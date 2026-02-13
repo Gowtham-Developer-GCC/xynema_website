@@ -1,0 +1,249 @@
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import UniversalSearch from './UniversalSearch';
+const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+    const { user, logoutUser, openLogin } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.openLogin && !user) {
+            openLogin();
+            window.history.replaceState({}, document.title);
+        }
+    }, [location, user, openLogin]);
+
+    const sidebarItems = [
+        { icon: Ticket, title: 'Your Orders', description: 'View all your bookings & purchases', path: '/bookings' },
+        { icon: Calendar, title: 'Event Tickets', description: 'View your event bookings', path: '/events-bookings' },
+        { icon: Heart, title: 'Favorites', description: 'Your saved movies & events', path: '/favorites' },
+        { icon: Menu, title: 'Store', description: 'Rented & Purchased Movies', path: '/store' },
+        { icon: Settings, title: 'Accounts & Settings', description: 'Location, Payments, Permissions & More', path: '/profile' },
+    ];
+
+    return (
+        <>
+            <nav className="bg-white text-gray-800 sticky top-0 z-[60] border-b border-gray-200 shadow-sm transition-all duration-300">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-14 md:h-16">
+
+                        {/* Logo & Search */}
+                        <div className="flex items-center gap-3 md:gap-6 flex-1">
+                            <Link to="/" className="flex-shrink-0 flex items-center gap-2 group">
+                                <div className="w-8 h-8 bg-xynemaRose rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                    <Play className="w-4 h-4 fill-white text-white translate-x-0.5" />
+                                </div>
+                                <span className="text-xl font-display font-black tracking-tighter text-xynemaRose uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
+                            </Link>
+
+                            <div className="flex-1 max-w-xl hidden md:block">
+                                <UniversalSearch variant="navbar" className="w-full" />
+                            </div>
+                        </div>
+
+                        {/* Right Side Actions */}
+                        <div className="flex items-center gap-2 md:gap-4 text-gray-600">
+                            {/* Mobile Search Toggle */}
+                            <button
+                                onClick={() => setIsMobileSearchOpen(true)}
+                                className="md:hidden p-2 hover:bg-gray-50 rounded-lg transition-all"
+                            >
+                                <Search className="h-5 w-5 md:h-5 md:w-5" />
+                            </button>
+
+                            {location.pathname === '/' && (
+                                <button
+                                    onClick={openCityModal}
+                                    className="flex items-center gap-1 hover:text-xynemaRose transition-colors group text-xs font-medium"
+                                >
+                                    <span className="text-gray-800 group-hover:text-xynemaRose">{selectedCity || 'Select City'}</span>
+                                    <ChevronDown className="h-3.5 w-3.5 text-gray-500 group-hover:text-xynemaRose mb-0.5" />
+                                </button>
+                            )}
+
+
+                            {user ? (
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="flex items-center gap-2 pl-1 pr-3 py-1 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-100"
+                                >
+                                    <img
+                                        src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
+                                        className="w-7 h-7 rounded-full border border-gray-200 object-cover"
+                                        alt=""
+                                    />
+                                    <span className="text-xs font-semibold text-gray-700 hidden lg:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={openLogin}
+                                    className="bg-xynemaRose text-white px-4 py-1.5 rounded-md text-xs font-bold transition-all hover:bg-charcoalSlate active:scale-95 shadow-sm"
+                                >
+                                    Sign in
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-2 hover:bg-gray-50 rounded-lg transition-all"
+                            >
+                                <Menu className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                {/* Mobile Search Overlay */}
+                {isMobileSearchOpen && (
+                    <div className="absolute inset-x-0 top-0 h-16 bg-white z-[65] border-b border-gray-100 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex-1 flex items-center gap-3">
+                            <UniversalSearch
+                                variant="navbar"
+                                className="flex-1"
+                                onSelect={() => setIsMobileSearchOpen(false)}
+                            />
+                            <button
+                                onClick={() => setIsMobileSearchOpen(false)}
+                                className="p-2 rounded-full bg-gray-100 shrink-0"
+                            >
+                                <X className="h-4 w-4 text-gray-500" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+                <div className="bg-white border-t border-gray-100 hidden md:block">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-9">
+                            <div className="flex gap-6 text-[10px] font-bold uppercase tracking-wider text-gray-600">
+                                <Link to="/movies" className="hover:text-xynemaRose transition-colors">Movies</Link>
+                                <Link to="/events" className="hover:text-xynemaRose transition-colors">Events</Link>
+                                <Link to="/private-events" className="hover:text-xynemaRose transition-colors">Private Events</Link>
+                                <Link to="/store" className="hover:text-xynemaRose transition-colors">Store</Link>
+                                <Link to="/explore?category=Plays" className="hover:text-xynemaRose transition-colors">Plays</Link>
+                                <Link to="/explore?category=Sports" className="hover:text-xynemaRose transition-colors">Sports</Link>
+                                <Link to="/explore?category=Activities" className="hover:text-xynemaRose transition-colors">Activities</Link>
+                            </div>
+                            <div className="flex gap-6 text-[10px] font-medium text-gray-500">
+                                {/* Placeholder links removed or hidden until implementation */}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav >
+
+            {/* Side Drawer Overlay - Moved OUTSIDE <nav> to avoid filter/transform issues */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 z-[100] transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                >
+                    <div
+                        className="absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl flex flex-col animate-slide-in"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="p-8 pb-10 bg-gradient-to-br from-xynemaRose via-charcoalSlate to-charcoalSlate text-white relative overflow-hidden shrink-0">
+                            {/* Decorative background circle */}
+                            <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full blur-3xl animate-pulse" />
+
+                            <div className="flex items-center justify-between relative z-10 pt-4">
+                                <div className="space-y-1.5 flex-1 min-w-0">
+                                    <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.4em]">Personal Hub</p>
+                                    <h2 className="text-3xl font-display font-black tracking-tighter uppercase leading-tight truncate pr-4">
+                                        {user ? user.displayName : 'Welcome!'}
+                                    </h2>
+                                    {user ? (
+                                        <div className="flex items-center gap-4 pt-1">
+                                            <Link
+                                                to="/profile"
+                                                onClick={() => setIsSidebarOpen(false)}
+                                                className="text-[9px] text-xynemaRose font-black uppercase tracking-[0.2em] bg-white px-3 py-1 rounded-full shadow-lg shadow-black/20 flex items-center gap-1 hover:scale-105 transition-all"
+                                            >
+                                                Account <ChevronRight className="w-2 h-2" />
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">Enter the premium experience</p>
+                                    )}
+                                </div>
+                                {user ? (
+                                    <div className="relative">
+                                        <img
+                                            src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`}
+                                            alt=""
+                                            className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-2xl"
+                                        />
+                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-charcoalSlate rounded-full" />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={openLogin}
+                                        className="text-[9px] text-xynemaRose font-black uppercase tracking-[0.2em] bg-white px-3 py-1 rounded-full shadow-lg shadow-black/20 flex items-center gap-1 hover:scale-105 transition-all">Sign In</button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* List */}
+                        <div className="flex-1 overflow-y-auto py-4 space-y-1">
+                            {/* Mobile Only Browsing Links */}
+                            <div className="md:hidden pb-2 mb-2 border-b border-gray-50">
+                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50">
+                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400" /></div>
+                                    <span className="text-sm font-medium text-gray-800">Movies</span>
+                                </Link>
+                                <Link to="/explore" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50">
+                                    <div className="w-5 flex justify-center"><Calendar className="w-4 h-4 text-gray-400" /></div>
+                                    <span className="text-sm font-medium text-gray-800">Events</span>
+                                </Link>
+                            </div>
+
+                            {sidebarItems.map((item, idx) => (
+                                <Link
+                                    key={idx}
+                                    to={item.path}
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-xynemaRose transition-colors" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-800">{item.title}</p>
+                                            {item.description && (
+                                                <p className="text-[10px] text-gray-400 mt-0.5">{item.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-200 group-hover:text-gray-400 transition-colors" />
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Sign Out */}
+                        {user && (
+                            <div className="p-6 border-t border-gray-100">
+                                <button
+                                    onClick={() => {
+                                        logoutUser();
+                                        setIsSidebarOpen(false);
+                                    }}
+                                    className="w-full py-3 text-red-500 font-bold border border-red-100 bg-red-50/50 hover:bg-red-50 rounded-lg text-xs transition-all"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )
+            }
+
+        </>
+    );
+};
+
+export default Navbar;

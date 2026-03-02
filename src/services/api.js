@@ -471,13 +471,25 @@ export const getMerchandise = async () => {
 /**
  * Get events from backend with Ticketmaster fallback (Parity with EventService.dart)
  */
-export const getEvents = async () => {
+export const getEvents = async (city) => {
+    // Default to stored city if not provided
+    const targetCity = city || localStorage.getItem('selected_city') || 'mumbai';
+
     return safeApiCall(async () => {
         try {
-            // 1. Fetch from Custom Backend
-            const response = await api.get('/events/get-events');
-            if (response.data.success && response.data.data) {
-                return response.data.data.map(e => new Event(e));
+            // 1. Fetch from Custom Backend - New Endpoint
+            const response = await api.get(`/movies/events?city=${targetCity}`);
+            let body = response.data;
+
+            // Handle if response is wrapped in an array [ { success: true, ... } ]
+            if (Array.isArray(body)) {
+                body = body[0] || {};
+            }
+
+            if (body.success && body.data) {
+                // The API now returns events nested in data.events
+                const eventsData = body.data.events || body.data;
+                return Array.isArray(eventsData) ? eventsData.map(e => new Event(e)) : [];
             }
             return [];
         } catch (error) {

@@ -301,8 +301,8 @@ class ApiCacheManager {
     /**
      * Helper: Get or fetch events
      */
-    async getOrFetchEvents(fetchFn) {
-        return this.getOrExecute('events', fetchFn, ApiCacheManager.EVENTS_TTL);
+    async getOrFetchEvents(city, fetchFn) {
+        return this.getOrExecute(`events_${city || 'all'}`, fetchFn, ApiCacheManager.EVENTS_TTL);
     }
 
     /**

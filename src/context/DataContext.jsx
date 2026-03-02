@@ -70,8 +70,8 @@ export const DataProvider = ({ children, selectedCity }) => {
                     1800 // 30 minutes
                 ),
                 // Events cache
-                apiCacheManager.getOrFetchEvents(
-                    () => api.getEvents()
+                apiCacheManager.getOrFetchEvents(selectedCity,
+                    () => api.getEvents(selectedCity)
                 ),
             ]);
 

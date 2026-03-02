@@ -7,9 +7,11 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
 import * as api from '../services/api';
+import { useData } from '../context/DataContext';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
+    const { selectedCity } = useData();
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(initialTab);
     const [events, setEvents] = useState([]);
@@ -43,7 +45,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
 
             const [eventData] = await Promise.all([
-                api.getEvents().catch(err => {
+                api.getEvents(selectedCity).catch(err => {
                     console.error('Events fetch error:', err);
                     return [];
                 })
@@ -86,7 +88,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         } catch (err) {
             console.error('Effect fetch error:', err);
         }
-    }, [searchParams]);
+    }, [searchParams, selectedCity]);
 
 
     // Filter Logic for Events

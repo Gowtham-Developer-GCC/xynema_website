@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
 import SEO from '../components/SEO';
 import * as api from '../services/api';
+import { useData } from '../context/DataContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 
@@ -10,7 +11,7 @@ const EventDetailsPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-
+    const { selectedCity } = useData();
     const [event, setEvent] = useState(location.state?.event || null);
     const [loading, setLoading] = useState(!event);
     const [error, setError] = useState(null);
@@ -24,7 +25,7 @@ const EventDetailsPage = () => {
     const fetchEventDetails = async () => {
         try {
             setLoading(true);
-            const events = await api.getEvents();
+            const events = await api.getEvents(selectedCity);
             const foundEvent = events.find(e => String(e.slug) === String(slug) || String(e.id) === String(slug));
             if (foundEvent) {
                 setEvent(foundEvent);

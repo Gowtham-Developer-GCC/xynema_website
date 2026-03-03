@@ -784,4 +784,12 @@ export const handleApiError = (error) => {
     };
 };
 
+// --- PRIVATE EVENT ENQUIRY ---
+export const submitPrivateEventEnquiry = async (data) => {
+    return safeApiCall(async () => {
+        const response = await api.post('/events/enquiry', data);
+        return response.data;
+    }, 'submit private event enquiry');
+};
+
 export default api;

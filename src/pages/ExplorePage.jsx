@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, PartyPopper, Shield, Send, Users, Info } from 'lucide-react';
+import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -445,97 +445,212 @@ const EventCard = ({ event }) => {
     );
 };
 
-const PrivateEventsSection = () => (
-    <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-        {/* Ultra-Minimal Hero */}
-        <div className="text-center max-w-2xl mx-auto space-y-6 pt-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-xynemaRose/5 text-xynemaRose rounded-full text-[10px] font-black uppercase tracking-widest">
-                <PartyPopper className="w-3 h-3" />
-                <span>Private & Exclusive</span>
+const PrivateEventsSection = () => {
+    const [formData, setFormData] = useState({
+        fullName: '',
+        phone: '',
+        email: '',
+        eventType: '',
+        eventDescription: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setStatusMessage({ type: '', text: '' });
+        try {
+            await api.submitPrivateEventEnquiry(formData);
+            setStatusMessage({ type: 'success', text: 'Enquiry submitted successfully! Our concierge will contact you shortly.' });
+            setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+        } catch (err) {
+            setStatusMessage({ type: 'error', text: err.message || 'Failed to submit enquiry. Please try again.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
+            {/* Ultra-Minimal Hero */}
+            <div className="text-center max-w-2xl mx-auto space-y-6 pt-12">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-xynemaRose/5 text-xynemaRose rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <PartyPopper className="w-3 h-3" />
+                    <span>Private & Exclusive</span>
+                </div>
+
+                <h2 className="text-5xl md:text-7xl font-display font-black text-gray-900 tracking-tight leading-[0.95] uppercase">
+                    Host It <br />
+                    <span className="text-xynemaRose">Your Way.</span>
+                </h2>
+
+                <p className="text-lg text-gray-500 font-medium leading-relaxed">
+                    The ultimate platform for private screenings and corporate events.
+                    Simple, secure, and completely branded.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+                    <button
+                        onClick={() => document.getElementById('enquiry-form')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="w-full sm:w-auto px-10 py-4 rounded-xl bg-xynemaRose text-white font-display font-black uppercase tracking-widest shadow-xl shadow-xynemaRose/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        Start Planning
+                    </button>
+                    {/* <button className="w-full sm:w-auto px-10 py-4 rounded-xl bg-white text-xynemaRose border-2 border-xynemaRose/10 font-bold uppercase tracking-widest hover:border-xynemaRose hover:bg-xynemaRose/5 transition-all">
+                        See Demo
+                    </button> */}
+                </div>
             </div>
 
-            <h2 className="text-5xl md:text-7xl font-display font-black text-gray-900 tracking-tight leading-[0.95] uppercase">
-                Host It <br />
-                <span className="text-xynemaRose">Your Way.</span>
-            </h2>
-
-            <p className="text-lg text-gray-500 font-medium leading-relaxed">
-                The ultimate platform for private screenings and corporate events.
-                Simple, secure, and completely branded.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-                <button className="w-full sm:w-auto px-10 py-4 rounded-xl bg-xynemaRose text-white font-display font-black uppercase tracking-widest shadow-xl shadow-xynemaRose/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    Start Planning
-                </button>
-                {/* <button className="w-full sm:w-auto px-10 py-4 rounded-xl bg-white text-xynemaRose border-2 border-xynemaRose/10 font-bold uppercase tracking-widest hover:border-xynemaRose hover:bg-xynemaRose/5 transition-all">
-                    See Demo
-                </button> */}
-            </div>
-        </div>
-
-        {/* Clean Process Steps (Restored 5-step flow) */}
-        <div className="max-w-6xl mx-auto px-4">
-            <div className="text-center mb-16">
-                <h3 className="text-2xl font-display font-black uppercase tracking-tight text-gray-900">
-                    How It Works
-                </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
-                {/* Desktop Connecting Line */}
-                <div className="hidden md:block absolute top-[2.5rem] left-[10%] right-[10%] h-0.5 bg-gray-100" />
-
-                {[
-                    { title: 'Inquiry', desc: 'Contact our concierge to start planning.', icon: Clock },
-                    { title: 'Details', desc: 'Submit date, venue, and guest counts.', icon: Info },
-                    { title: 'Secure QR', desc: 'System generates unique encrypted codes.', icon: Shield },
-                    { title: 'Invites', desc: 'Distribute via App, SMS, or Email.', icon: Send },
-                    { title: 'Day Of', desc: 'Instant verification at the gates.', icon: Shield }
-                ].map((step, idx) => (
-                    <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-4 group">
-                        <div className="w-20 h-20 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-gray-400 group-hover:border-xynemaRose group-hover:text-xynemaRose group-hover:shadow-lg group-hover:shadow-xynemaRose/10 transition-all duration-300">
-                            <step.icon className="w-8 h-8" />
-                        </div>
-                        <div>
-                            <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Step 0{idx + 1}</div>
-                            <h4 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-2">{step.title}</h4>
-                            <p className="text-xs text-gray-500 font-medium leading-relaxed px-2">{step.desc}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-
-        {/* Minimal Features Grid (Restored Content) */}
-        <div className="bg-gray-50 rounded-[40px] p-8 md:p-16">
-            <div className="max-w-5xl mx-auto">
-                <div className="text-center mb-12">
-                    <h3 className="text-3xl font-display font-black uppercase tracking-tight text-gray-900">
-                        Premium <span className="text-xynemaRose">Standard.</span>
+            {/* Clean Process Steps (Restored 5-step flow) */}
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h3 className="text-2xl font-display font-black uppercase tracking-tight text-gray-900">
+                        How It Works
                     </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
+                    {/* Desktop Connecting Line */}
+                    <div className="hidden md:block absolute top-[2.5rem] left-[10%] right-[10%] h-0.5 bg-gray-100" />
+
                     {[
-                        { title: 'Secure Entry', desc: 'QR-based access control with real-time logs.', icon: Shield },
-                        { title: 'Multi-Channel', desc: 'WhatsApp, Email & In-App notification delivery.', icon: Send },
-                        { title: 'Total Control', desc: 'Dedicated dashboard to manage guest lists.', icon: Shield },
-                        { title: 'Full Scalability', desc: 'Optimized for small groups or massive festivals.', icon: Users }
-                    ].map((feat, i) => (
-                        <div key={i} className="text-center space-y-3 group">
-                            <div className="w-12 h-12 mx-auto bg-white rounded-xl shadow-sm flex items-center justify-center text-xynemaRose group-hover:scale-110 transition-transform">
-                                <feat.icon className="w-5 h-5" />
+                        { title: 'Inquiry', desc: 'Contact our concierge to start planning.', icon: Clock },
+                        { title: 'Details', desc: 'Submit date, venue, and guest counts.', icon: Info },
+                        { title: 'Secure QR', desc: 'System generates unique encrypted codes.', icon: Shield },
+                        { title: 'Invites', desc: 'Distribute via App, SMS, or Email.', icon: Send },
+                        { title: 'Day Of', desc: 'Instant verification at the gates.', icon: Shield }
+                    ].map((step, idx) => (
+                        <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-4 group">
+                            <div className="w-20 h-20 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-gray-400 group-hover:border-xynemaRose group-hover:text-xynemaRose group-hover:shadow-lg group-hover:shadow-xynemaRose/10 transition-all duration-300">
+                                <step.icon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-sm font-black uppercase tracking-wider text-gray-900">{feat.title}</h4>
-                            <p className="text-xs text-gray-500 font-medium leading-relaxed">{feat.desc}</p>
+                            <div>
+                                <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Step 0{idx + 1}</div>
+                                <h4 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-2">{step.title}</h4>
+                                <p className="text-xs text-gray-500 font-medium leading-relaxed px-2">{step.desc}</p>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {/* Form Section */}
+            <div id="enquiry-form" className="max-w-3xl mx-auto px-4">
+                <div className="bg-white rounded-[40px] p-8 md:p-12 border border-gray-100 shadow-2xl shadow-black/5">
+                    <div className="text-center mb-10">
+                        <h3 className="text-3xl font-display font-black uppercase tracking-tight text-gray-900">
+                            Plan Your <span className="text-xynemaRose">Event</span>
+                        </h3>
+                        <p className="text-gray-500 text-sm mt-2 font-medium">Fill out the details below and we'll handle the rest.</p>
+                    </div>
+
+                    {statusMessage.text && (
+                        <div className={`mb-8 p-4 rounded-2xl flex items-center gap-3 ${statusMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                            {statusMessage.type === 'success' ? <Check className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                            <span className="text-sm font-bold">{statusMessage.text}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</label>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
+                                    placeholder="+91 9999900000"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
+                                    placeholder="john@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Type</label>
+                                <select
+                                    name="eventType"
+                                    value={formData.eventType}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors appearance-none"
+                                >
+                                    <option value="" disabled>Select event type</option>
+                                    <option value="corporate">Corporate Event</option>
+                                    <option value="private-screening">Private Screening</option>
+                                    <option value="party">Birthday/Private Party</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Description</label>
+                            <textarea
+                                name="eventDescription"
+                                value={formData.eventDescription}
+                                onChange={handleChange}
+                                required
+                                rows="4"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors resize-y"
+                                placeholder="Tell us more about your event..."
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-4 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-widest hover:bg-xynemaRose transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    <span>Submit Enquiry</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div className="h-10"></div>
         </div>
-    </div>
-);
+    );
+};
 
 
 const EmptyState = ({ onReset }) => (

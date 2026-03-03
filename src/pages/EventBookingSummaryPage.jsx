@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, Plus, X, CreditCard, CheckCircle } from 'lucide-react';
-import * as api from '../services/api';
+import { confirmEventBooking } from '../services/eventService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const EventBookingSummaryPage = () => {
@@ -123,7 +123,7 @@ const EventBookingSummaryPage = () => {
                 source: 'web'
             };
 
-            const result = await api.confirmEventBooking(reservationId, bookingData);
+            const result = await confirmEventBooking(reservationId, bookingData);
 
             if (result.success) {
                 setBookingResult(result.data);

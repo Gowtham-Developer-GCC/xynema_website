@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader, Info, Armchair, Accessibility, Ticket, ChevronRight, Clapperboard, Film, MapPin, Clock, AlertCircle, X, Pencil, Bike, Car, Truck, Bus } from 'lucide-react';
 import SEO from '../components/SEO';
-import * as api from '../services/api';
+import { getSeats, lockSeats, releaseSeats } from '../services/bookingService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
@@ -56,14 +56,14 @@ const SeatSelectionPage = () => {
 
                 const urlSeats = searchParams.get('seats')?.split(',');
                 if (urlSeats && urlSeats.length > 0) {
-                    api.releaseSeats(showId, urlSeats).catch(() => { });
+                    releaseSeats(showId, urlSeats).catch(() => { });
                 }
                 try {
                     const pendingLock = sessionStorage.getItem('pending_seat_lock');
                     if (pendingLock) {
                         const { showId: lockedShowId, seats: lockedSeats } = JSON.parse(pendingLock);
                         if (lockedSeats && lockedSeats.length > 0) {
-                            api.releaseSeats(lockedShowId || showId, lockedSeats).catch(() => { });
+                            releaseSeats(lockedShowId || showId, lockedSeats).catch(() => { });
                         }
                         sessionStorage.removeItem('pending_seat_lock');
                     }
@@ -71,7 +71,7 @@ const SeatSelectionPage = () => {
                     console.error('Session storage release error:', err);
                 }
 
-                const response = await api.getSeats(showId);
+                const response = await getSeats(showId);
                 setShow(response.data.show);
                 setSeats(response.data.seats || []);
                 const screenLayout = response.data.layout || response.data.show?.screen?.layout || response.data.show?.screen?.screenId?.layout;
@@ -97,7 +97,7 @@ const SeatSelectionPage = () => {
             // Only release if we've selected something and haven't proceeded
             if (!hasProceededRef.current && showId && selectedSeatsRef.current.length > 0) {
                 releaseTimeoutRef.current = setTimeout(() => {
-                    api.releaseSeats(showId, selectedSeatsRef.current).catch(() => { });
+                    releaseSeats(showId, selectedSeatsRef.current).catch(() => { });
                 }, 500); // 500ms grace period for remounts
             }
         };
@@ -170,7 +170,7 @@ const SeatSelectionPage = () => {
 
         try {
             setLoading(true);
-            const sessionId = await api.lockSeats(showId, selectedSeats);
+            const sessionId = await lockSeats(showId, selectedSeats);
             if (sessionId) {
                 sessionStorage.setItem('pending_seat_lock', JSON.stringify({
                     showId,
@@ -200,7 +200,7 @@ const SeatSelectionPage = () => {
         } catch (error) {
             showToast(error.message || 'Selected seats were just taken! Refreshing...', 'error');
             setSelectedSeats([]);
-            const response = await api.getSeats(showId);
+            const response = await getSeats(showId);
             if (response.success) setSeats(response.data.seats || []);
         } finally {
             setLoading(false);

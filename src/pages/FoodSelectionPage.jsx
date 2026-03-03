@@ -4,7 +4,8 @@ import { ArrowLeft, ShoppingCart, Plus, Minus, Loader, Zap, Info } from 'lucide-
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
-import * as api from '../services/api';
+import { getFoodItems } from '../services/storeService';
+import { getShowSeats } from '../services/bookingService';
 import ErrorState from '../components/ErrorState';
 import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
 import bookingSessionManager from '../utils/bookingSessionManager';
@@ -12,7 +13,7 @@ import bookingSessionManager from '../utils/bookingSessionManager';
 const FoodSelectionPage = () => {
     const { slug, theaterSlug } = useParams();
     const navigate = useNavigate();
-    
+
     // Get showId from sessionStorage (secure)
     const showId = sessionStorage.getItem('booking_show_id');
 
@@ -31,7 +32,7 @@ const FoodSelectionPage = () => {
             navigate(`/movie/${slug}/theaters`, { replace: true });
             return;
         }
-        
+
         // Validate booking draft has required seats
         const draftValidation = bookingSessionManager.validateBookingDraft(['seats']);
         if (!draftValidation.valid) {
@@ -40,7 +41,7 @@ const FoodSelectionPage = () => {
         }
 
         setBookingState(draftValidation.draft);
-        
+
         // Refresh session timestamp (keep alive)
         bookingSessionManager.refreshSession();
     }, [showId, theaterSlug, slug, navigate]);
@@ -72,8 +73,8 @@ const FoodSelectionPage = () => {
             try {
                 setLoading(true);
                 const [foodResponse, showResponse] = await Promise.all([
-                    api.getFoodItems(),
-                    api.getShowSeats(showId)
+                    getFoodItems(),
+                    getShowSeats(showId)
                 ]);
                 setFoodItems(foodResponse || []);
                 setShow(showResponse.show);

@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getUpcomingMovies, getFoodItems, getNotNowMovies, getUserBookings, getEventBookings, getUserProfile } from '../services/api';
+import { getUpcomingMovies, getNotNowMovies, addMovieReview, toggleInterest } from '../services/movieService';
+import { getFoodItems } from '../services/storeService';
+import { getUserBookings, getBookingDetails } from '../services/bookingService';
+import { getEventBookings, getEvents } from '../services/eventService';
+import { getUserProfile, updateUserProfile } from '../services/userService';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
 import { errorHandler } from '../utils/helpers';
@@ -71,7 +75,7 @@ export const DataProvider = ({ children, selectedCity }) => {
                 ),
                 // Events cache
                 apiCacheManager.getOrFetchEvents(selectedCity,
-                    () => api.getEvents(selectedCity)
+                    () => getEvents(selectedCity)
                 ),
             ]);
 
@@ -166,7 +170,7 @@ export const DataProvider = ({ children, selectedCity }) => {
 
         // 3. API Sync (Optimistic)
         try {
-            await api.toggleInterest(movieId, !isCurrentlyInterested);
+            await toggleInterest(movieId, !isCurrentlyInterested);
             return true;
         } catch (err) {
             console.error('Interest sync failed:', err);
@@ -194,7 +198,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         try {
             // Use cache manager to prevent duplicate profile fetches
             const profile = await apiCacheManager.getOrFetchProfile(() =>
-                api.getUserProfile()
+                getUserProfile()
             );
 
             if (profile) {
@@ -213,7 +217,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     const updateUserProfileData = useCallback(async (formData) => {
         try {
             const currentUser = userProfile;
-            const updatedUserData = await api.updateUserProfile(formData);
+            const updatedUserData = await updateUserProfile(formData);
 
             // Preserve token from current user (API response typically doesn't include token)
             if (currentUser && currentUser.token) {

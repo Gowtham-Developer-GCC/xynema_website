@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toggleInterest, addMovieReview } from '../services/api';
+import { toggleInterest, addMovieReview } from '../services/movieService';
 import SEO from '../components/SEO';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotFoundState from '../components/NotFoundState';

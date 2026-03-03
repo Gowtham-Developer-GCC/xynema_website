@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getStoredUser, storeUser, removeUser, loginWithGoogle, logout } from '../services/api';
+import { getStoredUser, storeUser, removeUser } from '../services/api';
+import { loginWithGoogle, logout } from '../services/userService';
 import { googleLogout } from '@react-oauth/google';
 import { AUTH_EVENTS } from '../services/authEvents';
 import { User } from '../models/index.js';

@@ -4,15 +4,15 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useReducer } from 'react';
+import { getUpcomingMovies } from '../services/movieService';
 import {
-    getUpcomingMovies,
     getTheatersForMovie,
     getShowSeats,
     lockSeats,
     releaseSeats,
     getUserBookings,
     confirmBooking,
-} from '../services/api';
+} from '../services/bookingService';
 import { errorHandler } from '../utils/helpers';
 
 /**

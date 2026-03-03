@@ -5,7 +5,7 @@ import SEO from '../components/SEO';
 import ErrorState from '../components/ErrorState';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
-import * as api from '../services/api';
+import { getMerchandise } from '../services/storeService';
 
 const StorePage = () => {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ const StorePage = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await api.getMerchandise();
+            const data = await getMerchandise();
             setStoreItems(data || []);
         } catch (err) {
             console.error('Store fetch failed:', err);

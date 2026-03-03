@@ -6,7 +6,7 @@ import { designSystem } from '../config/design-system';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
-import * as api from '../services/api';
+import { getEvents } from '../services/eventService';
 import { useData } from '../context/DataContext';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
@@ -45,7 +45,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
 
             const [eventData] = await Promise.all([
-                api.getEvents(selectedCity).catch(err => {
+                getEvents(selectedCity).catch(err => {
                     console.error('Events fetch error:', err);
                     return [];
                 })

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Shield, Info, MapPin, Ticket, Calendar, Clock, ShoppingBag } from 'lucide-react';
-import * as api from '../services/api';
+import { getEventBookingDetails } from '../services/eventService';
 import SEO from '../components/SEO';
 import ErrorState from '../components/ErrorState';
 import BookingQr from '../components/BookingQr';
@@ -17,7 +17,7 @@ const EventBookingDetailsPage = () => {
         const fetchBookingDetails = async () => {
             try {
                 setLoading(true);
-                const response = await api.getEventBookingDetails(id);
+                const response = await getEventBookingDetails(id);
                 if (response) {
                     setBooking(response);
                 } else {

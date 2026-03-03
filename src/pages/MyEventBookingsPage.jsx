@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, QrCode, Share2, MapPin, Calendar, Users, Loader, AlertCircle, ArrowLeft, Ticket, ExternalLink, ChevronRight, Sparkles, Search } from 'lucide-react';
-import * as api from '../services/api';
+import { getEventBookings } from '../services/eventService';
 import { EventBooking } from '../models';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
@@ -18,7 +18,7 @@ const MyEventBookingsPage = () => {
         const fetchBookings = async () => {
             try {
                 setLoading(true);
-                const response = await api.getEventBookings();
+                const response = await getEventBookings();
                 setBookings(response || []);
             } catch (err) {
                 console.error('Failed to fetch event bookings:', err);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, MapPin, X, Loader, ChevronRight } from 'lucide-react';
-import { getCities } from '../services/api';
+import { getCities } from '../services/movieService';
 
 const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -73,7 +73,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                 autoFocus
                             />
                         </div>
-{/* 
+                        {/* 
                         <div className="flex items-center justify-between px-1">
                             <button className="flex items-center gap-2 text-xynemaRose text-[10px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity">
                                 <div className="p-1.5 bg-xynemaRose/10 rounded-lg">

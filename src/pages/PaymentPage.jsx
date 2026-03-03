@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Lock, Check, AlertCircle, Loader, Shield, Info, Zap, ChevronRight } from 'lucide-react';
 import SEO from '../components/SEO';
-import * as api from '../services/api';
+import { getFoodItems } from '../services/storeService';
+import { getShowSeats, confirmBooking } from '../services/bookingService';
 import TicketCard from '../components/TicketCard';
 import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
 import bookingSessionManager from '../utils/bookingSessionManager';
@@ -106,12 +107,12 @@ const PaymentPage = () => {
             try {
                 setLoading(true);
                 // Fetch authoritative show details for pricing
-                const response = await api.getShowSeats(showId);
+                const response = await getShowSeats(showId);
                 setShow(response.show);
                 setShowSeats(response.seats || []);
 
                 if (cartData) {
-                    const foodItems = await api.getFoodItems();
+                    const foodItems = await getFoodItems();
                     let total = 0;
 
                     if (typeof cartData === 'object') {
@@ -247,7 +248,7 @@ const PaymentPage = () => {
                 }
             };
 
-            const successResult = await api.confirmBooking(showId, bookingPayload);
+            const successResult = await confirmBooking(showId, bookingPayload);
 
             if (successResult && successResult.success) {
                 // Track successful booking

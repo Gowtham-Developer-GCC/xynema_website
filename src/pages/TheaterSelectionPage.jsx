@@ -9,7 +9,7 @@ import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 import { designSystem } from '../config/design-system';
 import { cardStyles, animationStyles } from '../styles/components';
-import * as api from '../services/api';
+import { getTheatersForMovie } from '../services/movieService';
 import bookingSessionManager from '../utils/bookingSessionManager';
 
 const timeToMinutes = (timeStr) => {
@@ -147,7 +147,7 @@ const TheaterSelectionPage = () => {
         try {
             setLoading(true);
             setError(null);
-            const theatersRes = await api.getTheatersForMovie(targetMovieId, selectedCity, selectedDate);
+            const theatersRes = await getTheatersForMovie(targetMovieId, selectedCity, selectedDate);
             if (!isStopped.current) {
                 setTheaters(theatersRes || []);
             }
@@ -170,9 +170,9 @@ const TheaterSelectionPage = () => {
         try {
             const slug = movie.slug;
             const theaterSlug = theater?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'theater';
-            
+
             bookingSessionManager.startSession(showId, theater?.name || '', user?.id || user?._id);
-            
+
             navigate(`/movie/${slug}/${theaterSlug}/seats`);
         } catch (err) {
             console.error('Navigation error:', err);

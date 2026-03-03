@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Star, X, MessageSquare, Send, CheckCircle } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { addMovieReview } from '../services/api';
+import { addMovieReview } from '../services/movieService';
 
 const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
     const [rating, setRating] = useState(0);
@@ -32,7 +32,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
             // Attempt to post to backend
             await addMovieReview(booking.id || booking.bookingId, reviewData);
             console.log('Review submitted successfully to backend');
-            
+
             // Store reviewed booking in localStorage
             const reviewedBookings = JSON.parse(localStorage.getItem('reviewedBookings') || '[]');
             const bookingId = booking.id || booking.bookingId;
@@ -44,7 +44,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
             // Log for debug mode as requested
             console.error('DEBUG: Review submission failed but proceeding as success:', err);
             console.error('Failed review data:', { bookingId: booking.id, ...reviewData });
-            
+
             // Store reviewed booking in localStorage even if backend fails
             const reviewedBookings = JSON.parse(localStorage.getItem('reviewedBookings') || '[]');
             const bookingId = booking.id || booking.bookingId;

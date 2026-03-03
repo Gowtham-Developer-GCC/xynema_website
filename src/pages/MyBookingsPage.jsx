@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, Loader, ArrowLeft, Ticket, ExternalLink } from 'lucide-react';
-import * as api from '../services/api';
+import { getUserBookings } from '../services/bookingService';
 import SEO from '../components/SEO';
 
 const MyBookingsPage = () => {
@@ -20,7 +20,7 @@ const MyBookingsPage = () => {
             if (isLoadMore) setLoadingMore(true);
             else setLoading(true);
 
-            const response = await api.getUserBookings(targetPage);
+            const response = await getUserBookings(targetPage);
             const { bookings: newBookings, totalPages: total, currentPage } = response;
 
             if (isLoadMore) {

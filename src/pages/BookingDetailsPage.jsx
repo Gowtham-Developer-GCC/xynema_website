@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle } from 'lucide-react';
-import * as api from '../services/api';
+import { getBookingDetails } from '../services/bookingService';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
 import BookingQr from '../components/BookingQr';
@@ -22,7 +22,7 @@ const BookingDetailsPage = () => {
         const fetchBookingDetails = async () => {
             try {
                 setLoading(true);
-                const response = await api.getBookingDetails(id);
+                const response = await getBookingDetails(id);
                 if (response) {
                     const globalBooking = userBookings?.find(b => (b.id || b.bookingId) === id);
                     if (globalBooking?.isReviewed && !response.isReviewed) {

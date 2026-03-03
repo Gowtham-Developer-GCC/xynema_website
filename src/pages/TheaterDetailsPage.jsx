@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, Film, Loader } from 'lucide-react';
 import SEO from '../components/SEO';
-import * as api from '../services/api';
+import { getUpcomingMovies } from '../services/movieService';
 import ErrorState from '../components/ErrorState';
 
 const TheaterDetailsPage = () => {
@@ -30,7 +30,7 @@ const TheaterDetailsPage = () => {
 
         try {
             setLoading(true);
-            const res = await api.getUpcomingMovies(city);
+            const res = await getUpcomingMovies(city);
             // Identifier can be ID or Name/Slug. Since API returns list, we try to match by ID or check if slug matches name?
             // Usually theater slug logic might differ. For now, let's assume if it's an ID match it.
             // If it's a slug, we might need a better matching strategy if slug isn't in the object.
@@ -56,7 +56,7 @@ const TheaterDetailsPage = () => {
     const fetchMoviesAtTheater = useCallback(async () => {
         try {
             setMoviesLoading(true);
-            const res = await api.getUpcomingMovies(city);
+            const res = await getUpcomingMovies(city);
             const filteredMovies = res.movies.filter(movie =>
                 movie.theaters.some(t => String(t.id) === String(theaterIdentifier) || String(t._id) === String(theaterIdentifier))
             );

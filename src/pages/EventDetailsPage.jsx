@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react';
 import SEO from '../components/SEO';
-import * as api from '../services/api';
+import { getEvents, reserveEventTickets } from '../services/eventService';
 import { useData } from '../context/DataContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
@@ -25,7 +25,7 @@ const EventDetailsPage = () => {
     const fetchEventDetails = async () => {
         try {
             setLoading(true);
-            const events = await api.getEvents(selectedCity);
+            const events = await getEvents(selectedCity);
             const foundEvent = events.find(e => String(e.slug) === String(slug) || String(e.id) === String(slug));
             if (foundEvent) {
                 setEvent(foundEvent);
@@ -118,7 +118,7 @@ const EventDetailsPage = () => {
 
             console.log('[Reserve] Sending:', { showDate, showTime, tickets: selectedTickets });
 
-            const result = await api.reserveEventTickets(event.id, selectedTickets, showDate, showTime);
+            const result = await reserveEventTickets(event.id, selectedTickets, showDate, showTime);
 
             if (result?.reservationId) {
                 // Navigate to booking summary with enriched ticket data

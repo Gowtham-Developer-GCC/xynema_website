@@ -176,16 +176,19 @@ const HeroCarousel = memo(({ movies }) => {
                         pauseOnMouseEnter: true,
                     }}
                     navigation={true}
-                    className="w-full h-[140px] sm:h-[180px] md:h-[240px] lg:h-[320px] hero-swiper"
+                    className="w-full h-auto hero-swiper"
                 >
                     {displayMovies.map((movie, index) => (
                         <SwiperSlide
                             // Use unique key for duplicates using index
                             key={`${movie.id}-${index}`}
-                            className="relative h-full transition-all duration-300 !w-[90%] md:!w-[85%] lg:!w-[1088px] flex items-center justify-center"
+                            className="relative transition-all duration-300 !w-[90%] md:!w-[85%] lg:!w-[1088px] flex items-center justify-center"
                         >
-                            {/* Slide Content with rounded corners */}
-                            <div className="w-full h-full rounded-xl overflow-hidden relative bg-gray-200 select-none shadow-lg">
+                            {/* Slide Content with 21:9 aspect ratio */}
+                            <div
+                                className="w-full rounded-xl overflow-hidden relative bg-gray-200 select-none shadow-lg"
+                                style={{ aspectRatio: '21 / 6' }}
+                            >
                                 <Link
                                     to={`/movie/${movie.slug || movie.id}`}
                                     className="block w-full h-full cursor-pointer"
@@ -203,12 +206,20 @@ const HeroCarousel = memo(({ movies }) => {
                     ))}
                 </Swiper>
             </div>
-            <style dangerouslySetInnerHTML={{__html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .hero-swiper {
                     padding-bottom: 25px !important;
                     padding-top: 10px;
+                    height: auto !important;
+                }
+                .hero-swiper .swiper-wrapper {
+                    height: auto !important;
+                    display: flex;
+                    align-items: center;
                 }
                 .hero-swiper .swiper-slide {
+                    height: auto !important;
                     transform: scale(0.96);
                     opacity: 1; 
                     transition: transform 0.4s ease;
@@ -337,7 +348,7 @@ const HomeSkeleton = () => (
             <div className="max-w-[1088px] mx-auto px-4 lg:px-0">
                 <div
                     className="w-full bg-gray-200 rounded-xl animate-pulse"
-                    style={{ height: 'max(140px, min(320px, 30vw))' }}
+                    style={{ aspectRatio: '21 / 9' }}
                 />
             </div>
         </div>

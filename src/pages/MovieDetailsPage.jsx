@@ -165,13 +165,13 @@ const MovieDetailsPage = () => {
                         className="absolute inset-0 bg-cover bg-center md:bg-fixed"
                         style={{
                             backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})`,
-                            filter: 'blur(10px)',
-                            opacity: 0.6
+                            filter: 'blur(8px)',
+                            opacity: 0.8
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A] via-[#1A1A1A]/90 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
-                    <div className="absolute inset-0 bg-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/10 via-[#1A1A1A]/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/10 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-black/10" />
                 </div>
 
                 <div className="relative max-w-6xl mx-auto px-4 md:px-8 py-4 md:py-6">

@@ -7,8 +7,8 @@ export class Movie {
     constructor(data = {}) {
         this.id = data._id || data.id || '';
         this.title = data.MovieName || data.movieName || data.title || '';
-        this.posterUrl = data.posterUrl || data.PosterUrl || '';
-        this.backdropUrl = data.backdropUrl || data.BackdropUrl || '';
+        this.posterUrl = data.portraitPosterUrl || data.posterUrl || data.PosterUrl || '';
+        this.backdropUrl = data.landscapePosterUrl || data.backdropUrl || data.BackdropUrl || '';
 
         // Match sample response: "Genre": ["Action", "Adventure", "Drama"]
         this.genre = Array.isArray(data.Genre)

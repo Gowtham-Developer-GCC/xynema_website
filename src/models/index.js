@@ -56,6 +56,12 @@ export class Movie {
         this.theaters = (data.availability?.theatres || data.availability?.theaters || []).map(t => new Theater(t));
         this.interestCount = data.interestCount || data.InterestCount || 0;
 
+        // Highlights / Banners
+        this.bannerImageUrl = data.bannerImageUrl || data.imageUrl || '';
+        this.sectionImageUrl = data.sectionImageUrl || this.bannerImageUrl;
+        this.linkUrl = data.linkUrl || '';
+        this.highlightType = data.highlightType || '';
+
         // Availability flag for Upcoming logic - Handle boolean and string 'true'
         // Default to false (Upcoming) if missing or explicitly false
         const availValue = data.availability?.isAvailable ?? data.isAvailable;

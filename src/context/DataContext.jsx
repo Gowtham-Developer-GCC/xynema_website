@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getUpcomingMovies, getNotNowMovies, addMovieReview, toggleInterest } from '../services/movieService';
+import { getUpcomingMovies, getNotNowMovies, addMovieReview, toggleInterest, getHighlightsMovies } from '../services/movieService';
 import { getFoodItems } from '../services/storeService';
 import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
@@ -31,6 +31,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     const { isAuthenticated } = useAuth();
     const [movies, setMovies] = useState([]);
     const [latestMovies, setLatestMovies] = useState([]);
+    const [highlightsMovies, setHighlightsMovies] = useState([]);
     const [theaters, setTheaters] = useState([]);
     const [foodItems, setFoodItems] = useState([]);
     const [userMovieBookings, setUserMovieBookings] = useState([]);
@@ -56,7 +57,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         setLoading(true);
         setError(null);
         try {
-            const [movieData, foodData, latestData, eventData] = await Promise.all([
+            const [movieData, foodData, latestData, eventData, highlightsData] = await Promise.all([
                 // Use cache for movies unless page is not 1
                 page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getUpcomingMovies(selectedCity, page)
@@ -77,16 +78,23 @@ export const DataProvider = ({ children, selectedCity }) => {
                 apiCacheManager.getOrFetchEvents(selectedCity,
                     () => getEvents(selectedCity)
                 ),
+                // Highlights cache
+                apiCacheManager.getOrExecute('highlights_movies',
+                    () => getHighlightsMovies(),
+                    1800 // 30 minutes
+                ),
             ]);
 
             // Parse movie and theater data
             const moviesList = (movieData.movies || []).map(m => new Movie(m));
             const latestList = (Array.isArray(latestData) ? latestData : []).map(m => new Movie(m));
+            const highlightsList = (Array.isArray(highlightsData) ? highlightsData : []).map(m => new Movie(m));
             const theatersList = (movieData.theaters || []).map(t => new Theater(t));
             const foodList = Array.isArray(foodData) ? foodData : [];
 
             setMovies(moviesList);
             setLatestMovies(latestList);
+            setHighlightsMovies(highlightsList);
             setTheaters(theatersList);
             setEvents(eventData || []);
             setFoodItems(foodList);
@@ -393,6 +401,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         // State
         movies,
         latestMovies,
+        highlightsMovies,
         theaters,
         events,
         foodItems,

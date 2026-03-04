@@ -1,117 +1,163 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Youtube, Linkedin, Headphones, Ticket, Smartphone } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Phone, Mail, MapPin, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
-        <footer className="bg-[#333545] text-gray-400 font-sans text-sm">
-            {/* Top Stats/Info */}
-            <div className="bg-[#404454] py-4">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="flex items-center gap-4 text-white border-b border-gray-600 md:border-none pb-4 md:pb-0">
-                        <Headphones className="w-10 h-10 text-white" />
-                        <div>
-                            <p className="font-display font-bold text-sm uppercase tracking-wider text-white">24/7 Customer Care</p>
-                            <p className="text-xs text-gray-400">We're here to help you 24/7</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-white md:border-x border-gray-600 md:px-8 border-b md:border-b-0 pb-4 md:pb-0">
-                        <Ticket className="w-10 h-10 text-white" />
-                        <div>
-                            <p className="font-display font-bold text-sm uppercase tracking-wider text-white">Send Booking Confirmation</p>
-                            <p className="text-xs text-gray-400">Send booking confirmation to your email!</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-white">
-                        <Smartphone className="w-10 h-10 text-white" />
-                        <div>
-                            <p className="font-display font-bold text-sm uppercase tracking-wider text-white">Subscribe to Newsletter</p>
-                            <p className="text-xs text-gray-400">Get latest movie updates</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <footer className="bg-[#1a1f2c] text-gray-400 font-sans text-sm relative z-10 w-full mt-20 border-t border-gray-800">
+            {/* Main Footer Content */}
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-20 pb-10">
 
-            {/* Quick Links Section */}
-            <div className="py-16">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center md:text-left">
-                        <div>
-                            <h4 className="text-white font-display font-bold uppercase mb-6 text-xs tracking-widest border-l-4 border-xynemaRose pl-3">Explore Movies</h4>
-                            <ul className="space-y-3 font-sans">
-                                <li><Link to="/movies" className="hover:text-white transition-colors text-xs">Latest Releases</Link></li>
-                                <li><Link to="/upcoming-movies" className="hover:text-white transition-colors text-xs">Upcoming Movies</Link></li>
-                                <li><Link to="/movies" className="hover:text-white transition-colors text-xs">Recommended</Link></li>
-                                <li><Link to="/favorites" className="hover:text-white transition-colors text-xs">My Favorites</Link></li>
-                            </ul>
-                        </div>
+                {/* Top Section: Brand & Links */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 
-                        <div>
-                            <h4 className="text-white font-display font-bold uppercase mb-6 text-xs tracking-widest border-l-4 border-xynemaRose pl-3">Events & Activities</h4>
-                            <ul className="space-y-3 font-sans">
-                                <li><Link to="/explore" className="hover:text-white transition-colors text-xs">Public Events</Link></li>
-                                <li><Link to="/explore?category=Plays" className="hover:text-white transition-colors text-xs">Plays & Theatre</Link></li>
-                                <li><Link to="/explore?category=Sports" className="hover:text-white transition-colors text-xs">Sports Events</Link></li>
-                                <li><Link to="/explore?category=Activities" className="hover:text-white transition-colors text-xs">Outdoor Activities</Link></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-display font-bold uppercase mb-6 text-xs tracking-widest border-l-4 border-xynemaRose pl-3">Your Account</h4>
-                            <ul className="space-y-3 font-sans">
-                                <li><Link to="/profile" className="hover:text-white transition-colors text-xs">My Profile</Link></li>
-                                <li><Link to="/bookings" className="hover:text-white transition-colors text-xs">Movie Bookings</Link></li>
-                                <li><Link to="/events-bookings" className="hover:text-white transition-colors text-xs">Event Tickets</Link></li>
-                                <li><Link to="/store" className="hover:text-white transition-colors text-xs">Xynema Store</Link></li>
-                            </ul>
-                        </div>
-
-                        <div className="flex flex-col items-center md:items-start font-sans">
-                            <h4 className="text-white font-display font-bold uppercase mb-6 text-xs tracking-widest border-l-4 border-xynemaRose pl-3">Help & Policy</h4>
-                            <ul className="space-y-3 font-sans mb-8">
-                                <li><Link to="/terms" className="hover:text-white transition-colors text-xs">Terms of Use</Link></li>
-                                <li><Link to="/privacy" className="hover:text-white transition-colors text-xs">Privacy Policy</Link></li>
-                            </ul>
-
-                            <div className="mb-8">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Download our App</p>
-                                <a
-                                    href="https://play.google.com/store/apps/details?id=com.xynema.movieapp"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-3 bg-black border border-gray-600/50 rounded-xl px-4 py-2 hover:bg-gray-900 transition-all group shadow-lg hover:shadow-xl w-auto"
-                                >
-                                    <img src="https://yt3.googleusercontent.com/PJh5BeCRze4_08Qp8zOtb2bV6JGLiqmmc9QIRTVeTlrVmC2828C7gw5KIOU8uk70jN__SSY5Ug=s900-c-k-c0x00ffffff-no-rj" alt="Google Play" className="w-8 h-8 shrink-0 rounded-full" />
-                                    <div className="flex flex-col items-start -space-y-1">
-                                        <span className="text-[10px] text-gray-300 font-medium tracking-wide">GET IT ON</span>
-                                        <span className="text-lg text-white font-bold tracking-tight font-sans">Google Play</span>
-                                    </div>
-                                </a>
+                    {/* Brand Column */}
+                    <div className="col-span-1 lg:col-span-4 flex flex-col items-start pr-0 lg:pr-12">
+                        {/* Logo Area */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-white shadow-md rounded-md flex items-center justify-center p-1.5 shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                                <img src="/favicon.ico" alt="Xynema Logo Symbol" className="w-full h-full object-contain" />
                             </div>
+                            <span className="text-2xl font-display font-bold text-white tracking-tight">Xynema</span>
+                        </div>
 
-                            <div className="flex gap-4">
-                                {[Facebook, Twitter, Instagram, Youtube, Linkedin].map((Icon, i) => (
-                                    <a key={i} href="#" className="w-8 h-8 rounded-full bg-[#404454] flex items-center justify-center hover:bg-xynemaRose hover:text-white transition-all">
-                                        <Icon className="w-4 h-4" />
-                                    </a>
-                                ))}
+                        <p className="text-sm text-gray-400 leading-relaxed mb-8">
+                            Your ultimate destination for booking movie tickets, discovering events, and streaming premium content.
+                        </p>
+
+                        <div className="space-y-4">
+                            <a href="tel:+919874563210" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                                <Phone className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
+                                <span className="text-sm">+91 9874563210</span>
+                            </a>
+                            <a href="mailto:support@xynema.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                                <Mail className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
+                                <span className="text-sm">support@xynema.com</span>
+                            </a>
+                            <div className="flex items-center gap-3 text-gray-400">
+                                <MapPin className="w-4 h-4 text-[#3874c8] shrink-0" />
+                                <span className="text-sm">Ernakulam, Kerala, India</span>
                             </div>
                         </div>
                     </div>
+
+                    {/* Links Columns */}
+                    <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+                        <div>
+                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Movies</h4>
+                            <ul className="space-y-4 font-sans text-sm">
+                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Now Showing</Link></li>
+                                <li><Link to="/upcoming-movies" className="text-gray-400 hover:text-white transition-colors">Coming Soon</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Recommended</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Top Rated</Link></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Events</h4>
+                            <ul className="space-y-4 font-sans text-sm">
+                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Public Events</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Private Hosting</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Concerts</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Comedy Shows</Link></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Company</h4>
+                            <ul className="space-y-4 font-sans text-sm">
+                                <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+                                <li><Link to="/careers" className="text-gray-400 hover:text-white transition-colors">Careers</Link></li>
+                                <li><Link to="/press" className="text-gray-400 hover:text-white transition-colors">Press & Media</Link></li>
+                                <li><Link to="/advertise" className="text-gray-400 hover:text-white transition-colors">Advertise With Us</Link></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Support</h4>
+                            <ul className="space-y-4 font-sans text-sm">
+                                <li><Link to="/help" className="text-gray-400 hover:text-white transition-colors">Help Center</Link></li>
+                                <li><Link to="/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</Link></li>
+                                <li><Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+                                <li><Link to="/refund" className="text-gray-400 hover:text-white transition-colors">Refund Policy</Link></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Newsletter Sub-Section */}
+                <div className="border-t border-gray-800/60 pt-12 pb-8 flex flex-col items-center justify-center mb-4">
+                    <h3 className="text-xl font-semibold text-gray-200 mb-2">Subscribe to Our Newsletter</h3>
+                    <p className="text-sm text-gray-400 text-center mb-8 max-w-xl">
+                        Get the latest movie releases, event updates, and exclusive offers delivered to your inbox.
+                    </p>
+                    <div className="flex w-full max-w-md gap-3">
+                        <input
+                            type="email"
+                            placeholder="Enter your email address"
+                            className="flex-1 bg-[#252a37] border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3874c8] transition-colors"
+                        />
+                        <button className="bg-[#3874c8] hover:bg-[#2b5a9e] text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors">
+                            <Send className="w-4 h-4" />
+                            <span>Subscribe</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="w-full h-px bg-gray-800/80 my-8"></div>
+
+                {/* Social & Legal Row */}
+                <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6">
+                    <div className="flex items-center gap-4">
+                        {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+                            <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#252a37] flex items-center justify-center text-gray-400 hover:bg-[#3874c8] hover:text-white transition-all group">
+                                <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            </a>
+                        ))}
+                    </div>
+
+                    <div className="text-right">
+                        <p className="text-xs text-gray-500 mb-1">
+                            © 2026 Xynema. All rights reserved.
+                        </p>
+                        <p className="text-[11px] text-gray-600 font-medium">
+                            Made with ♥ in India
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Absolute Bottom Strip */}
+            <div className="bg-[#151924] py-4 px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-gray-800/40">
+                <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 font-medium mr-2">We accept:</span>
+                    {['Visa', 'Mastercard', 'UPI', 'Paytm'].map(method => (
+                        <div key={method} className="bg-[#2a303e] text-gray-400 text-[10px] font-semibold px-3 py-1.5 rounded-md uppercase tracking-wide">
+                            {method}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <span className="text-xs text-gray-500 font-medium tracking-wide mr-1 border-r border-gray-800 pr-5">Download App</span>
+                    <a href="#" className="transition-transform hover:scale-105 active:scale-95 duration-200">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+                            alt="Download on the App Store"
+                            className="h-10 w-auto"
+                        />
+                    </a>
+                    <a href="#" className="transition-transform hover:scale-105 active:scale-95 duration-200">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                            alt="Get it on Google Play"
+                            className="h-10 w-auto"
+                        />
+                    </a>
                 </div>
             </div>
 
-            {/* Bottom Strip */}
-            <div className="bg-[#1F212E] py-8 text-center">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <p className="text-xs mb-4 text-gray-500">
-                        Copyright {new Date().getFullYear()} © Xynema Entertainment Pvt. Ltd. All Rights Reserved.
-                    </p>
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                        The content and images used on this site are copyright protected and copyrights vests with the respective owners. Unauthorized use is prohibited.
-                    </p>
-                </div>
-            </div>
         </footer>
     );
 };

@@ -28,71 +28,79 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
     return (
         <>
-            <nav className="bg-white text-gray-800 sticky top-0 z-[60] border-b border-gray-200 shadow-sm transition-all duration-300">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-14 md:h-16">
+            <nav className="bg-white/70 backdrop-blur-xl text-gray-800 sticky top-0 z-[60] border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+                <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
+                    <div className="flex justify-between items-center h-16 md:h-20">
 
-                        {/* Logo & Search */}
-                        <div className="flex items-center gap-3 md:gap-6 flex-1">
-                            <Link to="/" className="flex-shrink-0 flex items-center gap-2 group">
-                                <div className="w-8 h-8 bg-xynemaRose rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                                    <Play className="w-4 h-4 fill-white text-white translate-x-0.5" />
+                        {/* Left: Logo & City */}
+                        <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
+                            <Link to="/" className="flex items-center gap-2 group">
+                                <div className="w-8 h-8 md:w-10 md:h-10 bg-[#2563EB] rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                    <Play className="w-4 h-4 md:w-5 md:h-5 fill-white text-white translate-x-0.5" />
                                 </div>
-                                <span className="text-xl font-display font-black tracking-tighter text-xynemaRose uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
+                                <span className="text-xl md:text-2xl font-display font-black tracking-tighter text-gray-900 uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
                             </Link>
 
-                            <div className="flex-1 max-w-xl hidden md:block">
-                                <UniversalSearch variant="navbar" className="w-full" />
-                            </div>
+                            <button
+                                onClick={openCityModal}
+                                className="flex items-center gap-1 md:gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 hover:bg-white/80 rounded-xl transition-colors group text-xs md:text-sm font-semibold text-gray-700 shadow-sm ml-2 md:ml-6 border border-white/60"
+                            >
+                                <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                <span className="text-gray-800 group-hover:text-[#2563EB] truncate max-w-[80px] md:max-w-none">{selectedCity || 'Select City'}</span>
+                                <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400 group-hover:text-[#2563EB] mb-[1px] md:mb-0.5" />
+                            </button>
                         </div>
 
-                        {/* Right Side Actions */}
-                        <div className="flex items-center gap-2 md:gap-4 text-gray-600">
+                        {/* Center: Nav Links */}
+                        <div className="hidden lg:flex items-center justify-center gap-8 text-[15px] font-bold text-gray-800 absolute left-1/2 -translate-x-1/2">
+                            <Link to="/movies" className="hover:text-[#2563EB] transition-colors">Movies</Link>
+                            <Link to="/events" className="hover:text-[#2563EB] transition-colors">Events</Link>
+                            <Link to="/stream" className="hover:text-[#2563EB] transition-colors">Stream</Link>
+                            <Link to="/offers" className="hover:text-[#2563EB] transition-colors">Offers</Link>
+                        </div>
+
+                        {/* Right: Search & Actions */}
+                        <div className="flex items-center justify-end gap-3 md:gap-4 flex-1">
                             {/* Mobile Search Toggle */}
                             <button
                                 onClick={() => setIsMobileSearchOpen(true)}
                                 className="md:hidden p-2 hover:bg-gray-50 rounded-lg transition-all"
                             >
-                                <Search className="h-5 w-5 md:h-5 md:w-5" />
+                                <Search className="h-5 w-5 text-gray-600" />
                             </button>
 
-                            {location.pathname === '/' && (
-                                <button
-                                    onClick={openCityModal}
-                                    className="flex items-center gap-1 hover:text-xynemaRose transition-colors group text-xs font-medium"
-                                >
-                                    <span className="text-gray-800 group-hover:text-xynemaRose">{selectedCity || 'Select City'}</span>
-                                    <ChevronDown className="h-3.5 w-3.5 text-gray-500 group-hover:text-xynemaRose mb-0.5" />
-                                </button>
-                            )}
-
+                            {/* Desktop Search */}
+                            <div className="hidden md:block w-56 lg:w-72">
+                                <UniversalSearch variant="navbar" className="w-full" />
+                            </div>
 
                             {user ? (
                                 <button
                                     onClick={() => setIsSidebarOpen(true)}
-                                    className="flex items-center gap-2 pl-1 pr-3 py-1 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-100"
+                                    className="flex items-center gap-2 pl-1.5 pr-4 py-1.5 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200"
                                 >
                                     <img
                                         src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
-                                        className="w-7 h-7 rounded-full border border-gray-200 object-cover"
+                                        className="w-8 h-8 rounded-full border border-gray-200 object-cover shadow-sm"
                                         alt=""
                                     />
-                                    <span className="text-xs font-semibold text-gray-700 hidden lg:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
+                                    <span className="text-sm font-semibold text-gray-700 hidden lg:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
                                 </button>
                             ) : (
                                 <button
                                     onClick={openLogin}
-                                    className="bg-xynemaRose text-white px-4 py-1.5 rounded-md text-xs font-bold transition-all hover:bg-charcoalSlate active:scale-95 shadow-sm"
+                                    className="bg-[#2563EB] text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all hover:bg-blue-700 active:scale-95 shadow-sm hidden md:block"
                                 >
-                                    Sign in
+                                    Sign Up
                                 </button>
                             )}
 
+                            {/* Mobile Menu Toggle */}
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="p-2 hover:bg-gray-50 rounded-lg transition-all"
+                                className="lg:hidden p-2 hover:bg-gray-50 rounded-lg transition-all"
                             >
-                                <Menu className="h-5 w-5" />
+                                <Menu className="h-5 w-5 text-gray-600" />
                             </button>
                         </div>
                     </div>
@@ -117,24 +125,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         </div>
                     </div>
                 )}
-                <div className="bg-white border-t border-gray-100 hidden md:block">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-9">
-                            <div className="flex gap-6 text-[10px] font-bold uppercase tracking-wider text-gray-600">
-                                <Link to="/movies" className="hover:text-xynemaRose transition-colors">Movies</Link>
-                                <Link to="/events" className="hover:text-xynemaRose transition-colors">Events</Link>
-                                <Link to="/private-events" className="hover:text-xynemaRose transition-colors">Private Events</Link>
-                                <Link to="/store" className="hover:text-xynemaRose transition-colors">Store</Link>
-                                <Link to="/explore?category=Plays" className="hover:text-xynemaRose transition-colors">Plays</Link>
-                                <Link to="/explore?category=Sports" className="hover:text-xynemaRose transition-colors">Sports</Link>
-                                <Link to="/explore?category=Activities" className="hover:text-xynemaRose transition-colors">Activities</Link>
-                            </div>
-                            <div className="flex gap-6 text-[10px] font-medium text-gray-500">
-                                {/* Placeholder links removed or hidden until implementation */}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </nav >
 
             {/* Side Drawer Overlay - Moved OUTSIDE <nav> to avoid filter/transform issues */}
@@ -191,14 +182,22 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {/* List */}
                         <div className="flex-1 overflow-y-auto py-4 space-y-1">
                             {/* Mobile Only Browsing Links */}
-                            <div className="md:hidden pb-2 mb-2 border-b border-gray-50">
-                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50">
-                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400" /></div>
+                            <div className="lg:hidden pb-2 mb-2 border-b border-gray-50">
+                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
+                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
                                     <span className="text-sm font-medium text-gray-800">Movies</span>
                                 </Link>
-                                <Link to="/explore" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50">
-                                    <div className="w-5 flex justify-center"><Calendar className="w-4 h-4 text-gray-400" /></div>
+                                <Link to="/events" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
+                                    <div className="w-5 flex justify-center"><Calendar className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
                                     <span className="text-sm font-medium text-gray-800">Events</span>
+                                </Link>
+                                <Link to="/stream" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
+                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" fill="currentColor" /></div>
+                                    <span className="text-sm font-medium text-gray-800">Stream</span>
+                                </Link>
+                                <Link to="/offers" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
+                                    <div className="w-5 flex justify-center"><Gift className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
+                                    <span className="text-sm font-medium text-gray-800">Offers</span>
                                 </Link>
                             </div>
 

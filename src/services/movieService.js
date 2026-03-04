@@ -115,9 +115,23 @@ export const getShows = async (movieId, theaterId) => {
     return { success: true, data: [] };
 };
 
+export const getHighlightsMovies = async () => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.MOVIES.HIGHLIGHTS);
+        if (response.data.success) {
+            const resultData = response.data.data;
+            if (Array.isArray(resultData)) {
+                return resultData.map(m => new Movie(m));
+            }
+        }
+        return [];
+    });
+};
+
 export const movieService = {
     getCities,
     getNotNowMovies,
+    getHighlightsMovies,
     addMovieReview,
     toggleInterest,
     getUpcomingMovies,

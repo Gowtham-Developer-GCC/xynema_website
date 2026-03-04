@@ -3,6 +3,7 @@ export const ENDPOINTS = {
     MOVIES: {
         CITIES: '/movies/cities',
         LATEST: '/movies/latest-movies',
+        HIGHLIGHTS: '/movies/highlights',
         UPCOMING: '/movies/upcomingmovies',
         ADD_REVIEW: (bookingId) => `/movies/add-review/${bookingId}`,
         INTEREST: (movieId) => `/movies/interest/${movieId}`,

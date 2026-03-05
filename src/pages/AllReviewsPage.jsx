@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ArrowLeft, User, MessageSquare, ThumbsUp, ThumbsDown, Share2, ChevronRight } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 
 const AllReviewsPage = () => {
@@ -30,7 +30,7 @@ const AllReviewsPage = () => {
         }
     }, [id, movies, latestMovies, contextLoading]);
 
-    if (loading) return <LoadingSpinner message="Fetching reviews..." />;
+    if (loading) return <LoadingScreen message="Fetching reviews..." />;
     if (error) return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <p className="text-red-500 font-bold mb-4">{error}</p>

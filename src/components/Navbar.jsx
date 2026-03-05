@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart } from 'lucide-react';
+import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { useTheme } from '../context/ThemeContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UniversalSearch from './UniversalSearch';
 const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const { user, logoutUser, openLogin } = useAuth();
+    const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -28,7 +30,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
     return (
         <>
-            <nav className="bg-white/70 backdrop-blur-xl text-gray-800 sticky top-0 z-[60] border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+            <nav className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
                 <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
                     <div className="flex justify-between items-center h-16 md:h-20">
 
@@ -38,7 +40,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <div className="w-8 h-8 md:w-10 md:h-10 bg-[#2563EB] rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                                     <Play className="w-4 h-4 md:w-5 md:h-5 fill-white text-white translate-x-0.5" />
                                 </div>
-                                <span className="text-xl md:text-2xl font-display font-black tracking-tighter text-gray-900 uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
+                                <span className="text-xl md:text-2xl font-display font-black tracking-tighter text-gray-900 dark:text-white uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
                             </Link>
 
                             <button
@@ -46,7 +48,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 className="flex items-center gap-1 md:gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 hover:bg-white/80 rounded-xl transition-colors group text-xs md:text-sm font-semibold text-gray-700 shadow-sm ml-2 md:ml-6 border border-white/60"
                             >
                                 <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="text-gray-800 group-hover:text-[#2563EB] truncate max-w-[80px] md:max-w-none">{selectedCity || 'Select City'}</span>
+                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-[#2563EB] truncate max-w-[80px] md:max-w-none">{selectedCity || 'Select City'}</span>
                                 <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400 group-hover:text-[#2563EB] mb-[1px] md:mb-0.5" />
                             </button>
                         </div>
@@ -74,6 +76,15 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <UniversalSearch variant="navbar" className="w-full" />
                             </div>
 
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden md:flex items-center justify-center text-gray-600 dark:text-gray-300"
+                                aria-label="Toggle dark mode"
+                            >
+                                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
+
                             {user ? (
                                 <button
                                     onClick={() => setIsSidebarOpen(true)}
@@ -95,13 +106,21 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 </button>
                             )}
 
-                            {/* Mobile Menu Toggle */}
-                            <button
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-2 hover:bg-gray-50 rounded-lg transition-all"
-                            >
-                                <Menu className="h-5 w-5 text-gray-600" />
-                            </button>
+                            {/* Mobile Menu & Theme Toggle */}
+                            <div className="flex items-center gap-1 lg:hidden">
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
+                                >
+                                    {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                                </button>
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
+                                >
+                                    <Menu className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -109,7 +128,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                 {/* Mobile Search Overlay */}
                 {isMobileSearchOpen && (
-                    <div className="absolute inset-x-0 top-0 h-16 bg-white z-[65] border-b border-gray-100 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute inset-x-0 top-0 h-16 bg-white dark:bg-gray-900 z-[65] border-b border-gray-100 dark:border-gray-800 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2">
                         <div className="flex-1 flex items-center gap-3">
                             <UniversalSearch
                                 variant="navbar"
@@ -135,7 +154,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                     onClick={() => setIsSidebarOpen(false)}
                 >
                     <div
-                        className="absolute right-0 top-0 h-full w-full max-w-[380px] bg-white shadow-2xl flex flex-col animate-slide-in"
+                        className="absolute right-0 top-0 h-full w-full max-w-[380px] bg-white dark:bg-gray-900 shadow-2xl flex flex-col animate-slide-in"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="p-8 pb-10 bg-gradient-to-br from-xynemaRose via-charcoalSlate to-charcoalSlate text-white relative overflow-hidden shrink-0">

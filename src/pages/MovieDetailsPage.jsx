@@ -4,7 +4,7 @@ import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, Al
 import { useAuth } from '../context/AuthContext';
 import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies } from '../services/movieService';
 import SEO from '../components/SEO';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import NotFoundState from '../components/NotFoundState';
 import ErrorState from '../components/ErrorState';
 import { designSystem } from '../config/design-system';
@@ -167,8 +167,8 @@ const MovieDetailsPage = () => {
         toggleInterestOptimistic(movie.id);
     };
 
-    if (!idOrSlug || (loading && !movie)) return <LoadingSpinner message="Fetching Movie" />;
-    if (loading) return <LoadingSpinner message="Fetching Movie" />;
+    if (!idOrSlug || (loading && !movie)) return <LoadingScreen message="Fetching Movie" />;
+    if (loading) return <LoadingScreen message="Fetching Movie" />;
     if (error) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for." />;
     if (!movie) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for." />;
 
@@ -765,7 +765,7 @@ const SimilarMovies = ({ currentMovie }) => {
     );
 };
 
-// Loading states consolidated into global LoadingSpinner
+// Loading states consolidated into global LoadingScreen
 
 // DetailErrorState removed - replaced with shared ErrorState
 

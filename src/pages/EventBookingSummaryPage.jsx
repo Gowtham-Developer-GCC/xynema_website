@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, Plus, X, CreditCard, CheckCircle } from 'lucide-react';
 import { confirmEventBooking } from '../services/eventService';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 
 const EventBookingSummaryPage = () => {
     const navigate = useNavigate();

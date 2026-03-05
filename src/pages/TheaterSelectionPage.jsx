@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Star, Clock, Loader, ChevronRight, ChevronDown, Filt
 import SEO from '../components/SEO';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 import { designSystem } from '../config/design-system';
@@ -234,7 +234,7 @@ const TheaterSelectionPage = () => {
         setFilterSettings(prev => ({ ...prev, [key]: value }));
     };
 
-    if (loading) return <LoadingSpinner message="Loading Nearby Screens" />;
+    if (loading) return <LoadingScreen message="Loading Nearby Screens" />;
     if (error) return <ErrorState error={error} onRetry={fetchData} title="Transmission Interrupted" buttonText="Recalibrate Connection" />;
     if (!movie) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for or it may not be available in this region." />;
 
@@ -245,149 +245,123 @@ const TheaterSelectionPage = () => {
                 description="Choose your preferred cinema theater and select your seats"
             />
 
-            {/* Simplified Movie Details Header */}
-            <div className="bg-white border-b border-gray-100">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-                    <div className="flex items-center gap-4">
+            {/* Redesigned Header to match Figma */}
+            <div className="bg-[#f8fafc] dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-[60]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center gap-6">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 shrink-0"
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 shrink-0"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight leading-tight truncate">
-                                {movie?.title}
+                            <h1 className="text-lg md:text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                                Select Showtime
                             </h1>
+                            <p className="text-[10px] md:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mt-1">
+                                {movie?.title}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
+                {/* Movie Info Banner Card */}
+                <div className="bg-white dark:bg-gray-800 rounded-[32px] border border-gray-100 dark:border-gray-700 p-6 md:p-8 mb-8 shadow-sm">
+                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                        {/* Poster */}
+                        <div className="w-40 md:w-48 shrink-0 relative group">
+                            <img
+                                src={movie?.posterUrl || movie?.image}
+                                alt={movie?.title}
+                                className="w-full aspect-[2/3] object-cover rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-500"
+                            />
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 pt-2">
+                            <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-4">
+                                {movie?.title}
+                            </h2>
+
+                            <div className="flex flex-wrap items-center gap-3 mb-6">
                                 {movie?.certification && (
-                                    <span className="px-1 py-0.5 rounded border border-gray-100 text-[8px] md:text-[9px] font-black text-gray-400 uppercase">
+                                    <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
                                         {movie.certification}
                                     </span>
                                 )}
+                                {movie?.duration > 0 && (
+                                    <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
+                                        {Math.floor(movie.duration / 60)}:{String(movie.duration % 60).padStart(2, '0')}:00
+                                    </span>
+                                )}
+                                <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
+                                    3D
+                                </span>
+                            </div>
 
-                                <div className="flex flex-wrap items-center gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    {movie?.genre && <span className="truncate max-w-[100px] md:max-w-none">{movie.genre}</span>}
-                                    {movie?.language && (
-                                        <div className="flex items-center gap-1.5 md:gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-gray-200" />
-                                            <span>{movie.language}</span>
-                                        </div>
-                                    )}
-                                    {movie?.duration > 0 && (
-                                        <div className="flex items-center gap-1.5 md:gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-gray-200" />
-                                            <span>{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-1.5 md:gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-gray-200 shrink-0" />
-                                        <span className="text-[#00296b] font-black truncate max-w-[80px] md:max-w-none">{selectedCity}</span>
-                                    </div>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Screen:</span>
+                                    <span className="text-sm md:text-base font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                                        {theaters[0]?.name || "Nearby Cinema"}
+                                    </span>
                                 </div>
+                                <p className="text-xs md:text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-relaxed max-w-lg">
+                                    Select a showtime below to proceed to seat selection.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Consolidated Controls Bar */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row md:items-center py-2 md:py-3 gap-3 md:gap-8">
-                        {/* Date Selection - Compact */}
-                        <div className="flex-1 overflow-x-auto no-scrollbar px-4 sm:px-0">
-                            <DateSelector
-                                selectedDate={selectedDate}
-                                onDateSelect={setSelectedDate}
-                                releaseDate={movie?.releaseDate}
-                            />
-                        </div>
+                <div className="h-px w-full bg-gray-100 dark:bg-gray-800 mb-12" />
 
-                        {/* Divider for Desktop */}
-                        <div className="hidden md:block w-px h-8 bg-gray-100" />
-
-                        {/* Filter & Sort Controls */}
-                        <div className="flex items-center gap-2 overflow-x-auto md:overflow-visible no-scrollbar pb-2 md:pb-0 px-4 sm:px-0 scroll-px-4 snap-x">
-                            {/* Sort Dropdown */}
-                            <FilterDropdown
-                                label="Sort"
-                                icon={Layers}
-                                options={[
-                                    { id: 'distance', label: 'Nearest', icon: MapPin },
-                                    { id: 'price', label: 'Price', icon: CreditCard },
-                                    { id: 'rating', label: 'Rating', icon: Star }
-                                ]}
-                                activeValue={sortBy}
-                                onSelect={setSortBy}
-                            />
-
-                            {/* Format Dropdown */}
-                            <FilterDropdown
-                                label="Format"
-                                icon={Layers}
-                                options={dynamicFilterOptions.formats}
-                                activeValue={filterSettings.format}
-                                onSelect={(val) => updateFilter('format', val)}
-                            />
-
-                            {/* Price Dropdown */}
-                            <FilterDropdown
-                                label="Price"
-                                icon={CreditCard}
-                                options={dynamicFilterOptions.priceRanges}
-                                activeValue={filterSettings.priceRange}
-                                onSelect={(val) => updateFilter('priceRange', val)}
-                            />
-
-                            {/* Timing Dropdown */}
-                            <FilterDropdown
-                                label="Timing"
-                                icon={Clock}
-                                options={dynamicFilterOptions.timeSlots}
-                                activeValue={filterSettings.timeSlot}
-                                onSelect={(val) => updateFilter('timeSlot', val)}
-                            />
-                        </div>
+                {/* Showtimes Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                            Showtimes for <span className="text-indigo-600 dark:text-indigo-400">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) === new Date().toLocaleDateString('en-US', { weekday: 'long' }) ? "Today" : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                        </h2>
                     </div>
-                </div>
-            </div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-32">
-                {/* Cinema Header Only */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-[#00296b] rounded-full" />
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Cinemas</h2>
-                        <span className="text-xs font-bold text-gray-400 border border-gray-100 px-2 py-0.5 rounded-full">
-                            {sortedTheaters.length} Available
-                        </span>
+                    <div className="flex-shrink-0">
+                        <DateSelector
+                            selectedDate={selectedDate}
+                            onDateSelect={setSelectedDate}
+                            releaseDate={movie?.releaseDate}
+                        />
                     </div>
                 </div>
 
-                {/* Theater List */}
+                {/* Cinema List - Grid Layout to match Figma */}
                 {sortedTheaters.length > 0 ? (
-                    <div className="grid gap-6">
+                    <div className="grid gap-12">
                         {sortedTheaters.map((theater) => (
-                            <TheaterCard
-                                key={theater.id}
-                                theater={theater}
-                                movieId={movie._id}
-                                selectedDate={selectedDate}
-                                selectedCity={selectedCity}
-                                onSelect={(showId) => handleTheaterSelect(showId, theater)}
-                            />
+                            <div key={theater.id || theater._id} className="space-y-6">
+                                {/* Only show theater name if it's not the first one or if multiple theaters are shown */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {(theater.filteredShows || []).map((show) => (
+                                        <ShowtimeCard
+                                            key={show.id || show._id}
+                                            show={show}
+                                            theater={theater}
+                                            onSelect={() => handleTheaterSelect(show.id || show._id, theater)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="py-24 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="py-24 text-center bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <MapPin className="w-8 h-8 text-gray-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">No Shows Available</h3>
-                        <p className="text-gray-500 text-sm max-w-xs mx-auto">Try changing the date or format to see available screenings in {selectedCity}.</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Shows Available</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">Try changing the date or format to see available screenings in {selectedCity}.</p>
                     </div>
                 )}
             </div>
@@ -450,14 +424,14 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
     let minDate = releaseDate ? new Date(releaseDate) : new Date();
     if (minDate < new Date().setHours(0, 0, 0, 0)) minDate = new Date();
 
-    const dates = Array.from({ length: 2 }, (_, i) => {
+    const dates = Array.from({ length: 7 }, (_, i) => {
         const date = new Date(minDate);
         date.setDate(minDate.getDate() + i);
         return date;
     });
 
     return (
-        <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar snap-x scroll-px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x">
             {dates.map((date) => {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -465,29 +439,29 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
                 const dateStr = `${year}-${month}-${day}`;
                 const isSelected = dateStr === selectedDate;
 
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
                 const dayNum = date.getDate();
-                const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
 
                 return (
                     <button
                         key={dateStr}
                         onClick={() => onDateSelect(dateStr)}
                         className={`
-                            flex-shrink-0 w-16 py-3 rounded-xl flex flex-col items-center justify-center snap-center active:scale-95 transition-transform
+                            flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
                             ${isSelected
-                                ? 'bg-[#00296b] text-white shadow-md shadow-blue-900/20'
-                                : 'bg-white text-gray-400 border border-gray-100 shadow-sm'
-                            }
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 border-indigo-600'
+                                : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700 hover:border-gray-300'
+                            } border-2
                         `}
                     >
-                        <span className={`text-[8px] font-black uppercase tracking-widest leading-none ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
+                        <span className={`text-[9px] font-black tracking-widest mb-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
                             {dayName}
                         </span>
-                        <span className="text-lg font-black tracking-tight my-0.5 leading-none">
+                        <span className="text-xl font-black tracking-tighter leading-none mb-1">
                             {dayNum}
                         </span>
-                        <span className={`text-[8px] font-black uppercase tracking-[0.1em] leading-none ${isSelected ? 'text-white/70' : 'text-gray-300'}`}>
+                        <span className={`text-[9px] font-black tracking-widest ${isSelected ? 'text-white/80' : 'text-gray-300'}`}>
                             {monthName}
                         </span>
                     </button>
@@ -497,172 +471,60 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
     );
 };
 
-const TheaterCard = ({ theater, movieId, selectedDate, onSelect, selectedCity }) => {
-    const navigate = useNavigate();
-    const allShows = theater.filteredShows || [];
+const ShowtimeCard = ({ show, theater, onSelect }) => {
+    const isFull = show.availableSeats <= 0;
+    const totalSeats = show.totalSeats || (show.availableSeats + (show.bookedSeats || 0));
+    const occupancyRatio = totalSeats > 0 ? (totalSeats - show.availableSeats) / totalSeats : 0;
 
     return (
-        <div className={`bg-white rounded-2xl border border-gray-100 p-4 shadow-sm relative`}>
-            <div className="flex flex-col lg:flex-row gap-2 md:gap-5 lg:gap-8 overflow-visible">
-                {/* Left Side: Theater Info */}
-                <div className="lg:w-64 xl:w-72 flex flex-col justify-between shrink-0">
-                    <div className="space-y-2">
-                        <div className="space-y-1">
-                            <div className="flex items-start justify-between gap-3">
-                                <button
-                                    onClick={() => navigate(`/theater/${theater.id || theater._id}?city=${selectedCity}`, { state: { theater } })}
-                                    className="flex items-center gap-2 text-left group w-full"
-                                >
-                                    <h3 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight leading-tight group-hover:text-xynemaRose transition-colors truncate">
-                                        {theater.name}
-                                    </h3>
-                                    <Info className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors shrink-0" />
-                                </button>
-                                {theater.rating > 0 && (
-                                    <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-green-700 border border-green-100 uppercase tracking-tight shrink-0">
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <span>{theater.rating}</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs md:text-sm text-gray-500 font-medium uppercase tracking-wider mt-1.5">
-                                {theater.distance && (
-                                    <span className="flex items-center gap-1.5">
-                                        <MapPin className="w-3.5 h-3.5 text-xynemaRose" />
-                                        {theater.distance} KM
-                                    </span>
-                                )}
-                                <span className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                                    {theater.city}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Desktop Divider (Visible only on LG up) */}
-                    <div className="hidden lg:block h-px bg-gray-50 mt-4" />
+        <button
+            onClick={isFull ? null : onSelect}
+            className={`
+                group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-xl transition-all duration-500 text-left relative overflow-hidden
+                ${isFull ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1'}
+            `}
+        >
+            <div className="flex justify-between items-start mb-4">
+                <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                    {show.startTime}
+                </span>
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        ₹{show.basePrice || 100}
+                    </span>
                 </div>
+            </div>
 
-                {/* Right Side: Showtimes */}
-                <div className="flex-1 min-w-0">
-                    {allShows.length > 0 ? (
-                        <div className="flex flex-nowrap items-center gap-3 py-2 md:pt-40 md:pb-40 md:-my-40 overflow-x-auto no-scrollbar scroll-smooth snap-x touch-pan-x">
-                            {allShows.map((show, index) => (
-                                <div key={show.id || show._id} className="min-w-[100px] md:min-w-[120px] shrink-0 snap-start">
-                                    <TimeChip
-                                        show={show}
-                                        onSelect={() => onSelect(show.id || show._id)}
-                                        position={index < 2 ? 'left' : index >= allShows.length - 2 ? 'right' : 'center'}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="h-full flex items-center justify-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-100">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] text-center">
-                                No screenings scheduled at this cinema
-                            </p>
-                        </div>
+            <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-6">
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="text-xs font-bold uppercase tracking-widest truncate">
+                    {theater.name}
+                </span>
+            </div>
+
+            {/* Availability Bar - Match Figma */}
+            <div className="space-y-2">
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                        style={{ width: `${(1 - occupancyRatio) * 100}%` }}
+                    />
+                </div>
+                <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                        {show.availableSeats} SEATS LEFT
+                    </span>
+                    {show.format && (
+                        <span className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">
+                            {show.format}
+                        </span>
                     )}
                 </div>
             </div>
-        </div>
-    );
-};
 
-const TimeChip = ({ show, onSelect, position = 'center' }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const isFull = show.availableSeats <= 0;
-
-    // Calculate availability ratio
-    const totalSeats = show.totalSeats || (show.availableSeats + (show.bookedSeats || 0));
-    const availabilityRatio = totalSeats > 0 ? show.availableSeats / totalSeats : 1;
-
-    // Status Logic
-    let statusColor = 'text-green-500';
-    let bgColor = 'bg-green-50/30';
-    let borderColor = 'border-green-100';
-    let availabilityLabel = `${show.availableSeats} Seats`;
-
-    if (show.availableSeats === 0) {
-        statusColor = 'text-gray-400';
-        bgColor = 'bg-gray-50';
-        borderColor = 'border-gray-100';
-        availabilityLabel = 'Sold Out';
-    } else if (availabilityRatio < 0.2) {
-        statusColor = 'text-orange-500';
-        bgColor = 'bg-orange-50/30';
-        borderColor = 'border-orange-100';
-        availabilityLabel = 'Filling Fast';
-    }
-
-    return (
-        <div
-            className={`relative ${isHovered ? 'z-50' : 'z-10'}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <button
-                onClick={isFull ? null : onSelect}
-                className={`
-                    flex flex-col items-center justify-center py-2 px-1 rounded-xl border w-full
-                    ${isFull ? 'cursor-not-allowed opacity-40' : 'hover:shadow-md'}
-                    ${bgColor} ${borderColor}
-                `}
-            >
-                <span className={`text-[13px] font-black tracking-tight ${isFull ? 'text-gray-400' : 'text-gray-900'}`}>
-                    {show.startTime}
-                </span>
-                <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`text-xs font-bold uppercase tracking-tight ${statusColor}`}>
-                        {availabilityLabel}
-                    </span>
-                    {show.screenType && (
-                        <>
-                            <div className="w-1 h-1 rounded-full bg-gray-300" />
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                                {show.screenType}
-                            </span>
-                        </>
-                    )}
-                </div>
-            </button>
-
-            {/* Horizontal Hover Tooltip - Smart Positioning */}
-            {isHovered && show.pricing && show.pricing.length > 0 && !isFull && (
-                <div className={`
-                    absolute bottom-full mb-4 z-[100] animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none
-                    ${position === 'left' ? 'left-0 origin-bottom-left' :
-                        position === 'right' ? 'right-0 origin-bottom-right' :
-                            'left-1/2 -translate-x-1/2 origin-bottom'}
-                `}>
-                    <div className="bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-4 whitespace-nowrap min-w-max">
-                        <div className="flex items-center gap-5 px-0.5">
-                            {show.pricing.map((price, idx) => (
-                                <div key={idx} className="flex items-center gap-3">
-                                    {idx > 0 && <div className="w-px h-5 bg-gray-100" />}
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">{price.label}</span>
-                                        <div className="text-sm font-bold text-gray-900 tracking-tight leading-none flex items-center gap-0.5">
-                                            <span className="text-[10px] text-gray-400">₹</span>
-                                            {price.basePrice || price.price}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {/* Arrow - Smart Positioning */}
-                        <div className={`
-                            absolute top-full w-3 h-3 bg-white border-r border-b border-gray-100 rotate-45 -mt-1.5 shadow-[2px_2px_5px_rgba(0,0,0,0.02)]
-                            ${position === 'left' ? 'left-8' :
-                                position === 'right' ? 'right-8' :
-                                    'left-1/2 -translate-x-1/2'}
-                        `} />
-                    </div>
-                </div>
-            )}
-        </div>
+            {/* Subtle glow effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        </button>
     );
 };
 

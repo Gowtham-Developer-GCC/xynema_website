@@ -5,8 +5,16 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        @apply bg-[#f8fafc] text-slate-900 transition-colors duration-300;
+    }
+
+    .dark html {
+        @apply bg-[#0f1115] text-gray-100;
+    }
+
     body {
-        @apply font-sans bg-white text-black;
+        @apply font-sans min-h-screen;
     }
 
     h1,
@@ -127,13 +135,25 @@
         background: #f1f1f1;
     }
 
+    .dark ::-webkit-scrollbar-track {
+        background: #0f1115;
+    }
+
     ::-webkit-scrollbar-thumb {
         background: #ccc;
         border-radius: 4px;
     }
 
+    .dark ::-webkit-scrollbar-thumb {
+        background: #2d3139;
+    }
+
     ::-webkit-scrollbar-thumb:hover {
-        background: #00296b;
+        background: #3874c8;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #427cae;
     }
 
     .scrollbar-hide::-webkit-scrollbar {

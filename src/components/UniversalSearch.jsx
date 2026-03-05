@@ -3,7 +3,7 @@ import { Search, MapPin, Ticket, Calendar, X, ChevronRight, Play } from 'lucide-
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
-const UniversalSearch = ({ className = "", variant = "hero" }) => {
+const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
     const isNavbar = variant === "navbar";
     const [query, setQuery] = useState("");
     const [showResults, setShowResults] = useState(false);
@@ -64,9 +64,11 @@ const UniversalSearch = ({ className = "", variant = "hero" }) => {
         setShowResults(false);
         if (onSelect) onSelect();
 
-        if (type === 'movie') navigate(`/movie/${item.slug || item.id}`);
-        else if (type === 'theater') navigate(`/theater/${item.id}`);
-        else if (type === 'event') navigate(`/event/${item.id}`);
+        const identifier = item.slug || item.id || item._id;
+
+        if (type === 'movie') navigate(`/movie/${identifier}`);
+        else if (type === 'theater') navigate(`/theater/${identifier}`);
+        else if (type === 'event') navigate(`/event/${identifier}`);
     };
 
     const hasResults = results.movies.length > 0 || results.theaters.length > 0 || results.events.length > 0;

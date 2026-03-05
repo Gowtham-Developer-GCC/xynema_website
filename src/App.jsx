@@ -6,12 +6,16 @@ import { DataProvider } from './context/DataContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import SEO from './components/SEO';
 import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/LoadingSpinner';
+import LoadingScreen from './components/LoadingScreen';
+import OfflineScreen from './components/OfflineScreen';
 import ScrollToTop from './components/ScrollToTop';
 import bookingSessionManager from './utils/bookingSessionManager';
 
+
+
 // Lazy load enhanced pages
 const HomePage = lazy(() => import('./pages/HomePage'));
+// ... (rest of imports are same, we just inject our import near the top)
 const MoviesPage = lazy(() => import('./pages/MoviesPage'));
 const MovieDetailsPage = lazy(() => import('./pages/MovieDetailsPage'));
 const TheaterSelectionPage = lazy(() => import('./pages/TheaterSelectionPage'));
@@ -38,7 +42,7 @@ const Footer = lazy(() => import('./components/Footer'));
 const LoginModal = lazy(() => import('./components/LoginModal'));
 const CitySelectionModal = lazy(() => import('./components/CitySelectionModal'));
 const NotFoundState = lazy(() => import('./components/NotFoundState'));
-const PageLoader = () => <LoadingSpinner message="Loading your Cinema" />;
+const PageLoader = () => <LoadingScreen message="Loading your Cinema" />;
 
 function BookingFlowGuard() {
     const location = useLocation();
@@ -59,10 +63,25 @@ function BookingFlowGuard() {
 }
 
 export default function App() {
+
     const [selectedCity, setSelectedCity] = useState(() => {
         return localStorage.getItem('selected_city') || "";
     });
     const [isCityModalManualOpen, setIsCityModalManualOpen] = useState(false);
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOffline(false);
+        const handleOffline = () => setIsOffline(true);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     const handleCityChange = (city) => {
         setSelectedCity(city);
@@ -75,8 +94,9 @@ export default function App() {
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <ScrollToTop />
                 <BookingFlowGuard />
+                {isOffline && <OfflineScreen />}
                 <DataProvider selectedCity={selectedCity}>
-                    <div className="min-h-screen bg-white font-sans text-slate-900 flex flex-col">
+                    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
                         <SEO />
                         <Navbar
                             selectedCity={selectedCity}
@@ -106,12 +126,12 @@ export default function App() {
                                         <Route path="/movie/:slug" element={<MovieDetailsPage />} />
                                         <Route path="/movie/:slug/reviews" element={<AllReviewsPage />} />
                                         <Route path="/movie/:slug/theaters" element={<TheaterSelectionPage selectedCity={selectedCity} />} />
-                                        
+
                                         <Route path="/movie/:slug/:theaterSlug/seats" element={<ProtectedRoute><SeatSelectionPage /></ProtectedRoute>} />
                                         <Route path="/movie/:slug/:theaterSlug/food" element={<ProtectedRoute><FoodSelectionPage /></ProtectedRoute>} />
                                         <Route path="/movie/:slug/:theaterSlug/summary" element={<ProtectedRoute><BookingSummaryPage /></ProtectedRoute>} />
                                         <Route path="/movie/:slug/:theaterSlug/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
-                    
+
                                         {/* Protected Account Routes */}
                                         <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
                                         <Route path="/events-bookings" element={<ProtectedRoute><MyEventBookingsPage /></ProtectedRoute>} />

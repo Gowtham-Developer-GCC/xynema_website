@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate, useLocation, useParams } from 'react-rout
 import { ArrowLeft, Loader, Info, Armchair, Accessibility, Ticket, ChevronRight, Clapperboard, Film, MapPin, Clock, AlertCircle, X, Pencil, Bike, Car, Truck, Bus } from 'lucide-react';
 import SEO from '../components/SEO';
 import { getSeats, lockSeats, releaseSeats } from '../services/bookingService';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 import bookingSessionManager from '../utils/bookingSessionManager';
@@ -207,7 +207,7 @@ const SeatSelectionPage = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner message="Scanning Layout" />;
+    if (loading) return <LoadingScreen message="Scanning Layout" />;
     if (error) return <ErrorState error={error} title="Issue Detected" buttonText="TRY AGAIN" />;
     if (!show || !showId) return <NotFoundState title="Show Not Found" message="We couldn't find the showtime you're looking for." />;
 
@@ -671,7 +671,7 @@ const SeatLayout = ({ layout, seats, selectedSeats, onSelectSeat, seatClasses })
     );
 };
 
-// LoadingState replaced by global LoadingSpinner
+// LoadingState replaced by global LoadingScreen
 
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-900 text-white'}`}>

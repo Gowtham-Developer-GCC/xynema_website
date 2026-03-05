@@ -74,26 +74,26 @@ const HomePage = ({ selectedCity }) => {
     if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Connection Failed" />;
 
     return (
-        <div className="min-h-screen bg-[#f5f5f5] text-black overflow-x-hidden font-sans">
+        <div className="min-h-screen bg-transparent text-black dark:text-gray-100 overflow-x-hidden font-sans transition-colors duration-300">
             <SEO
                 title={`${selectedCity} - Book Movie Tickets Online | XYNEMA`}
                 description="Book your favorite movies with ease and elegance."
             />
 
             {/* Hero Carousel */}
-            <div className="relative bg-white pt-4">
+            <div className="relative bg-white dark:bg-[#1a1c23] pt-4 transition-colors duration-300">
                 <HeroCarousel
                     movies={bannerMovies}
                 />
             </div>
 
             {/* Premium Hero Text Section */}
-            <section className="flex flex-col items-center justify-center text-center py-16 md:py-20 px-4 bg-gradient-to-b from-white to-[#f5f5f5] relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[400px] bg-blue-100/30 rounded-full blur-[80px] md:blur-[100px] pointer-events-none" />
-                <h1 className="text-5xl sm:text-6xl md:text-[6rem] lg:text-[8rem] font-bold leading-tight md:leading-none tracking-tight mb-4 md:mb-6 select-none animate-fade-in-up bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.03em' }}>
+            <section className="flex flex-col items-center justify-center text-center py-16 md:py-20 px-4 bg-gradient-to-b from-white to-[#f5f5f5] dark:from-[#1a1c23] dark:to-[#0f1115] relative overflow-hidden transition-all duration-300">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[400px] bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[80px] md:blur-[100px] pointer-events-none" />
+                <h1 className="text-5xl sm:text-6xl md:text-[6rem] lg:text-[8rem] font-bold leading-tight md:leading-none tracking-tight mb-4 md:mb-6 select-none animate-fade-in-up bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300 dark:from-gray-500 dark:via-gray-400 dark:to-gray-500 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.03em' }}>
                     Experience<br className="sm:hidden" /> Xynema
                 </h1>
-                <p className="text-gray-600 text-sm md:text-lg max-w-2xl mx-auto mb-8 md:mb-10 relative z-10 font-medium animate-fade-in-up delay-100">
+                <p className="text-gray-600 dark:text-gray-400 text-sm md:text-lg max-w-2xl mx-auto mb-8 md:mb-10 relative z-10 font-medium animate-fade-in-up delay-100">
                     Movies, Events, and Streams — seamlessly integrated for an unforgettable experience
                 </p>
                 <Link to="/movies" className="relative z-10 px-8 py-3.5 md:py-4 bg-[#2563EB] text-white text-sm md:text-base font-bold rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] transition-all duration-300 hover:-translate-y-1 hover:bg-blue-600 animate-fade-in-up delay-200">
@@ -105,10 +105,10 @@ const HomePage = ({ selectedCity }) => {
                 {/* Now Showing Section */}
                 <section className="relative group/nowshowing">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                             Now showing
                         </h2>
-                        <Link to="/movies" className="text-gray-400 hover:text-gray-800 transition-colors">
+                        <Link to="/movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                             <ChevronRight className="w-5 h-5" />
                         </Link>
                     </div>
@@ -139,10 +139,10 @@ const HomePage = ({ selectedCity }) => {
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-800 hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
+                        <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
                             <ChevronRight className="w-5 h-5 rotate-180" />
                         </button>
-                        <button className="now-showing-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-800 hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
+                        <button className="now-showing-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
@@ -152,10 +152,10 @@ const HomePage = ({ selectedCity }) => {
                 {upcomingMovies.length > 0 && (
                     <section className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                 Recommended for you
                             </h2>
-                            <Link to="/upcoming-movies" className="text-gray-400 hover:text-gray-800 transition-colors">
+                            <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
                             </Link>
                         </div>
@@ -186,10 +186,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="recommended-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-800 hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
-                            <button className="recommended-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-800 hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -200,10 +200,10 @@ const HomePage = ({ selectedCity }) => {
                 {upcomingMovies.length > 0 && (
                     <section className="relative mt-16 group/upcoming">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                 Upcoming movies
                             </h2>
-                            <Link to="/upcoming-movies" className="text-gray-400 hover:text-gray-800 transition-colors">
+                            <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
                             </Link>
                         </div>
@@ -235,10 +235,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows designed based on visual high-contrast */}
-                            <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-xynemaRose hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
+                            <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-xynemaRose dark:hover:text-pink-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="upcoming-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-xynemaRose hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
+                            <button className="upcoming-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-xynemaRose dark:hover:text-pink-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -294,64 +294,61 @@ const HomePage = ({ selectedCity }) => {
                     </section>
                 )}
 
-                {/* Trending Events Section (with fallback to MOCK_EVENTS) */}
-                {(events?.length > 0 || MOCK_EVENTS.length > 0) && (() => {
-                    const displayEvents = events?.length > 0 ? events : MOCK_EVENTS;
-                    return (
-                        <section className="relative mt-16 group/events">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    Trending events
-                                </h2>
-                                <Link to="/events" className="text-gray-400 hover:text-gray-800 transition-colors">
-                                    <ChevronRight className="w-5 h-5" />
-                                </Link>
-                            </div>
+                {/* Trending Events Section */}
+                {events?.length > 0 && (
+                    <section className="relative mt-16 group/events">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                Trending events
+                            </h2>
+                            <Link to="/events" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+                                <ChevronRight className="w-5 h-5" />
+                            </Link>
+                        </div>
 
-                            <div className="relative">
-                                <Swiper
-                                    modules={[Navigation]}
-                                    spaceBetween={24}
-                                    slidesPerView={1}
-                                    navigation={{
-                                        nextEl: '.events-next',
-                                        prevEl: '.events-prev',
-                                    }}
-                                    breakpoints={{
-                                        640: { slidesPerView: 2, spaceBetween: 24 },
-                                        768: { slidesPerView: 3, spaceBetween: 24 },
-                                        1024: { slidesPerView: 4, spaceBetween: 24 },
-                                        1280: { slidesPerView: 4, spaceBetween: 24 },
-                                    }}
-                                    className="!pb-6"
-                                >
-                                    {displayEvents.map((event, idx) => (
-                                        <SwiperSlide key={`event-${event.id || idx}`}>
-                                            <EventCard event={event} />
-                                        </SwiperSlide>
-                                    ))}
-                                </Swiper>
+                        <div className="relative">
+                            <Swiper
+                                modules={[Navigation]}
+                                spaceBetween={24}
+                                slidesPerView={1}
+                                navigation={{
+                                    nextEl: '.events-next',
+                                    prevEl: '.events-prev',
+                                }}
+                                breakpoints={{
+                                    640: { slidesPerView: 2, spaceBetween: 24 },
+                                    768: { slidesPerView: 3, spaceBetween: 24 },
+                                    1024: { slidesPerView: 4, spaceBetween: 24 },
+                                    1280: { slidesPerView: 4, spaceBetween: 24 },
+                                }}
+                                className="!pb-6"
+                            >
+                                {events.map((event, idx) => (
+                                    <SwiperSlide key={`event-${event.id || idx}`}>
+                                        <EventCard event={event} />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
 
-                                {/* Custom Navigation Arrows */}
-                                <button className="events-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-[#2563EB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
-                                    <ChevronRight className="w-6 h-6 rotate-180" />
-                                </button>
-                                <button className="events-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-[#2563EB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
-                                    <ChevronRight className="w-6 h-6" />
-                                </button>
-                            </div>
-                        </section>
-                    );
-                })()}
+                            {/* Custom Navigation Arrows */}
+                            <button className="events-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                                <ChevronRight className="w-6 h-6 rotate-180" />
+                            </button>
+                            <button className="events-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                                <ChevronRight className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </section>
+                )}
 
                 {/* Official Merchandise Section */}
                 {MOCK_STORE_ITEMS.length > 0 && (
                     <section className="relative mt-16 mb-8 group/store">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                 Official merchandise
                             </h2>
-                            <Link to="/store" className="text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-2 font-medium text-sm">
+                            <Link to="/store" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
                                 <ShoppingBag className="w-4 h-4" />
                                 Visit Store
                             </Link>
@@ -382,10 +379,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-[#2563EB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-[#2563EB] hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -409,7 +406,7 @@ const EventCard = memo(({ event }) => {
     const eventLink = `/event/${event.slug || event.id}`;
 
     return (
-        <div className="bg-white rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col h-full transition-transform duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:-translate-y-1 cursor-pointer">
+        <div className="bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] hover:-translate-y-1 cursor-pointer">
             <Link to={eventLink} className="block w-full">
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                     <img
@@ -422,24 +419,24 @@ const EventCard = memo(({ event }) => {
             </Link>
             <div className="p-5 flex flex-col flex-grow">
                 <Link to={eventLink} className="mb-2 block">
-                    <h3 className="font-semibold text-gray-900 text-[1.05rem] leading-snug truncate hover:text-blue-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                         {event.name}
                     </h3>
                 </Link>
 
                 <div className="flex flex-col gap-2 mb-5">
-                    <div className="flex items-center text-gray-500 text-sm font-medium">
-                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
                         <span>{formattedDate}</span>
                     </div>
-                    <div className="flex items-center text-gray-500 text-sm font-medium">
-                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
                         <span className="truncate">{event.city}</span>
                     </div>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
-                    <span className="font-bold text-[#1a5b8a] text-lg">
+                <div className="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <span className="font-bold text-[#1a5b8a] dark:text-blue-400 text-lg">
                         ₹{event.price ? event.price.toLocaleString() : 'Free'}
                     </span>
                     <Link
@@ -455,7 +452,6 @@ const EventCard = memo(({ event }) => {
 });
 
 // ============= COMPONENT: HeroCarousel =============
-
 const HeroCarousel = memo(({ movies }) => {
     if (!movies?.length) return null;
 
@@ -473,7 +469,7 @@ const HeroCarousel = memo(({ movies }) => {
     }, [movies]);
 
     return (
-        <section className="w-full bg-white overflow-hidden relative">
+        <section className="w-full bg-white dark:bg-[#1a1c23] overflow-hidden relative transition-colors duration-300">
             <svg width="0" height="0" className="absolute select-none pointer-events-none">
                 <defs>
                     <clipPath id="carousel-curve" clipPathUnits="objectBoundingBox">
@@ -493,12 +489,12 @@ const HeroCarousel = memo(({ movies }) => {
 // ============= COMPONENT: Skeleton Loader =============
 
 const HomeSkeleton = () => (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0f1115] transition-colors duration-300">
         {/* MATCH HERO CAROUSEL */}
-        <div className="w-full bg-[#f5f5f5] pt-[10px] pb-[25px]">
+        <div className="w-full bg-[#f5f5f5] dark:bg-[#0f1115] pt-[10px] pb-[25px]">
             <div className="max-w-[1088px] mx-auto px-4 lg:px-0">
                 <div
-                    className="w-full bg-gray-200 rounded-xl animate-pulse aspect-[16/9] md:aspect-[21/6]"
+                    className="w-full bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse aspect-[16/9] md:aspect-[21/6]"
                 />
             </div>
         </div>
@@ -507,8 +503,8 @@ const HomeSkeleton = () => (
             {/* RECOMMENDED SECTION SKELETON */}
             <div>
                 <div className="flex justify-between items-center mb-3">
-                    <div className="h-7 w-48 bg-gray-200 rounded animate-pulse" />
-                    <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-7 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {[1, 2, 3, 4, 5].map(i => (
@@ -526,16 +522,16 @@ const HomeSkeleton = () => (
             {/* UPCOMING SECTION SKELETON */}
             <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
-                    <div className="h-7 w-48 bg-gray-200 rounded animate-pulse" />
-                    <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-7 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {[1, 2, 3, 4, 5].map(i => (
                         <div key={i} className="flex flex-col space-y-3">
-                            <div className="aspect-[2/3] bg-gray-200 rounded-lg animate-pulse" />
+                            <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
                             <div className="space-y-2">
-                                <div className="h-4 w-11/12 bg-gray-200 rounded animate-pulse" />
-                                <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse" />
+                                <div className="h-4 w-11/12 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                                <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
                             </div>
                         </div>
                     ))}
@@ -548,44 +544,7 @@ const HomeSkeleton = () => (
 // --- StoreCard Component removed - moved to standalone component ---
 
 // --- Mock Data ---
-const MOCK_EVENTS = [
-    {
-        id: "mock-1",
-        slug: "coldplay-2026",
-        name: "Coldplay Concert 2026",
-        startDate: "2026-03-19",
-        city: "Fort Kochi, India",
-        price: 2500,
-        imageUrl: "https://images.unsplash.com/photo-1540039155732-d6824b5ce12d?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-        id: "mock-2",
-        slug: "agam-concert",
-        name: "Agam live concert",
-        startDate: "2026-03-21",
-        city: "Thrissur",
-        price: 2500,
-        imageUrl: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-        id: "mock-3",
-        slug: "anime-meetup",
-        name: "Anime meetup",
-        startDate: "2026-03-21",
-        city: "Thrissur",
-        price: 2500,
-        imageUrl: "https://images.unsplash.com/photo-1613376023733-7248152df88e?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-        id: "mock-4",
-        slug: "laugh-lounge",
-        name: "Laugh Lounge Comedy",
-        startDate: "2026-03-22",
-        city: "Thrissur",
-        price: 2500,
-        imageUrl: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&q=80&w=800"
-    }
-];
+
 
 const MOCK_STORE_ITEMS = [
     {

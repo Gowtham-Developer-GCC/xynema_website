@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { Heart, ArrowLeft, ThumbsUp, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import { optimizeImage } from '../utils/helpers';
 
 const FavoritesPage = () => {
@@ -50,7 +50,7 @@ const FavoritesPage = () => {
         });
     }, []);
 
-    if (loading && !movies?.length) return <LoadingSpinner message="Curating Favorites" />;
+    if (loading && !movies?.length) return <LoadingScreen message="Curating Favorites" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] pb-20">

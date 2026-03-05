@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import { optimizeImage } from '../utils/helpers';
 import { Search, ChevronDown, ChevronUp, Star, Heart, ThumbsUp, ChevronRight, X } from 'lucide-react';
@@ -100,7 +100,7 @@ const UpcomingMoviesPage = () => {
         setSelectedFormats([]);
     };
 
-    if (loading && !latestMovies?.length) return <LoadingSpinner message="Loading Upcoming Movies..." />;
+    if (loading && !latestMovies?.length) return <LoadingScreen message="Loading Upcoming Movies..." />;
     if (error && !latestMovies?.length) return <ErrorState error={error} onRetry={() => window.location.reload()} />;
 
     return (

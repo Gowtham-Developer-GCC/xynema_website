@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
 import { getEvents, getAllEventsList, submitPrivateEventEnquiry } from '../services/eventService';
@@ -142,26 +142,26 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         }
     };
 
-    if (loading) return <LoadingSpinner message="Scanning Library" />;
+    if (loading) return <LoadingScreen message="Scanning Library" />;
     if (error) return <ErrorState error={error} onRetry={fetchData} title="Access Interrupted" buttonText="Try Refreshing" />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA]">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
             <SEO
                 title="Explore Events - XYNEMA"
                 description="Discover live events near you"
             />
 
             {/* Header */}
-            <div className="bg-[#F5F5FA] border-b border-gray-200">
+            <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-display font-medium text-[#111827] mb-2 tracking-tight">Events</h1>
-                        <p className="text-[#6B7280] text-sm md:text-base">Discover curated experiences near you.</p>
+                        <h1 className="text-3xl sm:text-4xl font-display font-medium text-[#111827] dark:text-gray-100 mb-2 tracking-tight">Events</h1>
+                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base">Discover curated experiences near you.</p>
                     </div>
                     <button
                         onClick={() => handleTabChange('private_events')}
-                        className="flex items-center gap-2 text-sm font-semibold text-[#374151] hover:text-[#00296b] transition-colors"
+                        className="flex items-center gap-2 text-sm font-semibold text-[#374151] dark:text-gray-300 hover:text-[#00296b] dark:hover:text-blue-400 transition-colors"
                     >
                         <Sparkles className="w-4 h-4" />
                         Host Your Event
@@ -171,7 +171,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
             {/* Filter Pills */}
             {activeTab !== 'private_events' && (
-                <div className="bg-[#F5F5FA] border-b border-gray-200">
+                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800">
                     <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-3 overflow-x-auto no-scrollbar">
                         {['All', 'Music', 'Comedy', 'Workshops', 'Sports', 'Conferences'].map(cat => (
                             <button
@@ -184,8 +184,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     }
                                 }}
                                 className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${(cat === 'All' && eventFilters.tags.length === 0) || (eventFilters.tags.length === 1 && eventFilters.tags.includes(cat))
-                                    ? 'bg-[#00296B] text-white border-[#00296B] shadow-sm'
-                                    : 'bg-white text-[#4B5563] border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                    : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                     }`}
                             >
                                 {cat}
@@ -198,8 +198,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {activeTab !== 'private_events' && (
                     <div className="mb-6 mt-2">
-                        <h2 className="text-2xl font-display font-medium text-[#111827] tracking-tight">Trending Events</h2>
-                        <p className="text-[#6B7280] text-sm mt-1">Popular right now</p>
+                        <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">Trending Events</h2>
+                        <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">Popular right now</p>
                     </div>
                 )}
 
@@ -223,7 +223,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         {/* All Global Events */}
                         {!loadingGlobalEvents && allGlobalEvents.length > 0 && (
                             <div className="mt-8">
-                                <h2 className="text-[28px] font-display font-medium text-[#111827] tracking-tight mb-8">All events</h2>
+                                <h2 className="text-[28px] font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight mb-8">All events</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {allGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
@@ -310,14 +310,14 @@ const FilterChip = ({ label, onRemove }) => (
 const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, onReset }) => {
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl mb-8 animate-in slide-in-from-top-4 duration-300">
+        <div className="bg-white dark:bg-[#1a1c23] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl mb-8 animate-in slide-in-from-top-4 duration-300 transition-colors">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Location</label>
+                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Location</label>
                     <select
                         value={filters.city}
                         onChange={(e) => onFilterChange({ ...filters, city: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-xynemaRose outline-none transition-all"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-xynemaRose dark:focus:ring-blue-500 outline-none transition-all dark:text-gray-100"
                     >
                         <option value="All">All Cities</option>
                         {availableCities.map(city => <option key={city} value={city}>{city}</option>)}
@@ -325,13 +325,13 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Status</label>
+                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Status</label>
                     <div className="grid grid-cols-2 gap-2">
                         {['All', 'Active', 'Sold Out', 'Upcoming'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => onFilterChange({ ...filters, status })}
-                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.status === status ? 'bg-xynemaRose text-white border-xynemaRose' : 'bg-gray-50 border-gray-100 text-gray-500 hover:border-gray-200'}`}
+                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.status === status ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
                             >
                                 {status}
                             </button>
@@ -340,13 +340,13 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Timeframe</label>
+                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Timeframe</label>
                     <div className="grid grid-cols-2 gap-2">
                         {['All', 'Today', 'Tomorrow', 'Weekend'].map(date => (
                             <button
                                 key={date}
                                 onClick={() => onFilterChange({ ...filters, date })}
-                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.date === date ? 'bg-xynemaRose text-white border-xynemaRose' : 'bg-gray-50 border-gray-100 text-gray-500 hover:border-gray-200'}`}
+                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.date === date ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
                             >
                                 {date}
                             </button>
@@ -355,7 +355,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Categories</label>
+                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Categories</label>
                     <div className="flex flex-wrap gap-1.5">
                         {availableTags.slice(0, 6).map(tag => {
                             const isSelected = filters.tags.includes(tag);
@@ -368,7 +368,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                                             : [...filters.tags, tag];
                                         onFilterChange({ ...filters, tags: nextTags });
                                     }}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all border ${isSelected ? 'bg-xynemaRose/10 border-xynemaRose text-xynemaRose' : 'bg-white border-gray-100 text-gray-400'}`}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all border ${isSelected ? 'bg-xynemaRose/10 dark:bg-blue-500/10 border-xynemaRose dark:border-blue-500 text-xynemaRose dark:text-blue-400' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500'}`}
                                 >
                                     {tag}
                                 </button>
@@ -377,11 +377,11 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                     </div>
                 </div>
             </div>
-            <div className="mt-8 pt-6 border-t border-gray-50 flex justify-between items-center">
-                <button onClick={onReset} className="text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-xynemaRose transition-colors">Reset All</button>
+            <div className="mt-8 pt-6 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center transition-colors">
+                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest hover:text-xynemaRose dark:hover:text-blue-400 transition-colors">Reset All</button>
                 <button
                     onClick={() => onFilterChange(filters)}
-                    className="px-8 py-3 rounded-xl bg-xynemaRose text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-xynemaRose/20"
+                    className="px-8 py-3 rounded-xl bg-xynemaRose dark:bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-xynemaRose/20 dark:shadow-blue-900/40"
                 >
                     Apply Filters
                 </button>
@@ -424,7 +424,7 @@ const EventCard = ({ event }) => {
     return (
         <div
             onClick={() => navigate(`/event/${event.slug}`, { state: { event } })}
-            className={`group cursor-pointer flex flex-col bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm transition-all hover:shadow-md hover:border-gray-300 ${event.delayClass || ''}`}
+            className={`group cursor-pointer flex flex-col bg-white dark:bg-[#1a1c23] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm transition-all hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 ${event.delayClass || ''}`}
         >
             <div className="relative aspect-[3/2] overflow-hidden">
                 <img
@@ -435,27 +435,27 @@ const EventCard = ({ event }) => {
             </div>
 
             <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-lg font-medium text-[#111827] mb-6 tracking-tight line-clamp-2">
+                <h3 className="text-lg font-medium text-[#111827] dark:text-gray-100 mb-6 tracking-tight line-clamp-2">
                     {event.name}
                 </h3>
 
                 <div className="space-y-3 mt-auto mb-5">
-                    <div className="flex items-center gap-3 text-[#4B5563]">
-                        <Calendar className="w-4 h-4 text-gray-400 stroke-[1.5]" />
+                    <div className="flex items-center gap-3 text-[#4B5563] dark:text-gray-400">
+                        <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500 stroke-[1.5]" />
                         <span className="text-sm font-medium">{formattedDate}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[#4B5563]">
-                        <MapPin className="w-4 h-4 text-gray-400 stroke-[1.5]" />
+                    <div className="flex items-center gap-3 text-[#4B5563] dark:text-gray-400">
+                        <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 stroke-[1.5]" />
                         <span className="text-sm font-medium truncate">{event.city || event.venue}</span>
                     </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                     <div className="flex items-baseline gap-1.5">
-                        <span className="text-lg font-medium text-[#006699]">₹{event.price || 'Free'}</span>
-                        <span className="text-xs font-medium text-[#6B7280]">onwards</span>
+                        <span className="text-lg font-medium text-[#006699] dark:text-blue-400">₹{event.price || 'Free'}</span>
+                        <span className="text-xs font-medium text-[#6B7280] dark:text-gray-500">onwards</span>
                     </div>
-                    <div className="text-xs font-semibold text-[#4B5563] flex items-center gap-1 group-hover:text-[#111827] transition-colors">
+                    <div className="text-xs font-semibold text-[#4B5563] dark:text-gray-400 flex items-center gap-1 group-hover:text-[#111827] dark:group-hover:text-white transition-colors">
                         View details
                         <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M7 17L17 7" />
@@ -500,7 +500,7 @@ const PrivateEventsSection = () => {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 bg-[#F5F7F9]">
+        <div className="animate-in fade-in duration-500 bg-[#F5F7F9] dark:bg-[#0f1115]">
             {/* Dark Blue Hero Banner - No margins around it */}
             <div className="w-full bg-[#1E4B6E] text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
@@ -525,12 +525,12 @@ const PrivateEventsSection = () => {
 
             {/* Form Section Floating on top */}
             <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
-                <div className="bg-white/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
-                    <div className="mb-10 text-left border-b border-white/20 pb-6">
-                        <h3 className="text-[28px] font-display font-semibold text-gray-900 tracking-tight">
+                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 dark:border-gray-700 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
+                    <div className="mb-10 text-left border-b border-white/20 dark:border-gray-700 pb-6">
+                        <h3 className="text-[28px] font-display font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
                             Event Request Form
                         </h3>
-                        <p className="text-gray-600/90 text-base mt-2">
+                        <p className="text-gray-600/90 dark:text-gray-400 text-base mt-2">
                             Please provide us with the details of your event and we'll get back to you shortly.
                         </p>
                     </div>
@@ -545,26 +545,26 @@ const PrivateEventsSection = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Full Name <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
                                     placeholder="Enter your full name"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number <span className="text-red-500">*</span></label>
                                 <input
                                     type="tel"
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
                                     placeholder="Enter your phone number"
                                 />
                             </div>
@@ -572,26 +572,26 @@ const PrivateEventsSection = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
                                     placeholder="Enter your email address"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Event Type <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type <span className="text-red-500">*</span></label>
                                 <div className="relative">
                                     <select
                                         name="eventType"
                                         value={formData.eventType}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-[#9CA3AF] focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none"
+                                        className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-[#9CA3AF] dark:text-gray-400 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none"
                                     >
                                         <option value="" disabled>Select event type</option>
                                         <option value="public-event">Public Event</option>
@@ -605,23 +605,23 @@ const PrivateEventsSection = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Event Description</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Description</label>
                             <textarea
                                 name="eventDescription"
                                 value={formData.eventDescription}
                                 onChange={handleChange}
                                 required
                                 rows="4"
-                                className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors resize-y"
+                                className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors resize-y"
                                 placeholder="Tell us about your event, requirements, preferences, or special arrangements..."
                             />
                         </div>
 
-                        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20">
+                        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20 dark:border-gray-700">
                             <button
                                 type="button"
                                 onClick={() => setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' })}
-                                className="w-full sm:w-auto px-8 py-3.5 bg-white/30 text-gray-700 border border-white/40 rounded-lg hover:bg-white/50 font-medium transition-colors backdrop-blur-md"
+                                className="w-full sm:w-auto px-8 py-3.5 bg-white/30 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 border border-white/40 dark:border-gray-700 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 font-medium transition-colors backdrop-blur-md"
                             >
                                 Cancel
                             </button>
@@ -644,28 +644,28 @@ const PrivateEventsSection = () => {
             {/* Feature Cards Grid */}
             <div className="max-w-4xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 pb-24">
                 {/* 1 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
                         <Clock className="w-6 h-6" />
                     </div>
-                    <h4 className="font-bold text-gray-900 mb-2">Quick Response</h4>
-                    <p className="text-sm text-gray-500 font-medium">Our team will review your request and contact you within 24-48 hours.</p>
+                    <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Quick Response</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Our team will review your request and contact you within 24-48 hours.</p>
                 </div>
                 {/* 2 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
                         <Building className="w-6 h-6" />
                     </div>
-                    <h4 className="font-bold text-gray-900 mb-2">Premium Venues</h4>
-                    <p className="text-sm text-gray-500 font-medium">Access to exclusive venues across multiple cities and locations.</p>
+                    <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Premium Venues</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Access to exclusive venues across multiple cities and locations.</p>
                 </div>
                 {/* 3 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
                         <Sparkles className="w-6 h-6" />
                     </div>
-                    <h4 className="font-bold text-gray-900 mb-2">Custom Experience</h4>
-                    <p className="text-sm text-gray-500 font-medium">Fully customizable event packages tailored to your needs.</p>
+                    <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Custom Experience</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Fully customizable event packages tailored to your needs.</p>
                 </div>
             </div>
         </div>
@@ -674,15 +674,15 @@ const PrivateEventsSection = () => {
 
 
 const EmptyState = ({ onReset }) => (
-    <div className="col-span-full py-24 text-center bg-white rounded-[40px] border border-dashed border-gray-200 animate-in fade-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
+    <div className="col-span-full py-24 text-center bg-white dark:bg-[#1a1c23] rounded-[40px] border border-dashed border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in duration-500 transition-colors">
+        <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300 dark:text-gray-600">
             <Search className="w-10 h-10" />
         </div>
-        <h3 className="text-2xl font-black uppercase tracking-tight">Nothing Found</h3>
-        <p className="text-gray-500 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
+        <h3 className="text-2xl font-black uppercase tracking-tight dark:text-gray-100">Nothing Found</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
         <button
             onClick={onReset}
-            className="mt-8 px-8 py-3 bg-xynemaRose text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+            className="mt-8 px-8 py-3 bg-xynemaRose dark:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg dark:shadow-blue-900/20"
         >
             Reset Explore
         </button>

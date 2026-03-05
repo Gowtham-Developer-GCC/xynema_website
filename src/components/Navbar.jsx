@@ -53,10 +53,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                         {/* Center: Nav Links */}
                         <div className="hidden lg:flex items-center justify-center gap-8 text-[15px] font-bold text-gray-800 absolute left-1/2 -translate-x-1/2">
-                            <Link to="/movies" className="hover:text-[#2563EB] transition-colors">Movies</Link>
-                            <Link to="/events" className="hover:text-[#2563EB] transition-colors">Events</Link>
-                            <Link to="/stream" className="hover:text-[#2563EB] transition-colors">Stream</Link>
-                            <Link to="/offers" className="hover:text-[#2563EB] transition-colors">Offers</Link>
+                            <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') || location.pathname === '/' ? 'text-[#2563EB] after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-[#2563EB]' : 'hover:text-[#2563EB]'}`}>Movies</Link>
+                            <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-[#2563EB] after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-[#2563EB]' : 'hover:text-[#2563EB]'}`}>Events</Link>
+                            <Link to="/stream" className={`relative py-1 transition-colors ${location.pathname.startsWith('/stream') ? 'text-[#2563EB] after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-[#2563EB]' : 'hover:text-[#2563EB]'}`}>Stream</Link>
+                            <Link to="/offers" className={`relative py-1 transition-colors ${location.pathname.startsWith('/offers') ? 'text-[#2563EB] after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-[#2563EB]' : 'hover:text-[#2563EB]'}`}>Offers</Link>
                         </div>
 
                         {/* Right: Search & Actions */}
@@ -183,21 +183,21 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         <div className="flex-1 overflow-y-auto py-4 space-y-1">
                             {/* Mobile Only Browsing Links */}
                             <div className="lg:hidden pb-2 mb-2 border-b border-gray-50">
-                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
-                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
-                                    <span className="text-sm font-medium text-gray-800">Movies</span>
+                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/movies') || location.pathname === '/' ? 'bg-blue-50/50 border-[#2563EB]' : 'border-transparent hover:bg-gray-50'}`}>
+                                    <div className="w-5 flex justify-center"><Play className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/movies') || location.pathname === '/' ? 'text-[#2563EB]' : 'text-gray-400 group-hover:text-xynemaRose'}`} /></div>
+                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/movies') || location.pathname === '/' ? 'text-[#2563EB]' : 'text-gray-800'}`}>Movies</span>
                                 </Link>
-                                <Link to="/events" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
-                                    <div className="w-5 flex justify-center"><Calendar className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
-                                    <span className="text-sm font-medium text-gray-800">Events</span>
+                                <Link to="/events" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/events') ? 'bg-blue-50/50 border-[#2563EB]' : 'border-transparent hover:bg-gray-50'}`}>
+                                    <div className="w-5 flex justify-center"><Calendar className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/events') ? 'text-[#2563EB]' : 'text-gray-400 group-hover:text-xynemaRose'}`} /></div>
+                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/events') ? 'text-[#2563EB]' : 'text-gray-800'}`}>Events</span>
                                 </Link>
-                                <Link to="/stream" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
-                                    <div className="w-5 flex justify-center"><Play className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" fill="currentColor" /></div>
-                                    <span className="text-sm font-medium text-gray-800">Stream</span>
+                                <Link to="/stream" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/stream') ? 'bg-blue-50/50 border-[#2563EB]' : 'border-transparent hover:bg-gray-50'}`}>
+                                    <div className="w-5 flex justify-center"><Play className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/stream') ? 'text-[#2563EB]' : 'text-gray-400 group-hover:text-xynemaRose'}`} fill="currentColor" /></div>
+                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/stream') ? 'text-[#2563EB]' : 'text-gray-800'}`}>Stream</span>
                                 </Link>
-                                <Link to="/offers" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 group">
-                                    <div className="w-5 flex justify-center"><Gift className="w-4 h-4 text-gray-400 group-hover:text-xynemaRose transition-colors" /></div>
-                                    <span className="text-sm font-medium text-gray-800">Offers</span>
+                                <Link to="/offers" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/offers') ? 'bg-blue-50/50 border-[#2563EB]' : 'border-transparent hover:bg-gray-50'}`}>
+                                    <div className="w-5 flex justify-center"><Gift className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/offers') ? 'text-[#2563EB]' : 'text-gray-400 group-hover:text-xynemaRose'}`} /></div>
+                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/offers') ? 'text-[#2563EB]' : 'text-gray-800'}`}>Offers</span>
                                 </Link>
                             </div>
 

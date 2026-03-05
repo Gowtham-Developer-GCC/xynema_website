@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight } from 'lucide-react';
+import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
-import { getEvents } from '../services/eventService';
+import { getEvents, getAllEventsList, submitPrivateEventEnquiry } from '../services/eventService';
 import { useData } from '../context/DataContext';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
@@ -29,6 +29,9 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [availableEventTags, setAvailableEventTags] = useState([]);
     const [availableEventCities, setAvailableEventCities] = useState([]);
 
+    const [allGlobalEvents, setAllGlobalEvents] = useState([]);
+    const [loadingGlobalEvents, setLoadingGlobalEvents] = useState(true);
+
     // Sync tab with prop
     useEffect(() => {
         setActiveTab(initialTab);
@@ -44,9 +47,13 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             setError(null);
 
 
-            const [eventData] = await Promise.all([
+            const [eventData, globalEventData] = await Promise.all([
                 getEvents(selectedCity).catch(err => {
                     console.error('Events fetch error:', err);
+                    return [];
+                }),
+                getAllEventsList().catch(err => {
+                    console.error('Global Events fetch error:', err);
                     return [];
                 })
             ]);
@@ -55,6 +62,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
             setEvents(allEvents);
             setFilteredEvents(allEvents);
+            setAllGlobalEvents(globalEventData || []);
+            setLoadingGlobalEvents(false);
 
             // Extract available filters for events
             const tags = Array.from(new Set(allEvents.flatMap(e => e.tags))).sort();
@@ -144,98 +153,85 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             />
 
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-xynemaRose transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back
-                    </button>
-
-                    {/* Tabs */}
-                    <div className="flex bg-gray-100 p-1 rounded-xl h-10">
-                        {[
-                            { id: 'public_events', label: 'Public Events' },
-                            { id: 'private_events', label: 'Private Events' }
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`px-4 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${activeTab === tab.id ? 'bg-white text-xynemaRose shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+            <div className="bg-[#F5F5FA] border-b border-gray-200">
+                <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-display font-medium text-[#111827] mb-2 tracking-tight">Events</h1>
+                        <p className="text-[#6B7280] text-sm md:text-base">Discover curated experiences near you.</p>
                     </div>
-
-                    <div className="w-8"></div>
+                    <button
+                        onClick={() => handleTabChange('private_events')}
+                        className="flex items-center gap-2 text-sm font-semibold text-[#374151] hover:text-[#00296b] transition-colors"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Host Your Event
+                    </button>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Filter Pills */}
+            {activeTab !== 'private_events' && (
+                <div className="bg-[#F5F5FA] border-b border-gray-200">
+                    <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-3 overflow-x-auto no-scrollbar">
+                        {['All', 'Music', 'Comedy', 'Workshops', 'Sports', 'Conferences'].map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => {
+                                    if (cat === 'All') {
+                                        setEventFilters(prev => ({ ...prev, tags: [] }));
+                                    } else {
+                                        setEventFilters(prev => ({ ...prev, tags: [cat] }));
+                                    }
+                                }}
+                                className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${(cat === 'All' && eventFilters.tags.length === 0) || (eventFilters.tags.length === 1 && eventFilters.tags.includes(cat))
+                                    ? 'bg-[#00296B] text-white border-[#00296B] shadow-sm'
+                                    : 'bg-white text-[#4B5563] border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {activeTab !== 'private_events' && (
-                    <>
-                        {/* Search & Filter Bar */}
-                        <div className="mb-8">
-                            <div className="flex flex-col sm:flex-row gap-4 items-center">
-                                <div className="w-full flex-1 relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search events..."
-                                        value={eventSearchQuery}
-                                        onChange={(e) => setEventSearchQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-xynemaRose transition-all"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    className={`w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border ${showFilters ? 'bg-xynemaRose text-white border-xynemaRose' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 shadow-sm'}`}
-                                >
-                                    <Sliders className="w-5 h-5" />
-                                    Advanced Filters
-                                    {(eventFilters.city !== 'All' || eventFilters.tags.length > 0) && (
-                                        <span className="w-2 h-2 rounded-full bg-current animate-pulse ml-1" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Filters Panel */}
-                        {showFilters && (
-                            <FilterPanel
-                                filters={eventFilters}
-                                availableTags={availableEventTags}
-                                availableCities={availableEventCities}
-                                onFilterChange={setEventFilters}
-                                onReset={resetFilters}
-                            />
-                        )}
-
-                        {/* Active Filter Chips */}
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            {eventFilters.city !== 'All' && <FilterChip label={eventFilters.city} onRemove={() => setEventFilters({ ...eventFilters, city: 'All' })} />}
-                            {eventFilters.status !== 'All' && <FilterChip label={eventFilters.status} onRemove={() => setEventFilters({ ...eventFilters, status: 'All' })} />}
-                            {eventFilters.date !== 'All' && <FilterChip label={eventFilters.date} onRemove={() => setEventFilters({ ...eventFilters, date: 'All' })} />}
-                            {eventFilters.tags.map(tag => (
-                                <FilterChip key={tag} label={tag} onRemove={() => setEventFilters({ ...eventFilters, tags: eventFilters.tags.filter(t => t !== tag) })} />
-                            ))}
-                        </div>
-                    </>
+                    <div className="mb-6 mt-2">
+                        <h2 className="text-2xl font-display font-medium text-[#111827] tracking-tight">Trending Events</h2>
+                        <p className="text-[#6B7280] text-sm mt-1">Popular right now</p>
+                    </div>
                 )}
 
                 {/* Content Rendering */}
 
                 {activeTab === 'public_events' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredEvents.length > 0 ? (
-                            filteredEvents.map((event, idx) => (
-                                <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
-                            ))
-                        ) : <EmptyState onReset={resetFilters} />}
-                    </div>
+                    <>
+                        {/* Trending Row (First 3 events) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredEvents.length > 0 ? (
+                                filteredEvents.slice(0, 3).map((event, idx) => (
+                                    <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                ))
+                            ) : <EmptyState onReset={resetFilters} />}
+                        </div>
+                        {/* Private Event Banner injected after the first row (or at the bottom if fewer than 3 trending events) */}
+                        <div className="my-16">
+                            <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
+                        </div>
+
+                        {/* All Global Events */}
+                        {!loadingGlobalEvents && allGlobalEvents.length > 0 && (
+                            <div className="mt-8">
+                                <h2 className="text-[28px] font-display font-medium text-[#111827] tracking-tight mb-8">All events</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {allGlobalEvents.map((event, idx) => (
+                                        <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {activeTab === 'private_events' && <PrivateEventsSection />}
@@ -245,6 +241,62 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 };
 
 // ============= COMPONENTS =============
+
+const PrivateEventBanner = ({ onNavigate }) => {
+    return (
+        <div className="w-full bg-[#1E4B6E] rounded-xl text-white p-10 md:p-14 overflow-hidden relative shadow-lg">
+            {/* Subtle background glow effect if desired */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+
+            <div className="relative z-10 max-w-3xl">
+                <h2 className="text-3xl md:text-4xl font-display font-medium mb-4 tracking-tight">Host Your Private Event</h2>
+                <p className="text-blue-100/80 text-sm md:text-base leading-relaxed mb-10 max-w-2xl">
+                    From corporate gatherings to private screenings, we help you create memorable
+                    experiences. Submit your request and our team will reach out to you.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-10">
+                    <div className="flex flex-col gap-3">
+                        <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center bg-white/5">
+                            <Calendar className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-sm mb-1">Flexible Dates</h4>
+                            <p className="text-xs text-blue-100/70">Choose your preferred timing</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center bg-white/5">
+                            <MapPin className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-sm mb-1">Premium Venues</h4>
+                            <p className="text-xs text-blue-100/70">Multiple locations available</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center bg-white/5">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-sm mb-1">Custom Experience</h4>
+                            <p className="text-xs text-blue-100/70">Tailored to your needs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    onClick={onNavigate}
+                    className="bg-white text-[#1E4B6E] px-8 py-3.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                    Submit Request
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const FilterChip = ({ label, onRemove }) => (
     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-xynemaRose/10 text-xynemaRose text-[10px] font-bold border border-xynemaRose/20 animate-in fade-in zoom-in duration-200">
@@ -345,19 +397,19 @@ const EventCard = ({ event }) => {
         if (!event.startDate) return 'TBA';
         try {
             const start = new Date(event.startDate);
-            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
 
             if (event.eventType === 'multi-day' && event.endDate && event.endDate !== event.startDate) {
                 const end = new Date(event.endDate);
                 if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-                    return `${start.getDate()} - ${end.getDate()} ${start.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`;
+                    return `${start.getDate()} - ${end.getDate()} ${start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
                 }
                 if (start.getFullYear() === end.getFullYear()) {
-                    return `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                    return `${start.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`;
                 }
-                return `${start.toLocaleDateString('en-IN', options)} - ${end.toLocaleDateString('en-IN', options)}`;
+                return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
             }
-            return start.toLocaleDateString('en-IN', options);
+            return start.toLocaleDateString('en-US', options);
         } catch (e) {
             return event.startDate;
         }
@@ -365,79 +417,50 @@ const EventCard = ({ event }) => {
 
     const formattedDate = getFormattedDate();
 
+    // Figma Design details:
+    // - Clean white card with rounded border
+    // - No dark gradient
+    // - Simple "View details ↗"
     return (
         <div
             onClick={() => navigate(`/event/${event.slug}`, { state: { event } })}
-            className={`group cursor-pointer flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all hover:shadow-2xl hover:translate-y-[-4px] animate-slide-up opacity-0 ${event.delayClass || ''}`}
+            className={`group cursor-pointer flex flex-col bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm transition-all hover:shadow-md hover:border-gray-300 ${event.delayClass || ''}`}
         >
-            <div className="relative aspect-[16/9] overflow-hidden">
+            <div className="relative aspect-[3/2] overflow-hidden">
                 <img
                     src={event.imageUrl}
                     alt={event.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-
-                <div className="absolute top-4 left-4 flex gap-2">
-                    {event.tags.slice(0, 2).map(tag => (
-                        <span key={tag} className="px-2.5 py-1 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 text-[9px] font-black text-white uppercase tracking-wider">
-                            #{tag}
-                        </span>
-                    ))}
-                    {event.eventType === 'multi-day' && (
-                        <span className="px-2.5 py-1 rounded-lg bg-xynemaRose text-[9px] font-bold text-white uppercase tracking-wider">
-                            Multi-Day
-                        </span>
-                    )}
-                </div>
-
-                <div className="absolute bottom-4 left-4 right-4">
-                    <p className="text-[10px] font-display font-bold text-white uppercase tracking-[0.2em] mb-1">STARTING FROM</p>
-                    <p className="text-xl font-black text-white">₹{event.price || 'Free'}</p>
-                </div>
             </div>
 
-            <div className="p-6 space-y-4">
-                <h3 className="text-xl font-display font-black text-gray-900 group-hover:text-xynemaRose transition-colors line-clamp-1 tracking-tight uppercase">
+            <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-lg font-medium text-[#111827] mb-6 tracking-tight line-clamp-2">
                     {event.name}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <Calendar className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">DATE</p>
-                            <p className="text-xs font-bold text-gray-700">{formattedDate}</p>
-                        </div>
+                <div className="space-y-3 mt-auto mb-5">
+                    <div className="flex items-center gap-3 text-[#4B5563]">
+                        <Calendar className="w-4 h-4 text-gray-400 stroke-[1.5]" />
+                        <span className="text-sm font-medium">{formattedDate}</span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <Clock className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">TIME</p>
-                            <p className="text-xs font-bold text-gray-700">{event.startTime || 'TBA'}</p>
-                        </div>
+                    <div className="flex items-center gap-3 text-[#4B5563]">
+                        <MapPin className="w-4 h-4 text-gray-400 stroke-[1.5]" />
+                        <span className="text-sm font-medium truncate">{event.city || event.venue}</span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <MapPin className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">VENUE</p>
-                            <p className="text-xs font-bold text-gray-700 truncate">{event.venue}</p>
-                        </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-medium text-[#006699]">₹{event.price || 'Free'}</span>
+                        <span className="text-xs font-medium text-[#6B7280]">onwards</span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                            <Ticket className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">CITY</p>
-                            <p className="text-xs font-bold text-gray-700">{event.city}</p>
-                        </div>
+                    <div className="text-xs font-semibold text-[#4B5563] flex items-center gap-1 group-hover:text-[#111827] transition-colors">
+                        View details
+                        <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M7 17L17 7" />
+                            <path d="M7 7h10v10" />
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -466,8 +489,8 @@ const PrivateEventsSection = () => {
         setLoading(true);
         setStatusMessage({ type: '', text: '' });
         try {
-            await api.submitPrivateEventEnquiry(formData);
-            setStatusMessage({ type: 'success', text: 'Enquiry submitted successfully! Our concierge will contact you shortly.' });
+            await submitPrivateEventEnquiry(formData);
+            setStatusMessage({ type: 'success', text: 'Enquiry submitted! Our team will contact you shortly.' });
             setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
         } catch (err) {
             setStatusMessage({ type: 'error', text: err.message || 'Failed to submit enquiry. Please try again.' });
@@ -477,177 +500,174 @@ const PrivateEventsSection = () => {
     };
 
     return (
-        <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-            {/* Ultra-Minimal Hero */}
-            <div className="text-center max-w-2xl mx-auto space-y-6 pt-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-xynemaRose/5 text-xynemaRose rounded-full text-[10px] font-black uppercase tracking-widest">
-                    <PartyPopper className="w-3 h-3" />
-                    <span>Private & Exclusive</span>
+        <div className="animate-in fade-in duration-500 bg-[#F5F7F9]">
+            {/* Dark Blue Hero Banner - No margins around it */}
+            <div className="w-full bg-[#1E4B6E] text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+                <div className="text-center max-w-2xl mx-auto pt-24 pb-32 px-4 relative z-10">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full text-xs font-semibold tracking-wider mb-8">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                        <span className="text-white">PRIVATE EVENT HOSTING</span>
+                    </div>
+
+                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6">
+                        Host Your Private Event
+                    </h2>
+
+                    <p className="text-lg text-blue-100/90 leading-relaxed font-normal">
+                        Create unforgettable experiences with our premium venues and personalized event management. Fill out the form below and our team will craft the perfect event for you.
+                    </p>
                 </div>
 
-                <h2 className="text-5xl md:text-7xl font-display font-black text-gray-900 tracking-tight leading-[0.95] uppercase">
-                    Host It <br />
-                    <span className="text-xynemaRose">Your Way.</span>
-                </h2>
-
-                <p className="text-lg text-gray-500 font-medium leading-relaxed">
-                    The ultimate platform for private screenings and corporate events.
-                    Simple, secure, and completely branded.
-                </p>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-                    <button
-                        onClick={() => document.getElementById('enquiry-form')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="w-full sm:w-auto px-10 py-4 rounded-xl bg-xynemaRose text-white font-display font-black uppercase tracking-widest shadow-xl shadow-xynemaRose/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                        Start Planning
-                    </button>
-                    {/* <button className="w-full sm:w-auto px-10 py-4 rounded-xl bg-white text-xynemaRose border-2 border-xynemaRose/10 font-bold uppercase tracking-widest hover:border-xynemaRose hover:bg-xynemaRose/5 transition-all">
-                        See Demo
-                    </button> */}
-                </div>
             </div>
 
-            {/* Clean Process Steps (Restored 5-step flow) */}
-            <div className="max-w-6xl mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h3 className="text-2xl font-display font-black uppercase tracking-tight text-gray-900">
-                        How It Works
-                    </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
-                    {/* Desktop Connecting Line */}
-                    <div className="hidden md:block absolute top-[2.5rem] left-[10%] right-[10%] h-0.5 bg-gray-100" />
-
-                    {[
-                        { title: 'Inquiry', desc: 'Contact our concierge to start planning.', icon: Clock },
-                        { title: 'Details', desc: 'Submit date, venue, and guest counts.', icon: Info },
-                        { title: 'Secure QR', desc: 'System generates unique encrypted codes.', icon: Shield },
-                        { title: 'Invites', desc: 'Distribute via App, SMS, or Email.', icon: Send },
-                        { title: 'Day Of', desc: 'Instant verification at the gates.', icon: Shield }
-                    ].map((step, idx) => (
-                        <div key={idx} className="relative z-10 flex flex-col items-center text-center space-y-4 group">
-                            <div className="w-20 h-20 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-gray-400 group-hover:border-xynemaRose group-hover:text-xynemaRose group-hover:shadow-lg group-hover:shadow-xynemaRose/10 transition-all duration-300">
-                                <step.icon className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Step 0{idx + 1}</div>
-                                <h4 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-2">{step.title}</h4>
-                                <p className="text-xs text-gray-500 font-medium leading-relaxed px-2">{step.desc}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Form Section */}
-            <div id="enquiry-form" className="max-w-3xl mx-auto px-4">
-                <div className="bg-white rounded-[40px] p-8 md:p-12 border border-gray-100 shadow-2xl shadow-black/5">
-                    <div className="text-center mb-10">
-                        <h3 className="text-3xl font-display font-black uppercase tracking-tight text-gray-900">
-                            Plan Your <span className="text-xynemaRose">Event</span>
+            {/* Form Section Floating on top */}
+            <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
+                <div className="bg-white/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
+                    <div className="mb-10 text-left border-b border-white/20 pb-6">
+                        <h3 className="text-[28px] font-display font-semibold text-gray-900 tracking-tight">
+                            Event Request Form
                         </h3>
-                        <p className="text-gray-500 text-sm mt-2 font-medium">Fill out the details below and we'll handle the rest.</p>
+                        <p className="text-gray-600/90 text-base mt-2">
+                            Please provide us with the details of your event and we'll get back to you shortly.
+                        </p>
                     </div>
 
                     {statusMessage.text && (
-                        <div className={`mb-8 p-4 rounded-2xl flex items-center gap-3 ${statusMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        <div className={`mb-8 p-4 rounded-lg flex items-center gap-3 ${statusMessage.type === 'success' ? 'bg-green-500/10 text-green-700' : 'bg-red-500/10 text-red-700'} backdrop-blur-md border border-white/20`}>
                             {statusMessage.type === 'success' ? <Check className="w-5 h-5" /> : <Info className="w-5 h-5" />}
-                            <span className="text-sm font-bold">{statusMessage.text}</span>
+                            <span className="text-sm font-medium">{statusMessage.text}</span>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</label>
+                                <label className="text-sm font-medium text-gray-700">Full Name <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
-                                    placeholder="John Doe"
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    placeholder="Enter your full name"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Number</label>
+                                <label className="text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
                                 <input
                                     type="tel"
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
-                                    placeholder="+91 9999900000"
+                                    className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    placeholder="Enter your phone number"
                                 />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <label className="text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors"
-                                    placeholder="john@example.com"
+                                    className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    placeholder="Enter your email address"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Type</label>
-                                <select
-                                    name="eventType"
-                                    value={formData.eventType}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors appearance-none"
-                                >
-                                    <option value="" disabled>Select event type</option>
-                                    <option value="corporate">Corporate Event</option>
-                                    <option value="private-screening">Private Screening</option>
-                                    <option value="party">Birthday/Private Party</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                <label className="text-sm font-medium text-gray-700">Event Type <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <select
+                                        name="eventType"
+                                        value={formData.eventType}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-[#9CA3AF] focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none"
+                                    >
+                                        <option value="" disabled>Select event type</option>
+                                        <option value="public-event">Public Event</option>
+                                        <option value="private-event">Private Event</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Event Description</label>
+                            <label className="text-sm font-medium text-gray-700">Event Description</label>
                             <textarea
                                 name="eventDescription"
                                 value={formData.eventDescription}
                                 onChange={handleChange}
                                 required
                                 rows="4"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:border-xynemaRose focus:bg-white transition-colors resize-y"
-                                placeholder="Tell us more about your event..."
+                                className="w-full px-4 py-3 bg-white/40 border border-white/60 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors resize-y"
+                                placeholder="Tell us about your event, requirements, preferences, or special arrangements..."
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-4 rounded-xl bg-gray-900 text-white font-black text-sm uppercase tracking-widest hover:bg-xynemaRose transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    <span>Submit Enquiry</span>
-                                    <ArrowRight className="w-4 h-4" />
-                                </>
-                            )}
-                        </button>
+                        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' })}
+                                className="w-full sm:w-auto px-8 py-3.5 bg-white/30 text-gray-700 border border-white/40 rounded-lg hover:bg-white/50 font-medium transition-colors backdrop-blur-md"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full sm:w-auto px-10 py-3.5 bg-[#3B6A8B] text-white rounded-lg font-medium hover:bg-[#2A516E] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <span>Submit Request</span>
+                                )}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
 
-            <div className="h-10"></div>
+            {/* Feature Cards Grid */}
+            <div className="max-w-4xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 pb-24">
+                {/* 1 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                        <Clock className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-2">Quick Response</h4>
+                    <p className="text-sm text-gray-500 font-medium">Our team will review your request and contact you within 24-48 hours.</p>
+                </div>
+                {/* 2 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                        <Building className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-2">Premium Venues</h4>
+                    <p className="text-sm text-gray-500 font-medium">Access to exclusive venues across multiple cities and locations.</p>
+                </div>
+                {/* 3 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 text-[#1E4B6E] rounded-full flex items-center justify-center mb-4">
+                        <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-2">Custom Experience</h4>
+                    <p className="text-sm text-gray-500 font-medium">Fully customizable event packages tailored to your needs.</p>
+                </div>
+            </div>
         </div>
     );
 };

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toggleInterest, addMovieReview } from '../services/movieService';
+import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies } from '../services/movieService';
 import SEO from '../components/SEO';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotFoundState from '../components/NotFoundState';
@@ -199,7 +199,7 @@ const MovieDetailsPage = () => {
                     {/* <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" /> */}
                 </div>
 
-                <div className="relative z-10 max-w-[1200px] mx-auto px-4 md:px-8 w-full mt-4">
+                <div className="relative z-10 max-w-[80%] mx-auto px-4 md:px-8 w-full mt-4">
                     <div className="flex flex-col md:flex-row gap-8 md:gap-14 items-center md:items-start text-white p-6 md:p-10 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-saturate-150 relative overflow-hidden">
                         {/* Soft Highlight for Glass Edge */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
@@ -345,7 +345,7 @@ const MovieDetailsPage = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className={`grid grid-cols-1 gap-8 ${movie.offers?.length > 0 ? 'lg:grid-cols-12' : 'lg:grid-cols-1'}`}>
                     {/* Left Column */}
                     <div className={`${movie.offers?.length > 0 ? 'lg:col-span-8' : 'w-full'} space-y-10 md:space-y-14`}>
@@ -699,114 +699,27 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
     );
 };
 
-const MOCK_RECOMMENDATIONS = [
-    {
-        id: 'mock-1',
-        title: 'Leo',
-        genre: 'Action, Thriller',
-        posterUrl: 'https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00351731-mnyvqzstvp-portrait.jpg',
-        rating: 8.5,
-        slug: 'leo',
-        language: 'Tamil'
-    },
-    {
-        id: 'mock-2',
-        title: 'Jailer',
-        genre: 'Action, Crime',
-        posterUrl: 'https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00331686-qfmsyvzsrk-portrait.jpg',
-        rating: 8.9,
-        slug: 'jailer',
-        language: 'Tamil'
-    },
-    {
-        id: 'mock-3',
-        title: 'Vikram',
-        genre: 'Action, Mystery',
-        posterUrl: 'https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00138591-lxmzvzqsqk-portrait.jpg',
-        rating: 9.1,
-        slug: 'vikram',
-        language: 'Tamil'
-    },
-    {
-        id: 'mock-4',
-        title: 'The Greatest of All Time',
-        genre: 'Action, Sci-Fi',
-        posterUrl: 'https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00382346-mzwvxsqyqk-portrait.jpg',
-        rating: 8.2,
-        slug: 'the-greatest-of-all-time',
-        language: 'Tamil'
-    },
-    {
-        id: 'mock-5',
-        title: 'Kalki 2898 AD',
-        genre: 'Action, Sci-Fi',
-        posterUrl: 'https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00352941-lqmxvsqzvk-portrait.jpg',
-        rating: 9.0,
-        slug: 'kalki-2898-ad',
-        language: 'Telugu'
-    }
-];
 
 const SimilarMovies = ({ currentMovie }) => {
-    const { movies, latestMovies, selectedCity } = useData();
+    const { latestMovies, highlightsMovies } = useData();
     const navigate = useNavigate();
-    const [apiMovies, setApiMovies] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchRecommendations = async () => {
-            const totalStored = (movies?.length || 0) + (latestMovies?.length || 0);
-            if (totalStored < 5) {
-                setIsLoading(true);
-                try {
-                    const [upcoming, highlights] = await Promise.all([
-                        getUpcomingMovies(selectedCity || localStorage.getItem('selected_city') || 'Kochi'),
-                        getHighlightsMovies()
-                    ]);
+    // Use latestMovies and highlightsMovies from context
+    const allMovies = [...(latestMovies || []), ...(highlightsMovies || [])];
 
-                    const combined = [
-                        ...(upcoming?.movies || []),
-                        ...(Array.isArray(highlights) ? highlights : [])
-                    ];
-                    setApiMovies(combined);
-                } catch (err) {
-                    console.error('Error fetching recommendations:', err);
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        };
-        fetchRecommendations();
-    }, [movies, latestMovies, selectedCity]);
+    // Remove duplicates and current movie
+    const moviesToShow = Array.from(new Set(allMovies.map(m => m.id)))
+        .map(id => allMovies.find(m => m.id === id))
+        .filter(m => m && m.id !== currentMovie.id);
 
-    // Filter logic: Same genre, exclude current movie
-    const allMovies = [...(movies || []), ...(latestMovies || []), ...apiMovies];
-    const dedupedMovies = allMovies.filter((movie, index, self) =>
-        index === self.findIndex((t) => (t.id || t._id) === (movie.id || movie._id))
-    );
-    const otherMovies = dedupedMovies.filter(m =>
-        m.id !== currentMovie.id && m._id !== currentMovie._id
-    );
+    // Development purpose: disable genre filter, show all available movies
+    let similarMovies = moviesToShow.slice(0, 8);
 
-    // Try genre-based matching first
-    let similarMovies = otherMovies.filter(m => {
-        const currentGenres = (currentMovie.genre || '').toLowerCase().split(',').map(g => g.trim());
-        const movieGenres = (m.genre || '').toLowerCase().split(',').map(g => g.trim());
-        return currentGenres.some(g => g && movieGenres.includes(g));
-    }).slice(0, 8);
-
-    // Fallback 1: if no genre matches, show any other movies
-    if (similarMovies.length === 0) {
-        similarMovies = otherMovies.slice(0, 8);
-    }
-
-    // Fallback 2: if still no movies (data empty), use MOCK_RECOMMENDATIONS
-    if (similarMovies.length === 0 && !isLoading) {
-        similarMovies = MOCK_RECOMMENDATIONS;
-    }
+    // Only render the section if we actually have movies to show
+    if (similarMovies.length === 0) return null;
 
     return (
-        <section id="similar-movies" className="relative mt-16 group/similar animate-slide-up opacity-0 delay-400">
+        <section id="similar-movies" className="relative mt-16 group/similar animate-slide-up delay-400">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                     You might also like

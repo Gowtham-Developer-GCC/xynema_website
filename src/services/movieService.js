@@ -16,7 +16,8 @@ export const getNotNowMovies = async () => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.MOVIES.LATEST);
         if (response.data.success) {
-            const resultData = response.data.data;
+            // The API returns { success: true, count: X, data: [...] } or { ..., latestMovies: [...] }
+            const resultData = response.data.data || response.data.latestMovies;
             if (Array.isArray(resultData)) {
                 return resultData.map(m => new Movie(m));
             }

@@ -26,6 +26,28 @@ export const getEvents = async (city) => {
     });
 };
 
+export const getAllEventsList = async () => {
+    return safeApiCall(async () => {
+        try {
+            const response = await api.get(ENDPOINTS.EVENTS.LIST);
+            let body = response.data;
+
+            if (Array.isArray(body)) {
+                body = body[0] || {};
+            }
+
+            if (body.success && body.data) {
+                const eventsData = body.data.events || body.data;
+                return Array.isArray(eventsData) ? eventsData.map(e => new Event(e)) : [];
+            }
+            return [];
+        } catch (error) {
+            console.error('Error fetching global events:', error);
+            return [];
+        }
+    });
+};
+
 export const getEventBookings = async () => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST);

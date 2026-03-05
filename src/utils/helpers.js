@@ -212,9 +212,16 @@ export const utils = {
 
     /**
      * Image Optimization
+     * Safely handles internal and external URLs
      */
     optimizeImage(url, options = {}) {
         if (!url) return 'https://placehold.co/400x600/333/FFF?text=XY';
+
+        // Skip optimization for external CDNs that might break with extra params
+        if (url.includes('bmscdn.com') || url.includes('unsplash.com') || url.includes('cloudinary.com') || url.startsWith('http')) {
+            return url;
+        }
+
         const { width = 1200, height = 630, quality = 80, format = 'webp' } = options;
         const params = new URLSearchParams({
             w: width,
@@ -223,7 +230,8 @@ export const utils = {
             f: format,
             auto: 'format',
         });
-        return `${url}?${params}`;
+
+        return url.includes('?') ? `${url}&${params}` : `${url}?${params}`;
     },
 
     /**

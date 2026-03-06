@@ -1,13 +1,24 @@
-
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader, Info, Armchair, Accessibility, Ticket, ChevronRight, Clapperboard, Film, MapPin, Clock, AlertCircle, X, Pencil, Bike, Car, Truck, Bus } from 'lucide-react';
+import { ArrowLeft, Clock, Ticket, Info, ChevronRight, Users, AlertCircle, X, ChevronLeft, Settings } from 'lucide-react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import SEO from '../components/SEO';
 import { getSeats, lockSeats, releaseSeats } from '../services/bookingService';
+import { getNotNowMovies } from '../services/movieService';
 import LoadingScreen from '../components/LoadingScreen';
+import SeatLayout from '../components/SeatSelection/SeatLayout';
+import BookingSummary from '../components/SeatSelection/BookingSummary';
+import SeatCountModal from '../components/SeatSelection/SeatCountModal';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
-import bookingSessionManager from '../utils/bookingSessionManager';
+
+const Toast = ({ message, type, onClose }) => (
+    <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
+        {type === 'error' ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+        <span className="text-xs font-black uppercase tracking-wider">{message}</span>
+        <button onClick={onClose} className="ml-4 opacity-50 hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
+    </div>
+);
 
 const SeatSelectionPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -16,9 +27,14 @@ const SeatSelectionPage = () => {
     const { state } = useLocation();
 
     const showId = sessionStorage.getItem('booking_show_id');
-    const theaterName = sessionStorage.getItem('booking_theater_name');
     const theaterId = state?.theaterId || searchParams.get('theaterId');
     const movieId = state?.movieId || searchParams.get('movieId');
+
+    // Fallback display values from sessionStorage (set during movie/theater selection steps)
+    const movieTitle = state?.movieTitle || sessionStorage.getItem('booking_movie_title') || '';
+    const moviePoster = state?.moviePoster || sessionStorage.getItem('booking_movie_poster') || '';
+    const theaterName = state?.theaterName || sessionStorage.getItem('booking_theater_name') || 'Unknown Theatre';
+    const showDate = state?.date || searchParams.get('date') || sessionStorage.getItem('booking_show_date') || '';
 
     useEffect(() => {
         if (!showId || !theaterSlug) {
@@ -28,26 +44,50 @@ const SeatSelectionPage = () => {
 
     const [seats, setSeats] = useState([]);
     const [layout, setLayout] = useState(null);
-    const [selectedSeats, setSelectedSeats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [show, setShow] = useState(null);
     const [toast, setToast] = useState(null);
-    const [numSeatsToSelect, setNumSeatsToSelect] = useState(1);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedShow, setSelectedShow] = useState(null);
+    const [selectedSeats, setSelectedSeats] = useState([]);
+    const [isCountModalOpen, setIsCountModalOpen] = useState(true);
+    const [selectedSeatCount, setSelectedSeatCount] = useState(2);
+    const [movieData, setMovieData] = useState(null); // Real movie data fetched from API
+
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     const hasProceededRef = useRef(false);
     const selectedSeatsRef = useRef([]);
-    const containerRef = useRef(null);
     const releaseTimeoutRef = useRef(null);
 
     useEffect(() => {
         selectedSeatsRef.current = selectedSeats;
-        // Auto-trim selection if seat count limit is reduced
-        if (selectedSeats.length > numSeatsToSelect) {
-            setSelectedSeats(prev => prev.slice(0, numSeatsToSelect));
-        }
-    }, [selectedSeats, numSeatsToSelect]);
+    }, [selectedSeats]);
+
+    // Fetch movie details from latest-movies API and match by slug
+    useEffect(() => {
+        const fetchMovieDetails = async () => {
+            try {
+                const movies = await getNotNowMovies();
+                if (Array.isArray(movies)) {
+                    // Movie model maps: MovieName → title, portraitPosterUrl → posterUrl
+                    const matched = movies.find(m => m.slug === slug || m.id === movieId);
+                    if (matched) {
+                        setMovieData({
+                            title: matched.title,          // Already mapped from MovieName
+                            portraitPosterUrl: matched.posterUrl, // Already mapped from portraitPosterUrl
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch movie details from API:', e);
+            }
+        };
+        if (slug || movieId) fetchMovieDetails();
+    }, [slug, movieId]);
 
     useEffect(() => {
         const fetchSeats = async () => {
@@ -58,6 +98,8 @@ const SeatSelectionPage = () => {
                 if (urlSeats && urlSeats.length > 0) {
                     releaseSeats(showId, urlSeats).catch(() => { });
                 }
+
+                // Release pending locks from previous attempts
                 try {
                     const pendingLock = sessionStorage.getItem('pending_seat_lock');
                     if (pendingLock) {
@@ -72,13 +114,22 @@ const SeatSelectionPage = () => {
                 }
 
                 const response = await getSeats(showId);
-                setShow(response.data.show);
-                setSeats(response.data.seats || []);
-                const screenLayout = response.data.layout || response.data.show?.screen?.layout || response.data.show?.screen?.screenId?.layout;
+                const showData = response.data?.show || response.data;
+                const seatsData = response.data?.seats || [];
+
+                setShow(showData);
+                setSeats(seatsData);
+
+                // Find layout in various possible nested locations (matching mobile logic)
+                const screenLayout = response.data?.layout ||
+                    showData?.layout ||
+                    showData?.screen?.layout ||
+                    showData?.screen?.screenId?.layout ||
+                    {};
 
                 setLayout(screenLayout);
-                setIsModalOpen(true);
             } catch (err) {
+                console.error('Fetch seats error:', err);
                 setError(err);
             } finally {
                 setLoading(false);
@@ -87,82 +138,38 @@ const SeatSelectionPage = () => {
 
         if (showId) fetchSeats();
 
-        // Clear any pending release on remount (Fix for React Strict Mode)
         if (releaseTimeoutRef.current) {
             clearTimeout(releaseTimeoutRef.current);
             releaseTimeoutRef.current = null;
         }
 
         return () => {
-            // Only release if we've selected something and haven't proceeded
             if (!hasProceededRef.current && showId && selectedSeatsRef.current.length > 0) {
                 releaseTimeoutRef.current = setTimeout(() => {
                     releaseSeats(showId, selectedSeatsRef.current).catch(() => { });
-                }, 500); // 500ms grace period for remounts
+                }, 500);
             }
         };
     }, [showId]);
 
-    const handleSeatSelect = (seatId) => {
-        const seat = seats.find(s => (s.id || s._id) === seatId);
-        if (!seat || seat.isBooked || seat.isLocked || !seat.isAvailable) {
-            showToast('Seat is already booked or unavailable', 'error');
-            return;
+    // Unified state logic above and fetch effects below
+    useEffect(() => {
+        if (show) {
+            setSelectedShow({
+                showId: showId,
+                id: showId,
+                time: show.startTime || show.showTime || sessionStorage.getItem('booking_show_time') || '',
+                price: show.pricing?.[0]?.basePrice || 150,
+                screenName: show.theatre?.name || theaterName || 'Screen'
+            });
         }
+    }, [show, showId, theaterName]);
 
-        // 1. If seat is already selected -> Deselect JUST this one (Flexible Modification)
-        if (selectedSeats.includes(seatId)) {
-            setSelectedSeats(prev => prev.filter(id => id !== seatId));
-            return;
-        }
-
-        // 2. If seat is NEW -> Perform Batch Auto-Selection
-        const { row, column } = seat.position;
-        const newBatch = [];
-        let currentSeats = [...selectedSeats];
-
-        // If we are already at or above limit, reset selection for a fresh batch (Batch Replacement)
-        if (currentSeats.length >= numSeatsToSelect) {
-            currentSeats = [];
-        }
-
-        const remainingCount = numSeatsToSelect - currentSeats.length;
-
-        // Find consecutive available seats in the same row starting from this one
-        for (let c = column; newBatch.length < remainingCount; c++) {
-            const nextSeat = seats.find(s =>
-                s.position.row === row &&
-                s.position.column === c &&
-                s.isAvailable && !s.isBooked && !s.isLocked
-            );
-
-            // Break if we hit a gap, a booked seat, or a different row (consecutive check)
-            if (!nextSeat) break;
-
-            // Only add if not already in the overall selection
-            if (!currentSeats.includes(nextSeat.id || nextSeat._id)) {
-                newBatch.push(nextSeat.id || nextSeat._id);
-            }
-        }
-
-        if (newBatch.length > 0) {
-            setSelectedSeats([...currentSeats, ...newBatch]);
-        }
+    const handleSeatChange = (seats) => {
+        setSelectedSeats(seats);
     };
 
-    const showToast = (message, type = 'info') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    const calculateTotalPrice = () => {
-        return selectedSeats.reduce((total, seatId) => {
-            const seat = seats.find(s => (s.id || s._id) === seatId);
-            return total + (seat?.basePrice || 250);
-        }, 0);
-    };
-
-    const handleProceedToFood = async () => {
+    const handleProceedToPayment = async () => {
         if (selectedSeats.length === 0) {
             showToast('Please select your seats', 'warning');
             return;
@@ -170,36 +177,44 @@ const SeatSelectionPage = () => {
 
         try {
             setLoading(true);
-            const sessionId = await lockSeats(showId, selectedSeats);
+            const seatIds = selectedSeats.map(seat => seat.id);
+            const sessionId = await lockSeats(showId, seatIds);
+
             if (sessionId) {
                 sessionStorage.setItem('pending_seat_lock', JSON.stringify({
                     showId,
-                    seats: selectedSeats,
+                    seats: seatIds,
                     timestamp: Date.now()
                 }));
 
-                // Persist booking session for retrieval in Food/Payment pages
-                const draftBooking = {
-                    movieId: show?.movie?.id || show?.movie?._id || movieId,
-                    movieSlug: slug,
-                    theaterId: show?.theatre?.id || show?.theatre?._id || theaterId,
+                // Update booking draft for PaymentPage to consume
+                const bookingDraft = {
                     showId,
-                    seats: selectedSeats,
-                    date: show?.date,
-                    sessionId,
-                    timestamp: Date.now()
+                    movieId: movieId,
+                    theaterId: theaterId,
+                    sessionId: sessionId,
+                    date: showDate,
+                    seats: seatIds,
+                    cart: {} // Empty cart since we're skipping food for now
                 };
-                sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(draftBooking));
-                sessionStorage.setItem('pending_seat_lock', JSON.stringify({ showId, seats: selectedSeats }));
+                sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(bookingDraft));
 
                 hasProceededRef.current = true;
-                navigate(`/movie/${slug}/${theaterSlug}/food`);
+                navigate(`/movie/${slug}/${theaterSlug}/payment`, {
+                    state: {
+                        movie: displayShow,
+                        show: selectedShow,
+                        seats: selectedSeats,
+                        sessionId: sessionId
+                    }
+                });
             } else {
-                throw new Error('Could not lock seats');
+                showToast('Failed to select seats. Please try again.', 'error');
             }
-        } catch (error) {
-            showToast(error.message || 'Selected seats were just taken! Refreshing...', 'error');
-            setSelectedSeats([]);
+        } catch (err) {
+            console.error('Proceed to payment error:', err);
+            showToast(err.message || 'Could not lock seats. They might have been taken.', 'error');
+            // Refresh seats to show updated availability
             const response = await getSeats(showId);
             if (response.success) setSeats(response.data.seats || []);
         } finally {
@@ -207,480 +222,157 @@ const SeatSelectionPage = () => {
         }
     };
 
+    const handleCancelBooking = () => {
+        if (window.confirm('Cancel current selection?')) {
+            setSelectedSeats([]);
+            navigate(-1);
+        }
+    };
+
+    // Build display data — API returns movie/theatre as raw IDs, so we rely on sessionStorage values
+    const displayShow = React.useMemo(() => {
+        if (!show) return null;
+        const resolvedTitle = sessionStorage.getItem('booking_movie_title') || movieTitle || 'Movie';
+        const resolvedPoster = sessionStorage.getItem('booking_movie_poster') || moviePoster || '';
+        const resolvedTheaterName = sessionStorage.getItem('booking_theater_name') || theaterName || 'Theatre';
+        const resolvedShowTime = show?.showTime || show?.startTime || sessionStorage.getItem('booking_show_time') || '';
+        const resolvedDate = show?.showDate || show?.date || showDate;
+
+        return {
+            ...show,
+            movie: {
+                id: movieId,
+                title: movieData?.title || resolvedTitle,
+                portraitPosterUrl: movieData?.portraitPosterUrl || resolvedPoster,
+            },
+            theatre: {
+                id: theaterId,
+                name: resolvedTheaterName,
+            },
+            startTime: resolvedShowTime,
+            date: resolvedDate,
+        };
+    }, [show, movieId, movieTitle, moviePoster, theaterId, theaterName, showDate, movieData]);
+
+    // Show summary state for BookingSummary
+    const showForSummary = React.useMemo(() => {
+        if (!showId || !show) return null;
+        return {
+            showId,
+            id: showId,
+            time: show?.showTime || show?.startTime || sessionStorage.getItem('booking_show_time') || '',
+            screenName: sessionStorage.getItem('booking_theater_name') || theaterName || 'Screen',
+            price: show?.pricing?.[0]?.basePrice || 150,
+        };
+    }, [show, showId, theaterName]);
+
     if (loading) return <LoadingScreen message="Scanning Layout" />;
     if (error) return <ErrorState error={error} title="Issue Detected" buttonText="TRY AGAIN" />;
     if (!show || !showId) return <NotFoundState title="Show Not Found" message="We couldn't find the showtime you're looking for." />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA]">
+        <div className="min-h-screen bg-[#F5F5FA] flex flex-col">
             <SEO title="Select Seats - XYNEMA" description="Choose your preferred movie seats" />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {isModalOpen && (
-                <SeatCountModal
-                    value={numSeatsToSelect}
-                    onChange={setNumSeatsToSelect}
-                    onConfirm={() => setIsModalOpen(false)}
-                />
-            )}
+            {/* Sub-Header: Information & Controls — Positioned in-flow below global navbar */}
+            <div className="bg-white border-b border-gray-100 shadow-sm py-4">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+                    {/* Left: Navigation Buttons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#1a2b4b] hover:bg-slate-100 active:scale-95 transition-all group"
+                        >
+                            <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
+                        </button>
+                        <button
+                            onClick={() => setIsCountModalOpen(true)}
+                            className="h-10 px-4 rounded-xl bg-[#1a2b4b] text-white flex items-center gap-2 hover:bg-[#111c32] active:scale-95 transition-all group shadow-sm"
+                        >
+                            <Settings className="w-4 h-4 transition-transform group-hover:rotate-45" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                {selectedSeatCount} {selectedSeatCount === 1 ? 'Seat' : 'Seats'}
+                            </span>
+                        </button>
+                    </div>
 
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-
-                    <div className="flex-1 mx-6 flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-sm font-black text-gray-900 uppercase tracking-wide">
-                                {show?.movie?.title}
+                    {/* Center: Movie/Theatre info */}
+                    <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
+                        <div className="flex items-center gap-2 mb-0.5 w-full justify-center">
+                            <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide truncate">
+                                {displayShow.movie?.title}
                             </h1>
-                            <span className="text-gray-300">|</span>
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                {show?.theatre?.name}
+                            <span className="text-slate-300">|</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate">
+                                {displayShow.theatre?.name}
                             </span>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-xynemaRose" />
-                                <span className="text-[10px] font-black text-xynemaRose uppercase tracking-widest">
-                                    {show?.startTime}
+                                <Clock className="w-3 h-3 text-[#1a2b4b]" />
+                                <span className="text-[10px] font-black text-[#1a2b4b] uppercase tracking-widest">
+                                    {displayShow.startTime}
                                 </span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <Ticket className="w-3 h-3 text-gray-400" />
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    {new Date(state?.date || searchParams.get('date') || show?.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                <Ticket className="w-3 h-3 text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    {showDate ? new Date(showDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : ''}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50">
-                        <Info className="w-4 h-4 text-gray-300" />
+                    {/* Right: Info button */}
+                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-300">
+                        <Info className="w-4 h-4" />
                     </div>
-                </div>
-            </header>
-
-            {/* Show Overview Bar */}
-
-
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {/* Legend - Moved to Top */}
-                <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8 max-w-3xl mx-auto">
-                    {/* Row 1: Types */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 group">
-                            <Armchair className="w-4 h-4 text-gray-400" />
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Recliner</span>
-                        </div>
-                        <div className="flex items-center gap-2 group">
-                            <Accessibility className="w-4 h-4 text-gray-400" />
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Disabled</span>
-                        </div>
-                    </div>
-
-                    {/* Divider (Desktop Only) */}
-                    <div className="hidden md:block w-px h-4 bg-gray-200" />
-
-                    {/* Row 2: Status */}
-                    <div className="flex items-center gap-4">
-                        <LegendItem color="bg-white border border-green-500 shadow-sm shadow-green-200" label="Available" />
-                        <LegendItem color="bg-green-500 text-white shadow-sm shadow-green-200" label="Selected" />
-                        <LegendItem color="bg-gray-100 text-gray-300 border border-gray-200" label="Sold" />
-                    </div>
-                </div>
-
-                <div className="w-full overflow-hidden flex flex-col items-center">
-                    <div className="w-full overflow-auto no-scrollbar curve-container pb-32 px-4" ref={containerRef}>
-                        <div className="min-w-fit mx-auto pl-8 pr-8">
-                            <SeatLayout
-                                layout={layout}
-                                seats={seats}
-                                selectedSeats={selectedSeats}
-                                onSelectSeat={handleSeatSelect}
-                                seatClasses={show?.screen?.screenId?.seatClasses}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#F5F5FA]/80 backdrop-blur-md border-t border-gray-100 p-4 md:p-6">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                            {selectedSeats.length} / {numSeatsToSelect} SEATS
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="text-[9px] text-xynemaRose bg-white border px-2 py-0.5 rounded hover:bg-xynemaRose hover:text-white transition-colors flex items-center gap-1"
-                            >
-                                <Pencil className="w-2.5 h-2.5" />
-                                EDIT SEATS
-                            </button>
-                        </p>
-                        <p className="text-2xl font-black text-xynemaRose">
-                            ₹{calculateTotalPrice().toLocaleString()}
-                        </p>
-                    </div>
-                    <button
-                        onClick={handleProceedToFood}
-                        disabled={selectedSeats.length !== numSeatsToSelect}
-                        className="px-14 py-4 rounded-xl bg-xynemaRose text-white font-black text-sm uppercase disabled:bg-gray-200"
-                    >
-                        Pay Now
-                    </button>
                 </div>
             </div>
-            {isModalOpen && (
-                <SeatCountModal
-                    value={numSeatsToSelect}
-                    onChange={setNumSeatsToSelect}
-                    onConfirm={() => {
-                        setIsModalOpen(false);
-                        setSelectedSeats([]); // Reset selection when count changes
-                    }}
-                    seatClasses={show?.screen?.screenId?.seatClasses}
-                    seats={seats}
-                />
-            )}
-        </div >
-    );
-};
 
-const SeatCountModal = ({ value, onChange, onConfirm, seatClasses, seats }) => {
-    // Dynamic vehicle asset based on count
-    const getVehicleImage = (count) => {
-        const vehicles = {
-            1: "bicycle",
-            2: "scooter",
-            3: "auto",
-            4: "car",
-            5: "sedan",
-            6: "suv",
-            7: "van",
-            8: "tempo",
-            9: "minibus",
-            10: "bus"
-        };
-        return `/assets/vehicles/${vehicles[count] || "scooter"}.png`;
-    };
-
-    // Robust Pricing Logic: Use prop or derive from seats
-    const displayClasses = (seatClasses && seatClasses.length > 0)
-        ? seatClasses
-        : (() => {
-            if (!seats || seats.length === 0) return [];
-            const unique = new Map();
-            seats.forEach(s => {
-                // Determine class name (try deep nested, then type, then fallback)
-                let name = s.seatClass?.name;
-                if (!name && typeof s.seatClass === 'string') name = 'Standard'; // ID only
-                if (!name) name = s.seatType || s.type || 'Standard';
-
-                const price = s.basePrice || 0;
-                const key = `${name}-${price}`;
-
-                if (!unique.has(key)) {
-                    unique.set(key, {
-                        id: key,
-                        name: name.toUpperCase(),
-                        price: price,
-                        status: 'AVAILABLE'
-                    });
-                }
-            });
-            // Sort by price descending (Diamond usually > Gold)
-            return Array.from(unique.values()).sort((a, b) => b.price - a.price);
-        })();
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" />
-            <div className="relative w-full max-w-xl bg-white rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 flex flex-col items-center">
-
-                <h3 className="text-lg font-bold text-gray-900 mb-6">How many seats?</h3>
-
-                {/* Dynamic Asset */}
-                <div className="mb-8 h-32 flex items-center justify-center transform hover:scale-105 transition-transform duration-500">
-                    <img
-                        src={getVehicleImage(value)}
-                        alt="Vehicle"
-                        className="h-full w-auto object-contain drop-shadow-xl"
+            {/* Main Content Area - Split View — Flexible height below sub-header */}
+            <main className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row overflow-hidden">
+                {/* Left Side: Seat Layout */}
+                <div className="flex-1 p-4 lg:p-6 overflow-hidden h-[60vh] lg:h-full relative rounded-tr-xl lg:rounded-tr-none">
+                    <SeatLayout
+                        showId={showId}
+                        onSeatChange={handleSeatChange}
+                        maxSeatCount={selectedSeatCount}
+                        showToast={showToast}
                     />
                 </div>
 
-                {/* Number Selector */}
-                <div className="flex flex-wrap justify-center gap-3 mb-8">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                        <button
-                            key={n}
-                            onClick={() => onChange(n)}
-                            className={`
-                                w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center transition-all duration-200
-                                ${value === n
-                                    ? 'bg-xynemaRose text-white shadow-lg scale-110'
-                                    : 'bg-transparent text-gray-900 hover:font-bold hover:scale-110'}
-                            `}
-                        >
-                            {n}
-                        </button>
-                    ))}
+                {/* Right Side: Summary Section */}
+                <div className="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.1)] flex flex-col h-[60vh] lg:h-full z-30 shrink-0">
+                    <BookingSummary
+                        movie={displayShow}
+                        show={showForSummary}
+                        selectedSeats={selectedSeats}
+                        onConfirm={handleProceedToPayment}
+                        onCancel={() => setSelectedSeats([])}
+                        onEditCount={() => setIsCountModalOpen(true)}
+                    />
                 </div>
+            </main>
 
-                {/* Pricing Info */}
-                <div className="w-full border-t border-gray-100 pt-6 mb-6 flex justify-around gap-4">
-                    {displayClasses.map((cls) => (
-                        <div key={cls.id || cls._id || cls.name} className="flex flex-col items-center gap-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cls.name}</span>
-                            <span className="text-base font-black text-gray-900">₹{cls.price}</span>
-                            <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest mt-1">AVAILABLE</span>
-                        </div>
-                    ))}
-                    {displayClasses.length === 0 && (
-                        <div className="flex flex-col items-center gap-1">
-                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">STANDARD</span>
-                            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest mt-1">FILLING FAST</span>
-                        </div>
-                    )}
-                </div>
-
-                <button
-                    onClick={onConfirm}
-                    className="w-full py-4 rounded-xl bg-xynemaRose text-white font-bold text-base shadow-xl hover:shadow-2xl transition-all active:scale-95"
-                >
-                    Select Seats
-                </button>
-            </div>
-        </div>
-    );
-};
-
-const CurvedScreen = () => (
-    <div className="w-full max-w-[500px] mx-auto mt-20 mb-12 flex flex-col items-center">
-        {/* Screen Object matching the image */}
-        <div className="relative w-full h-12 perspective-[1000px]">
-            {/* Top/Front Face */}
-            <div
-                className="w-full h-full bg-blue-100 border-2 border-blue-400 shadow-[0_0_20px_rgba(56,189,248,0.4)] relative overflow-hidden"
-                style={{
-                    transform: 'perspective(400px) rotateX(20deg) scale(0.9)',
-                    borderRadius: '4px',
-                    boxShadow: '0 10px 40px -5px rgba(56, 189, 248, 0.4)'
+            {/* Seat Count Modal */}
+            <SeatCountModal
+                isOpen={isCountModalOpen}
+                onClose={() => setIsCountModalOpen(false)}
+                onSelect={(count) => {
+                    setSelectedSeatCount(count);
+                    setIsCountModalOpen(false);
                 }}
-            >
-                {/* Inner Glow */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent" />
-            </div>
+                pricing={show?.pricing?.map(p => ({
+                    label: p.label || p.seatType.toUpperCase(),
+                    price: p.basePrice,
+                    status: 'AVAILABLE'
+                }))}
+            />
         </div>
-
-        <p className="mt-4 text-xs font-semibold text-gray-400 tracking-wide opacity-80">
-            All eyes this way please
-        </p>
-    </div>
-);
-
-const LegendItem = ({ color, label, isBorder, isDynamicColor }) => (
-    <div className="flex items-center gap-3 group">
-        <div
-            className={`w-3.5 h-3.5 rounded-md transition-transform group-hover:scale-110 shadow-sm ${!isDynamicColor ? color : ''}`}
-            style={isDynamicColor ? { backgroundColor: color } : {}}
-        />
-        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">{label}</span>
-    </div>
-);
-
-const SeatLayout = ({ layout, seats, selectedSeats, onSelectSeat, seatClasses }) => {
-    if (!layout || !seats) return (
-        <div className="flex flex-col items-center justify-center space-y-4">
-            <Loader className="w-10 h-10 text-xynemaRose animate-spin opacity-20" />
-            <div className="text-gray-300 text-sm font-bold tracking-widest uppercase opacity-40">Scanning Layout...</div>
-        </div>
-    );
-
-    const { rows, columns, rowLabels, seatLayout } = layout;
-
-    const getSeatAt = (r, c) => {
-        return seats.find(s => s.position.row === r && s.position.column === c);
-    };
-
-    let lastType = null;
-    let lastPrice = null;
-
-    const rowIndices = Array.from({ length: rows }, (_, i) => i);
-    const colIndices = Array.from({ length: columns }, (_, i) => i);
-
-    return (
-        <div className="flex flex-col items-center space-y-2 lg:space-y-3 pb-0">
-            {rowIndices.map((r) => {
-                const rowLabel = rowLabels[r] || '';
-
-                // Find first valid seat in this row to determine type/price section
-                let firstSeatInRow = null;
-                let firstLayoutSeatInRow = null;
-                for (let c = 0; c < columns; c++) {
-                    const s = getSeatAt(r, c);
-                    if (s) {
-                        firstSeatInRow = s;
-                        firstLayoutSeatInRow = seatLayout?.[r]?.[c];
-                        break;
-                    }
-                }
-
-                const showHeader = firstSeatInRow && (
-                    (firstSeatInRow.seatType || firstSeatInRow.type) !== lastType ||
-                    firstSeatInRow.basePrice !== lastPrice
-                );
-
-                if (showHeader) {
-                    lastType = firstSeatInRow.seatType || firstSeatInRow.type;
-                    lastPrice = firstSeatInRow.basePrice;
-                }
-
-                // Header Logic
-                let headerText = '';
-                if (showHeader) {
-                    // Try to find class name from seat object or look it up
-                    let className = firstSeatInRow?.seatClass?.name;
-
-                    if (!className && seatClasses) {
-                        let seatClassId = firstSeatInRow.seatClass?.id || firstSeatInRow.seatClass?._id;
-
-                        // Handle unpopulated seatClass (string or number ID)
-                        if (!seatClassId && firstSeatInRow.seatClass && typeof firstSeatInRow.seatClass !== 'object') {
-                            seatClassId = firstSeatInRow.seatClass;
-                        }
-
-                        // Fallback to explicit classId on seat or layout data
-                        if (!seatClassId) {
-                            seatClassId = firstSeatInRow.classId || firstLayoutSeatInRow?.classId;
-                        }
-
-                        // Use loose equality (==) to handle string/number ID mismatches
-                        const cls = seatClasses.find(sc => sc.id == seatClassId || sc._id == seatClassId);
-                        if (cls) className = cls.name;
-                    }
-
-                    if (!className) className = "UNKNOWN" // Fallback
-
-                    headerText = `₹${firstSeatInRow.basePrice} ${className?.toUpperCase()} `;
-                }
-
-                return (
-                    <div key={`row-${r}`} className="w-full flex flex-col items-center">
-                        {showHeader && (
-                            <div className="flex items-center gap-3 mt-6 mb-2">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">
-                                    {headerText}
-                                </span>
-                            </div>
-                        )}
-                        <div className="flex items-center gap-4 md:gap-6">
-                            <span className="w-6 text-gray-500 font-black text-[10px] text-right">{rowLabel}</span>
-                            <div className="flex gap-1.5 lg:gap-2">
-                                {colIndices.map((c) => {
-                                    const seat = getSeatAt(r, c);
-                                    // Get the visual layout object for this cell
-                                    const layoutSeat = seatLayout?.[r]?.[c];
-
-                                    // If no layout data or it's empty space, treat as gap
-                                    if (!layoutSeat || layoutSeat.type === 'empty' || layoutSeat.type === 'path' || layoutSeat.type === 'aisle') {
-                                        return <div key={`gap-${r}-${c}`} className="w-8 h-8 md:w-9 md:h-9" />;
-                                    }
-
-                                    const seatId = seat?.id || seat?._id || layoutSeat._id;
-                                    const isSelected = selectedSeats.includes(seatId);
-                                    const isUnavailable = seat
-                                        ? (seat.isBooked || seat.isLocked || !seat.isAvailable)
-                                        : (layoutSeat.type === 'disabled');
-
-                                    // Determine seat type
-                                    const seatType = seat?.seatType || layoutSeat.type || 'normal';
-
-                                    // Determine color
-                                    // User requested "no need different colored" - implying uniform color theme.
-                                    // We'll use a standard green for available/selected to match the "clean" aesthetic.
-                                    // The differentiation comes from the layout sections (headers) and icons.
-                                    const seatColor = '#22c55e'; // Standard Green
-
-                                    // Determine styles
-                                    let buttonStyle = {};
-                                    if (isUnavailable) {
-                                        buttonStyle = {
-                                            backgroundColor: '#e5e7eb', // gray-200
-                                            borderColor: 'transparent',
-                                            color: '#9ca3af' // gray-400
-                                        };
-                                    } else if (isSelected) {
-                                        buttonStyle = {
-                                            backgroundColor: seatColor,
-                                            borderColor: seatColor,
-                                            color: '#ffffff'
-                                        };
-                                    } else {
-                                        // Available: Outline
-                                        buttonStyle = {
-                                            backgroundColor: '#ffffff',
-                                            borderColor: seatColor,
-                                            color: seatColor
-                                        };
-                                    }
-
-                                    // Accessible Label - Descriptive and clear for screen readers
-                                    const seatName = `${rowLabel}${seat?.seatNumber || c}`;
-                                    const ariaLabel = `Seat ${seatName}, ${seat?.seatType || 'Standard'}, ₹${seat?.basePrice || ''}, ${isUnavailable ? 'Sold Out' : isSelected ? 'Selected' : 'Available'}`;
-
-                                    return (
-                                        <button
-                                            key={seatId}
-                                            disabled={isUnavailable}
-                                            onClick={() => (seat || layoutSeat) && onSelectSeat(seatId)}
-                                            style={buttonStyle}
-                                            aria-label={ariaLabel}
-                                            aria-pressed={isSelected}
-                                            className={`w-8 h-8 md:w-9 md:h-9 rounded-lg text-[10px] font-black flex items-center justify-center border transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isUnavailable
-                                                ? 'cursor-not-allowed opacity-40'
-                                                : isSelected
-                                                    ? 'shadow-xl shadow-green-100 transform scale-105 z-10'
-                                                    : 'hover:shadow-lg hover:scale-105 hover:z-10'
-                                                }`}
-                                        >
-                                            {seatType === 'recliner' ? (
-                                                <Armchair className="w-4 h-4" />
-                                            ) : seatType === 'disabled' ? (
-                                                <Accessibility className="w-4 h-4" />
-                                            ) : (
-                                                <span>{seat?.seatNumber || layoutSeat?._id?.split('-')?.pop() || c}</span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <span className="w-6 text-gray-500 font-black text-[10px] text-right">{rowLabel}</span>
-                        </div>
-                    </div>
-                );
-            })}
-
-            <CurvedScreen />
-        </div >
     );
 };
-
-// LoadingState replaced by global LoadingScreen
-
-const Toast = ({ message, type, onClose }) => (
-    <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-900 text-white'}`}>
-        {type === 'error' ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
-        <span className="text-xs font-black uppercase tracking-wider">{message}</span>
-        <button onClick={onClose} className="ml-4 opacity-50 hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
-    </div>
-);
-
-// ErrorState removed - imported from components
 
 export default SeatSelectionPage;

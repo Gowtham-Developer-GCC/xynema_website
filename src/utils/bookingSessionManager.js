@@ -11,7 +11,7 @@
  * - Integrity validation
  */
 
-import * as api from '../services/api';
+import { releaseSeats } from '../services/bookingService';
 
 const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
 const MAX_BOOKING_ATTEMPTS = 5; // Max failed booking attempts
@@ -31,7 +31,7 @@ class BookingSessionManager {
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 15);
         const dataStr = `${showId}-${userId || 'guest'}-${timestamp}-${randomStr}`;
-        
+
         // Simple hash (in production, use crypto.subtle.digest)
         let hash = 0;
         for (let i = 0; i < dataStr.length; i++) {
@@ -48,7 +48,7 @@ class BookingSessionManager {
     startSession(showId, theaterName, userId = null) {
         const timestamp = Date.now();
         const sessionToken = this.generateSessionToken(showId, userId);
-        
+
         sessionStorage.setItem('booking_show_id', showId);
         sessionStorage.setItem('booking_theater_name', theaterName);
         sessionStorage.setItem('booking_session_start', timestamp.toString());
@@ -66,7 +66,7 @@ class BookingSessionManager {
             screen.width + 'x' + screen.height,
             new Date().getTimezoneOffset()
         ].join('|');
-        
+
         // Simple hash
         let hash = 0;
         for (let i = 0; i < fingerprint.length; i++) {
@@ -154,12 +154,12 @@ class BookingSessionManager {
     trackBookingAttempt(success = false) {
         const now = Date.now();
         this.bookingAttempts.push({ timestamp: now, success });
-        
+
         // Clean old attempts outside rate limit window
         this.bookingAttempts = this.bookingAttempts.filter(
             attempt => (now - attempt.timestamp) < RATE_LIMIT_WINDOW
         );
-        
+
         // Store in sessionStorage for persistence
         sessionStorage.setItem('booking_attempts', JSON.stringify(this.bookingAttempts));
     }
@@ -184,7 +184,7 @@ class BookingSessionManager {
         );
 
         const failedAttempts = recentAttempts.filter(a => !a.success).length;
-        
+
         if (failedAttempts >= MAX_BOOKING_ATTEMPTS) {
             return {
                 limited: true,
@@ -228,7 +228,7 @@ class BookingSessionManager {
             // Release seats on backend
             if (seatsToRelease && seatsToRelease.length > 0) {
                 try {
-                    await api.releaseSeats(showId, seatsToRelease);
+                    await releaseSeats(showId, seatsToRelease);
                 } catch (error) {
                     // Silent fail - backend will auto-release anyway
                 }

@@ -5,7 +5,11 @@ import { ShowLayoutResponse, Booking } from '../models/index.js';
 export const getShowSeats = async (showId) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.BOOKING.SHOWS.AVAILABLE_SEATS(showId));
-        const data = response.data.data || response.data;
+        let responseData = response.data;
+        if (Array.isArray(responseData)) {
+            responseData = responseData[0];
+        }
+        const data = responseData?.data || responseData;
         return new ShowLayoutResponse(data);
     });
 };

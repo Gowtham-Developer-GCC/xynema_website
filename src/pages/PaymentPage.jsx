@@ -1,38 +1,53 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CreditCard, Lock, Check, AlertCircle, Loader, Shield, Info, Zap, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, MapPin, ShieldCheck, CheckCircle, ChevronRight, Info, Ticket, Coffee, User, CreditCard } from 'lucide-react';
 import SEO from '../components/SEO';
 import { getFoodItems } from '../services/storeService';
 import { getShowSeats, confirmBooking } from '../services/bookingService';
-import TicketCard from '../components/TicketCard';
+import { initiatePayment } from '../services/paymentService';
 import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
 import bookingSessionManager from '../utils/bookingSessionManager';
-import {
-    sanitizeCardName,
-    isValidCardNumber,
-    isValidCVV,
-    isValidExpiry,
-    getCardType,
-    getCardTypeName,
-    validateBookingData,
-    logSecurityEvent
-} from '../utils/securityUtils';
+import TicketCard from '../components/TicketCard';
 
 const PaymentPage = () => {
     const { slug, theaterSlug } = useParams();
     const navigate = useNavigate();
-
-    // Get showId from sessionStorage (secure)
     const showId = sessionStorage.getItem('booking_show_id');
 
-    // Hydrate State from Session Storage
     const [bookingState, setBookingState] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+    const [confirmedBooking, setConfirmedBooking] = useState(null);
+    const [show, setShow] = useState(null);
+    const [showSeats, setShowSeats] = useState([]);
+    const [foodItems, setFoodItems] = useState([]);
+    const [selectedMethod, setSelectedMethod] = useState('upi');
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+
+    const seats = useMemo(() => bookingState?.seats || [], [bookingState]);
+    const cartData = useMemo(() => bookingState?.cart || {}, [bookingState]);
+    const sessionId = bookingState?.sessionId;
+    const selectedDate = bookingState?.date;
+
     const isBookingConfirmedRef = useRef(false);
+    const seatsRef = useRef([]);
+
+    // Keep seats ref in sync for cleanup closure
+    useEffect(() => {
+        seatsRef.current = seats;
+    }, [seats]);
+
+    const paymentMethods = [
+        { id: 'upi', name: 'UPI / QR', icon: <CreditCard className="w-5 h-5" /> },
+        { id: 'card', name: 'Credit / Debit Card', icon: <ShieldCheck className="w-5 h-5" /> },
+        { id: 'netbanking', name: 'Net Banking', icon: <MapPin className="w-5 h-5" /> },
+        { id: 'wallet', name: 'Wallets', icon: <Coffee className="w-5 h-5" /> },
+    ];
 
     useEffect(() => {
-        if (isBookingConfirmedRef.current) {
-            return;
-        }
+        if (isBookingConfirmedRef.current) return;
 
         const sessionValidation = bookingSessionManager.validateSession();
         if (!sessionValidation.valid) {
@@ -40,12 +55,6 @@ const PaymentPage = () => {
             return;
         }
 
-        if (!showId || !theaterSlug) {
-            navigate(`/movie/${slug}/theaters`, { replace: true });
-            return;
-        }
-
-        // Validate booking draft has required seats
         const draftValidation = bookingSessionManager.validateBookingDraft(['seats']);
         if (!draftValidation.valid) {
             navigate(`/movie/${slug}/${theaterSlug}/seats`, { replace: true });
@@ -53,447 +62,352 @@ const PaymentPage = () => {
         }
 
         setBookingState(draftValidation.draft);
-
-        // Refresh session timestamp (keep alive)
         bookingSessionManager.refreshSession();
+
+        // Calculate initial time left based on session start
+        const sessionStart = sessionStorage.getItem('booking_session_start');
+        if (sessionStart) {
+            const elapsed = Math.floor((Date.now() - parseInt(sessionStart)) / 1000);
+            const remaining = Math.max(0, 600 - elapsed);
+            setTimeLeft(remaining);
+        }
     }, [showId, theaterSlug, slug, navigate]);
 
-    const movieId = bookingState?.movieId;
-    const theaterId = bookingState?.theaterId;
-    const sessionId = bookingState?.sessionId;
-    const selectedDate = bookingState?.date;
-    const seats = useMemo(() => bookingState?.seats || [], [bookingState]);
-    const cartData = useMemo(() => bookingState?.cart || {}, [bookingState]);
+    // Timer Countdown Logic
+    useEffect(() => {
+        if (timeLeft <= 0 || success) return;
 
-    // State Hooks
-    const [paymentMethod, setPaymentMethod] = useState('credit/debit card');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(false);
-    const [bookingId, setBookingId] = useState(null);
-    const [confirmedBooking, setConfirmedBooking] = useState(null);
-    const [show, setShow] = useState(null);
-    const [showSeats, setShowSeats] = useState([]);
+        const timer = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    handleExpiration();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
 
-    const [cardData, setCardData] = useState({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        name: ''
-    });
+        return () => clearInterval(timer);
+    }, [timeLeft, success]);
 
-    const [cardType, setCardType] = useState('');
-    const [foodPrice, setFoodPrice] = useState(0);
+    // Handle Unmount/Navigation Cleanup (Auto-release seats)
+    useEffect(() => {
+        return () => {
+            if (!isBookingConfirmedRef.current && seatsRef.current.length > 0) {
+                console.log('[PaymentPage] Navigated away, releasing seats:', seatsRef.current);
+                bookingSessionManager.clearSession(seatsRef.current);
+            }
+        };
+    }, []);
 
-    const ticketsTotal = useMemo(() => {
-        if (!seats.length) return 0;
-        // Try to sum prices of actual selected seats
-        const sum = seats.reduce((total, seatId) => {
-            const seat = showSeats.find(s => (s.id || s._id) === seatId);
-            return total + (seat?.price || 0);
-        }, 0);
+    const handleExpiration = async () => {
+        if (isBookingConfirmedRef.current) return;
 
-        // If sum is 0, fall back to seat count * basePrice (or 250)
-        if (sum === 0) {
-            return seats.length * (show?.basePrice || 250);
+        setIsProcessing(true);
+        setError("Session expired. Releasing seats...");
+
+        try {
+            await bookingSessionManager.clearSession(seatsRef.current);
+            setTimeout(() => {
+                navigate(`/movie/${slug}/theaters`, { replace: true });
+            }, 2000);
+        } catch (err) {
+            navigate(`/movie/${slug}/theaters`, { replace: true });
         }
-        return sum;
-    }, [showSeats, seats, show]);
+    };
 
-    const totalAmount = ticketsTotal + foodPrice;
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
 
     useEffect(() => {
+        const loadRazorpay = () => {
+            return new Promise((resolve) => {
+                if (window.Razorpay) {
+                    resolve(true);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.body.appendChild(script);
+            });
+        };
+
         const fetchData = async () => {
             try {
                 setLoading(true);
-                // Fetch authoritative show details for pricing
-                const response = await getShowSeats(showId);
-                setShow(response.show);
-                setShowSeats(response.seats || []);
-
-                if (cartData) {
-                    const foodItems = await getFoodItems();
-                    let total = 0;
-
-                    if (typeof cartData === 'object') {
-                        // Handle Object format from State
-                        Object.entries(cartData).forEach(([id, qty]) => {
-                            const item = foodItems.find(f => String(f.id) === String(id));
-                            if (item) total += item.price * parseInt(qty);
-                        });
-                    } else if (typeof cartData === 'string') {
-                        // Handle String format from URL with legacy parsing
-                        const cartPairs = cartData.split(',').map(pair => pair.split(':'));
-                        cartPairs.forEach(([id, qty]) => {
-                            const item = foodItems.find(f => String(f.id) === String(id));
-                            if (item) total += item.price * parseInt(qty);
-                        });
-                    }
-                    setFoodPrice(total);
-                }
+                const [showResponse, foodResponse] = await Promise.all([
+                    getShowSeats(showId),
+                    getFoodItems(),
+                    loadRazorpay()
+                ]);
+                setShow(showResponse.show);
+                setShowSeats(showResponse.seats || []);
+                setFoodItems(foodResponse || []);
             } catch (err) {
                 console.error('Failed to fetch payment data:', err);
-                setError({ message: 'Failed to load booking details. Please try again.' });
+                setError('Failed to load booking details. Please try again.');
             } finally {
                 setLoading(false);
             }
         };
 
         if (showId) fetchData();
-    }, [showId, cartData]);
+    }, [showId]);
 
-    const seatsRef = useRef(seats);
+    const ticketsTotal = useMemo(() => {
+        if (!seats.length || !showSeats.length) return seats.length * (show?.basePrice || 250);
+        return seats.reduce((total, seatId) => {
+            const seat = showSeats.find(s => (s.id || s._id) === seatId);
+            return total + (seat?.price || show?.basePrice || 0);
+        }, 0);
+    }, [showSeats, seats, show]);
 
-    // Keep seatsRef in sync
-    useEffect(() => {
-        seatsRef.current = seats;
-    }, [seats]);
+    const snackTotal = useMemo(() => {
+        return Object.entries(cartData).reduce((total, [id, qty]) => {
+            const item = foodItems.find(f => String(f.id) === String(id));
+            return total + (item?.price || 0) * qty;
+        }, 0);
+    }, [cartData, foodItems]);
 
-    const handleCardInputChange = (e) => {
-        const { name, value } = e.target;
-
-        // Security: Enhanced input sanitization and validation
-        let sanitizedValue = value;
-
-        if (name === 'cardNumber') {
-            // Allow only numbers and limit to 19 digits (some cards are 19 digits)
-            sanitizedValue = value.replace(/\D/g, '').slice(0, 19);
-
-            // Detect card type in real-time (works with partial numbers)
-            const detectedType = getCardType(sanitizedValue);
-            setCardType(detectedType || '');
-        } else if (name === 'expiryDate') {
-            // Format: MM/YY, allow only numbers and /
-            sanitizedValue = value.replace(/[^\d/]/g, '').slice(0, 5);
-            // Auto-format: Add / after MM
-            if (sanitizedValue.length === 2 && !sanitizedValue.includes('/')) {
-                sanitizedValue += '/';
-            }
-        } else if (name === 'cvv') {
-            // Allow only numbers, limit based on card type (Amex = 4 digits, others = 3)
-            const maxLength = cardType === 'american-express' ? 4 : 3;
-            sanitizedValue = value.replace(/\D/g, '').slice(0, maxLength);
-        } else if (name === 'name') {
-            // Use security utility for card name sanitization
-            sanitizedValue = sanitizeCardName(value);
-        }
-
-        setCardData(prev => ({ ...prev, [name]: sanitizedValue }));
-    };
-
-    const validatePayment = () => {
-        if (paymentMethod === 'credit/debit card') {
-            // Enhanced validation using security utilities
-            if (!cardData.name?.trim()) {
-                setError({ message: 'Please enter cardholder name' });
-                logSecurityEvent('PAYMENT_VALIDATION_FAILED', { reason: 'missing_name' });
-                return false;
-            }
-
-            if (!isValidCardNumber(cardData.cardNumber)) {
-                setError({ message: 'Please enter a valid card number' });
-                logSecurityEvent('PAYMENT_VALIDATION_FAILED', { reason: 'invalid_card_number' });
-                return false;
-            }
-
-            if (!isValidExpiry(cardData.expiryDate)) {
-                setError({ message: 'Please enter a valid expiry date (MM/YY)' });
-                logSecurityEvent('PAYMENT_VALIDATION_FAILED', { reason: 'invalid_expiry' });
-                return false;
-            }
-
-            if (!isValidCVV(cardData.cvv, cardData.cardNumber)) {
-                setError({ message: `Please enter a valid CVV (${cardType === 'american-express' ? '4' : '3'} digits)` });
-                logSecurityEvent('PAYMENT_VALIDATION_FAILED', { reason: 'invalid_cvv' });
-                return false;
-            }
-        }
-
-        // Validate booking data integrity using security utility
-        const bookingValidation = validateBookingData({
-            seatIds: seats,
-            sessionId: sessionId,
-            paymentDetails: { method: paymentMethod }
-        });
-
-        if (!bookingValidation.valid) {
-            setError({ message: bookingValidation.errors[0] || 'Invalid booking data' });
-            logSecurityEvent('BOOKING_VALIDATION_FAILED', { errors: bookingValidation.errors });
-            navigate(`/movie/${slug}/${theaterSlug}/seats`, { replace: true });
-            return false;
-        }
-
-        return true;
-    };
+    const grandTotal = ticketsTotal + snackTotal;
 
     const handlePayment = async () => {
-        try {
-            // Check rate limiting
-            const rateLimitCheck = bookingSessionManager.isRateLimited();
-            if (rateLimitCheck.limited) {
-                setError({ message: rateLimitCheck.message });
-                return;
-            }
+        setIsProcessing(true);
+        setError(null);
 
-            if (!validatePayment()) return;
-            setLoading(true);
-            setError(null);
+        try {
+            // Development/Testing Flow: Generate random transaction ID
+            const randomTxnId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
             const bookingPayload = {
                 seatIds: seats,
                 sessionId: sessionId,
                 paymentDetails: {
-                    method: paymentMethod.toLowerCase(),
-                    transactionId: `TXN${Date.now()}`
+                    method: selectedMethod,
+                    transactionId: randomTxnId
                 }
             };
 
-            const successResult = await confirmBooking(showId, bookingPayload);
+            const result = await confirmBooking(showId, bookingPayload);
+            handleBookingSuccess(result);
 
-            if (successResult && successResult.success) {
-                // Track successful booking
-                bookingSessionManager.trackBookingAttempt(true);
-
-                // Prioritize data from backend response if available
-                const b = successResult.data?.booking || {};
-                const realBookingId = b.bookingId || successResult.data?.bookingId || `BK${Date.now()}`;
-
-                const localConfirmedBooking = {
-                    id: realBookingId,
-                    movieTitle: b.movieTitle || show?.movie?.title || 'Movie',
-                    posterUrl: b.posterUrl || show?.movie?.posterUrl || '',
-                    theaterName: b.theaterName || show?.theatre?.name || 'Theater',
-                    city: b.city || show?.theatre?.city || 'N/A',
-                    date: b.date || b.showDate || selectedDate,
-                    time: b.time || b.showTime || show?.startTime || '',
-                    screen: b.screen || show?.screen?.name || show?.screen?.screenName || '1',
-                    seats: b.seats ? b.seats.map(s => typeof s === 'object' ? (s.seatLabel || s.seatNumber) : s) : showSeats.filter(s => seats.includes(s.id || s._id)).map(s => s.seatNumber),
-                    backendSeatIds: seats,
-                    showId: showId,
-                    sessionId: sessionId,
-                    paymentMethod: b.paymentMethod || paymentMethod.toLowerCase(),
-                    transactionId: b.transactionId || bookingPayload.paymentDetails.transactionId,
-                    status: b.status || 'confirmed',
-                    ticketPrice: b.ticketPrice || ticketsTotal,
-                    foodPrice: b.foodPrice || foodPrice,
-                    tax: b.tax || 0,
-                    totalAmount: b.totalAmount || totalAmount,
-                    language: b.language || show?.movie?.language || '',
-                    format: b.format || show?.format || ''
-                };
-
-                setConfirmedBooking(localConfirmedBooking);
-                setBookingId(realBookingId);
-                isBookingConfirmedRef.current = true;
-
-                // Clear booking session (removes all session storage + releases any remaining locked seats)
-                // No need to release seats here as they're already confirmed on backend
-                await bookingSessionManager.clearSession([]);
-
-                setSuccess(true);
-            } else {
-                // Track failed attempt
-                bookingSessionManager.trackBookingAttempt(false);
-                throw new Error('Payment Rejected or Session Conflict');
-            }
         } catch (err) {
-            // Track failed attempt
-            bookingSessionManager.trackBookingAttempt(false);
-            setError({ message: err.message || 'Payment failed. Please try again or use a different method.' });
-            console.error('Payment failed:', err);
-        } finally {
-            setLoading(false);
+            console.error('Payment error:', err);
+            setError(err.message || 'Could not process booking. Please try again.');
+            setIsProcessing(false);
         }
     };
 
+    const handleBookingSuccess = async (successResult) => {
+        if (successResult && successResult.success) {
+            const b = successResult.data?.booking || successResult.data || {};
+            const localConfirmedBooking = {
+                id: b.bookingId || b.id || b._id || `BK${Date.now()}`,
+                movieTitle: b.movieTitle || show?.movie?.title || 'Movie',
+                posterUrl: b.posterUrl || show?.movie?.posterUrl || '',
+                theaterName: b.theaterName || show?.theatre?.name || 'Theater',
+                city: b.city || show?.theatre?.city || 'N/A',
+                date: b.date || b.showDate || selectedDate,
+                time: b.time || b.showTime || show?.startTime || '',
+                screen: b.screen || show?.screen?.name || '1',
+                seats: b.seats ? b.seats.map(s => typeof s === 'object' ? (s.seatLabel || s.seatNumber) : s) : showSeats.filter(s => seats.includes(s.id || s._id)).map(s => s.seatNumber),
+                totalAmount: b.totalAmount || grandTotal,
+                status: 'confirmed'
+            };
+
+            setConfirmedBooking(localConfirmedBooking);
+            isBookingConfirmedRef.current = true;
+            await bookingSessionManager.clearSession([]);
+            setSuccess(true);
+        } else {
+            setError(successResult?.message || 'Payment verified but booking confirmation failed. Please contact support.');
+            setIsProcessing(false);
+        }
+    };
+
+    if (loading) return <BookingLoadingSkeleton variant="payment" />;
     if (success) return <SuccessScreen booking={confirmedBooking} />;
 
     return (
-        <div className="min-h-screen bg-whiteSmoke">
-            <SEO title="Payment - XYNEMA" description="Complete your movie booking safely" />
+        <div className="min-h-screen bg-slate-50">
+            <SEO title={`Payment - ${show?.movie?.title || 'Movie'}`} />
 
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-xynemaRose transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Go Back
+            <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+                    <button onClick={() => navigate(-1)} className="p-3 rounded-full hover:bg-slate-100 transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-slate-600" />
                     </button>
-                    <div className="text-center">
-                        <h1 className="text-sm font-bold text-gray-900">Payment</h1>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Secure Checkout</p>
+                    <div className="flex flex-col items-center">
+                        <h1 className="text-sm font-black tracking-[0.2em] text-slate-900 uppercase">SECURE CHECKOUT</h1>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={`w-1 h-1 rounded-full animate-pulse ${timeLeft < 60 ? 'bg-red-600' : 'bg-emerald-600'}`}></span>
+                            <span className={`text-[10px] font-bold ${timeLeft < 60 ? 'text-red-600' : 'text-slate-400'}`}>
+                                {timeLeft > 0 ? `SESSION EXPIRES IN ${formatTime(timeLeft)}` : 'SESSION EXPIRED'}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-green-500" />
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:block">Secure Session</span>
-                    </div>
+                    <div className="w-10"></div>
                 </div>
             </header>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid lg:grid-cols-12 gap-8">
-                {/* Payment Methods */}
-                <div className="lg:col-span-8 space-y-8">
-                    {error && (
-                        <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                            <p className="text-sm text-red-600 font-medium">{error.message}</p>
-                        </div>
-                    )}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Left Column: Action & Info */}
+                    <div className="flex-1 space-y-8">
+                        {error && (
+                            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                <Info className="w-5 h-5 text-red-500" />
+                                <p className="text-sm font-bold text-red-900">{error}</p>
+                            </div>
+                        )}
 
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="p-8">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Payment Method</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-                                {[
-                                    { id: 'credit/debit card', label: 'Credit/Debit Card', icon: <CreditCard className="w-5 h-5" /> },
-                                    { id: 'upi', label: 'UPI / GPay', icon: <Zap className="w-5 h-5" /> },
-                                    { id: 'wallet', label: 'Wallets', icon: <Lock className="w-5 h-5" /> },
-                                    { id: 'netbanking', label: 'Net Banking', icon: <Info className="w-5 h-5" /> }
-                                ].map(method => (
-                                    <button
-                                        key={method.id}
-                                        onClick={() => setPaymentMethod(method.id)}
-                                        className={`p-4 rounded-xl border-2 flex flex-col items-center gap-3 text-center ${paymentMethod === method.id ? 'bg-xynemaRose/5 border-xynemaRose text-xynemaRose' : 'bg-white border-gray-100 text-gray-400'}`}
-                                    >
-                                        <div className={`p-2 rounded-lg ${paymentMethod === method.id ? 'bg-xynemaRose/10' : 'bg-gray-50'}`}>{method.icon}</div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider">{method.label}</p>
-                                    </button>
-                                ))}
+                        <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <ShieldCheck className="w-3.5 h-3.5" /> Select Payment Method
+                                </h3>
+                                <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Dev Mode</span>
                             </div>
 
-                            {paymentMethod === 'credit/debit card' ? (
-                                <div className="space-y-6">
-                                    <div className="grid sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Cardholder Name</label>
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                value={cardData.name}
-                                                onChange={handleCardInputChange}
-                                                placeholder="John Doe"
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3 text-sm font-bold focus:border-xynemaRose outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Card Number</label>
-                                                {cardType && (
-                                                    <span className="text-[10px] font-bold text-xynemaRose uppercase tracking-widest">
-                                                        {getCardTypeName(cardData.cardNumber)}
-                                                    </span>
-                                                )}
+                            <div className="p-8 space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {paymentMethods.map((method) => (
+                                        <button
+                                            key={method.id}
+                                            onClick={() => setSelectedMethod(method.id)}
+                                            className={`p-5 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${selectedMethod === method.id ? 'border-rose-600 bg-rose-50/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                                        >
+                                            <div className={`p-3 rounded-xl ${selectedMethod === method.id ? 'bg-rose-600 text-white' : 'bg-slate-50 text-slate-400'}`}>
+                                                {method.icon}
                                             </div>
-                                            <input
-                                                type="text"
-                                                name="cardNumber"
-                                                value={cardData.cardNumber}
-                                                onChange={handleCardInputChange}
-                                                placeholder="XXXX XXXX XXXX XXXX"
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3 text-sm font-bold focus:border-xynemaRose outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
-                                            <input
-                                                type="text"
-                                                name="expiryDate"
-                                                value={cardData.expiryDate}
-                                                onChange={handleCardInputChange}
-                                                placeholder="MM/YY"
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3 text-sm font-bold focus:border-xynemaRose outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">CVV</label>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                                                    {cardType === 'american-express' ? '4 DIGITS' : '3 DIGITS'}
-                                                </span>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider">{method.name}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 leading-none mt-1">Instant confirmation</p>
                                             </div>
-                                            <input
-                                                type="password"
-                                                name="cvv"
-                                                value={cardData.cvv}
-                                                onChange={handleCardInputChange}
-                                                placeholder={cardType === 'american-express' ? '****' : '***'}
-                                                maxLength={cardType === 'american-express' ? 4 : 3}
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3 text-sm font-bold focus:border-xynemaRose outline-none"
-                                            />
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="pt-8 border-t border-slate-100">
+                                    <div className="space-y-4 max-w-sm mx-auto text-center">
+                                        <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Ready to Book?</h2>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                                            Generating random transaction ID for testing via {selectedMethod.toUpperCase()}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={handlePayment}
+                                        disabled={isProcessing}
+                                        className="w-full mt-8 relative group block"
+                                    >
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-rose-600 to-rose-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                                        <div className={`relative w-full flex items-center justify-center gap-3 bg-rose-600 text-white font-black text-sm uppercase tracking-[0.3em] py-5 rounded-2xl transition-all ${isProcessing ? 'opacity-90' : 'hover:scale-[1.02] active:scale-98'}`}>
+                                            {isProcessing ? (
+                                                <>
+                                                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                    <span>CONFIRMING...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>CONFIRM ₹{grandTotal.toLocaleString()}</span>
+                                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                </>
+                                            )}
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-center gap-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                    <div className="flex items-center gap-1.5"><ShieldCheck className="w-3 h-3 text-emerald-500" /> SSL SECURE</div>
+                                    <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                                    <div className="flex items-center gap-1.5"><User className="w-3 h-3 text-emerald-500" /> PCI COMPLIANT</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div className="p-6 bg-slate-100/50 rounded-2xl border border-slate-200 flex items-start gap-4">
+                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                                <Info className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tighter mb-1">Cancellation Policy</h4>
+                                <p className="text-[10px] font-medium text-slate-500 leading-relaxed uppercase tracking-tight">
+                                    Tickets once booked cannot be cancelled or exchanged. Please verify your selected showtime and seats before proceeding.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Sticky Sidebar Summary */}
+                    <aside className="w-full lg:w-[400px]">
+                        <div className="sticky top-28 space-y-6">
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div className="p-6 bg-slate-50 border-b border-slate-100 flex gap-4">
+                                    <img
+                                        src={show?.movie?.posterUrl || "/logo.png"}
+                                        alt={show?.movie?.title}
+                                        className="w-20 h-28 object-cover rounded-xl shadow-lg shadow-black/5"
+                                    />
+                                    <div className="flex-1 min-w-0 py-1">
+                                        <h2 className="text-base font-black text-slate-900 uppercase tracking-tight mb-2 truncate">{show?.movie?.title}</h2>
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <MapPin className="w-3 h-3 text-rose-500" /> {show?.theatre?.name}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <Calendar className="w-3 h-3 text-rose-500" /> {new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <Clock className="w-3 h-3 text-rose-500" /> {show?.startTime}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="py-20 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                    <p className="text-gray-400 font-bold uppercase text-[10px]">Payment will be processed via external secure link</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={handlePayment}
-                        disabled={loading || success}
-                        className="w-full py-5 rounded-2xl bg-xynemaRose text-white font-bold text-sm shadow-md disabled:bg-gray-200 flex items-center justify-center gap-3"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader className="w-5 h-5 animate-spin" />
-                                <span>Verifying...</span>
-                            </>
-                        ) : (
-                            <>
-                                <Lock className="w-4 h-4 fill-current" />
-                                <span className="uppercase tracking-widest">Pay Total: ₹{totalAmount.toLocaleString()}</span>
-                            </>
-                        )}
-                    </button>
+                                <div className="p-8 space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <Ticket className="w-3.5 h-3.5" /> Tickets ({seats.length})
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                                                    {showSeats.filter(s => seats.includes(s.id || s._id)).map(s => s.seatNumber).join(', ')}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">₹{ticketsTotal.toLocaleString()}</p>
+                                            </div>
+                                        </div>
+
+                                        {snackTotal > 0 && (
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                    <Coffee className="w-3.5 h-3.5" /> Food & Snacks
+                                                </div>
+                                                <p className="text-xs font-black text-slate-900">₹{snackTotal.toLocaleString()}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <div className="flex justify-between items-center bg-slate-50 px-5 py-5 rounded-2xl">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Amount</span>
+                                            <span className="text-2xl font-black text-rose-600 tracking-tighter">₹{grandTotal.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
-
-                {/* Sidebar Summary */}
-                <aside className="lg:col-span-4">
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <h3 className="text-lg font-bold text-gray-900 uppercase tracking-tight">Order Summary</h3>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-400 font-bold uppercase text-[10px]">Tickets ({seats.length})</span>
-                                <span className="text-gray-900 font-bold">₹{ticketsTotal.toLocaleString()}</span>
-                            </div>
-                            {foodPrice > 0 && (
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-400 font-bold uppercase text-[10px]">Food & Snacks</span>
-                                    <span className="text-gray-900 font-bold">₹{foodPrice.toLocaleString()}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between items-center text-[10px] font-bold uppercase text-green-600">
-                                <span>Discounts</span>
-                                <span>- ₹0</span>
-                            </div>
-                            <div className="h-px bg-gray-100" />
-                            <div className="flex justify-between items-end">
-                                <span className="text-[10px] font-bold uppercase text-gray-400">Amount Payable</span>
-                                <span className="text-3xl font-bold text-xynemaRose">₹{totalAmount.toLocaleString()}</span>
-                            </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-xl p-6 space-y-3">
-                            <div className="flex items-center gap-2">
-                                <Check className="w-4 h-4 text-green-500" />
-                                <p className="text-[10px] font-bold text-gray-400 uppercase">E-Tickets via Email/SMS</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Check className="w-4 h-4 text-green-500" />
-                                <p className="text-[10px] font-bold text-gray-400 uppercase">Secure Payment Gateway</p>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
             </main>
         </div>
     );
@@ -503,65 +417,41 @@ const SuccessScreen = ({ booking }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 sm:p-12">
-            <SEO title="Booking Successful - XYNEMA" description="Your movie ticket is ready!" />
-
-            <div className="max-w-md w-full text-center space-y-10">
-                {/* Success Indicator */}
-                <div className="flex flex-col items-center gap-6">
-                    <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-100 ring-8 ring-emerald-50">
-                        <Check className="w-10 h-10 text-white stroke-[3px]" />
-                    </div>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Booking Confirmed!</h2>
-                        <p className="text-gray-500 text-sm font-medium">Your ticket has been sent to your email.</p>
-                    </div>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-[40px] p-10 text-center shadow-2xl space-y-10 animate-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto border-2 border-rose-100 shadow-xl shadow-rose-100/50">
+                    <CheckCircle className="w-12 h-12 text-rose-600" />
                 </div>
 
-                {/* Ticket Display */}
-                {booking && (
-                    <div className="space-y-6">
-                        <div className="border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-                            <TicketCard
-                                ticket={booking}
-                                onClick={() => navigate(`/bookings/${booking.id}`)}
-                            />
-                        </div>
-
-                        <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-left space-y-4">
-                            <div className="flex justify-between items-center text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                <span>Booking ID</span>
-                                <span className="text-gray-900">{booking.id}</span>
-                            </div>
-                            <div className="h-px bg-gray-200/50" />
-                            <div className="flex justify-between items-end">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Amount Paid</span>
-                                <span className="text-2xl font-black text-xynemaRose">₹{booking.totalAmount?.toLocaleString()}</span>
-                            </div>
-                        </div>
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <h1 className="text-[10px] font-black text-rose-600 uppercase tracking-[0.4em]">BOOKING CONFIRMED</h1>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-tight">YOU'RE ALL SET!</h2>
                     </div>
-                )}
+                    <p className="text-xs text-slate-400 font-bold leading-relaxed px-4 uppercase tracking-wider">
+                        Your tickets for <span className="text-slate-900 border-b-2 border-rose-600/20 pb-0.5">{booking?.movieTitle}</span> are ready.
+                    </p>
+                </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-4 pt-4">
+                <div className="space-y-4 pt-6">
+                    <button
+                        onClick={() => navigate(`/bookings/${booking?.id}`)}
+                        className="w-full bg-rose-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-rose-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        VIEW DIGITAL TICKET
+                    </button>
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full h-14 rounded-2xl bg-xynemaRose text-white font-black text-xs uppercase tracking-[0.2em] shadow-md"
+                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-slate-900 transition-colors"
                     >
-                        Back to Home
-                    </button>
-                    <button
-                        onClick={() => navigate('/bookings')}
-                        className="w-full h-14 rounded-2xl bg-white border border-gray-200 text-gray-600 font-black text-xs uppercase tracking-[0.2em] hover:bg-gray-50"
-                    >
-                        View My Bookings
+                        BACK TO HOME
                     </button>
                 </div>
 
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                    <Shield size={12} className="text-emerald-500" />
-                    Verified Transaction
-                </p>
+                <div className="pt-4 flex items-center justify-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sent to your registered email</span>
+                </div>
             </div>
         </div>
     );

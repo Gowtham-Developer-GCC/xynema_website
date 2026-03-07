@@ -63,7 +63,7 @@ const MovieDetailsPage = () => {
     }
     const navigate = useNavigate();
     const { user, isAuthenticated, openLogin } = useAuth();
-    const { movies, latestMovies, loading: contextLoading, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { movies, latestMovies, upcomingMovies, loading: contextLoading, getMovieById, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -101,13 +101,7 @@ const MovieDetailsPage = () => {
 
     useEffect(() => {
         if (!contextLoading) {
-            const allAvailableMovies = [...(movies || []), ...(latestMovies || [])];
-
-            const foundMovie = allAvailableMovies.find(m => {
-                const slugMatch = m.slug && m.slug.toLowerCase() === idOrSlug?.toLowerCase();
-                const idMatch = String(m.id) === idOrSlug || String(m._id) === idOrSlug;
-                return idMatch || slugMatch;
-            });
+            const foundMovie = getMovieById(idOrSlug);
 
             if (foundMovie) {
                 setMovie(foundMovie);
@@ -177,7 +171,7 @@ const MovieDetailsPage = () => {
     const interestOffset = getInterestOffset(movie.id);
 
     return (
-        <div className="min-h-screen bg-[#f5f5f5]">
+        <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0f1115] transition-colors duration-300">
             <SEO
                 title={`${movie.title} - Book Tickets | XYNEMA`}
                 description={movie.description || `Watch ${movie.title} in cinemas near you`}
@@ -362,17 +356,17 @@ const MovieDetailsPage = () => {
                     {/* Right Column */}
                     {movie.offers?.length > 0 && (
                         <div className="lg:col-span-4 space-y-10">
-                            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Available Offers</h3>
+                            <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6 transition-colors">
+                                <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Available Offers</h3>
                                 <div className="space-y-4">
                                     {movie.offers.map((offer, idx) => (
-                                        <div key={idx} className="p-4 rounded-xl bg-premiumGold/5 border border-premiumGold/10 flex gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-premiumGold/10 flex items-center justify-center shrink-0">
+                                        <div key={idx} className="p-4 rounded-xl bg-premiumGold/5 dark:bg-premiumGold/10 border border-premiumGold/10 dark:border-premiumGold/20 flex gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-premiumGold/10 dark:bg-premiumGold/20 flex items-center justify-center shrink-0">
                                                 <Sparkles className="w-5 h-5 text-premiumGold" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-gray-900">{offer.title}</p>
-                                                <p className="text-[11px] text-gray-500 font-medium leading-relaxed mt-1">{offer.description}</p>
+                                                <p className="text-sm font-black text-gray-900 dark:text-gray-100">{offer.title}</p>
+                                                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-relaxed mt-1">{offer.description}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -400,13 +394,13 @@ const MovieDetailsPage = () => {
             )}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors">
                 <button
                     onClick={handleBookingClick}
                     disabled={!movie.isAvailable}
                     className={`w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
                         ? 'bg-xynemaRose text-white shadow-xynemaRose/20'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     {movie.isAvailable ? 'Book Tickets' : 'Coming Soon'}
@@ -423,14 +417,14 @@ const CastCrewModal = ({ title, items, onClose }) => {
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 onClick={onClose}
             />
-            <div className="relative w-full max-w-2xl max-h-[80vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight">{title}</h3>
+            <div className="relative w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300 transition-colors">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{title}</h3>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                        className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors"
                     >
-                        <ArrowLeft className="w-6 h-6 text-gray-900 rotate-90 md:rotate-0" />
+                        <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-gray-100 rotate-90 md:rotate-0" />
                     </button>
                 </div>
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
@@ -456,8 +450,8 @@ const CastCrewModal = ({ title, items, onClose }) => {
                                         )}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-800 text-xs">{name}</h4>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{role}</p>
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-200 text-xs">{name}</h4>
+                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">{role}</p>
                                     </div>
                                 </div>
                             );
@@ -476,11 +470,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
             {movie.cast?.length > 0 && (
                 <section id="cast" className="space-y-6 pt-6 animate-slide-up opacity-0 delay-200">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight text-center md:text-left w-full md:w-auto">Cast</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto">Cast</h3>
                         {movie.cast?.length > 5 && (
                             <button
                                 onClick={onShowAllCast}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose hover:opacity-80 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity hidden md:block"
                             >
                                 See All
                             </button>
@@ -520,7 +514,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCast}
-                                className="px-6 py-2 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                             >
                                 See All Cast
                             </button>
@@ -531,13 +525,13 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
             {/* Crew Section */}
             {movie.crew?.length > 0 && (
-                <section id="crew" className="space-y-6 pt-8 border-t border-gray-100 animate-slide-up opacity-0 delay-300">
+                <section id="crew" className="space-y-6 pt-8 border-t border-gray-100 dark:border-gray-800 transition-colors animate-slide-up opacity-0 delay-300">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight text-center md:text-left w-full md:w-auto">Crew</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto">Crew</h3>
                         {movie.crew?.length > 5 && (
                             <button
                                 onClick={onShowAllCrew}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose hover:opacity-80 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity hidden md:block"
                             >
                                 See All
                             </button>
@@ -577,7 +571,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCrew}
-                                className="px-6 py-2 rounded-full border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                             >
                                 See All Crew
                             </button>
@@ -588,11 +582,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
             {/* Official Merchandise Section */}
             {!merchLoading && merchandise.length > 0 && (
-                <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 group/store animate-slide-up opacity-0 delay-400">
+                <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 dark:border-gray-800 transition-colors group/store animate-slide-up opacity-0 delay-400">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Official merchandise</h3>
-                        <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-xynemaRose transition-colors group/link">
-                            <ShoppingBag className="w-4 h-4 text-gray-400 group-hover/link:text-xynemaRose transition-colors" />
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Official merchandise</h3>
+                        <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:text-xynemaRose dark:hover:text-blue-400 transition-colors group/link">
+                            <ShoppingBag className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover/link:text-xynemaRose dark:group-hover/link:text-blue-400 transition-colors" />
                             Visit Store
                         </Link>
                     </div>
@@ -623,10 +617,10 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="merch-prev absolute -left-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 items-center justify-center text-gray-800 hover:text-xynemaRose hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
+                        <button className="merch-prev absolute -left-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
                             <ChevronRight className="w-6 h-6 rotate-180" />
                         </button>
-                        <button className="merch-next absolute -right-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 items-center justify-center text-gray-800 hover:text-xynemaRose hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
+                        <button className="merch-next absolute -right-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
                             <ChevronRight className="w-6 h-6" />
                         </button>
                     </div>
@@ -639,16 +633,16 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
             {/* Reviews Section */}
             {(movie.reviews?.length > 0 || movie.isAvailable) && movie.rating > 0 && (
                 <section id="reviews" className="space-y-6 animate-slide-up opacity-0 delay-400">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 transition-colors pb-2">
                         <div className="space-y-1">
-                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">Top reviews</h3>
-                            <p className="text-xs text-gray-400">Summary of {movie.reviews?.length} reviews.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Top reviews</h3>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">Summary of {movie.reviews?.length} reviews.</p>
                         </div>
                         {movie.reviews?.length > 0 && (
                             <Link
                                 to={`/movie/${movie.slug}/reviews`}
                                 state={{ movieId: movie.id, movieName: movie.title }}
-                                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-xynemaRose hover:opacity-80 transition-opacity"
+                                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity"
                             >
                                 {movie.reviews.length} reviews
                                 <ChevronRight className="w-4 h-4" />
@@ -660,11 +654,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
                     <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-6 snap-x">
                         {movie.reviews?.map((review, idx) => (
-                            <div key={idx} className="flex-shrink-0 w-full md:w-[450px] p-5 rounded-2xl border-2 border-black/10 hover:border-black transition-all snap-start">
+                            <div key={idx} className="flex-shrink-0 w-full md:w-[450px] p-5 rounded-2xl border-2 border-black/10 dark:border-white/10 hover:border-black dark:hover:border-white transition-all snap-start">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
+                                            <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 overflow-hidden">
                                                 <img
                                                     src={`https://ui-avatars.com/api/?name=${review.user.name || 'User'}&background=random&color=fff`}
                                                     alt="User"
@@ -672,21 +666,21 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                                 />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-gray-900 text-sm tracking-tight">{review.user.name || 'Verified User'}</p>
+                                                <p className="font-bold text-gray-900 dark:text-gray-100 text-sm tracking-tight">{review.user.name || 'Verified User'}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                            <span className="text-sm font-black text-gray-900">{review.rating}/10</span>
+                                            <span className="text-sm font-black text-gray-900 dark:text-gray-100">{review.rating}/10</span>
                                         </div>
                                     </div>
-                                    <p className="text-black text-sm leading-relaxed font-medium line-clamp-4">
+                                    <p className="text-black dark:text-gray-200 text-sm leading-relaxed font-medium line-clamp-4">
                                         {review.comment}
                                     </p>
                                 </div>
 
-                                <div className="flex items-center justify-end pt-3 border-t border-gray-50 mt-1">
-                                    <span className="text-[10px] text-black-100 font-bold uppercase tracking-widest">
+                                <div className="flex items-center justify-end pt-3 border-t border-gray-50 dark:border-gray-800 mt-1">
+                                    <span className="text-[10px] text-black-100 dark:text-gray-500 font-bold uppercase tracking-widest">
                                         {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </span>
                                 </div>
@@ -701,16 +695,16 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
 
 const SimilarMovies = ({ currentMovie }) => {
-    const { latestMovies, highlightsMovies } = useData();
+    const { latestMovies, highlightsMovies, upcomingMovies } = useData();
     const navigate = useNavigate();
 
-    // Use latestMovies and highlightsMovies from context
-    const allMovies = [...(latestMovies || []), ...(highlightsMovies || [])];
+    // Use latestMovies, highlightsMovies, and upcomingMovies from context
+    const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
 
     // Remove duplicates and current movie
-    const moviesToShow = Array.from(new Set(allMovies.map(m => m.id)))
-        .map(id => allMovies.find(m => m.id === id))
-        .filter(m => m && m.id !== currentMovie.id);
+    const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
+        .map(id => allMovies.find(m => String(m.id) === id))
+        .filter(m => m && String(m.id) !== String(currentMovie.id));
 
     // Development purpose: disable genre filter, show all available movies
     let similarMovies = moviesToShow.slice(0, 8);
@@ -721,10 +715,10 @@ const SimilarMovies = ({ currentMovie }) => {
     return (
         <section id="similar-movies" className="relative mt-16 group/similar animate-slide-up delay-400">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                     You might also like
                 </h2>
-                <Link to="/movies" className="text-gray-400 hover:text-gray-800 transition-colors">
+                <Link to="/movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
                     <ChevronRight className="w-5 h-5" />
                 </Link>
             </div>
@@ -754,10 +748,10 @@ const SimilarMovies = ({ currentMovie }) => {
                     ))}
                 </Swiper>
 
-                <button className="similar-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-xynemaRose hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
+                <button className="similar-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
                     <ChevronRight className="w-6 h-6 rotate-180" />
                 </button>
-                <button className="similar-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#1E2532] hover:text-xynemaRose hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
+                <button className="similar-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
                     <ChevronRight className="w-6 h-6" />
                 </button>
             </div>
@@ -778,10 +772,10 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight">Rate {movie.title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-900">
+            <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300 transition-colors">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Rate {movie.title}</h3>
+                    <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100">
                         <ArrowLeft className="w-6 h-6 rotate-90" />
                     </button>
                 </div>
@@ -794,22 +788,22 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
                                 className="transition-transform active:scale-90"
                             >
                                 <Star
-                                    className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`}
+                                    className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 dark:text-gray-700'}`}
                                 />
                             </button>
                         ))}
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Your Experience (Optional)</label>
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Your Experience (Optional)</label>
                         <textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Tell us what you liked or didn't like..."
-                            className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-xynemaRose/20 focus:border-xynemaRose transition-all resize-none"
+                            className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-xynemaRose dark:focus:ring-blue-500 transition-all resize-none"
+                            placeholder="Share your thoughts on the movie..."
                         />
                     </div>
                 </div>
-                <div className="p-6 border-t border-gray-100">
+                <div className="p-6 border-t border-gray-100 dark:border-gray-800 transition-colors">
                     <button
                         onClick={() => onSubmit(rating, comment)}
                         disabled={rating === 0 || isSubmitting}
@@ -823,7 +817,7 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

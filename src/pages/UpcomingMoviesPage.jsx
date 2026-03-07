@@ -8,7 +8,7 @@ import { optimizeImage } from '../utils/helpers';
 import { Search, ChevronDown, ChevronUp, Star, Heart, ThumbsUp, ChevronRight, X } from 'lucide-react';
 
 const UpcomingMoviesPage = () => {
-    const { latestMovies, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { upcomingMovies, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
     const navigate = useNavigate();
 
     // Filter States
@@ -41,7 +41,7 @@ const UpcomingMoviesPage = () => {
         const gens = new Set();
         const fmts = new Set();
 
-        latestMovies?.forEach(m => {
+        upcomingMovies?.forEach(m => {
             // Language parsing - Split by comma
             if (m.language) {
                 const lList = m.language.split(',').map(s => s.trim());
@@ -59,12 +59,12 @@ const UpcomingMoviesPage = () => {
             genres: Array.from(gens).sort(),
             formats: Array.from(fmts).sort()
         };
-    }, [latestMovies]);
+    }, [upcomingMovies]);
 
     // Filtering Logic
     const filteredMovies = useMemo(() => {
-        if (!latestMovies?.length) return [];
-        return latestMovies.filter(m => {
+        if (!upcomingMovies?.length) return [];
+        return upcomingMovies.filter(m => {
             // Language Filter
             if (selectedLanguages.length > 0) {
                 const movieLangs = (m.language || '').split(',').map(s => s.trim());
@@ -88,7 +88,7 @@ const UpcomingMoviesPage = () => {
 
             return true;
         });
-    }, [latestMovies, selectedLanguages, selectedGenres, selectedFormats]);
+    }, [upcomingMovies, selectedLanguages, selectedGenres, selectedFormats]);
 
     const toggleFilter = (set, item) => {
         set(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
@@ -100,11 +100,11 @@ const UpcomingMoviesPage = () => {
         setSelectedFormats([]);
     };
 
-    if (loading && !latestMovies?.length) return <LoadingScreen message="Loading Upcoming Movies..." />;
-    if (error && !latestMovies?.length) return <ErrorState error={error} onRetry={() => window.location.reload()} />;
+    if (loading && !upcomingMovies?.length) return <LoadingScreen message="Loading Upcoming Movies..." />;
+    if (error && !upcomingMovies?.length) return <ErrorState error={error} onRetry={() => refreshData()} />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] font-sans">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] font-sans transition-colors duration-300">
             <SEO
                 title="Upcoming Movies - XYNEMA"
                 description="Be the first to catch the latest releases. Explore upcoming movies."
@@ -126,9 +126,9 @@ const UpcomingMoviesPage = () => {
                     {/* LEFT SIDEBAR FILTERS */}
                     <aside className="hidden md:block w-1/4 shrink-0 space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Filters</h2>
                             {(selectedLanguages.length > 0 || selectedGenres.length > 0 || selectedFormats.length > 0) && (
-                                <button onClick={clearFilters} className="text-xs text-gray-500 hover:text-xynemaRose transition-colors">Clear All</button>
+                                <button onClick={clearFilters} className="text-xs text-gray-500 dark:text-gray-400 hover:text-xynemaRose dark:hover:text-blue-400 transition-colors">Clear All</button>
                             )}
                         </div>
 
@@ -141,10 +141,10 @@ const UpcomingMoviesPage = () => {
                     <main className="flex-1">
                         <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h1 className="text-2xl font-bold text-gray-900">Upcoming Movies</h1>
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Upcoming Movies</h1>
                                 <Link
                                     to="/movies"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:border-xynemaRose text-gray-700 hover:text-xynemaRose rounded-full font-bold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 group"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-xynemaRose dark:hover:border-blue-400 text-gray-700 dark:text-gray-300 hover:text-xynemaRose dark:hover:text-blue-400 rounded-full font-bold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 group"
                                 >
                                     <Search className="w-4 h-4" />
                                     <span>Explore Movies</span>
@@ -159,8 +159,8 @@ const UpcomingMoviesPage = () => {
                                         key={lang}
                                         onClick={() => toggleFilter(setSelectedLanguages, lang)}
                                         className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${selectedLanguages.includes(lang)
-                                            ? 'bg-xynemaRose text-white border-xynemaRose'
-                                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-xynemaRose'
+                                            ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600'
+                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-xynemaRose dark:hover:text-blue-400'
                                             }`}
                                     >
                                         {lang}
@@ -184,10 +184,10 @@ const UpcomingMoviesPage = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
-                                <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-lg font-bold text-gray-500">No Movies Found</h3>
-                                <p className="text-sm text-gray-400">Try adjusting your filters</p>
+                            <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 transition-colors">
+                                <Search className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+                                <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400">No Movies Found</h3>
+                                <p className="text-sm text-gray-400 dark:text-gray-600">Try adjusting your filters</p>
                             </div>
                         )}
                     </main>
@@ -237,17 +237,17 @@ const FilterSection = ({ title, items, selected, onToggle }) => {
     if (!items || items.length === 0) return null;
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
             >
-                <span className="text-sm font-bold text-gray-900 flex-1 text-left flex items-center gap-2">
-                    {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 flex-1 flex items-center gap-2">
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
                     {title}
                 </span>
                 {selected.length > 0 && (
-                    <span className="text-[10px] bg-xynemaRose/10 text-xynemaRose px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] bg-xynemaRose/10 dark:bg-blue-500/20 text-xynemaRose dark:text-blue-400 px-2 py-0.5 rounded-full font-bold">
                         {selected.length}
                     </span>
                 )}
@@ -260,8 +260,8 @@ const FilterSection = ({ title, items, selected, onToggle }) => {
                                 key={item}
                                 onClick={() => onToggle(item)}
                                 className={`px-3 py-1.5 text-xs border rounded-lg transition-all ${selected.includes(item)
-                                    ? 'bg-xynemaRose text-white border-xynemaRose'
-                                    : 'bg-white text-gray-600 border-gray-100 hover:border-gray-300'
+                                    ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600'
+                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
                             >
                                 {item}
@@ -323,10 +323,10 @@ const MovieCard = ({
             </div>
 
             <div className="px-1">
-                <h3 className="text-[15px] font-bold text-gray-900 leading-tight mb-1 group-hover:text-xynemaRose transition-colors">
+                <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100 leading-tight mb-1 group-hover:text-xynemaRose dark:group-hover:text-blue-400 transition-colors">
                     {movie.title}
                 </h3>
-                <p className="text-[13px] text-gray-500 font-medium group-hover:text-gray-700 transition-colors">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
                     {Array.isArray(movie.genre) ? movie.genre.join('/') : (movie.genre || '').split(',').join('/')}
                 </p>
             </div>

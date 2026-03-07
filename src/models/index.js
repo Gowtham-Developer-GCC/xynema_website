@@ -180,6 +180,10 @@ export class Show {
         this.endTime = data.endTime || '';
         this.format = data.format || '2D';
         this.language = data.language || '';
+        this.movieLanguage = Array.isArray(data.movieLanguage)
+            ? data.movieLanguage.join(', ')
+            : (data.movieLanguage || '');
+        this.subtitles = data.subtitles || '';
 
         // Match Flutter logic: Extract from pricing array if direct basePrice is missing
         this.pricing = Array.isArray(data.pricing) ? data.pricing : [];
@@ -283,6 +287,7 @@ export class Booking {
         this.movieId = data.movieId || '';
         this.movieTitle = data.movieTitle || 'Unknown Movie';
         this.posterUrl = data.posterUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image';
+        this.landscapePosterUrl = data.landscapePosterUrl || '';
         this.theaterName = data.theaterName || 'Unknown Theatre';
         this.city = data.city || 'N/A';
         this.date = data.date || '';
@@ -314,30 +319,41 @@ export class Booking {
 
     static fromApiJson(json) {
         // Ultra-resilient key mapping matching Flutter app logic
-        const movieData = json.movie || json.movieDetails || json.Movie || {};
-        const theatreData = json.theatre || json.theater || json.venue || json.theatreDetails || {};
+        const movieData = json.movie || json.movieDetails || json.Movie || json.event || {};
+        const theatreData = json.theatre || json.theatreDetails || json.theater || json.venue || movieData.venue || {};
         const screenData = json.screen || json.screenDetails || {};
         const pricing = json.pricing || json.paymentInfo || {};
         const payment = json.payment || json.transaction || {};
-        const seatsList = Array.isArray(json.seats) ? json.seats : [];
+        const seatsList = Array.isArray(json.seats) ? json.seats : (Array.isArray(json.tickets) ? json.tickets : []);
 
         // Extract Movie Title
-        let movieTitle = (movieData.movieName || movieData.MovieName || movieData.title || movieData.name ||
-            json.movieName || json.MovieName || 'Unknown Movie').toString().trim();
+        let movieTitle = (movieData.movieName || movieData.MovieName || movieData.eventName || movieData.title || movieData.name ||
+            json.movieName || json.MovieName || json.eventName || 'Unknown Movie').toString().trim();
         if (!movieTitle) movieTitle = 'Unknown Movie';
 
         // Extract Poster URL
-        const posterUrl = (movieData.posterUrl || movieData.PosterUrl || movieData.image ||
-            json.posterUrl || json.PosterUrl || '').toString().trim();
+        const posterUrl = (
+            movieData.portraitPosterUrl || movieData.posterUrl || movieData.PosterUrl || movieData.image ||
+            (Array.isArray(movieData.images) && movieData.images[0]?.url) ||
+            json.posterUrl || json.PosterUrl || ''
+        ).toString().trim();
+
+        const landscapePosterUrl = (
+            movieData.landscapePosterUrl ||
+            (Array.isArray(movieData.images) && (movieData.images.find(img => img.type === 'landscape')?.url || movieData.images[1]?.url)) ||
+            ''
+        ).toString().trim();
 
         // Extract Theater Name
-        let theaterName = (theatreData.theatreName || theatreData.theaterName || theatreData.name ||
+        let theaterName = (theatreData.theatreName || theatreData.theaterName || theatreData.venueName || theatreData.name ||
             json.theatreName || json.theaterName || 'Unknown Theatre').toString().trim();
         if (!theaterName || theaterName === "null") theaterName = 'Unknown Theatre';
 
         // Helper to normalize seat strings
         const normalizeSeat = (s) => {
             if (typeof s === 'object' && s !== null) {
+                // For events, use ticket class and quantity if seatLabel is missing
+                if (s.ticketClass) return `${s.ticketClass}${s.quantity > 1 ? ` x${s.quantity}` : ''}`;
                 return s.seatLabel || s.label || s.number || '';
             }
             return String(s);
@@ -354,13 +370,14 @@ export class Booking {
 
         return new Booking({
             bookingId: (json.bookingId || json._id || '').toString(),
-            movieId: (movieData._id || movieData.id || json.movieId || '').toString(),
+            movieId: (movieData._id || movieData.id || movieData.eventId || json.movieId || '').toString(),
             movieTitle,
             posterUrl,
+            landscapePosterUrl,
             theaterName,
             city: (theatreData.location || theatreData.city || json.location || json.city || 'N/A').toString(),
-            date: (json.showDate || json.date || '').toString(),
-            time: (json.showTime || json.time || json.startTime || '').toString(),
+            date: (json.showDate || json.date || movieData.showDate || '').toString(),
+            time: (json.showTime || json.time || json.startTime || movieData.showTime || '').toString(),
             screen: (screenData.screenName || json.screenName || screenData.name || '1').toString(),
             seats,
             backendSeatIds: [], // Not critical for display
@@ -370,14 +387,14 @@ export class Booking {
             transactionId: (payment.transactionId || payment.txnId || json.transactionId || '').toString(),
             status: (json.status || 'confirmed').toString(),
             ticketPrice,
-            foodPrice: 0, // Placeholder
+            foodPrice: parseFloat(pricing.foodSubtotal || 0),
             convenienceFee,
             discount,
             tax,
             totalAmount,
-            foodOrders: {},
+            foodOrders: json.foodAndBeverages || {},
             duration: movieData.duration || movieData.Duration || json.duration || 0,
-            language: (movieData.language || movieData.movieLanguage || json.language || '').toString(),
+            language: (movieData.language || movieData.movieLanguage || json.language || (Array.isArray(movieData.languages) ? movieData.languages[0] : '') || '').toString(),
             certification: (movieData.certification || json.certification || '').toString(),
             createdAt: (json.createdAt || '').toString(),
             isReviewed: json.isReviewed ?? false,

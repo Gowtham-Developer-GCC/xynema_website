@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getUpcomingMovies, getNotNowMovies, addMovieReview, toggleInterest, getHighlightsMovies } from '../services/movieService';
+import { getUpcomingMovies, getNowShowingMovies, getNotNowMovies, addMovieReview, toggleInterest, getHighlightsMovies } from '../services/movieService';
 import { getFoodItems } from '../services/storeService';
 import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
@@ -31,6 +31,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     const { isAuthenticated } = useAuth();
     const [movies, setMovies] = useState([]);
     const [latestMovies, setLatestMovies] = useState([]);
+    const [upcomingMovies, setUpcomingMovies] = useState([]);
     const [highlightsMovies, setHighlightsMovies] = useState([]);
     const [theaters, setTheaters] = useState([]);
     const [foodItems, setFoodItems] = useState([]);
@@ -57,11 +58,11 @@ export const DataProvider = ({ children, selectedCity }) => {
         setLoading(true);
         setError(null);
         try {
-            const [movieData, foodData, latestData, eventData, highlightsData] = await Promise.all([
-                // Use cache for movies unless page is not 1
+            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData] = await Promise.all([
+                // Now Showing (based on city)
                 page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
-                    () => getUpcomingMovies(selectedCity, page)
-                ) : getUpcomingMovies(selectedCity, page),
+                    () => getNowShowingMovies(selectedCity, page)
+                ) : getNowShowingMovies(selectedCity, page),
 
                 // Food items cache
                 apiCacheManager.getOrExecute('food_items',
@@ -69,9 +70,14 @@ export const DataProvider = ({ children, selectedCity }) => {
                     1800 // 30 minutes
                 ),
 
-                // Latest movies cache
+                // Upcoming movies cache (Hits /latest-movies -> Global Upcoming)
+                apiCacheManager.getOrFetchUpcomingMovies(null,
+                    () => getUpcomingMovies()
+                ),
+
+                // Latest movies cache (Hits /upcomingmovies -> Streaming for City)
                 apiCacheManager.getOrExecute('latest_movies',
-                    () => getNotNowMovies(),
+                    () => getNotNowMovies(selectedCity),
                     1800 // 30 minutes
                 ),
                 // Events cache
@@ -87,12 +93,14 @@ export const DataProvider = ({ children, selectedCity }) => {
 
             // Parse movie and theater data
             const moviesList = (movieData.movies || []).map(m => new Movie(m));
+            const upcomingList = (Array.isArray(upcomingData) ? upcomingData : []).map(m => new Movie(m));
             const latestList = (Array.isArray(latestData) ? latestData : []).map(m => new Movie(m));
             const highlightsList = (Array.isArray(highlightsData) ? highlightsData : []).map(m => new Movie(m));
             const theatersList = (movieData.theaters || []).map(t => new Theater(t));
             const foodList = Array.isArray(foodData) ? foodData : [];
 
             setMovies(moviesList);
+            setUpcomingMovies(upcomingList);
             setLatestMovies(latestList);
             setHighlightsMovies(highlightsList);
             setTheaters(theatersList);
@@ -110,31 +118,21 @@ export const DataProvider = ({ children, selectedCity }) => {
     }, [selectedCity]);
 
     /**
-     * FOR RATING
-     * 
-     */
-
-    /**
      * Fetch user's personal bookings
-     * Separated into movie and event bookings with caching
      */
     const fetchUserBookings = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
-            // Use cache manager to prevent duplicate requests
             const [movieBookings, eventBookings] = await Promise.all([
                 apiCacheManager.getOrFetchMovieBookings(() => getUserBookings()),
                 apiCacheManager.getOrFetchEventBookings(() => getEventBookings())
             ]);
 
-            // Ensure bookings are arrays before spreading
             const movieBookingsArray = Array.isArray(movieBookings) ? movieBookings : [];
             const eventBookingsArray = Array.isArray(eventBookings) ? eventBookings : [];
 
             setUserMovieBookings(movieBookingsArray);
             setUserEventBookings(eventBookingsArray);
-
-            // Keep combined list for backward compatibility
             setUserBookings([...movieBookingsArray, ...eventBookingsArray]);
         } catch (err) {
             console.error('Error fetching user bookings:', err);
@@ -152,7 +150,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             const cached = JSON.parse(localStorage.getItem('interested_movies') || '[]');
             const interestSet = new Set(cached);
             setInterestedMovieIds(interestSet);
-            setInitialInterestedMovieIds(new Set(interestSet)); // Capture initial state for offset calculation
+            setInitialInterestedMovieIds(new Set(interestSet));
         } catch (e) {
             console.error('Error loading interests:', e);
         }
@@ -170,19 +168,14 @@ export const DataProvider = ({ children, selectedCity }) => {
             newSet.add(movieId);
         }
 
-        // 1. Update UI immediately
         setInterestedMovieIds(newSet);
-
-        // 2. Persist to localStorage
         localStorage.setItem('interested_movies', JSON.stringify(Array.from(newSet)));
 
-        // 3. API Sync (Optimistic)
         try {
             await toggleInterest(movieId, !isCurrentlyInterested);
             return true;
         } catch (err) {
             console.error('Interest sync failed:', err);
-            // Revert on failure? Flutter keeps it optimistic, let's stick to that for now
             return false;
         }
     }, [interestedMovieIds, isAuthenticated]);
@@ -197,18 +190,12 @@ export const DataProvider = ({ children, selectedCity }) => {
     }, [interestedMovieIds, initialInterestedMovieIds]);
 
     /**
-     * Fetch user profile - OPTIMIZED with caching
-     * Only fetch from API if we don't have fresh profile data
+     * Fetch user profile
      */
     const fetchUserProfile = useCallback(async () => {
         if (!isAuthenticated) return;
-
         try {
-            // Use cache manager to prevent duplicate profile fetches
-            const profile = await apiCacheManager.getOrFetchProfile(() =>
-                getUserProfile()
-            );
-
+            const profile = await apiCacheManager.getOrFetchProfile(() => getUserProfile());
             if (profile) {
                 const standardizedUser = new User(profile);
                 setUserProfile(standardizedUser);
@@ -220,21 +207,15 @@ export const DataProvider = ({ children, selectedCity }) => {
 
     /**
      * Update user profile
-     * Ensures token is preserved and cache is invalidated
      */
     const updateUserProfileData = useCallback(async (formData) => {
         try {
             const currentUser = userProfile;
             const updatedUserData = await updateUserProfile(formData);
-
-            // Preserve token from current user (API response typically doesn't include token)
             if (currentUser && currentUser.token) {
                 updatedUserData.token = currentUser.token;
             }
-
-            // Invalidate profile cache so next fetch gets fresh data
             apiCacheManager.invalidate('user_profile');
-
             setUserProfile(updatedUserData);
             return updatedUserData;
         } catch (err) {
@@ -243,10 +224,9 @@ export const DataProvider = ({ children, selectedCity }) => {
         }
     }, [userProfile]);
 
-
     /**
-      * Effect to fetch user data on login
-      */
+     * Effect to fetch user data on login
+     */
     useEffect(() => {
         if (isAuthenticated) {
             fetchUserBookings();
@@ -258,13 +238,6 @@ export const DataProvider = ({ children, selectedCity }) => {
             setUserProfile(null);
         }
     }, [isAuthenticated, fetchUserBookings, fetchUserProfile]);
-
-
-    /**
-     *END FOR RATING
-     * 
-     */
-
 
     /**
      * Pagination Methods
@@ -292,20 +265,25 @@ export const DataProvider = ({ children, selectedCity }) => {
      */
     useEffect(() => {
         if (selectedCity) {
-            setMovies([]); // Clear movies to trigger skeleton
-            setTheaters([]); // Clear theaters
+            setMovies([]);
+            setTheaters([]);
             refreshData(1);
         }
     }, [selectedCity, refreshData]);
 
     /**
-     * Get movie by ID
+     * Get movie by ID or Slug
      */
     const getMovieById = useCallback(
-        id => {
-            return movies.find(m => m.id === id) || latestMovies.find(m => m.id === id);
+        idOrSlug => {
+            const allAvailableMovies = [...movies, ...latestMovies, ...upcomingMovies];
+            return allAvailableMovies.find(m => {
+                const idMatch = String(m.id) === String(idOrSlug) || String(m._id) === String(idOrSlug);
+                const slugMatch = m.slug && m.slug.toLowerCase() === String(idOrSlug).toLowerCase();
+                return idMatch || slugMatch;
+            });
         },
-        [movies, latestMovies]
+        [movies, latestMovies, upcomingMovies]
     );
 
     /**
@@ -398,9 +376,9 @@ export const DataProvider = ({ children, selectedCity }) => {
     }, [foodItems]);
 
     const value = {
-        // State
         movies,
         latestMovies,
+        upcomingMovies,
         highlightsMovies,
         theaters,
         events,
@@ -414,8 +392,6 @@ export const DataProvider = ({ children, selectedCity }) => {
         userBookings,
         userProfile,
         pagination,
-
-        // Methods
         refreshData,
         fetchUserBookings,
         fetchUserProfile,
@@ -432,8 +408,6 @@ export const DataProvider = ({ children, selectedCity }) => {
         getFoodItemById,
         filterFoodByCategory,
         getFoodCategories,
-
-        // Interest Logic
         interestedMovieIds,
         toggleInterestOptimistic,
         getInterestOffset

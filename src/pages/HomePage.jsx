@@ -13,7 +13,7 @@ import StoreCard from '../components/StoreCard';
 import MovieCard from '../components/MovieCard';
 
 const HomePage = ({ selectedCity }) => {
-    const { movies, latestMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
 
     // Favorites State
     const [favorites, setFavorites] = useState(() => {
@@ -62,10 +62,10 @@ const HomePage = ({ selectedCity }) => {
     }, [movies]);
 
     // Filter Upcoming Movies by Availability
-    const upcomingMovies = useMemo(() => {
-        if (!latestMovies?.length) return [];
-        return latestMovies.slice(0, 5);
-    }, [latestMovies]);
+    const displayedUpcoming = useMemo(() => {
+        if (!upcomingMovies?.length) return [];
+        return upcomingMovies.slice(0, 5);
+    }, [upcomingMovies]);
 
     // Loading State -> Skeleton
     if (loading && !movies?.length) return <HomeSkeleton />;
@@ -150,7 +150,7 @@ const HomePage = ({ selectedCity }) => {
 
                 {/* Recommended for you Section */}
                 {upcomingMovies.length > 0 && (
-                    <section className="relative mt-12 group/recommended">
+                    <section id="recommended-section" className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                 Recommended for you
@@ -176,8 +176,8 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-4"
                             >
-                                {upcomingMovies.map((movie, idx) => (
-                                    <SwiperSlide key={`upcoming-${movie.id}`}>
+                                {latestMovies.map((movie, idx) => (
+                                    <SwiperSlide key={`latest-${movie.id}`}>
                                         <MovieCard
                                             movie={{ ...movie, delayClass: `delay-[${(idx + 1) * 100}ms]` }}
                                         />
@@ -224,7 +224,7 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-4"
                             >
-                                {upcomingMovies.map((movie, idx) => (
+                                {displayedUpcoming.map((movie, idx) => (
                                     <SwiperSlide key={`upcoming-new-${movie.id}`}>
                                         {/* Using the same MovieCard to benefit from the newly added glass effect */}
                                         <MovieCard

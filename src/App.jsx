@@ -28,6 +28,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
 const EventDetailsPage = lazy(() => import('./pages/EventDetailsPage'));
 const EventBookingSummaryPage = lazy(() => import('./pages/EventBookingSummaryPage'));
+const EventShowSelectionPage = lazy(() => import('./pages/EventShowSelectionPage'));
 const StorePage = lazy(() => import('./pages/StorePage'));
 const BookingSummaryPage = lazy(() => import('./pages/BookingSummaryPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -144,6 +145,8 @@ export default function App() {
                                         <Route path="/private-events" element={<ExplorePage initialTab="private_events" />} />
                                         <Route path="/explore" element={<ExplorePage initialTab="public_events" />} />
                                         <Route path="/event/:slug" element={<EventDetailsPage />} />
+                                        <Route path="/event/:slug/shows" element={<EventShowSelectionPage />} />
+                                        <Route path="/stream" element={<StorePage />} />
                                         <Route path="/store" element={<StorePage />} />
                                         <Route path="/privacy" element={<PrivacyPolicy />} />
                                         <Route path="/terms" element={<TermsOfUse />} />

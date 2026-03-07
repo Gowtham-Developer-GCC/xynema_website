@@ -171,9 +171,38 @@ const TheaterSelectionPage = () => {
             const slug = movie.slug;
             const theaterSlug = theater?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'theater';
 
+            // Find the specific show for time info
+            const selectedShow = theater.allShows?.find(s => (s.id || s._id) === showId);
+            const startTime = selectedShow?.startTime || '';
+            const screenName = selectedShow?.screen?.name || (typeof selectedShow?.screen === 'string' ? selectedShow.screen : '') || '1';
+            const movieLanguage = selectedShow?.movieLanguage || '';
+            const format = selectedShow?.format || '2D';
+            const subtitles = selectedShow?.subtitles || '';
+
+            // Persist movie details for the booking flow
+            sessionStorage.setItem('booking_movie_title', movie?.title || '');
+            sessionStorage.setItem('booking_movie_poster', movie?.portraitPosterUrl || movie?.posterUrl || '');
+            sessionStorage.setItem('booking_show_date', selectedDate);
+            sessionStorage.setItem('booking_show_time', startTime);
+            sessionStorage.setItem('booking_screen_name', screenName);
+            sessionStorage.setItem('booking_theater_name', theater?.name || '');
+            sessionStorage.setItem('booking_movie_language', movieLanguage);
+            sessionStorage.setItem('booking_movie_format', format);
+            sessionStorage.setItem('booking_movie_subtitles', subtitles);
+
             bookingSessionManager.startSession(showId, theater?.name || '', user?.id || user?._id);
 
-            navigate(`/movie/${slug}/${theaterSlug}/seats`);
+            navigate(`/movie/${slug}/${theaterSlug}/seats`, {
+                state: {
+                    movieId: movie?.id || movie?._id,
+                    movieTitle: movie?.title,
+                    moviePoster: movie?.portraitPosterUrl || movie?.posterUrl,
+                    theaterId: theater?.id || theater?._id,
+                    theaterName: theater?.name,
+                    date: selectedDate,
+                    startTime: startTime
+                }
+            });
         } catch (err) {
             console.error('Navigation error:', err);
         }
@@ -260,7 +289,7 @@ const TheaterSelectionPage = () => {
                                 Select Showtime
                             </h1>
                             <p className="text-[10px] md:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mt-1">
-                                {movie?.title}
+                                {movie?.MovieName || movie?.movieName || movie?.title}
                             </p>
                         </div>
                     </div>
@@ -274,8 +303,8 @@ const TheaterSelectionPage = () => {
                         {/* Poster */}
                         <div className="w-40 md:w-48 shrink-0 relative group">
                             <img
-                                src={movie?.posterUrl || movie?.image}
-                                alt={movie?.title}
+                                src={movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image}
+                                alt={movie?.MovieName || movie?.movieName || movie?.title}
                                 className="w-full aspect-[2/3] object-cover rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
@@ -283,7 +312,7 @@ const TheaterSelectionPage = () => {
                         {/* Details */}
                         <div className="flex-1 pt-2">
                             <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-4">
-                                {movie?.title}
+                                {movie?.MovieName || movie?.movieName || movie?.title}
                             </h2>
 
                             <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -292,23 +321,27 @@ const TheaterSelectionPage = () => {
                                         {movie.certification}
                                     </span>
                                 )}
-                                {movie?.duration > 0 && (
+                                {(movie?.Duration || movie?.duration) && (
                                     <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
-                                        {Math.floor(movie.duration / 60)}:{String(movie.duration % 60).padStart(2, '0')}:00
+                                        {typeof (movie.Duration || movie.duration) === 'string'
+                                            ? (movie.Duration || movie.duration)
+                                            : `${Math.floor(movie.duration / 60)}:${String(movie.duration % 60).padStart(2, '0')}:00`}
                                     </span>
                                 )}
-                                <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
-                                    3D
-                                </span>
+                                {movie?.Genre && Array.isArray(movie.Genre) && movie.Genre.map((g, i) => (
+                                    <span key={i} className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
+                                        {g}
+                                    </span>
+                                ))}
+                                {!movie?.Genre && movie?.genre && (
+                                    <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
+                                        {movie.genre}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Screen:</span>
-                                    <span className="text-sm md:text-base font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                                        {theaters[0]?.name || "Nearby Cinema"}
-                                    </span>
-                                </div>
+
                                 <p className="text-xs md:text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-relaxed max-w-lg">
                                     Select a showtime below to proceed to seat selection.
                                 </p>
@@ -339,21 +372,55 @@ const TheaterSelectionPage = () => {
                 {/* Cinema List - Grid Layout to match Figma */}
                 {sortedTheaters.length > 0 ? (
                     <div className="grid gap-12">
-                        {sortedTheaters.map((theater) => (
-                            <div key={theater.id || theater._id} className="space-y-6">
-                                {/* Only show theater name if it's not the first one or if multiple theaters are shown */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {(theater.filteredShows || []).map((show) => (
-                                        <ShowtimeCard
-                                            key={show.id || show._id}
-                                            show={show}
-                                            theater={theater}
-                                            onSelect={() => handleTheaterSelect(show.id || show._id, theater)}
-                                        />
+                        {sortedTheaters.map((theater) => {
+                            // Group shows by screenName and format within this theater
+                            const groupedByScreen = (theater.filteredShows || []).reduce((acc, show) => {
+                                const key = `${show.screenName || 'Screen'} - ${show.format || '2D'} - ${show.movieLanguage || ''} - ${show.subtitles || ''}`;
+                                if (!acc[key]) {
+                                    acc[key] = {
+                                        screenName: show.screenName || 'Screen',
+                                        format: show.format || '2D',
+                                        movieLanguage: show.movieLanguage || '',
+                                        subtitles: show.subtitles || '',
+                                        shows: []
+                                    };
+                                }
+                                acc[key].shows.push(show);
+                                return acc;
+                            }, {});
+
+                            return (
+                                <div key={theater.id || theater._id} className="space-y-8">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MapPin className="w-5 h-5 text-indigo-500" />
+                                        <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                                            {theater.name}
+                                        </h3>
+                                    </div>
+
+                                    {Object.values(groupedByScreen).map((group, gIdx) => (
+                                        <div key={gIdx} className="space-y-4 pl-0 md:pl-7">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 dark:text-indigo-500 shrink-0">
+                                                    {group.screenName} • {group.format} {group.movieLanguage ? `• ${group.movieLanguage}` : ''} {group.subtitles ? `(Sub: ${group.subtitles})` : ''}
+                                                </span>
+                                                <div className="h-[1px] w-full bg-gray-100 dark:bg-gray-800" />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {group.shows.map((show) => (
+                                                    <ShowtimeCard
+                                                        key={show.id || show._id}
+                                                        show={show}
+                                                        theater={theater}
+                                                        onSelect={() => handleTheaterSelect(show.id || show._id, theater)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="py-24 text-center bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
@@ -472,58 +539,66 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
 };
 
 const ShowtimeCard = ({ show, theater, onSelect }) => {
-    const isFull = show.availableSeats <= 0;
-    const totalSeats = show.totalSeats || (show.availableSeats + (show.bookedSeats || 0));
-    const occupancyRatio = totalSeats > 0 ? (totalSeats - show.availableSeats) / totalSeats : 0;
+    const total = show.totalSeats || (show.availableSeats + (show.bookedSeats || 0));
+    const booked = show.bookedSeats || 0;
+    const available = total > 0 ? total - booked : show.availableSeats || 0;
+
+    const occupancyPercent = total > 0 ? ((total - available) / total) * 100 : 0;
+    const isFull = available <= 0 || occupancyPercent >= 100;
+
+    let statusText = 'Available';
+    let statusColor = 'text-emerald-500';
+
+    if (isFull) {
+        statusText = 'Filled';
+        statusColor = 'text-gray-400';
+    } else if (occupancyPercent >= 90) {
+        statusText = 'Fast Filling';
+        statusColor = 'text-orange-500';
+    }
 
     return (
         <button
             onClick={isFull ? null : onSelect}
+            disabled={isFull}
             className={`
                 group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-xl transition-all duration-500 text-left relative overflow-hidden
-                ${isFull ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1'}
+                ${isFull ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 cursor-not-allowed opacity-75' : 'hover:-translate-y-1'}
             `}
         >
-            <div className="flex justify-between items-start mb-4">
-                <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+            <div className="flex justify-between items-start mb-6">
+                <span className={`text-xl font-black tracking-tight ${isFull ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-white'}`}>
                     {show.startTime}
                 </span>
-                <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                <div className={`${isFull ? 'bg-gray-100 dark:bg-gray-800' : 'bg-emerald-50 dark:bg-emerald-900/20'} px-2 py-1 rounded-lg border ${isFull ? 'border-gray-200 dark:border-gray-700' : 'border-emerald-100 dark:border-emerald-800'}`}>
+                    <span className={`text-xs font-black ${isFull ? 'text-gray-400 dark:text-gray-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         ₹{show.basePrice || 100}
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-6">
-                <MapPin className="w-3.5 h-3.5" />
-                <span className="text-xs font-bold uppercase tracking-widest truncate">
-                    {theater.name}
-                </span>
-            </div>
-
             {/* Availability Bar - Match Figma */}
-            <div className="space-y-2">
+            <div className="space-y-3">
                 <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
-                        style={{ width: `${(1 - occupancyRatio) * 100}%` }}
+                        className={`h-full rounded-full transition-all duration-1000 ${isFull ? 'bg-gray-300 dark:bg-gray-600' : (occupancyPercent >= 90 ? 'bg-orange-500' : 'bg-indigo-600')}`}
+                        style={{ width: `${occupancyPercent}%` }}
                     />
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        {show.availableSeats} SEATS LEFT
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                        {available} SEATS LEFT
                     </span>
-                    {show.format && (
-                        <span className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest">
-                            {show.format}
-                        </span>
-                    )}
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${statusColor}`}>
+                        {statusText}
+                    </span>
                 </div>
             </div>
 
             {/* Subtle glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            {!isFull && (
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            )}
         </button>
     );
 };

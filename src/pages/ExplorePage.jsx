@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -30,12 +30,26 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [availableEventCities, setAvailableEventCities] = useState([]);
 
     const [allGlobalEvents, setAllGlobalEvents] = useState([]);
+    const [filteredGlobalEvents, setFilteredGlobalEvents] = useState([]);
     const [loadingGlobalEvents, setLoadingGlobalEvents] = useState(true);
+    const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+    const moreFiltersRef = useRef(null);
 
     // Sync tab with prop
     useEffect(() => {
         setActiveTab(initialTab);
     }, [initialTab]);
+
+    // Handle clicks outside "More Filters" dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (moreFiltersRef.current && !moreFiltersRef.current.contains(event.target)) {
+                setIsMoreFiltersOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -63,11 +77,13 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             setEvents(allEvents);
             setFilteredEvents(allEvents);
             setAllGlobalEvents(globalEventData || []);
+            setFilteredGlobalEvents(globalEventData || []);
             setLoadingGlobalEvents(false);
 
-            // Extract available filters for events
-            const tags = Array.from(new Set(allEvents.flatMap(e => e.tags))).sort();
-            const cities = Array.from(new Set(allEvents.map(e => e.city).filter(c => c))).sort();
+            // Extract available filters for events from both local and global sources
+            const allAvailableEvents = [...allEvents, ...(globalEventData || [])];
+            const tags = Array.from(new Set(allAvailableEvents.flatMap(e => e.tags || []).filter(t => t))).sort();
+            const cities = Array.from(new Set(allAvailableEvents.map(e => e.city).filter(c => c))).sort();
             setAvailableEventTags(tags);
             setAvailableEventCities(cities);
 
@@ -103,26 +119,31 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     // Filter Logic for Events
     useEffect(() => {
         try {
-            let filtered = events;
-            if (eventSearchQuery.trim()) {
-                filtered = filtered.filter(e =>
-                    e.name.toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
-                    e.description.toLowerCase().includes(eventSearchQuery.toLowerCase())
-                );
-            }
-            if (eventFilters.city !== 'All') {
-                filtered = filtered.filter(e => e.city === eventFilters.city);
-            }
-            if (eventFilters.tags.length > 0) {
-                filtered = filtered.filter(e =>
-                    e.tags.some(tag => eventFilters.tags.includes(tag))
-                );
-            }
-            setFilteredEvents(filtered);
+            const filterData = (data) => {
+                let filtered = data;
+                if (eventSearchQuery.trim()) {
+                    filtered = filtered.filter(e =>
+                        (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
+                        (e.description || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
+                    );
+                }
+                if (eventFilters.city !== 'All') {
+                    filtered = filtered.filter(e => e.city === eventFilters.city);
+                }
+                if (eventFilters.tags.length > 0) {
+                    filtered = filtered.filter(e =>
+                        (e.tags || []).some(tag => eventFilters.tags.includes(tag))
+                    );
+                }
+                return filtered;
+            };
+
+            setFilteredEvents(filterData(events));
+            setFilteredGlobalEvents(filterData(allGlobalEvents));
         } catch (err) {
             console.error('Event filter error:', err);
         }
-    }, [events, eventSearchQuery, eventFilters]);
+    }, [events, allGlobalEvents, eventSearchQuery, eventFilters]);
 
     const resetFilters = () => {
         try {
@@ -171,26 +192,105 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
             {/* Filter Pills */}
             {activeTab !== 'private_events' && (
-                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800">
-                    <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex gap-3 overflow-x-auto no-scrollbar">
-                        {['All', 'Music', 'Comedy', 'Workshops', 'Sports', 'Conferences'].map(cat => (
+                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 relative z-[20]">
+                    <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center gap-3">
+                        {/* Scrollable Pills Area */}
+                        <div className="flex-1 flex items-center gap-3 overflow-x-auto no-scrollbar">
+                            {/* Static "All" Pill */}
                             <button
-                                key={cat}
                                 onClick={() => {
-                                    if (cat === 'All') {
-                                        setEventFilters(prev => ({ ...prev, tags: [] }));
-                                    } else {
-                                        setEventFilters(prev => ({ ...prev, tags: [cat] }));
-                                    }
+                                    setEventFilters(prev => ({ ...prev, tags: [] }));
+                                    setIsMoreFiltersOpen(false);
                                 }}
-                                className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${(cat === 'All' && eventFilters.tags.length === 0) || (eventFilters.tags.length === 1 && eventFilters.tags.includes(cat))
+                                className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${eventFilters.tags.length === 0
                                     ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
                                     : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                     }`}
                             >
-                                {cat}
+                                All
                             </button>
-                        ))}
+
+                            {/* First 4 Dynamic Tags */}
+                            {availableEventTags.slice(0, 4).map(tag => (
+                                <button
+                                    key={tag}
+                                    onClick={() => {
+                                        setEventFilters(prev => ({ ...prev, tags: [tag] }));
+                                        setIsMoreFiltersOpen(false);
+                                    }}
+                                    className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                        ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                        : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                                        }`}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Fixed "More Filters" Dropdown */}
+                        {availableEventTags.length > 4 && (
+                            <div className="relative shrink-0" ref={moreFiltersRef}>
+                                <button
+                                    onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                                    className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border flex items-center gap-2 ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
+                                        ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                        : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                                        }`}
+                                >
+                                    <span>More Filters</span>
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isMoreFiltersOpen && (
+                                    <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left">
+                                            <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Additional Categories</span>
+                                        </div>
+                                        <div className="max-h-64 overflow-y-auto no-scrollbar px-2">
+                                            {availableEventTags.slice(4).map(tag => (
+                                                <label
+                                                    key={tag}
+                                                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg cursor-pointer transition-colors group"
+                                                >
+                                                    <div className="relative flex items-center justify-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="peer appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 checked:bg-[#00296B] dark:checked:bg-blue-600 checked:border-[#00296B] dark:checked:border-blue-600 transition-all cursor-pointer"
+                                                            checked={eventFilters.tags.includes(tag)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setEventFilters(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+                                                                } else {
+                                                                    setEventFilters(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#00296B] dark:group-hover:text-blue-400 transition-colors">
+                                                        {tag}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        {eventFilters.tags.some(t => availableEventTags.slice(4).includes(t)) && (
+                                            <div className="px-3 pt-3 mt-2 border-t border-gray-100 dark:border-gray-700">
+                                                <button
+                                                    onClick={() => {
+                                                        const otherTags = eventFilters.tags.filter(t => !availableEventTags.slice(4).includes(t));
+                                                        setEventFilters(prev => ({ ...prev, tags: otherTags }));
+                                                    }}
+                                                    className="w-full py-1.5 text-[10px] font-bold text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 text-center uppercase tracking-wider transition-colors"
+                                                >
+                                                    Clear selection
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -221,20 +321,25 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         </div>
 
                         {/* All Global Events */}
-                        {!loadingGlobalEvents && allGlobalEvents.length > 0 && (
+                        {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
                             <div className="mt-8">
                                 <h2 className="text-[28px] font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight mb-8">All events</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {allGlobalEvents.map((event, idx) => (
+                                    {filteredGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                     ))}
                                 </div>
                             </div>
                         )}
+                        {filteredEvents.length === 0 && filteredGlobalEvents.length === 0 && (
+                            <EmptyState onReset={resetFilters} />
+                        )}
                     </>
                 )}
 
-                {activeTab === 'private_events' && <PrivateEventsSection />}
+                {activeTab === 'private_events' && (
+                    <PrivateEventsSection onCancel={() => handleTabChange('public_events')} />
+                )}
             </div>
         </div>
     );
@@ -468,7 +573,7 @@ const EventCard = ({ event }) => {
     );
 };
 
-const PrivateEventsSection = () => {
+const PrivateEventsSection = ({ onCancel }) => {
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
@@ -489,9 +594,13 @@ const PrivateEventsSection = () => {
         setLoading(true);
         setStatusMessage({ type: '', text: '' });
         try {
-            await submitPrivateEventEnquiry(formData);
-            setStatusMessage({ type: 'success', text: 'Enquiry submitted! Our team will contact you shortly.' });
-            setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+            const success = await submitPrivateEventEnquiry(formData);
+            if (success) {
+                setStatusMessage({ type: 'success', text: 'Enquiry submitted! Our team will contact you shortly.' });
+                setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+                // Optional: Navigate back after success
+                // setTimeout(() => onCancel(), 3000);
+            }
         } catch (err) {
             setStatusMessage({ type: 'error', text: err.message || 'Failed to submit enquiry. Please try again.' });
         } finally {
@@ -552,7 +661,7 @@ const PrivateEventsSection = () => {
                                     value={formData.fullName}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
                                     placeholder="Enter your full name"
                                 />
                             </div>
@@ -591,11 +700,12 @@ const PrivateEventsSection = () => {
                                         value={formData.eventType}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-[#9CA3AF] dark:text-gray-400 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none"
+                                        className={`w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`}
+                                        style={{ colorScheme: 'dark' }}
                                     >
-                                        <option value="" disabled>Select event type</option>
-                                        <option value="public-event">Public Event</option>
-                                        <option value="private-event">Private Event</option>
+                                        <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">Select event type</option>
+                                        <option value="public-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Public Event</option>
+                                        <option value="private-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Private Event</option>
                                     </select>
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                                         <ChevronDown className="w-4 h-4" />
@@ -620,7 +730,10 @@ const PrivateEventsSection = () => {
                         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20 dark:border-gray-700">
                             <button
                                 type="button"
-                                onClick={() => setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' })}
+                                onClick={() => {
+                                    setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+                                    if (onCancel) onCancel();
+                                }}
                                 className="w-full sm:w-auto px-8 py-3.5 bg-white/30 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 border border-white/40 dark:border-gray-700 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 font-medium transition-colors backdrop-blur-md"
                             >
                                 Cancel

@@ -4,11 +4,11 @@ import { ArrowLeft, ShoppingCart, Plus, Minus, Loader, Zap, Info } from 'lucide-
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
-import { getFoodItems } from '../services/storeService';
-import { getShowSeats } from '../services/bookingService';
+import { getFoodAndBeverages, getShowSeats } from '../services/bookingService';
 import ErrorState from '../components/ErrorState';
 import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
 import bookingSessionManager from '../utils/bookingSessionManager';
+import BookingSummary from '../components/SeatSelection/BookingSummary';
 
 const FoodSelectionPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -70,13 +70,39 @@ const FoodSelectionPage = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!showId || !theaterId) return;
+
             try {
                 setLoading(true);
                 const [foodResponse, showResponse] = await Promise.all([
-                    getFoodItems(),
+                    getFoodAndBeverages(theaterId),
                     getShowSeats(showId)
                 ]);
-                setFoodItems(foodResponse || []);
+                
+                // Transform API response to match component expectations
+                let foodItemsData = [];
+                if (foodResponse?.data?.items) {
+                    try {
+                        // Flatten the items object (categories as keys) into a single array
+                        const itemsObject = foodResponse.data.items;
+                        foodItemsData = Object.values(itemsObject).flat().map(item => ({
+                            id: item._id || item.id,
+                            name: item.item_name || item.name,
+                            category: item.category,
+                            price: item.selling_price || item.price,
+                            image: item.foodImageUrl || item.image || '🍿', // fallback emoji if no image
+                            description: item.description || '',
+                            available: item.is_available !== false, // default to true if not specified
+                            inventory: item.inventory_stock || 0,
+                            isPopular: item.isMarkAsPopular || false
+                        })).filter(item => item.available); // Only show available items
+                    } catch (error) {
+                        console.error('Error processing food items:', error);
+                        foodItemsData = [];
+                    }
+                }
+                
+                setFoodItems(foodItemsData);
                 setShow(showResponse.show);
                 setShowSeats(showResponse.seats || []);
             } catch (err) {
@@ -86,8 +112,8 @@ const FoodSelectionPage = () => {
             }
         };
 
-        if (showId) fetchData();
-    }, [showId]);
+        fetchData();
+    }, [showId, theaterId]);
 
     const addToCart = (item) => {
         try {
@@ -160,34 +186,35 @@ const FoodSelectionPage = () => {
 
             {/* Header */}
             <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div className="w-[80%] max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-xynemaRose transition-colors"
+                        className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-indigo-600 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Go Back
                     </button>
                     <div className="text-center">
-                        <h1 className="text-sm font-bold text-gray-900">Food & Drinks</h1>
+                        <h1 className="text-sm font-bold text-gray-900">Food & Beverages</h1>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            {seats.length} Seats | Selected
+                            Optional • Add to your booking
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center relative">
-                            <ShoppingCart className="w-4 h-4 text-gray-400" />
-                            {Object.keys(cart).length > 0 && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-xynemaRose text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                    {Object.keys(cart).length}
-                                </span>
-                            )}
-                        </div>
+                    <div className="flex items-center gap-3 w-20 justify-end">
+                        <button
+                            onClick={() => {
+                                setCart({});
+                                handleProceedToPayment();
+                            }}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Skip
+                        </button>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-8">
+            <main className="w-[80%] max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-8">
                 <div className="flex-1">
                     {/* Categories */}
                     <div className="mb-8 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
@@ -195,7 +222,7 @@ const FoodSelectionPage = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCategory === category ? 'bg-xynemaRose text-white border-xynemaRose shadow-lg shadow-red-100' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCategory === category ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                             >
                                 {category}
                             </button>
@@ -216,64 +243,38 @@ const FoodSelectionPage = () => {
                     </div>
                 </div>
 
-                {/* Cart Sidebar */}
-                <aside className="lg:w-96 shrink-0">
-                    <div className="sticky top-24 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <ShoppingCart className="w-5 h-5 text-xynemaRose" />
-                                Your Order
-                            </h2>
-
-                            <div className="space-y-6 mb-8 max-h-[400px] overflow-y-auto no-scrollbar">
-                                {Object.entries(cart).length > 0 ? (
-                                    Object.entries(cart).map(([id, qty]) => {
-                                        const item = foodItems.find(f => String(f.id) === String(id));
-                                        return (
-                                            <div key={id} className="flex justify-between items-center">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="text-xl">{item?.image || '🍿'}</div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900">{item?.name}</p>
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Qty: {qty}</p>
-                                                    </div>
-                                                </div>
-                                                <p className="text-sm font-bold text-gray-900">₹{((item?.price || 0) * qty).toLocaleString()}</p>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                        <p className="text-gray-400 font-bold uppercase text-[10px]">No snacks added yet</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="pt-6 border-t border-gray-100 space-y-4">
-                                <div className="flex justify-between items-center text-gray-400">
-                                    <span className="text-[10px] font-bold uppercase">Tickets Total ({seats.length})</span>
-                                    <span className="text-sm font-bold">₹{ticketsTotal.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-gray-400">
-                                    <span className="text-[10px] font-bold uppercase">Snacks Total</span>
-                                    <span className="text-sm font-bold">₹{snackTotal.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold text-gray-900">Total Payable</span>
-                                    <span className="text-2xl font-bold text-xynemaRose">₹{totalAmount.toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleProceedToPayment}
-                                className="w-full mt-8 py-4 rounded-xl bg-xynemaRose text-white font-bold text-sm transition-all hover:bg-charcoalSlate active:scale-95 disabled:bg-gray-200 disabled:shadow-none disabled:active:scale-100 flex items-center justify-center gap-2"
-                            >
-                                <Zap className="w-4 h-4 fill-current" />
-                                Proceed to Payment
-                            </button>
-                        </div>
-                    </div>
-                </aside>
+                {/* Cart Sidebar via BookingSummary */}
+                <div className="w-full lg:w-[400px] h-auto lg:h-[calc(100vh-80px)] lg:sticky top-[80px] bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden z-30 shrink-0">
+                    <BookingSummary
+                        movie={{ // Mocking structure expected by BookingSummary from previous step
+                            movie: { title: sessionStorage.getItem('booking_movie_title'), portraitPosterUrl: sessionStorage.getItem('booking_movie_poster') },
+                            theatre: { name: sessionStorage.getItem('booking_theater_name') }
+                        }}
+                        show={{ // Mocking structure
+                            time: sessionStorage.getItem('booking_show_time'),
+                            basePrice: show?.basePrice || 150
+                        }}
+                        selectedSeats={showSeats.filter(s => seats.includes(s.id || s._id))}
+                        buttonText={Object.keys(cart).length > 0 ? "Pay Now" : "Skip & Pay"}
+                        buttonIcon={<Zap className="w-4 h-4" />}
+                        onConfirm={handleProceedToPayment}
+                        showSkip={true}
+                        onSkip={() => {
+                            setCart({}); // clear cart before proceeding
+                            setTimeout(handleProceedToPayment, 50);
+                        }}
+                        snacksTotal={snackTotal}
+                        snackDetails={Object.entries(cart).map(([id, qty]) => {
+                            const item = foodItems.find(f => String(f.id) === String(id));
+                            return {
+                                name: item?.name,
+                                image: item?.image,
+                                qty: qty,
+                                total: (item?.price || 0) * qty
+                            };
+                        })}
+                    />
+                </div>
             </main>
             {/* Mobile Sticky Cart Footer */}
             {Object.keys(cart).length > 0 && (
@@ -295,7 +296,7 @@ const FoodSelectionPage = () => {
                     </div>
                     <button
                         onClick={handleProceedToPayment}
-                        className="w-full py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-xynemaRose/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                         <Zap className="w-4 h-4 fill-current" />
                         Proceed to Payment
@@ -306,43 +307,62 @@ const FoodSelectionPage = () => {
     );
 };
 
-const FoodCard = ({ item, quantity, onAdd, onRemove }) => (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all text-center">
-        <div className="w-20 h-20 bg-gray-50 rounded-2xl mx-auto flex items-center justify-center mb-4 text-4xl">
-            {item.image}
-        </div>
+const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
+    // Check if image is a URL or emoji
+    const isImageUrl = item.image && (item.image.startsWith('http') || item.image.startsWith('https') || item.image.startsWith('/'));
+    
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-2xl mx-auto flex items-center justify-center mb-4 overflow-hidden">
+                {isImageUrl ? (
+                    <img 
+                        src={item.image} 
+                        alt={item.name}
+                        className="w-full h-full object-cover rounded-2xl"
+                        onError={(e) => {
+                            // Fallback to emoji if image fails to load
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                        }}
+                    />
+                ) : null}
+                <span className={`text-4xl ${isImageUrl ? 'hidden' : ''}`}>
+                    {item.image || '🍿'}
+                </span>
+            </div>
 
-        <div className="space-y-1 mb-4">
-            <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{item.name}</h3>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.category}</p>
-        </div>
+            <div className="space-y-1 mb-4">
+                <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{item.name}</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.category}</p>
+            </div>
 
-        <div className="text-xl font-bold text-xynemaRose mb-6">
-            ₹{item.price}
-        </div>
+            <div className="text-xl font-bold text-indigo-600 mb-6">
+                ₹{item.price}
+            </div>
 
-        <div className="h-10">
-            {quantity === 0 ? (
-                <button
-                    onClick={onAdd}
-                    className="w-full h-full rounded-lg border border-gray-200 text-gray-600 font-bold text-[10px] uppercase tracking-wider hover:border-xynemaRose hover:text-xynemaRose transition-all"
-                >
-                    Add to Cart
-                </button>
-            ) : (
-                <div className="w-full h-full flex items-center justify-between bg-xynemaRose text-white rounded-lg px-3">
-                    <button onClick={onRemove} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
-                        <Minus className="w-3 h-3" />
+            <div className="h-10">
+                {quantity === 0 ? (
+                    <button
+                        onClick={onAdd}
+                        className="w-full h-full rounded-lg border border-gray-200 text-gray-600 font-bold text-[10px] uppercase tracking-wider hover:border-indigo-600 hover:text-indigo-600 transition-all"
+                    >
+                        Add to Cart
                     </button>
-                    <span className="font-bold text-sm">{quantity}</span>
-                    <button onClick={onAdd} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
-                        <Plus className="w-3 h-3" />
-                    </button>
-                </div>
-            )}
+                ) : (
+                    <div className="w-full h-full flex items-center justify-between bg-indigo-600 text-white rounded-lg px-3">
+                        <button onClick={onRemove} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
+                            <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="font-bold text-sm">{quantity}</span>
+                        <button onClick={onAdd} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
+                            <Plus className="w-3 h-3" />
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const LoadingState = () => (
     <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-6 p-8">

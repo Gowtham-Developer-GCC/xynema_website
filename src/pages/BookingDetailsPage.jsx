@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock } from 'lucide-react';
 import { getBookingDetails } from '../services/bookingService';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
@@ -93,130 +93,174 @@ const BookingDetailsPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-whiteSmoke pb-20">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 pb-20 transition-colors duration-300">
             <SEO title={`Ticket - ${booking.movieTitle} | XYNEMA`} description="View your movie ticket" />
 
             {/* Header */}
-            <header className="bg-white/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 print:hidden">
+            <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 print:hidden transition-colors duration-300">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/bookings')}
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors"
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="text-center">
-                        <h1 className="text-xs font-black text-gray-900 uppercase tracking-widest">E-Ticket</h1>
+                    <div className="text-center flex items-center gap-2">
+                        <Ticket size={16} className="text-indigo-500" />
+                        <h1 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Boarding Pass</h1>
                     </div>
                     <div className="w-10" />
                 </div>
             </header>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-                {/* Main Ticket Card */}
-                <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100 translate-y-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                {/* Main High-Fidelity Ticket Card */}
+                <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-indigo-900/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
 
-                    {/* Movie Header Section */}
-                    <div className="p-8 pb-0">
-                        <div className="flex gap-6 items-start mb-0">
-                            <div className="w-24 aspect-[2/3] rounded-2xl overflow-hidden shadow-lg border border-gray-100 shrink-0">
-                                <img
-                                    src={booking.posterUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
-                                    className="w-full h-full object-cover"
-                                    alt={booking.movieTitle}
-                                />
-                            </div>
-                            <div className="flex-1 pt-2">
-                                <h2 className="text-2xl font-black tracking-tighter uppercase text-gray-900 leading-tight mb-2">
-                                    {booking.movieTitle}
-                                </h2>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-2 py-0.5 bg-gray-50 text-[9px] font-black text-gray-400 border border-gray-100 rounded uppercase tracking-widest">
-                                        {booking.format || '2D'}
-                                    </span>
-                                    <span className="px-2 py-0.5 bg-gray-50 text-[9px] font-black text-gray-400 border border-gray-100 rounded uppercase tracking-widest">
-                                        {booking.language}
-                                    </span>
-                                    {(booking.movie?.certification || booking.certification) && (
-                                        <span className="px-2 py-0.5 bg-gray-50 text-[9px] font-black text-gray-400 border border-gray-100 rounded uppercase tracking-widest">
-                                            {booking.movie?.certification || booking.certification}
+                    {/* Top Section: Hero Image & Movie Info */}
+                    <div className="relative w-full h-56 bg-gray-900 overflow-hidden">
+                        {/* Immersive Background */}
+                        <div
+                            className="absolute inset-0 bg-cover bg-center scale-105 opacity-60 contrast-125 saturate-150"
+                            style={{ backgroundImage: `url(${booking.landscapePosterUrl || booking.posterUrl})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent flex flex-col justify-end p-8">
+                            <div className="relative z-10 flex gap-6 items-end">
+                                {/* Portrait Poster inset */}
+                                <div className="w-24 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
+                                    <img
+                                        src={booking.posterUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
+                                        className="w-full h-full object-cover shadow-inner"
+                                        alt={booking.movieTitle}
+                                    />
+                                </div>
+                                {/* Title and Tags */}
+                                <div className="flex-1 pb-2">
+                                    <h2 className="text-3xl font-black tracking-tighter uppercase text-white leading-none mb-3 drop-shadow-md">
+                                        {booking.movieTitle}
+                                    </h2>
+                                    <div className="flex flex-wrap gap-2 drop-shadow-sm">
+                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                            {booking.format || '2D'}
                                         </span>
-                                    )}
-                                    {(booking.movie?.duration || booking.duration) ? (
-                                        <span className="px-2 py-0.5 bg-gray-50 text-[9px] font-black text-gray-400 border border-gray-100 rounded uppercase tracking-widest">
-                                            {Math.floor((booking.movie?.duration || booking.duration) / 60)}h {(booking.movie?.duration || booking.duration) % 60}m
+                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                            {booking.language}
                                         </span>
-                                    ) : null}
+                                        {(booking.movie?.certification || booking.certification) && (
+                                            <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                                {booking.movie?.certification || booking.certification}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* QR Code Section - Integrated */}
-                        <div className="bg-gray-50 rounded-3xl p-8 flex flex-col items-center justify-center border border-gray-100 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4">
-                                <Shield size={16} className="text-green-500/20" />
-                            </div>
-                            <div className="bg-white p-4 rounded-2xl shadow-sm mb-4 ring-1 ring-gray-100 transition-transform group-hover:scale-105 duration-500">
-                                <BookingQr booking={booking} size={160} />
-                            </div>
-                            <div className="text-center space-y-2">
-                                <p className="text-[14px] font-black text-charcoalSlate font-mono uppercase tracking-tight bg-white px-3 py-1 rounded-lg ring-1 ring-gray-100 inline-block shadow-sm">
-                                    {booking.bookingId || booking.id}
+                    {/* Middle Section: Primary Booking Data */}
+                    <div className="p-8 pt-12">
+                        <div className="grid grid-cols-2 gap-8">
+                            {/* Date & Time */}
+                            <div className="col-span-2 sm:col-span-1 space-y-1">
+                                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Calendar size={12} /> Show Time
                                 </p>
+                                <p className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{bookingDate}</p>
+                                <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">{bookingTime}</p>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Perforation Line */}
-                    <div className="relative h-10 flex items-center justify-between pointer-events-none">
-                        <div className="w-6 h-10 bg-whiteSmoke rounded-r-full border-y border-r border-gray-100 -ml-1" />
-                        <div className="flex-1 border-t-2 border-dashed border-gray-100 mx-4" />
-                        <div className="w-6 h-10 bg-whiteSmoke rounded-l-full border-y border-l border-gray-100 -mr-1" />
-                    </div>
-
-                    {/* Details Section */}
-                    <div className="p-8 pt-0 space-y-8">
-                        {/* Info Grid */}
-                        <div className="grid grid-cols-2 gap-y-8 gap-x-4">
-                            {/* Theater - Full Width */}
-                            <DetailItem className="col-span-2" icon={<MapPin size={12} />} label="Theater" value={booking.theatre?.theatreName || booking.theaterName} />
-
-                            {/* Date & Time - Split */}
-                            <DetailItem icon={<Calendar size={12} />} label="Date" value={bookingDate} />
-                            <DetailItem icon={<Calendar size={12} />} label="Time" value={bookingTime} />
-
-                            {/* Screen & Seats - Split */}
-                            <DetailItem icon={<Monitor size={12} />} label="Screen" value={booking.screen?.screenName || booking.screen || '1'} />
-                            <DetailItem icon={<Armchair size={12} />} label="Seats" value={getSeatString()} subValue={`${booking.totalSeats || booking.seats?.length || 1} Tickets`} />
-
-                            {/* User Info - Full Width */}
-                            {booking.user && (
-                                <div className="col-span-2 pt-4 border-t border-dashed border-gray-100">
-                                    <DetailItem icon={<ShoppingBag size={12} />} label="Booked By" value={booking.user.name} subValue={booking.user.email} />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Detailed Receipt View */}
-                        <div className="pt-8 border-t border-gray-50 space-y-4">
-                            <div className="space-y-2">
-                                <ReceiptRow label="Subtotal" value={booking.pricing?.subtotal || booking.ticketPrice} />
-                                <ReceiptRow label="Convenience Fee" value={booking.pricing?.convenienceFee || booking.convenienceFee} />
-                                <ReceiptRow label="GST" value={booking.pricing?.gst || booking.tax} />
-                                {(booking.pricing?.discount > 0 || booking.discount > 0) && (
-                                    <ReceiptRow label="Discount" value={-(booking.pricing?.discount || booking.discount)} isDiscount />
-                                )}
+                            {/* Location */}
+                            <div className="col-span-2 sm:col-span-1 space-y-1 sm:text-right">
+                                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center sm:justify-end gap-2">
+                                    <MapPin size={12} /> Venue
+                                </p>
+                                <p className="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase line-clamp-2">{booking.theatre?.theatreName || booking.theaterName}</p>
+                                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-0.5">{booking.screen?.screenName || booking.screen || 'Screen 1'}</p>
                             </div>
-                            <div className="pt-4 border-t border-dashed border-gray-100 flex justify-between items-end">
-                                <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Amount</p>
-                                    <p className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">
-                                        TXN ID: <span className="text-gray-400">{booking.payment?.transactionId || booking.transactionId || 'N/A'}</span>
+
+                            {/* Seats */}
+                            <div className="col-span-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl p-6 border border-indigo-100 dark:border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <Armchair size={12} /> Your Seats
                                     </p>
+                                    <p className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{getSeatString()}</p>
                                 </div>
-                                <div className="text-right">
-                                    <span className="text-2xl font-black text-xynemaRose tracking-tighter">₹{(booking.pricing?.total || booking.totalAmount)?.toLocaleString()}</span>
-                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Paid via {(booking.payment?.method || booking.paymentMethod)?.toUpperCase()}</p>
+                                <div className="w-full sm:w-auto px-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-center shadow-sm border border-gray-100 dark:border-gray-700">
+                                    <span className="text-lg font-black text-gray-900 dark:text-white">{booking.totalSeats || booking.seats?.length || 1}</span>
+                                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 ml-1 uppercase">Tickets</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Highly Visual Perforation Structural Metaphor */}
+                    <div className="relative flex items-center justify-between h-8 z-20 pointer-events-none">
+                        {/* Left Cutout */}
+                        <div className="absolute left-0 w-8 h-8 -translate-x-1/2 bg-[#F5F5FA] dark:bg-gray-950 rounded-full border border-gray-100 dark:border-gray-800 shadow-[inset_-4px_0_8px_rgba(0,0,0,0.02)] dark:shadow-[inset_-4px_0_8px_rgba(0,0,0,0.2)]" />
+
+                        {/* Dashed Line */}
+                        <div className="w-full border-t-2 border-dashed border-gray-200 dark:border-gray-800 mx-8" />
+
+                        {/* Right Cutout */}
+                        <div className="absolute right-0 w-8 h-8 translate-x-1/2 bg-[#F5F5FA] dark:bg-gray-950 rounded-full border border-gray-100 dark:border-gray-800 shadow-[inset_4px_0_8px_rgba(0,0,0,0.02)] dark:shadow-[inset_4px_0_8px_rgba(0,0,0,0.2)]" />
+                    </div>
+
+                    {/* Bottom Section: QR, Pricing, & IDs */}
+                    <div className="p-8 pt-6 bg-gray-50/50 dark:bg-gray-900/50">
+                        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-between">
+
+                            {/* Verification Block */}
+                            <div className="flex flex-col items-center shrink-0">
+                                <div className="bg-white p-3 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700">
+                                    <BookingQr booking={booking} size={140} />
+                                </div>
+                                <div className="mt-4 flex items-center justify-center gap-1.5 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">
+                                    <Shield size={12} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{booking.status}</span>
+                                </div>
+                            </div>
+
+                            {/* Details & Pricing */}
+                            <div className="flex-1 w-full space-y-6">
+                                {/* Identifiers */}
+                                <div className="grid grid-cols-2 gap-4 pb-6 border-b border-gray-200 dark:border-gray-800">
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Booking ID</p>
+                                        <p className="text-xs font-mono font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded inline-block">{booking.bookingId || booking.id}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Transaction ID</p>
+                                        <p className="text-xs font-mono font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded inline-block truncate max-w-full" title={booking.payment?.transactionId || booking.transactionId}>
+                                            {booking.payment?.transactionId || booking.transactionId || 'N/A'}
+                                        </p>
+                                    </div>
+                                    {booking.user && (
+                                        <div className="col-span-2">
+                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><ShoppingBag size={10} /> Booked By</p>
+                                            <p className="text-sm font-black text-gray-900 dark:text-white uppercase truncate">{booking.user.name}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Clean Receipt */}
+                                <div className="space-y-3">
+                                    <ReceiptRow label="Tickets Subtotal" value={booking.pricing?.subtotal || booking.ticketPrice} />
+                                    {!!booking.foodPrice && <ReceiptRow label="Food & Bev" value={booking.foodPrice} />}
+                                    <ReceiptRow label="Convenience Fee" value={booking.pricing?.convenienceFee || booking.convenienceFee} />
+                                    <ReceiptRow label="Taxes" value={booking.pricing?.gst || booking.tax} />
+                                    {(booking.pricing?.discount > 0 || booking.discount > 0) && (
+                                        <ReceiptRow label="Discount" value={-(booking.pricing?.discount || booking.discount)} isDiscount />
+                                    )}
+                                    <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex justify-between items-end">
+                                        <div>
+                                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">Total</p>
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Paid via {(booking.payment?.method || booking.paymentMethod)?.toUpperCase()}</p>
+                                        </div>
+                                        <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter leading-none">
+                                            ₹{(booking.pricing?.total || booking.totalAmount)?.toLocaleString()}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -252,26 +296,26 @@ const BookingDetailsPage = () => {
 
                     if (booking.isReviewed || justReviewed) {
                         return (
-                            <div className="bg-green-50 rounded-[24px] p-6 border border-green-100 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-2 duration-500">
-                                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                                    <CheckCircle size={24} className="text-green-600" />
+                            <div className="bg-green-50 dark:bg-green-900/20 rounded-[24px] p-6 border border-green-100 dark:border-green-800/30 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-2 duration-500">
+                                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center mb-3">
+                                    <CheckCircle size={24} className="text-green-600 dark:text-green-400" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Thanks for your review!</h3>
-                                <p className="text-xs font-medium text-gray-500 mt-1">Your feedback helps others choose better movies.</p>
+                                <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Thanks for your review!</h3>
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">Your feedback helps others choose better movies.</p>
                             </div>
                         );
                     }
 
                     return (
-                        <div className="bg-white rounded-[24px] p-8 border border-gray-100 shadow-xl shadow-gray-200/30 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            <div className="w-16 h-16 rounded-3xl bg-xynemaRose/5 flex items-center justify-center mb-6 ring-1 ring-xynemaRose/10">
-                                <Star size={32} className="text-xynemaRose fill-xynemaRose" />
+                        <div className="bg-white dark:bg-gray-900 rounded-[24px] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/30 dark:shadow-black/30 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-2 duration-500 transition-colors duration-300">
+                            <div className="w-16 h-16 rounded-3xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-6 ring-1 ring-amber-500/20">
+                                <Star size={32} className="text-amber-500 fill-amber-500" />
                             </div>
-                            <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">How was the movie?</h3>
-                            <p className="text-xs text-gray-500 mt-1 mb-6">Rate your experience to help our community.</p>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">How was the movie?</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-6">Rate your experience to help our community.</p>
                             <button
                                 onClick={() => setShowReviewModal(true)}
-                                className="w-full max-w-xs h-14 rounded-2xl bg-xynemaRose text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-xynemaRose/20 hover:scale-[1.02] active:scale-95 transition-all"
+                                className="w-full max-w-xs h-14 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all"
                             >
                                 Rate Movie
                             </button>
@@ -280,12 +324,12 @@ const BookingDetailsPage = () => {
                 })()}
 
                 {/* Footer Actions */}
-                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden">
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex justify-center">
                     <button
                         onClick={handleDownload}
-                        className="w-full h-14 rounded-2xl bg-xynemaRose text-white text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-xynemaRose/10 hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full max-w-[200px] h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                        <Download size={14} /> Download Ticket
+                        <Download size={14} /> Download Pass
                     </button>
                 </div>
 
@@ -311,31 +355,31 @@ const BookingDetailsPage = () => {
 };
 
 const DetailItem = ({ icon, label, value, subValue, className = '' }) => (
-    <div className={`space-y-1.5 ${className}`}>
-        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+    <div className={`space-y-1 ${className}`}>
+        <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
             {icon} {label}
         </p>
         <div>
-            <p className="text-sm font-bold text-gray-900 leading-tight uppercase truncate">{value}</p>
-            {subValue && <p className="text-[10px] font-bold text-xynemaRose uppercase mt-0.5">{subValue}</p>}
+            <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight uppercase truncate">{value}</p>
+            {subValue && <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mt-0.5">{subValue}</p>}
         </div>
     </div>
 );
 
 const ReceiptRow = ({ label, value, isDiscount }) => (
     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wide">
-        <span className="text-gray-400">{label}</span>
-        <span className={isDiscount ? "text-green-500" : "text-gray-900"}>
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className={isDiscount ? "text-green-500 dark:text-green-400" : "text-gray-900 dark:text-white"}>
             {isDiscount ? '-' : ''}₹{(value || 0).toLocaleString()}
         </span>
     </div>
 );
 
 const LoadingState = () => (
-    <div className="min-h-screen bg-whiteSmoke flex flex-col items-center justify-center space-y-6">
-        <div className="w-12 h-12 rounded-full border-4 border-gray-100 border-t-xynemaRose animate-spin" />
+    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 transition-colors duration-300">
+        <div className="w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-800 border-t-indigo-600 dark:border-t-indigo-500 animate-spin" />
         <div className="text-center font-display">
-            <p className="text-xynemaRose font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">Ticket Readying</p>
+            <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">Ticket Readying</p>
         </div>
     </div>
 );

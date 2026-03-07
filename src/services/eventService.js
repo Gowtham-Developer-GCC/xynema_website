@@ -48,6 +48,17 @@ export const getAllEventsList = async () => {
     });
 };
 
+export const getEventDetails = async (eventIdOrSlug) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.EVENTS.DETAILS(eventIdOrSlug));
+        if (response.data.success) {
+            const eventData = response.data.data;
+            return eventData ? new Event(eventData) : null;
+        }
+        return null;
+    });
+};
+
 export const getEventBookings = async () => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST);

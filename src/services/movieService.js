@@ -12,12 +12,12 @@ export const getCities = async () => {
     });
 };
 
-export const getNotNowMovies = async () => {
+export const getNotNowMovies = async (city) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.MOVIES.LATEST);
+        // Hits /movies/upcomingmovies which actually has Streaming/Latest data
+        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city } });
         if (response.data.success) {
-            // The API returns { success: true, count: X, data: [...] } or { ..., latestMovies: [...] }
-            const resultData = response.data.data || response.data.latestMovies;
+            const resultData = response.data.data || response.data.latestMovies || response.data.movies;
             if (Array.isArray(resultData)) {
                 return resultData.map(m => new Movie(m));
             }
@@ -40,11 +40,13 @@ export const toggleInterest = async (movieId, interested) => {
     });
 };
 
-export const getUpcomingMovies = async (city) => {
+// This actually fetches Now Showing movies (movies tied to theaters in a city)
+export const getNowShowingMovies = async (city, page = 1) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city } });
+        // Hits /movies/upcomingmovies which actually has Now Showing data with theaters
+        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city, page } });
         if (response.data.success) {
-            const resultData = response.data.data;
+            const resultData = response.data.data || response.data.movies;
             const movies = [];
             const uniqueTheatersMap = new Map();
 
@@ -81,6 +83,21 @@ export const getUpcomingMovies = async (city) => {
             };
         }
         return { movies: [], theaters: [], pagination: {} };
+    });
+};
+
+// This fetches true Upcoming movies
+export const getUpcomingMovies = async () => {
+    return safeApiCall(async () => {
+        // Hits /movies/latest-movies which actually has Global Upcoming data
+        const response = await api.get(ENDPOINTS.MOVIES.LATEST);
+        if (response.data.success) {
+            const resultData = response.data.data || response.data.movies;
+            if (Array.isArray(resultData)) {
+                return resultData.map(m => new Movie(m));
+            }
+        }
+        return [];
     });
 };
 
@@ -135,5 +152,6 @@ export const movieService = {
     getHighlightsMovies,
     addMovieReview,
     toggleInterest,
+    getNowShowingMovies,
     getUpcomingMovies,
 };

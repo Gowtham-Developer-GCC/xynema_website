@@ -13,6 +13,7 @@ export const ENDPOINTS = {
     // Events
     EVENTS: {
         LIST: '/movies/events',
+        DETAILS: (eventId) => `/movies/events/${eventId}`,
         ENQUIRY: '/events/enquiry',
     },
 
@@ -23,6 +24,7 @@ export const ENDPOINTS = {
             LOCK_SEATS: (showId) => `/booking/shows/${showId}/lock-seats`,
             RELEASE_SEATS: (showId) => `/booking/shows/${showId}/release-seats`,
             CONFIRM: (showId) => `/booking/shows/${showId}/confirm-booking`,
+            FOOD_AND_BEVERAGES: (theaterId) => `/booking/food&beverages/${theaterId}/food-and-beverages`,
         },
         MY_BOOKINGS: '/booking/my-bookings',
         BOOKING_DETAILS: (bookingId) => `/booking/mybookings/${bookingId}`,

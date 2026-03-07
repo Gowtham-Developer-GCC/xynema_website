@@ -7,7 +7,7 @@ import 'swiper/css/navigation';
 import StoreCard from '../components/StoreCard';
 import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper, ShoppingBag } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getEvents, reserveEventTickets, getAllEventsList } from '../services/eventService';
+import { getEventDetails, reserveEventTickets, getAllEventsList } from '../services/eventService';
 import { useData } from '../context/DataContext';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
@@ -44,17 +44,14 @@ const EventDetailsPage = () => {
     const fetchEventDetails = async () => {
         try {
             setLoading(true);
-            const [events, allEvents] = await Promise.all([
-                getEvents(selectedCity),
-                getAllEventsList()
+            const [foundEvent, allEvents] = await Promise.all([
+                getEventDetails(slug),
+                getAllEventsList().catch(() => [])
             ]);
 
-            const foundEvent = events.find(e => String(e.slug) === String(slug) || String(e.id) === String(slug));
             if (foundEvent) {
                 setEvent(foundEvent);
-
-                // Set Similar Events (without filtering)
-                setSimilarEvents(allEvents);
+                setSimilarEvents(allEvents || []);
             } else {
                 setError('Event not found');
             }
@@ -108,36 +105,51 @@ const EventDetailsPage = () => {
             return;
         }
 
+        const tickets = getCurrentTickets();
+        const selectedTickets = Object.entries(ticketQuantities)
+            .filter(([_, qty]) => qty > 0)
+            .map(([ticketId, quantity]) => ({
+                ticketClassId: ticketId,
+                quantity
+            }));
+
+        if (event.eventType === 'multi-day') {
+            // Navigate to the new show selection page instead of booking directly
+            const enrichedTickets = Object.entries(ticketQuantities)
+                .filter(([_, qty]) => qty > 0)
+                .map(([ticketId, quantity]) => {
+                    const ticket = tickets.find(t => t.id === ticketId);
+                    return {
+                        ticketClassId: ticketId,
+                        className: ticket.className,
+                        quantity,
+                        pricePerTicket: ticket.price,
+                        totalPrice: ticket.price * quantity
+                    };
+                });
+
+            navigate(`/event/${event.slug}/shows`, {
+                state: {
+                    event,
+                    selectedTickets,
+                    ticketQuantities,
+                    enrichedTickets,
+                    totalAmount: getTotalAmount(),
+                }
+            });
+            return;
+        }
+
         setIsReserving(true);
         try {
-            const tickets = getCurrentTickets();
-            const selectedTickets = Object.entries(ticketQuantities)
-                .filter(([_, qty]) => qty > 0)
-                .map(([ticketId, quantity]) => ({
-                    ticketClassId: ticketId,
-                    quantity
-                }));
-
             let showDate = null;
-            let showTime = null;
+            let showTime = event.startTime;
 
-            if (event.eventType === 'multi-day' && event.showTimes?.length > 0) {
-                const showTimeData = event.showTimes[selectedShowTimeIndex];
-                showTime = showTimeData.startTime;
-                try {
-                    const dt = new Date(showTimeData.date);
-                    showDate = dt.toISOString();
-                } catch (e) {
-                    showDate = showTimeData.date;
-                }
-            } else {
-                showTime = event.startTime;
-                try {
-                    const dt = new Date(event.startDate);
-                    showDate = dt.toISOString();
-                } catch (e) {
-                    showDate = event.startDate;
-                }
+            try {
+                const dt = new Date(event.startDate);
+                showDate = dt.toISOString();
+            } catch (e) {
+                showDate = event.startDate;
             }
 
             console.log('[Reserve] Sending:', { showDate, showTime, tickets: selectedTickets });
@@ -606,7 +618,6 @@ const EventDetailsPage = () => {
                     {/* Right Column Area: Booking */}
                     <div className="lg:col-span-4 space-y-8" id="tickets-section">
                         <div className="sticky top-24 space-y-6">
-                            {/* Premium Ticket Selection Card */}
                             <div className="bg-white dark:bg-[#1a1c23] rounded-[32px] p-8 border border-gray-100 dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] relative overflow-hidden group/tickets transition-colors duration-300">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 dark:bg-blue-900/20 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
 

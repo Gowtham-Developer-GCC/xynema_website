@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Clock, Calendar, MapPin, ShieldCheck, CheckCircle, ChevronRight, Info, Ticket, Coffee, User, CreditCard } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, MapPin, ShieldCheck, CheckCircle, ChevronRight, Info, Ticket, Coffee, User, CreditCard, Building, Wallet, Smartphone } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getFoodItems } from '../services/storeService';
-import { getShowSeats, confirmBooking } from '../services/bookingService';
+import { getShowSeats, getFoodAndBeverages, confirmBooking } from '../services/bookingService';
 import { initiatePayment } from '../services/paymentService';
 import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
 import bookingSessionManager from '../utils/bookingSessionManager';
@@ -40,10 +39,10 @@ const PaymentPage = () => {
     }, [seats]);
 
     const paymentMethods = [
-        { id: 'upi', name: 'UPI / QR', icon: <CreditCard className="w-5 h-5" /> },
-        { id: 'card', name: 'Credit / Debit Card', icon: <ShieldCheck className="w-5 h-5" /> },
-        { id: 'netbanking', name: 'Net Banking', icon: <MapPin className="w-5 h-5" /> },
-        { id: 'wallet', name: 'Wallets', icon: <Coffee className="w-5 h-5" /> },
+        { id: 'upi', name: 'UPI / QR', icon: <Smartphone className="w-5 h-5" /> },
+        { id: 'card', name: 'Credit / Debit Card', icon: <CreditCard className="w-5 h-5" /> },
+        { id: 'netbanking', name: 'Net Banking', icon: <Building className="w-5 h-5" /> },
+        { id: 'wallet', name: 'Wallets', icon: <Wallet className="w-5 h-5" /> },
     ];
 
     useEffect(() => {
@@ -140,16 +139,40 @@ const PaymentPage = () => {
         };
 
         const fetchData = async () => {
+            const theaterId = bookingState?.theaterId;
+            if (!showId || !theaterId) return;
+
             try {
                 setLoading(true);
                 const [showResponse, foodResponse] = await Promise.all([
                     getShowSeats(showId),
-                    getFoodItems(),
+                    getFoodAndBeverages(theaterId),
                     loadRazorpay()
                 ]);
+
+                // Transform API response to match component expectations
+                let foodItemsData = [];
+                if (foodResponse?.data?.items) {
+                    try {
+                        const itemsObject = foodResponse.data.items;
+                        foodItemsData = Object.values(itemsObject).flat().map(item => ({
+                            id: item._id || item.id,
+                            name: item.item_name || item.name,
+                            category: item.category,
+                            price: item.selling_price || item.price,
+                            image: item.foodImageUrl || item.image || '🍿',
+                            description: item.description || '',
+                            available: item.is_available !== false
+                        })).filter(item => item.available);
+                    } catch (error) {
+                        console.error('Error processing food items:', error);
+                        foodItemsData = [];
+                    }
+                }
+
                 setShow(showResponse.show);
                 setShowSeats(showResponse.seats || []);
-                setFoodItems(foodResponse || []);
+                setFoodItems(foodItemsData);
             } catch (err) {
                 console.error('Failed to fetch payment data:', err);
                 setError('Failed to load booking details. Please try again.');
@@ -158,8 +181,8 @@ const PaymentPage = () => {
             }
         };
 
-        if (showId) fetchData();
-    }, [showId]);
+        if (showId && bookingState) fetchData();
+    }, [showId, bookingState]);
 
     const ticketsTotal = useMemo(() => {
         if (!seats.length || !showSeats.length) return seats.length * (show?.basePrice || 250);
@@ -176,7 +199,9 @@ const PaymentPage = () => {
         }, 0);
     }, [cartData, foodItems]);
 
-    const grandTotal = ticketsTotal + snackTotal;
+    const subTotal = ticketsTotal + snackTotal;
+    const convenienceFee = subTotal * 0.1; // 10% Convenience Fee
+    const grandTotal = subTotal + convenienceFee;
 
     const handlePayment = async () => {
         setIsProcessing(true);
@@ -205,19 +230,35 @@ const PaymentPage = () => {
         }
     };
 
+    const localDisplayTitle = show?.movie?.title || show?.movie?.MovieName || show?.movieName || sessionStorage.getItem('booking_movie_title') || 'Movie';
+    const localDisplayPoster = show?.movie?.portraitPosterUrl || show?.movie?.posterUrl || show?.posterUrl || sessionStorage.getItem('booking_movie_poster') || '';
+    const localDisplayTheater = sessionStorage.getItem('booking_theater_name') || show?.theatre?.name || show?.theaterName || 'Theater';
+    const localDisplayTime = show?.startTime || show?.showTime || sessionStorage.getItem('booking_show_time') || '';
+    const localDisplayLanguage = sessionStorage.getItem('booking_movie_language') || show?.movieLanguage || 'English';
+    const localDisplayFormat = sessionStorage.getItem('booking_movie_format') || show?.format || '2D';
+    const rawScreen = sessionStorage.getItem('booking_screen_name') || show?.screen?.name || (typeof show?.screen === 'string' ? show.screen : '1');
+    const localDisplayScreen = rawScreen.toLowerCase().includes('screen') ? rawScreen : `Screen ${rawScreen}`;
+
     const handleBookingSuccess = async (successResult) => {
         if (successResult && successResult.success) {
             const b = successResult.data?.booking || successResult.data || {};
             const localConfirmedBooking = {
                 id: b.bookingId || b.id || b._id || `BK${Date.now()}`,
-                movieTitle: b.movieTitle || show?.movie?.title || 'Movie',
-                posterUrl: b.posterUrl || show?.movie?.posterUrl || '',
-                theaterName: b.theaterName || show?.theatre?.name || 'Theater',
+                movieTitle: b.movieTitle || localDisplayTitle,
+                posterUrl: b.posterUrl || localDisplayPoster,
+                theaterName: b.theaterName || localDisplayTheater,
                 city: b.city || show?.theatre?.city || 'N/A',
                 date: b.date || b.showDate || selectedDate,
-                time: b.time || b.showTime || show?.startTime || '',
-                screen: b.screen || show?.screen?.name || '1',
-                seats: b.seats ? b.seats.map(s => typeof s === 'object' ? (s.seatLabel || s.seatNumber) : s) : showSeats.filter(s => seats.includes(s.id || s._id)).map(s => s.seatNumber),
+                time: b.time || b.showTime || localDisplayTime,
+                screen: b.screen || localDisplayScreen,
+                seats: b.seats ? b.seats.map(s => {
+                    if (typeof s === 'object' && s !== null) {
+                        const r = s.row || '';
+                        const n = s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || '';
+                        return `${r}${n}`;
+                    }
+                    return s;
+                }) : showSeats.filter(s => seats.includes(s.id || s._id)).map(s => `${s.row || ''}${s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || ''}`),
                 totalAmount: b.totalAmount || grandTotal,
                 status: 'confirmed'
             };
@@ -236,17 +277,17 @@ const PaymentPage = () => {
     if (success) return <SuccessScreen booking={confirmedBooking} />;
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <SEO title={`Payment - ${show?.movie?.title || 'Movie'}`} />
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
+            <SEO title={`Payment - ${localDisplayTitle}`} />
 
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+            <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-                    <button onClick={() => navigate(-1)} className="p-3 rounded-full hover:bg-slate-100 transition-colors">
-                        <ArrowLeft className="w-5 h-5 text-slate-600" />
+                    <button onClick={() => navigate(-1)} className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-gray-400" />
                     </button>
                     <div className="flex flex-col items-center">
-                        <h1 className="text-sm font-black tracking-[0.2em] text-slate-900 uppercase">SECURE CHECKOUT</h1>
+                        <h1 className="text-sm font-black tracking-[0.2em] text-slate-900 dark:text-white uppercase">SECURE CHECKOUT</h1>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className={`w-1 h-1 rounded-full animate-pulse ${timeLeft < 60 ? 'bg-red-600' : 'bg-emerald-600'}`}></span>
                             <span className={`text-[10px] font-bold ${timeLeft < 60 ? 'text-red-600' : 'text-slate-400'}`}>
@@ -269,9 +310,9 @@ const PaymentPage = () => {
                             </div>
                         )}
 
-                        <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <section className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-200 dark:border-gray-800 overflow-hidden">
+                            <div className="p-8 border-b border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-900/50 flex items-center justify-between">
+                                <h3 className="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                     <ShieldCheck className="w-3.5 h-3.5" /> Select Payment Method
                                 </h3>
                                 <span className="bg-amber-100 text-amber-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Dev Mode</span>
@@ -283,23 +324,23 @@ const PaymentPage = () => {
                                         <button
                                             key={method.id}
                                             onClick={() => setSelectedMethod(method.id)}
-                                            className={`p-5 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${selectedMethod === method.id ? 'border-rose-600 bg-rose-50/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                                            className={`p-5 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${selectedMethod === method.id ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20' : 'border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-slate-200 dark:hover:border-gray-700'}`}
                                         >
-                                            <div className={`p-3 rounded-xl ${selectedMethod === method.id ? 'bg-rose-600 text-white' : 'bg-slate-50 text-slate-400'}`}>
+                                            <div className={`p-3 rounded-xl ${selectedMethod === method.id ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-gray-500'}`}>
                                                 {method.icon}
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider">{method.name}</p>
+                                                <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider">{method.name}</p>
                                                 <p className="text-[9px] font-bold text-slate-400 leading-none mt-1">Instant confirmation</p>
                                             </div>
                                         </button>
                                     ))}
                                 </div>
 
-                                <div className="pt-8 border-t border-slate-100">
+                                <div className="pt-8 border-t border-slate-100 dark:border-gray-800">
                                     <div className="space-y-4 max-w-sm mx-auto text-center">
-                                        <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Ready to Book?</h2>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                                        <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Ready to Book?</h2>
+                                        <p className="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
                                             Generating random transaction ID for testing via {selectedMethod.toUpperCase()}
                                         </p>
                                     </div>
@@ -309,8 +350,8 @@ const PaymentPage = () => {
                                         disabled={isProcessing}
                                         className="w-full mt-8 relative group block"
                                     >
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-rose-600 to-rose-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                                        <div className={`relative w-full flex items-center justify-center gap-3 bg-rose-600 text-white font-black text-sm uppercase tracking-[0.3em] py-5 rounded-2xl transition-all ${isProcessing ? 'opacity-90' : 'hover:scale-[1.02] active:scale-98'}`}>
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                                        <div className={`relative w-full flex items-center justify-center gap-3 bg-indigo-600 text-white font-black text-sm uppercase tracking-[0.3em] py-5 rounded-2xl transition-all ${isProcessing ? 'opacity-90' : 'hover:scale-[1.02] active:scale-98'}`}>
                                             {isProcessing ? (
                                                 <>
                                                     <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -334,13 +375,13 @@ const PaymentPage = () => {
                             </div>
                         </section>
 
-                        <div className="p-6 bg-slate-100/50 rounded-2xl border border-slate-200 flex items-start gap-4">
-                            <div className="p-2 bg-white rounded-lg border border-slate-200">
-                                <Info className="w-4 h-4 text-slate-400" />
+                        <div className="p-6 bg-slate-100/50 dark:bg-gray-900/50 rounded-2xl border border-slate-200 dark:border-gray-800 flex items-start gap-4">
+                            <div className="p-2 bg-white dark:bg-gray-800 rounded-lg border border-slate-200 dark:border-gray-700">
+                                <Info className="w-4 h-4 text-slate-400 dark:text-gray-500" />
                             </div>
                             <div>
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tighter mb-1">Cancellation Policy</h4>
-                                <p className="text-[10px] font-medium text-slate-500 leading-relaxed uppercase tracking-tight">
+                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-1">Cancellation Policy</h4>
+                                <p className="text-[10px] font-medium text-slate-500 dark:text-gray-400 leading-relaxed uppercase tracking-tight">
                                     Tickets once booked cannot be cancelled or exchanged. Please verify your selected showtime and seats before proceeding.
                                 </p>
                             </div>
@@ -350,24 +391,24 @@ const PaymentPage = () => {
                     {/* Right Column: Sticky Sidebar Summary */}
                     <aside className="w-full lg:w-[400px]">
                         <div className="sticky top-28 space-y-6">
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="p-6 bg-slate-50 border-b border-slate-100 flex gap-4">
+                            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-200 dark:border-gray-800 overflow-hidden">
+                                <div className="p-6 bg-slate-50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-800 flex gap-4">
                                     <img
-                                        src={show?.movie?.posterUrl || "/logo.png"}
-                                        alt={show?.movie?.title}
+                                        src={localDisplayPoster || "/logo.png"}
+                                        alt={localDisplayTitle}
                                         className="w-20 h-28 object-cover rounded-xl shadow-lg shadow-black/5"
                                     />
                                     <div className="flex-1 min-w-0 py-1">
-                                        <h2 className="text-base font-black text-slate-900 uppercase tracking-tight mb-2 truncate">{show?.movie?.title}</h2>
+                                        <h2 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2 truncate">{localDisplayTitle}</h2>
                                         <div className="space-y-1.5">
                                             <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                <MapPin className="w-3 h-3 text-rose-500" /> {show?.theatre?.name}
+                                                <MapPin className="w-3 h-3 text-indigo-500" /> {localDisplayTheater}
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                <Calendar className="w-3 h-3 text-rose-500" /> {new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                <Calendar className="w-3 h-3 text-indigo-500" /> {new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                <Clock className="w-3 h-3 text-rose-500" /> {show?.startTime}
+                                                <Clock className="w-3 h-3 text-indigo-500" /> {localDisplayTime}
                                             </div>
                                         </div>
                                     </div>
@@ -380,27 +421,35 @@ const PaymentPage = () => {
                                                 <Ticket className="w-3.5 h-3.5" /> Tickets ({seats.length})
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
-                                                    {showSeats.filter(s => seats.includes(s.id || s._id)).map(s => s.seatNumber).join(', ')}
+                                                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                                    {showSeats.filter(s => seats.includes(s.id || s._id)).map(s => {
+                                                        const r = s.row || '';
+                                                        const n = s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || '';
+                                                        return `${r}${n}`;
+                                                    }).join(', ')}
                                                 </p>
-                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">₹{ticketsTotal.toLocaleString()}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 mt-0.5">₹{ticketsTotal.toLocaleString()}</p>
                                             </div>
                                         </div>
 
                                         {snackTotal > 0 && (
                                             <div className="flex justify-between items-start">
-                                                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">
                                                     <Coffee className="w-3.5 h-3.5" /> Food & Snacks
                                                 </div>
-                                                <p className="text-xs font-black text-slate-900">₹{snackTotal.toLocaleString()}</p>
+                                                <p className="text-xs font-black text-slate-900 dark:text-white">₹{snackTotal.toLocaleString()}</p>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="pt-6 border-t border-slate-100">
-                                        <div className="flex justify-between items-center bg-slate-50 px-5 py-5 rounded-2xl">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Amount</span>
-                                            <span className="text-2xl font-black text-rose-600 tracking-tighter">₹{grandTotal.toLocaleString()}</span>
+                                    <div className="pt-6 border-t border-slate-100 space-y-4">
+                                        <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                                            <span>Convenience Fee (10%)</span>
+                                            <span>₹{convenienceFee.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-slate-50 dark:bg-gray-800/50 px-5 py-5 rounded-2xl">
+                                            <span className="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em]">Total Amount</span>
+                                            <span className="text-2xl font-black text-indigo-600 tracking-tighter">₹{grandTotal.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -417,26 +466,26 @@ const SuccessScreen = ({ booking }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-[40px] p-10 text-center shadow-2xl space-y-10 animate-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto border-2 border-rose-100 shadow-xl shadow-rose-100/50">
-                    <CheckCircle className="w-12 h-12 text-rose-600" />
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors duration-300">
+            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[40px] p-10 text-center shadow-2xl space-y-10 animate-in zoom-in duration-500 border border-transparent dark:border-gray-800">
+                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto border-2 border-indigo-100 dark:border-indigo-800/30 shadow-xl shadow-indigo-100/50">
+                    <CheckCircle className="w-12 h-12 text-indigo-600" />
                 </div>
 
                 <div className="space-y-4">
                     <div className="space-y-1">
-                        <h1 className="text-[10px] font-black text-rose-600 uppercase tracking-[0.4em]">BOOKING CONFIRMED</h1>
-                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-tight">YOU'RE ALL SET!</h2>
+                        <h1 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em]">BOOKING CONFIRMED</h1>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">YOU'RE ALL SET!</h2>
                     </div>
-                    <p className="text-xs text-slate-400 font-bold leading-relaxed px-4 uppercase tracking-wider">
-                        Your tickets for <span className="text-slate-900 border-b-2 border-rose-600/20 pb-0.5">{booking?.movieTitle}</span> are ready.
+                    <p className="text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-4 uppercase tracking-wider">
+                        Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-indigo-600/20 pb-0.5">{booking?.movieTitle}</span> are ready.
                     </p>
                 </div>
 
                 <div className="space-y-4 pt-6">
                     <button
                         onClick={() => navigate(`/bookings/${booking?.id}`)}
-                        className="w-full bg-rose-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-rose-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         VIEW DIGITAL TICKET
                     </button>

@@ -22,9 +22,9 @@ export const getSeats = async (showId) => {
     };
 };
 
-export const lockSeats = async (showId, seatIds) => {
+export const lockSeats = async (showId, payload) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.BOOKING.SHOWS.LOCK_SEATS(showId), { seatIds });
+        const response = await api.post(ENDPOINTS.BOOKING.SHOWS.LOCK_SEATS(showId), payload);
         if (response.data.success) {
             return response.data.data?.sessionId || null;
         }
@@ -68,12 +68,14 @@ export const getUserBookings = async (page = 1) => {
         const response = await api.get(ENDPOINTS.BOOKING.MY_BOOKINGS, { params: { page } });
         if (response.data.success) {
             const data = response.data.data;
-            const bookings = data?.bookings || [];
+            // Handle both nested { bookings: [] } and direct [] response
+            const bookings = Array.isArray(data) ? data : (data?.bookings || []);
+
             return {
                 bookings: Array.isArray(bookings) ? bookings.map(b => Booking.fromApiJson(b)) : [],
                 totalPages: data?.totalPages || 1,
                 currentPage: data?.currentPage || 1,
-                total: data?.total || 0
+                total: data?.total || (Array.isArray(data) ? data.length : 0)
             };
         }
         return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };
@@ -88,5 +90,12 @@ export const getBookingDetails = async (bookingId) => {
             return booking ? Booking.fromApiJson(booking) : null;
         }
         return null;
+    });
+};
+
+export const getFoodAndBeverages = async (theaterId) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.BOOKING.SHOWS.FOOD_AND_BEVERAGES(theaterId));
+        return response.data;
     });
 };

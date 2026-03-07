@@ -311,6 +311,13 @@ class ApiCacheManager {
     async getOrFetchFood(fetchFn) {
         return this.getOrExecute('food_items', fetchFn, ApiCacheManager.FOOD_TTL);
     }
+
+    /**
+     * Helper: Get or fetch upcoming movies
+     */
+    async getOrFetchUpcomingMovies(city, fetchFn) {
+        return this.getOrExecute(`upcoming_movies_${city || 'global'}`, fetchFn, ApiCacheManager.MOVIES_TTL);
+    }
 }
 
 // Export singleton instance and class

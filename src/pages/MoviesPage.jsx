@@ -27,8 +27,8 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
             <button
                 onClick={() => setOpen(o => !o)}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all select-none ${activeCount > 0
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-gray-200 text-gray-700 bg-white hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500/50'
+                    : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1a1d24] hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
             >
                 {activeCount > 0 ? `${label} (${activeCount})` : label}
@@ -36,7 +36,7 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
             </button>
 
             {open && (
-                <div className="absolute top-full mt-2 left-0 z-30 bg-white border border-gray-100 rounded-xl shadow-xl p-3 w-56 max-h-64 overflow-y-auto">
+                <div className="absolute top-full mt-2 left-0 z-30 bg-white dark:bg-[#1a1d24] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl p-3 w-56 max-h-64 overflow-y-auto transition-colors duration-300">
                     {activeCount > 0 && (
                         <button
                             onClick={() => { onClear(); }}
@@ -51,8 +51,8 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
                                 key={item}
                                 onClick={() => onToggle(item)}
                                 className={`text-left px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selected.includes(item)
-                                    ? 'bg-blue-50 text-blue-600'
-                                    : 'text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                                     }`}
                             >
                                 {item}
@@ -69,6 +69,7 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
 const MoviesPage = ({ selectedCity }) => {
     const {
         movies,
+        latestMovies,
         upcomingMovies,
         loading,
         error,
@@ -146,24 +147,24 @@ const MoviesPage = ({ selectedCity }) => {
     if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Something went wrong" />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] font-sans">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] font-sans transition-colors duration-300">
             <SEO
                 title={`Movies in ${selectedCity} - XYNEMA`}
                 description={`Browse movies in ${selectedCity}. Filter by language, genre, and format.`}
             />
 
             {/* ── Hero Header ───────────────────────────────── */}
-            <div className="bg-white border-b border-gray-100">
-                <div className="w-[80%] mx-auto px-4 py-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-1">Movies</h1>
-                    <p className="text-sm text-gray-500">Discover and book tickets for the latest blockbusters</p>
+            <div className="bg-white dark:bg-[#0f1115] border-b border-gray-100 dark:border-gray-800">
+                <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Movies</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Discover and book tickets for the latest blockbusters</p>
                 </div>
             </div>
 
             {/* ── Tabs + Filters Bar ────────────────────────── */}
-            <div className="bg-white border-b border-gray-100 sticky top-[64px] z-20 shadow-sm">
-                <div className="w-[80%] mx-auto px-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap py-0">
+            <div className="bg-white dark:bg-[#0f1115]/80 dark:backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 sticky top-[64px] z-20 shadow-sm transition-colors duration-300">
+                <div className="w-[90%] sm:w-[80%] mx-auto px-4">
+                    <div className="flex items-center justify-between gap-4 flex-wrap py-0 text-slate-950 dark:text-white">
 
                         {/* Left: Tabs */}
                         <div className="flex items-center gap-0">
@@ -172,8 +173,8 @@ const MoviesPage = ({ selectedCity }) => {
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
                                     className={`px-5 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-800'
+                                        ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                                         }`}
                                 >
                                     {tab.label}
@@ -233,11 +234,16 @@ const MoviesPage = ({ selectedCity }) => {
             </div>
 
             {/* ── Main Content ──────────────────────────────── */}
-            <div className="w-[80%] mx-auto px-4 py-8">
+            <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
 
                 {/* Result count */}
-                <p className="text-sm text-gray-500 mb-6 font-medium">
-                    {filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'} in <span className="text-gray-800 font-semibold">{selectedCity}</span>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
+                    {filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'}
+                    {activeTab !== 'upcoming' ? (
+                        <> in <span className="text-gray-800 dark:text-gray-200 font-semibold">{selectedCity}</span></>
+                    ) : (
+                        <> coming soon</>
+                    )}
                 </p>
 
                 {/* Movies Grid */}
@@ -252,9 +258,9 @@ const MoviesPage = ({ selectedCity }) => {
                     </div>
                 ) : (
                     <div className="text-center py-24">
-                        <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-500">No Movies Found</h3>
-                        <p className="text-sm text-gray-400 mt-1">Try adjusting or clearing your filters</p>
+                        <Search className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400">No Movies Found</h3>
+                        <p className="text-sm text-gray-400 dark:text-gray-600 mt-1">Try adjusting or clearing your filters</p>
                     </div>
                 )}
 
@@ -264,7 +270,7 @@ const MoviesPage = ({ selectedCity }) => {
                         <button
                             onClick={prevPage}
                             disabled={pagination.page <= 1}
-                            className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             aria-label="Previous Page"
                         >
                             <ChevronRight className="w-5 h-5 rotate-180" />
@@ -276,7 +282,7 @@ const MoviesPage = ({ selectedCity }) => {
                                     onClick={() => goToPage(p)}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${pagination.page === p
                                         ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     {p}
@@ -286,7 +292,7 @@ const MoviesPage = ({ selectedCity }) => {
                         <button
                             onClick={nextPage}
                             disabled={pagination.page >= pagination.pages}
-                            className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             aria-label="Next Page"
                         >
                             <ChevronRight className="w-5 h-5" />

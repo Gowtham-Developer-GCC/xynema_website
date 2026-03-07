@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, useLocation, useParams } from 'react-rout
 import { ArrowLeft, Clock, Ticket, Info, ChevronRight, Users, AlertCircle, X, ChevronLeft, Settings } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import SEO from '../components/SEO';
-import { getSeats, lockSeats, releaseSeats } from '../services/bookingService';
+import { getSeats, releaseSeats } from '../services/bookingService';
 import { getNotNowMovies } from '../services/movieService';
 import LoadingScreen from '../components/LoadingScreen';
 import SeatLayout from '../components/SeatSelection/SeatLayout';
@@ -35,6 +35,7 @@ const SeatSelectionPage = () => {
     const moviePoster = state?.moviePoster || sessionStorage.getItem('booking_movie_poster') || '';
     const theaterName = state?.theaterName || sessionStorage.getItem('booking_theater_name') || 'Unknown Theatre';
     const showDate = state?.date || searchParams.get('date') || sessionStorage.getItem('booking_show_date') || '';
+    const startTime = state?.startTime || sessionStorage.getItem('booking_show_time') || '';
 
     useEffect(() => {
         if (!showId || !theaterSlug) {
@@ -76,10 +77,19 @@ const SeatSelectionPage = () => {
                     // Movie model maps: MovieName → title, portraitPosterUrl → posterUrl
                     const matched = movies.find(m => m.slug === slug || m.id === movieId);
                     if (matched) {
-                        setMovieData({
-                            title: matched.title,          // Already mapped from MovieName
-                            portraitPosterUrl: matched.posterUrl, // Already mapped from portraitPosterUrl
-                        });
+                        const movieInfo = {
+                            title: matched.title || matched.MovieName || '',
+                            portraitPosterUrl: matched.posterUrl || matched.portraitPosterUrl || ''
+                        };
+                        setMovieData(movieInfo);
+
+                        // Also update session storage for consistency if missing
+                        if (!sessionStorage.getItem('booking_movie_title')) {
+                            sessionStorage.setItem('booking_movie_title', movieInfo.title);
+                        }
+                        if (!sessionStorage.getItem('booking_movie_poster')) {
+                            sessionStorage.setItem('booking_movie_poster', movieInfo.portraitPosterUrl);
+                        }
                     }
                 }
             } catch (e) {
@@ -178,45 +188,35 @@ const SeatSelectionPage = () => {
         try {
             setLoading(true);
             const seatIds = selectedSeats.map(seat => seat.id);
-            const sessionId = await lockSeats(showId, seatIds);
+            // Replace API call with local temporary lock until payment summary
+            const tempSessionId = `temp_session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-            if (sessionId) {
-                sessionStorage.setItem('pending_seat_lock', JSON.stringify({
-                    showId,
-                    seats: seatIds,
-                    timestamp: Date.now()
-                }));
-
-                // Update booking draft for PaymentPage to consume
+            if (tempSessionId) {
+                // Update booking draft for FoodPage to consume
                 const bookingDraft = {
                     showId,
                     movieId: movieId,
                     theaterId: theaterId,
-                    sessionId: sessionId,
+                    sessionId: tempSessionId,
                     date: showDate,
                     seats: seatIds,
-                    cart: {} // Empty cart since we're skipping food for now
+                    cart: {} // Empty cart initially
                 };
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(bookingDraft));
 
                 hasProceededRef.current = true;
-                navigate(`/movie/${slug}/${theaterSlug}/payment`, {
+                navigate(`/movie/${slug}/${theaterSlug}/food`, {
                     state: {
                         movie: displayShow,
                         show: selectedShow,
                         seats: selectedSeats,
-                        sessionId: sessionId
+                        sessionId: tempSessionId
                     }
                 });
-            } else {
-                showToast('Failed to select seats. Please try again.', 'error');
             }
         } catch (err) {
             console.error('Proceed to payment error:', err);
-            showToast(err.message || 'Could not lock seats. They might have been taken.', 'error');
-            // Refresh seats to show updated availability
-            const response = await getSeats(showId);
-            if (response.success) setSeats(response.data.seats || []);
+            showToast(err.message || 'Could not proceed to food selection.', 'error');
         } finally {
             setLoading(false);
         }
@@ -350,6 +350,8 @@ const SeatSelectionPage = () => {
                         movie={displayShow}
                         show={showForSummary}
                         selectedSeats={selectedSeats}
+                        buttonText="Proceed to Food"
+                        buttonIcon={<ChevronRight className="w-5 h-5" />}
                         onConfirm={handleProceedToPayment}
                         onCancel={() => setSelectedSeats([])}
                         onEditCount={() => setIsCountModalOpen(true)}

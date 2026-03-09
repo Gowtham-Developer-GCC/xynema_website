@@ -128,6 +128,7 @@ export class Theater {
         this.rating = data.rating || 0;
         this.basePrice = data.basePrice || 0;
         this.features = data.features || (data.amenities ? data.amenities.slice(0, 3) : []);
+        this.isFoodAndBeveragesAvailable = data.isFoodAndBeveragesAvailable ?? true;
 
         // Convenience: Flatten all shows from all screens
         this.allShows = this.screens.reduce((acc, screen) => {
@@ -202,6 +203,8 @@ export class Show {
             ? new Theater(data.theatre || data.theater)
             : new Theater({});
         this.screen = data.screen || {};
+        this.isFoodAndBeveragesAvailable = data.isFoodAndBeveragesAvailable ?? true;
+
     }
 
     static fromJson(json) {
@@ -604,38 +607,58 @@ export class Event {
 export class EventBooking {
     constructor(data = {}) {
         this.id = data._id || '';
+        this.id = data._id || data.id || '';
         this.bookingId = data.bookingId || '';
-        this.status = data.status || '';
+        this.status = data.bookingStatus || data.status || '';
         this.qrCode = data.qrCode || '';
         this.bookedAt = data.bookedAt || '';
         this.isCheckedIn = data.isCheckedIn || false;
 
-        // Event Details
-        const eventData = data.event || {};
-        const venueData = eventData.venue || {};
-        this.eventName = eventData.eventName || '';
-        this.eventId = eventData.eventId || '';
-        this.showDate = eventData.showDate || '';
-        this.showTime = eventData.showTime || '';
+        // Event Details - Handle both nested and top-level fields
+        const eventData = data.eventDetails || data.event || {};
+        const venueData = data.venue || eventData.venue || eventData.location || {};
+
+        this.eventName = data.eventName || eventData.eventName || '';
+        this.eventId = data.eventId || eventData.eventId || eventData._id || '';
+
+        // Date and Time Mapping
+        this.showDate = data.showDate || eventData.showDate || '';
+        this.showTime = data.showTime || eventData.showTime || '';
+
+        // Image extraction
+        const images = eventData.eventImages || eventData.images || [];
+        const primaryImage = images.find(img => img.isPrimary) || images[0];
+        this.imageUrl = primaryImage?.url || '';
 
         this.venue = {
-            name: venueData.venueName || '',
-            address: venueData.venueAddress || '',
+            name: venueData.venueName || venueData.venue || venueData.name || '',
+            address: venueData.venueAddress || venueData.address || '',
             city: venueData.city || ''
         };
 
-        // Pricing
+        // Pricing and Tickets — Robust mapping for various API formats
         const pricing = data.pricing || {};
-        this.totalAmount = parseFloat(pricing.totalAmount || 0);
-        this.currency = pricing.currency || 'INR';
+        this.totalAmount = parseFloat(data.totalPrice || data.totalAmount || pricing.totalAmount || 0);
+        this.currency = data.currency || pricing.currency || 'INR';
 
-        // Tickets
-        this.tickets = Array.isArray(data.tickets) ? data.tickets.map(t => ({
-            ticketClass: t.ticketClass || '',
-            quantity: t.quantity || 0,
-            pricePerTicket: parseFloat(t.pricePerTicket || 0),
-            totalPrice: parseFloat(t.totalPrice || 0)
-        })) : [];
+        // Tickets - Handle both array and single ticket fields
+        if (Array.isArray(data.tickets)) {
+            this.tickets = data.tickets.map(t => ({
+                ticketClass: t.ticketClass || '',
+                quantity: t.quantity || 0,
+                pricePerTicket: parseFloat(t.pricePerTicket || 0),
+                totalPrice: parseFloat(t.totalPrice || 0)
+            }));
+        } else if (data.ticketClass || data.quantity) {
+            this.tickets = [{
+                ticketClass: data.ticketClass || 'Standard',
+                quantity: data.quantity || 1,
+                pricePerTicket: parseFloat(data.pricePerTicket || 0),
+                totalPrice: parseFloat(data.totalPrice || 0)
+            }];
+        } else {
+            this.tickets = [];
+        }
     }
 
     static fromJson(json) {

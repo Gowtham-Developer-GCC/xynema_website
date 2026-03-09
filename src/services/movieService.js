@@ -146,6 +146,19 @@ export const getHighlightsMovies = async () => {
     });
 };
 
+export const getSimilarMovies = async (movieId) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.MOVIES.SIMILAR(movieId));
+        if (response.data.success) {
+            const resultData = response.data.data;
+            if (Array.isArray(resultData)) {
+                return resultData.map(m => new Movie(m));
+            }
+        }
+        return [];
+    });
+};
+
 export const movieService = {
     getCities,
     getNotNowMovies,
@@ -154,4 +167,5 @@ export const movieService = {
     toggleInterest,
     getNowShowingMovies,
     getUpcomingMovies,
+    getSimilarMovies,
 };

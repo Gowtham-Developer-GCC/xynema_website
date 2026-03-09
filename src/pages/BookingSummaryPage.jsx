@@ -4,7 +4,7 @@ import { ArrowLeft, Info, ShieldCheck, ChevronRight, MapPin, Calendar, Clock, Mo
 import * as api from '../services/api';
 import { getShowSeats, getFoodAndBeverages, lockSeats } from '../services/bookingService';
 import SEO from '../components/SEO';
-import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
+import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 
 const BookingSummaryPage = () => {
@@ -179,7 +179,7 @@ const BookingSummaryPage = () => {
         }
     };
 
-    if (loading) return <BookingLoadingSkeleton variant="summary" />;
+    if (loading) return <LoadingScreen message="Preparing Summary" />;
 
     if (error) return (
         <div className="min-h-screen bg-whiteSmoke flex flex-col items-center justify-center p-6 text-center">
@@ -323,9 +323,8 @@ const BookingSummaryPage = () => {
                         {/* Snacks */}
                         {snackTotal > 0 && (
                             <div className="space-y-2 pt-2">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Food & Beverages</p>
-                                    <p className="text-xs font-bold text-gray-900 dark:text-white">₹{snackTotal.toLocaleString()}</p>
+                                <div className="lex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800">
+                                    <p className="text-gray-900 dark:text-white">Food & Beverages</p>
                                 </div>
                                 <div className="space-y-1.5 pl-3">
                                     {Object.entries(cart).map(([id, qty]) => {
@@ -338,6 +337,10 @@ const BookingSummaryPage = () => {
                                             </div>
                                         );
                                     })}
+                                </div>
+                                <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800">
+                                    <p className="text-gray-900 dark:text-white">Food & Beverages Subtotal</p>
+                                    <p className="text-gray-900 dark:text-white">₹{snackTotal.toLocaleString()}</p>
                                 </div>
                             </div>
                         )}

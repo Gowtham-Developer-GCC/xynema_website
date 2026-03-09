@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import SeatLayout from '../components/SeatSelection/SeatLayout';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
 import SeatCountModal from '../components/SeatSelection/SeatCountModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 
@@ -54,6 +55,7 @@ const SeatSelectionPage = () => {
     const [isCountModalOpen, setIsCountModalOpen] = useState(true);
     const [selectedSeatCount, setSelectedSeatCount] = useState(2);
     const [movieData, setMovieData] = useState(null); // Real movie data fetched from API
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });
@@ -185,6 +187,11 @@ const SeatSelectionPage = () => {
             return;
         }
 
+        if (selectedSeats.length !== selectedSeatCount) {
+            showToast(`Please select exactly ${selectedSeatCount} ${selectedSeatCount === 1 ? 'seat' : 'seats'}`, 'warning');
+            return;
+        }
+
         try {
             setLoading(true);
             const seatIds = selectedSeats.map(seat => seat.id);
@@ -205,14 +212,27 @@ const SeatSelectionPage = () => {
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(bookingDraft));
 
                 hasProceededRef.current = true;
-                navigate(`/movie/${slug}/${theaterSlug}/food`, {
-                    state: {
-                        movie: displayShow,
-                        show: selectedShow,
-                        seats: selectedSeats,
-                        sessionId: tempSessionId
-                    }
-                });
+                const isFoodAvailable = sessionStorage.getItem('booking_is_food_available') !== 'false';
+
+                if (isFoodAvailable) {
+                    navigate(`/movie/${slug}/${theaterSlug}/food`, {
+                        state: {
+                            movie: displayShow,
+                            show: selectedShow,
+                            seats: selectedSeats,
+                            sessionId: tempSessionId
+                        }
+                    });
+                } else {
+                    navigate(`/movie/${slug}/${theaterSlug}/summary`, {
+                        state: {
+                            movie: displayShow,
+                            show: selectedShow,
+                            seats: selectedSeats,
+                            sessionId: tempSessionId
+                        }
+                    });
+                }
             }
         } catch (err) {
             console.error('Proceed to payment error:', err);
@@ -223,10 +243,12 @@ const SeatSelectionPage = () => {
     };
 
     const handleCancelBooking = () => {
-        if (window.confirm('Cancel current selection?')) {
-            setSelectedSeats([]);
-            navigate(-1);
-        }
+        setIsCancelModalOpen(true);
+    };
+
+    const confirmCancelBooking = () => {
+        setSelectedSeats([]);
+        navigate(-1);
     };
 
     // Build display data — API returns movie/theatre as raw IDs, so we rely on sessionStorage values
@@ -261,29 +283,30 @@ const SeatSelectionPage = () => {
             showId,
             id: showId,
             time: show?.showTime || show?.startTime || sessionStorage.getItem('booking_show_time') || '',
+            date: show?.showDate || show?.date || showDate,
             screenName: sessionStorage.getItem('booking_theater_name') || theaterName || 'Screen',
             price: show?.pricing?.[0]?.basePrice || 150,
         };
-    }, [show, showId, theaterName]);
+    }, [show, showId, theaterName, showDate]);
 
     if (loading) return <LoadingScreen message="Scanning Layout" />;
     if (error) return <ErrorState error={error} title="Issue Detected" buttonText="TRY AGAIN" />;
     if (!show || !showId) return <NotFoundState title="Show Not Found" message="We couldn't find the showtime you're looking for." />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] flex flex-col">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col">
             <SEO title="Select Seats - XYNEMA" description="Choose your preferred movie seats" />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Sub-Header: Information & Controls — Positioned in-flow below global navbar */}
-            <div className="bg-white border-b border-gray-100 shadow-sm py-4">
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-4">
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
                     {/* Left: Navigation Buttons */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#1a2b4b] hover:bg-slate-100 active:scale-95 transition-all group"
+                            className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-gray-700 flex items-center justify-center text-[#1a2b4b] dark:text-gray-100 hover:bg-slate-100 dark:hover:bg-gray-700 active:scale-95 transition-all group"
                         >
                             <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
                         </button>
@@ -301,7 +324,7 @@ const SeatSelectionPage = () => {
                     {/* Center: Movie/Theatre info */}
                     <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
                         <div className="flex items-center gap-2 mb-0.5 w-full justify-center">
-                            <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide truncate">
+                            <h1 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide truncate">
                                 {displayShow.movie?.title}
                             </h1>
                             <span className="text-slate-300">|</span>
@@ -312,7 +335,7 @@ const SeatSelectionPage = () => {
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1.5">
                                 <Clock className="w-3 h-3 text-[#1a2b4b]" />
-                                <span className="text-[10px] font-black text-[#1a2b4b] uppercase tracking-widest">
+                                <span className="text-[10px] font-black text-[#1a2b4b] dark:text-indigo-400 uppercase tracking-widest">
                                     {displayShow.startTime}
                                 </span>
                             </div>
@@ -326,7 +349,7 @@ const SeatSelectionPage = () => {
                     </div>
 
                     {/* Right: Info button */}
-                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-300">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-gray-800 text-slate-300 dark:text-gray-600">
                         <Info className="w-4 h-4" />
                     </div>
                 </div>
@@ -338,6 +361,7 @@ const SeatSelectionPage = () => {
                 <div className="flex-1 p-4 lg:p-6 overflow-hidden h-[60vh] lg:h-full relative rounded-tr-xl lg:rounded-tr-none">
                     <SeatLayout
                         showId={showId}
+                        selectedSeats={selectedSeats}
                         onSeatChange={handleSeatChange}
                         maxSeatCount={selectedSeatCount}
                         showToast={showToast}
@@ -345,15 +369,17 @@ const SeatSelectionPage = () => {
                 </div>
 
                 {/* Right Side: Summary Section */}
-                <div className="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.1)] flex flex-col h-[60vh] lg:h-full z-30 shrink-0">
+                <div className="w-full lg:w-[400px] bg-white dark:bg-gray-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-gray-800 shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.1)] flex flex-col h-[60vh] lg:h-full z-30 shrink-0">
                     <BookingSummary
                         movie={displayShow}
                         show={showForSummary}
                         selectedSeats={selectedSeats}
-                        buttonText="Proceed to Food"
+                        requiredSeatCount={selectedSeatCount}
+                        buttonText={sessionStorage.getItem('booking_is_food_available') === 'false' ? "Process" : "Process"}
                         buttonIcon={<ChevronRight className="w-5 h-5" />}
                         onConfirm={handleProceedToPayment}
-                        onCancel={() => setSelectedSeats([])}
+                        onCancel={handleCancelBooking}
+                        onClearAll={() => setSelectedSeats([])}
                         onEditCount={() => setIsCountModalOpen(true)}
                     />
                 </div>
@@ -367,11 +393,52 @@ const SeatSelectionPage = () => {
                     setSelectedSeatCount(count);
                     setIsCountModalOpen(false);
                 }}
-                pricing={show?.pricing?.map(p => ({
-                    label: p.label || p.seatType.toUpperCase(),
-                    price: p.basePrice,
-                    status: 'AVAILABLE'
-                }))}
+                pricing={(() => {
+                    if (!seats || seats.length === 0) {
+                        // Fallback to show.pricing if seats layout isn't loaded yet
+                        return show?.pricing?.filter(p => !['path', 'aisle', 'empty', 'wheelchair'].includes((p.seatType || '').toLowerCase())).map(p => ({
+                            label: p.label || p.seatClass?.name || (p.seatType || 'NORMAL').toUpperCase(),
+                            price: p.basePrice || p.price || 0,
+                            status: 'AVAILABLE'
+                        })) || [];
+                    }
+
+                    // Deriving from actual seats layout for accuracy
+                    const categoriesMap = new Map();
+                    seats.flat().forEach(seat => {
+                        // Support both raw seats and processed matrix seats
+                        const type = (seat.originalType || seat.type || '').toLowerCase();
+                        if (seat && type !== 'path' && type !== 'aisle' && type !== 'empty') {
+                            // Extract label matching SeatLayout.jsx logic
+                            const label = seat.categoryName || seat.seatClass?.name || (seat.type || 'NORMAL').toUpperCase();
+                            const price = seat.basePrice || seat.price || 0;
+                            const key = `${label}-${price}`;
+
+                            if (!categoriesMap.has(key)) {
+                                categoriesMap.set(key, {
+                                    label: label,
+                                    price: price,
+                                    status: 'AVAILABLE'
+                                });
+                            }
+                        }
+                    });
+
+                    // Sort by price descending (Premium first)
+                    return Array.from(categoriesMap.values()).sort((a, b) => b.price - a.price);
+                })()}
+            />
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={confirmCancelBooking}
+                title="Cancel Selection?"
+                message="Your current seat selection will be lost. Do you want to go back to theater selection?"
+                confirmText="Yes, Go Back"
+                cancelText="No, Stay Here"
+                type="danger"
             />
         </div>
     );

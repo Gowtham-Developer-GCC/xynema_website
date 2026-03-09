@@ -6,7 +6,7 @@ import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
 import { getFoodAndBeverages, getShowSeats } from '../services/bookingService';
 import ErrorState from '../components/ErrorState';
-import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
+import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
 
@@ -78,7 +78,7 @@ const FoodSelectionPage = () => {
                     getFoodAndBeverages(theaterId),
                     getShowSeats(showId)
                 ]);
-                
+
                 // Transform API response to match component expectations
                 let foodItemsData = [];
                 if (foodResponse?.data?.items) {
@@ -101,7 +101,7 @@ const FoodSelectionPage = () => {
                         foodItemsData = [];
                     }
                 }
-                
+
                 setFoodItems(foodItemsData);
                 setShow(showResponse.show);
                 setShowSeats(showResponse.seats || []);
@@ -168,7 +168,7 @@ const FoodSelectionPage = () => {
         return sum;
     }, [showSeats, seats, show]);
 
-    if (loading) return <BookingLoadingSkeleton variant="food" />;
+    if (loading) return <LoadingScreen message="Preparing Menu" />;
     if (error) return <ErrorState error={error} title="Oops!" buttonText="Try Again" />;
 
     const categories = ['All', ...new Set(foodItems.map(item => item.category))];
@@ -181,22 +181,22 @@ const FoodSelectionPage = () => {
     const totalAmount = ticketsTotal + snackTotal;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA]">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950">
             <SEO title="Food & Snacks - XYNEMA" description="Add snacks and drinks to your movie experience" />
 
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+            <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
                 <div className="w-[80%] max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-indigo-600 transition-colors"
+                        className="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Go Back
                     </button>
                     <div className="text-center">
-                        <h1 className="text-sm font-bold text-gray-900">Food & Beverages</h1>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                        <h1 className="text-sm font-bold text-gray-900 dark:text-white">Food & Beverages</h1>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">
                             Optional • Add to your booking
                         </p>
                     </div>
@@ -206,7 +206,7 @@ const FoodSelectionPage = () => {
                                 setCart({});
                                 handleProceedToPayment();
                             }}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
                         >
                             Skip
                         </button>
@@ -222,7 +222,7 @@ const FoodSelectionPage = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCategory === category ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCategory === category ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                             >
                                 {category}
                             </button>
@@ -244,7 +244,7 @@ const FoodSelectionPage = () => {
                 </div>
 
                 {/* Cart Sidebar via BookingSummary */}
-                <div className="w-full lg:w-[400px] h-auto lg:h-[calc(100vh-80px)] lg:sticky top-[80px] bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden z-30 shrink-0">
+                <div className="w-full lg:w-[400px] h-auto lg:h-[calc(100vh-80px)] lg:sticky top-[80px] bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 shadow-xl rounded-2xl overflow-hidden z-30 shrink-0">
                     <BookingSummary
                         movie={{ // Mocking structure expected by BookingSummary from previous step
                             movie: { title: sessionStorage.getItem('booking_movie_title'), portraitPosterUrl: sessionStorage.getItem('booking_movie_poster') },
@@ -255,7 +255,7 @@ const FoodSelectionPage = () => {
                             basePrice: show?.basePrice || 150
                         }}
                         selectedSeats={showSeats.filter(s => seats.includes(s.id || s._id))}
-                        buttonText={Object.keys(cart).length > 0 ? "Pay Now" : "Skip & Pay"}
+                        buttonText={Object.keys(cart).length > 0 ? "Process" : "Skip & Process"}
                         buttonIcon={<Zap className="w-4 h-4" />}
                         onConfirm={handleProceedToPayment}
                         showSkip={true}
@@ -278,11 +278,11 @@ const FoodSelectionPage = () => {
             </main>
             {/* Mobile Sticky Cart Footer */}
             {Object.keys(cart).length > 0 && (
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-8 animate-in slide-in-from-bottom-2">
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-8 animate-in slide-in-from-bottom-2">
                     <div className="flex items-center justify-between mb-3">
                         <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{Object.keys(cart).length} Items</p>
-                            <p className="text-xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
+                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{Object.keys(cart).length} Items</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">₹{totalAmount.toLocaleString()}</p>
                         </div>
                         <button
                             onClick={() => {
@@ -310,13 +310,13 @@ const FoodSelectionPage = () => {
 const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
     // Check if image is a URL or emoji
     const isImageUrl = item.image && (item.image.startsWith('http') || item.image.startsWith('https') || item.image.startsWith('/'));
-    
+
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-2xl mx-auto flex items-center justify-center mb-4 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all text-center">
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-700/50 rounded-2xl mx-auto flex items-center justify-center mb-4 overflow-hidden">
                 {isImageUrl ? (
-                    <img 
-                        src={item.image} 
+                    <img
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover rounded-2xl"
                         onError={(e) => {
@@ -332,11 +332,11 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
             </div>
 
             <div className="space-y-1 mb-4">
-                <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{item.name}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.category}</p>
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">{item.name}</h3>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{item.category}</p>
             </div>
 
-            <div className="text-xl font-bold text-indigo-600 mb-6">
+            <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">
                 ₹{item.price}
             </div>
 
@@ -344,7 +344,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                 {quantity === 0 ? (
                     <button
                         onClick={onAdd}
-                        className="w-full h-full rounded-lg border border-gray-200 text-gray-600 font-bold text-[10px] uppercase tracking-wider hover:border-indigo-600 hover:text-indigo-600 transition-all"
+                        className="w-full h-full rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-bold text-[10px] uppercase tracking-wider hover:border-indigo-600 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
                     >
                         Add to Cart
                     </button>
@@ -365,7 +365,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
 };
 
 const LoadingState = () => (
-    <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-6 p-8">
+    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 p-8">
         <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #00296b)' }} />
         <div className="text-center">
             <p className="text-xynemaRose font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Menu</p>

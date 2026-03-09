@@ -1,20 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Search, Loader, ArrowLeft, Ticket, ExternalLink, QrCode, User, Clock, Calendar } from 'lucide-react';
+import { MapPin, Search, Loader, ArrowLeft, Ticket, ExternalLink, QrCode, User, Clock, Calendar, Play, Film } from 'lucide-react';
 import { getUserBookings } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
 import SEO from '../components/SEO';
 
 const MyBookingsPage = () => {
     const navigate = useNavigate();
-    const [bookingType, setBookingType] = useState('movies'); // 'movies' or 'events'
     const [bookings, setBookings] = useState([]);
     const [eventBookings, setEventBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [eventLoading, setEventLoading] = useState(false);
-    const [filterStatus, setFilterStatus] = useState('upcoming');
-
-    // Pagination State (for Movies)
+    const [eventLoading, setEventLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [bookingType, setBookingType] = useState('movies'); // 'movies' or 'events'
+    const [filterStatus, setFilterStatus] = useState('all');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -69,28 +68,49 @@ const MyBookingsPage = () => {
     const parseDateTime = (dateStr, timeStr) => {
         if (!dateStr) return null;
         try {
-            // Robust parsing: Treat "YYYY-MM-DD" as local date to avoid timezone shifts
             let date;
-            if (dateStr.includes('-') && !dateStr.includes('T')) {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                date = new Date(year, month - 1, day);
-            } else {
+
+            // Handle ISO strings (e.g., "2025-03-04T00:00:00.000Z")
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                date = new Date(dateStr);
+            }
+            // Handle YYYY-MM-DD or DD-MM-YYYY
+            else if (typeof dateStr === 'string' && dateStr.includes('-')) {
+                const parts = dateStr.split('-').map(Number);
+                if (parts[0] > 1900) { // YYYY-MM-DD
+                    date = new Date(parts[0], parts[1] - 1, parts[2]);
+                } else { // DD-MM-YYYY
+                    date = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+            }
+            // Handle timestamps (numeric)
+            else if (!isNaN(dateStr) && !isNaN(parseFloat(dateStr))) {
+                const ts = parseFloat(dateStr);
+                // Assume seconds if < 10^12, else milliseconds
+                date = new Date(ts < 10000000000 ? ts * 1000 : ts);
+            }
+            // Fallback for other standard formats
+            else {
                 date = new Date(dateStr);
             }
 
             if (isNaN(date.getTime())) return null;
 
-            if (timeStr) {
-                const parts = timeStr.trim().toUpperCase().split(' ');
-                const time = parts[0];
-                const period = parts[1]; // AM/PM
+            // Apply time if provided and if date doesn't already have explicit non-zero time from ISO
+            if (timeStr && typeof timeStr === 'string' && date.getHours() === 0 && date.getMinutes() === 0) {
+                const cleanTime = timeStr.trim().toUpperCase();
+                const timeMatch = cleanTime.match(/(\d+):(\d+)\s*(AM|PM)?/);
 
-                let [hours, minutes] = time.split(':').map(Number);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1], 10);
+                    const minutes = parseInt(timeMatch[2], 10);
+                    const period = timeMatch[3];
 
-                if (period === 'PM' && hours < 12) hours += 12;
-                if (period === 'AM' && hours === 12) hours = 0;
+                    if (period === 'PM' && hours < 12) hours += 12;
+                    if (period === 'AM' && hours === 12) hours = 0;
 
-                date.setHours(hours || 0, minutes || 0, 0, 0);
+                    date.setHours(hours, minutes, 0, 0);
+                }
             }
             return date;
         } catch (e) {
@@ -99,28 +119,54 @@ const MyBookingsPage = () => {
         }
     };
 
-    const activeBookings = bookingType === 'movies' ? bookings : eventBookings;
-
-    const filteredBookings = activeBookings.filter(b => {
+    const filterByStatus = (booking, type) => {
         if (filterStatus === 'all') return true;
 
-        const dateStr = bookingType === 'movies' ? b.date : b.showDate;
-        const timeStr = bookingType === 'movies' ? b.time : b.showTime;
+        const dateStr = type === 'movies' ? booking.date : booking.showDate;
+        const timeStr = type === 'movies' ? booking.time : booking.showTime;
 
         const showDate = parseDateTime(dateStr, timeStr);
-        if (!showDate) return true;
+        if (!showDate) {
+            console.warn(`[Filter] ${type} booking date parsing failed:`, { dateStr, timeStr });
+            return false;
+        }
 
         const now = new Date();
-        const gracePeriodMs = bookingType === 'movies' ? 200 * 60 * 1000 : 24 * 60 * 60 * 1000;
-
+        const gracePeriodMs = type === 'movies' ? 2 * 60 * 60 * 1000 : 4 * 60 * 60 * 1000;
         const isPast = now.getTime() > (showDate.getTime() + gracePeriodMs);
 
-        if (filterStatus === 'upcoming') return !isPast;
-        if (filterStatus === 'past') return isPast;
-        return true;
-    });
+        const result = filterStatus === 'upcoming' ? !isPast : filterStatus === 'past' ? isPast : true;
 
-    if (loading && bookingType === 'movies') return <LoadingState />;
+        if (type === 'events') {
+            console.log(`[Filter] Event: ${booking.eventName}, showDate: ${showDate.toISOString()}, isPast: ${isPast}, filter: ${filterStatus}, result: ${result}`);
+        }
+
+        return result;
+    };
+
+    const sortBookings = (a, b, type) => {
+        const dateA = parseDateTime(type === 'movies' ? a.date : a.showDate, type === 'movies' ? a.time : a.showTime);
+        const dateB = parseDateTime(type === 'movies' ? b.date : b.showDate, type === 'movies' ? b.time : b.showTime);
+        if (!dateA || !dateB) return 0;
+        return dateB.getTime() - dateA.getTime(); // Descending (most recent first)
+    };
+
+    // Memoized filtered and sorted lists to ensure reactivity and performance
+    const filteredMovies = useMemo(() => {
+        console.log(`[Memo] Recalculating filteredMovies for status: ${filterStatus}`);
+        return bookings
+            .filter(b => filterByStatus(b, 'movies'))
+            .sort((a, b) => sortBookings(a, b, 'movies'));
+    }, [bookings, filterStatus]);
+
+    const filteredEvents = useMemo(() => {
+        console.log(`[Memo] Recalculating filteredEvents for status: ${filterStatus}`);
+        return eventBookings
+            .filter(b => filterByStatus(b, 'events'))
+            .sort((a, b) => sortBookings(a, b, 'events'));
+    }, [eventBookings, filterStatus]);
+
+    if (loading && bookings.length === 0) return <LoadingState />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 transition-colors duration-300">
@@ -190,63 +236,118 @@ const MyBookingsPage = () => {
                     </div>
                 </div>
 
-                {eventLoading && bookingType === 'events' ? (
-                    <div className="py-20 flex flex-col items-center justify-center gap-4">
-                        <Loader className="w-8 h-8 text-indigo-600 animate-spin" />
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Fetching event passes...</p>
-                    </div>
-                ) : filteredBookings.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        {filteredBookings.map((booking) => (
-                            bookingType === 'movies' ? (
-                                <BookingCard key={booking.id} booking={booking} />
-                            ) : (
-                                <EventBookingCard key={booking.id} booking={booking} />
-                            )
-                        ))}
-
-                        {/* Load More Section (Movies Only) */}
-                        {bookingType === 'movies' && page < totalPages && (
-                            <div className="flex justify-center pt-8 pb-12">
-                                <button
-                                    onClick={handleLoadMore}
-                                    disabled={loadingMore}
-                                    className={`
-                                        flex items-center gap-3 px-10 py-4 rounded-2xl font-display font-bold text-[10px] uppercase tracking-widest transition-all
-                                        ${loadingMore
-                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
-                                            : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-95 hover:bg-indigo-700'
-                                        }
-                                    `}
-                                >
-                                    {loadingMore ? (
-                                        <>
-                                            <Loader className="w-4 h-4 animate-spin" />
-                                            Syncing Transactions...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Search className="w-4 h-4" />
-                                            Load More
-                                        </>
-                                    )}
-                                </button>
+                <div className="space-y-20 pb-20">
+                    {/* Movies Section Group */}
+                    {bookingType === 'movies' && (
+                        <section id="movie-bookings-section" className="scroll-mt-32">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center shadow-sm">
+                                    <Film className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] leading-none mb-1">Movie Tickets</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Cinema Transactions</p>
+                                </div>
+                                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 dark:from-gray-800 to-transparent ml-4" />
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="py-24 text-center bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+
+                            {filteredMovies.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    {filteredMovies.map((booking) => (
+                                        <BookingCard key={booking.id} booking={booking} />
+                                    ))}
+
+                                    {page < totalPages && (
+                                        <div className="flex justify-center pt-8">
+                                            <button
+                                                onClick={handleLoadMore}
+                                                disabled={loadingMore}
+                                                className={`
+                                                    flex items-center gap-3 px-10 py-4 rounded-2xl font-display font-bold text-[10px] uppercase tracking-widest transition-all
+                                                    ${loadingMore
+                                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
+                                                        : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-95 hover:bg-indigo-700'
+                                                    }
+                                                `}
+                                            >
+                                                {loadingMore ? (
+                                                    <>
+                                                        <Loader className="w-4 h-4 animate-spin" />
+                                                        Syncing Transactions...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Search className="w-4 h-4" />
+                                                        Load More
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center bg-white/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                                    <p className="text-gray-400 dark:text-gray-500 text-xs font-medium italic">No movie bookings to show in this category.</p>
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                    {/* Events Section Group */}
+                    {bookingType === 'events' && (
+                        <section id="event-bookings-section" className="scroll-mt-32">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center shadow-sm">
+                                    <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] leading-none mb-1">Event Tickets</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Experience Passes</p>
+                                </div>
+                                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 dark:from-gray-800 to-transparent ml-4" />
+                            </div>
+
+                            {eventLoading && eventBookings.length === 0 ? (
+                                <div className="py-12 flex flex-col items-center justify-center gap-4">
+                                    <Loader className="w-8 h-8 text-indigo-600 animate-spin" />
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Fetching event passes...</p>
+                                </div>
+                            ) : filteredEvents.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    {filteredEvents.map((booking) => (
+                                        <EventBookingCard key={booking.bookingId || booking.id} booking={booking} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center bg-white/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                                    <p className="text-gray-400 dark:text-gray-500 text-xs font-medium italic">No event passes to show in this category.</p>
+                                </div>
+                            )}
+                        </section>
+                    )}
+                </div>
+
+                {filteredMovies.length === 0 && filteredEvents.length === 0 && !loading && !eventLoading && (
+                    <div className="py-24 text-center bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
                         <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Ticket className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No {bookingType === 'movies' ? 'Bookings' : 'Event Passes'} Found</h2>
-                        <p className="text-gray-400 dark:text-gray-500 text-sm mb-8">You haven't booked any {bookingType === 'movies' ? 'movie tickets' : 'event passes'} yet.</p>
-                        <button
-                            onClick={() => navigate(bookingType === 'movies' ? '/' : '/events')}
-                            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-indigo-600 text-white font-display font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20"
-                        >
-                            Explore {bookingType === 'movies' ? 'Movies' : 'Events'}
-                        </button>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Transactions Found</h2>
+                        <p className="text-gray-400 dark:text-gray-500 text-sm mb-8">You haven't made any bookings yet.</p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => navigate('/')}
+                                className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-indigo-600 text-white font-display font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20"
+                            >
+                                Explore Movies
+                            </button>
+                            <button
+                                onClick={() => navigate('/events')}
+                                className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-white dark:bg-gray-800 text-indigo-600 dark:text-white border border-indigo-100 dark:border-gray-700 font-display font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                            >
+                                Explore Events
+                            </button>
+                        </div>
                     </div>
                 )}
             </main>

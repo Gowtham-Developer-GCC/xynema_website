@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies } from '../services/movieService';
+import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies, getSimilarMovies } from '../services/movieService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import NotFoundState from '../components/NotFoundState';
@@ -695,22 +695,48 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
 
 const SimilarMovies = ({ currentMovie }) => {
-    const { latestMovies, highlightsMovies, upcomingMovies } = useData();
+    const { movies, latestMovies, highlightsMovies, upcomingMovies, loading: contextLoading } = useData();
+    const [similarMovies, setSimilarMovies] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
 
-    // Use latestMovies, highlightsMovies, and upcomingMovies from context
-    const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
+    useEffect(() => {
+        const fetchSimilar = async () => {
+            const movieId = currentMovie.id || currentMovie._id;
+            if (!movieId) return;
 
-    // Remove duplicates and current movie
-    const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
-        .map(id => allMovies.find(m => String(m.id) === id))
-        .filter(m => m && String(m.id) !== String(currentMovie.id));
+            setIsLoading(true);
+            try {
+                const data = await getSimilarMovies(movieId);
+                // If API returns no data, fallback to context movies
+                if (data && data.length > 0) {
+                    setSimilarMovies(data.slice(0, 8));
+                } else {
+                    // Fallback logic
+                    const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
+                    const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
+                        .map(id => allMovies.find(m => String(m.id) === id))
+                        .filter(m => m && String(m.id) !== String(currentMovie.id));
+                    setSimilarMovies(moviesToShow.slice(0, 8));
+                }
+            } catch (error) {
+                console.error('Error fetching similar movies:', error);
+                // Fallback on error too
+                const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
+                const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
+                    .map(id => allMovies.find(m => String(m.id) === id))
+                    .filter(m => m && String(m.id) !== String(currentMovie.id));
+                setSimilarMovies(moviesToShow.slice(0, 8));
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    // Development purpose: disable genre filter, show all available movies
-    let similarMovies = moviesToShow.slice(0, 8);
+        fetchSimilar();
+    }, [currentMovie.id, currentMovie._id, latestMovies, highlightsMovies, upcomingMovies]);
 
-    // Only render the section if we actually have movies to show
-    if (similarMovies.length === 0) return null;
+    // Only render the section if we actually have movies to show or if we are loading
+    if (!isLoading && similarMovies.length === 0) return null;
 
     return (
         <section id="similar-movies" className="relative mt-16 group/similar animate-slide-up delay-400">

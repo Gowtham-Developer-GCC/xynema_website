@@ -8,8 +8,8 @@ import React from 'react';
  */
 const LoadingScreen = ({ message, overlay = false }) => {
     const wrapClass = overlay
-        ? 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm'
-        : 'min-h-screen flex flex-col items-center justify-center bg-white';
+        ? 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm'
+        : 'min-h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-950';
 
     return (
         <div className={wrapClass}>
@@ -22,7 +22,7 @@ const LoadingScreen = ({ message, overlay = false }) => {
                 className="w-64 h-64 object-contain"
             />
             {message && (
-                <p className="mt-4 text-white/70 text-sm font-medium tracking-wide animate-pulse">
+                <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide animate-pulse">
                     {message}
                 </p>
             )}

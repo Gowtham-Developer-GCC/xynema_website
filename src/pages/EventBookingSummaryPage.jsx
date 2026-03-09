@@ -153,7 +153,7 @@ const EventBookingSummaryPage = () => {
                         </p>
                     </div>
                     <div className="space-y-3 pt-4">
-                        <button onClick={() => navigate('/event-booking/bookings')} className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-[0.98] transition-all">VIEW TICKETS</button>
+                        <button onClick={() => navigate('/events-bookings')} className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-[0.98] transition-all">VIEW TICKETS</button>
                         <button onClick={() => navigate('/')} className="w-full text-slate-400 dark:text-gray-500 font-black text-xs uppercase tracking-widest py-2 hover:text-slate-600 dark:hover:text-gray-300 transition-colors">BACK TO HOME</button>
                     </div>
                 </div>

@@ -189,6 +189,7 @@ const TheaterSelectionPage = () => {
             sessionStorage.setItem('booking_movie_language', movieLanguage);
             sessionStorage.setItem('booking_movie_format', format);
             sessionStorage.setItem('booking_movie_subtitles', subtitles);
+            sessionStorage.setItem('booking_is_food_available', String(theater?.isFoodAndBeveragesAvailable ?? true));
 
             bookingSessionManager.startSession(showId, theater?.name || '', user?.id || user?._id);
 
@@ -268,7 +269,7 @@ const TheaterSelectionPage = () => {
     if (!movie) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for or it may not be available in this region." />;
 
     return (
-        <div className="min-h-screen bg-whiteSmoke w-full max-w-[100vw] overflow-x-hidden">
+        <div className="min-h-screen bg-whiteSmoke dark:bg-gray-950 w-full max-w-[100vw] overflow-x-hidden">
             <SEO
                 title={`Select Theater - ${movie?.title} | XYNEMA`}
                 description="Choose your preferred cinema theater and select your seats"
@@ -446,8 +447,8 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
                 onClick={() => setIsOpen(!isOpen)}
                 onBlur={() => setTimeout(() => setIsOpen(false), 200)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${isOpen || activeValue !== 'All' && activeValue !== 'distance'
-                    ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
-                    : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
                     }`}
             >
                 {activeOption.icon ? <activeOption.icon className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -463,7 +464,7 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
                     {options.map((opt) => (
                         <button
                             key={opt.id}
@@ -471,7 +472,7 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
                                 onSelect(opt.id);
                                 setIsOpen(false);
                             }}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors hover:bg-gray-50 ${activeValue === opt.id ? 'text-xynemaRose' : 'text-gray-600'
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${activeValue === opt.id ? 'text-xynemaRose' : 'text-gray-600 dark:text-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-2">

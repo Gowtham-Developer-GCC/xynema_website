@@ -4,7 +4,7 @@ import { ArrowLeft, Clock, Calendar, MapPin, ShieldCheck, CheckCircle, ChevronRi
 import SEO from '../components/SEO';
 import { getShowSeats, getFoodAndBeverages, confirmBooking } from '../services/bookingService';
 import { initiatePayment } from '../services/paymentService';
-import BookingLoadingSkeleton from '../components/BookingLoadingSkeleton';
+import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import TicketCard from '../components/TicketCard';
 
@@ -273,7 +273,7 @@ const PaymentPage = () => {
         }
     };
 
-    if (loading) return <BookingLoadingSkeleton variant="payment" />;
+    if (loading) return <LoadingScreen message="Securing Connection" />;
     if (success) return <SuccessScreen booking={confirmedBooking} />;
 
     return (
@@ -467,8 +467,8 @@ const SuccessScreen = ({ booking }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors duration-300">
-            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[40px] p-10 text-center shadow-2xl space-y-10 animate-in zoom-in duration-500 border border-transparent dark:border-gray-800">
-                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto border-2 border-indigo-100 dark:border-indigo-800/30 shadow-xl shadow-indigo-100/50">
+            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[40px] p-10 text-center shadow-2xl dark:shadow-none space-y-10 animate-in zoom-in duration-500 border border-transparent dark:border-gray-800">
+                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto border-2 border-indigo-100 dark:border-indigo-800/30 shadow-xl shadow-indigo-100/50 dark:shadow-none">
                     <CheckCircle className="w-12 h-12 text-indigo-600" />
                 </div>
 
@@ -485,7 +485,7 @@ const SuccessScreen = ({ booking }) => {
                 <div className="space-y-4 pt-6">
                     <button
                         onClick={() => navigate(`/bookings/${booking?.id}`)}
-                        className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         VIEW DIGITAL TICKET
                     </button>

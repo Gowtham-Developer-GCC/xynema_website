@@ -8,6 +8,7 @@ export const ENDPOINTS = {
         ADD_REVIEW: (bookingId) => `/movies/add-review/${bookingId}`,
         INTEREST: (movieId) => `/movies/interest/${movieId}`,
         THEATRES: (movieId) => `/movies/${movieId}/theatres`,
+        SIMILAR: (movieId) => `/movies/similar-movies/${movieId}`,
     },
 
     // Events

@@ -474,7 +474,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         {movie.cast?.length > 5 && (
                             <button
                                 onClick={onShowAllCast}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 transition-opacity hidden md:block"
                             >
                                 See All
                             </button>
@@ -493,7 +493,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                             <img
                                                 src={photoUrl}
                                                 alt={name}
-                                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                                                className="w-full h-full object-cover transition-transform duration-300"
                                             />
                                         ) : (
                                             <span className="text-4xl font-black text-white transition-colors tracking-tighter">
@@ -514,7 +514,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCast}
-                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-all"
                             >
                                 See All Cast
                             </button>
@@ -531,7 +531,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         {movie.crew?.length > 5 && (
                             <button
                                 onClick={onShowAllCrew}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 transition-opacity hidden md:block"
                             >
                                 See All
                             </button>
@@ -550,7 +550,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                             <img
                                                 src={photoUrl}
                                                 alt={name}
-                                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                                                className="w-full h-full object-cover transition-transform duration-300"
                                             />
                                         ) : (
                                             <span className="text-4xl font-black text-white transition-colors tracking-tighter">
@@ -571,7 +571,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCrew}
-                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-all"
                             >
                                 See All Crew
                             </button>
@@ -585,17 +585,18 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                 <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 dark:border-gray-800 transition-colors group/store animate-slide-up opacity-0 delay-400">
                     <div className="flex items-center justify-between pb-2">
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Official merchandise</h3>
-                        <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:text-xynemaRose dark:hover:text-blue-400 transition-colors group/link">
-                            <ShoppingBag className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover/link:text-xynemaRose dark:group-hover/link:text-blue-400 transition-colors" />
+                        <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-colors group/link">
+                            <ShoppingBag className="w-4 h-4 text-gray-400 dark:text-gray-500 transition-colors" />
                             Visit Store
                         </Link>
                     </div>
 
-                    <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="relative">
                         <Swiper
                             modules={[Navigation]}
                             spaceBetween={20}
                             slidesPerView={1.2}
+                            roundLengths={true}
                             navigation={{
                                 nextEl: '.merch-next',
                                 prevEl: '.merch-prev',
@@ -708,32 +709,17 @@ const SimilarMovies = ({ currentMovie }) => {
             setIsLoading(true);
             try {
                 const data = await getSimilarMovies(movieId);
-                // If API returns no data, fallback to context movies
-                if (data && data.length > 0) {
-                    setSimilarMovies(data.slice(0, 8));
-                } else {
-                    // Fallback logic
-                    const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
-                    const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
-                        .map(id => allMovies.find(m => String(m.id) === id))
-                        .filter(m => m && String(m.id) !== String(currentMovie.id));
-                    setSimilarMovies(moviesToShow.slice(0, 8));
-                }
+                setSimilarMovies(data?.slice(0, 8) || []);
             } catch (error) {
                 console.error('Error fetching similar movies:', error);
-                // Fallback on error too
-                const allMovies = [...(latestMovies || []), ...(highlightsMovies || []), ...(upcomingMovies || [])];
-                const moviesToShow = Array.from(new Set(allMovies.map(m => String(m.id))))
-                    .map(id => allMovies.find(m => String(m.id) === id))
-                    .filter(m => m && String(m.id) !== String(currentMovie.id));
-                setSimilarMovies(moviesToShow.slice(0, 8));
+                setSimilarMovies([]);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchSimilar();
-    }, [currentMovie.id, currentMovie._id, latestMovies, highlightsMovies, upcomingMovies]);
+    }, [currentMovie.id, currentMovie._id]);
 
     // Only render the section if we actually have movies to show or if we are loading
     if (!isLoading && similarMovies.length === 0) return null;

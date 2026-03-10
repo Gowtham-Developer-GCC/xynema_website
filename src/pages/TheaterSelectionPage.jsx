@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Clock, Loader, ChevronRight, ChevronDown, Filter, Info, Calendar, Ticket, Sun, SunMedium, Moon, CloudSun, CreditCard, Layers, Check } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Clock, Loader, ChevronRight, ChevronDown, Filter, Info, Calendar, Ticket, Sun, SunMedium, Moon, CloudSun, CreditCard, Layers, Check, ChevronLeft } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -269,110 +269,92 @@ const TheaterSelectionPage = () => {
     if (!movie) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for or it may not be available in this region." />;
 
     return (
-        <div className="min-h-screen bg-whiteSmoke dark:bg-gray-950 w-full max-w-[100vw] overflow-x-hidden">
+        <div className="min-h-screen bg-[#f9fafb] dark:bg-gray-950 w-full max-w-[100vw] overflow-x-hidden">
             <SEO
                 title={`Select Theater - ${movie?.title} | XYNEMA`}
                 description="Choose your preferred cinema theater and select your seats"
             />
 
-            {/* Redesigned Header to match Figma */}
-            <div className="bg-[#f8fafc] dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-[60]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 shrink-0"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-lg md:text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                                Select Showtime
-                            </h1>
-                            <p className="text-[10px] md:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mt-1">
+            {/* Redesigned Minimalist Header & Movie Info - Matches Figma */}
+            <div className="bg-white dark:bg-gray-900 pt-6 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 relative z-10 w-full">
+                <div className="max-w-[80%] mx-auto flex items-start gap-4 md:gap-6">
+                    {/* Simple Back Button */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mt-1 md:mt-2 p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 -ml-1"
+                    >
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 stroke-[1.5]" />
+                    </button>
+
+                    {/* Movie Details - Clean Stack */}
+                    <div className="flex gap-5 md:gap-6 items-start w-full">
+                        {/* Poster */}
+                        <div className="w-[100px] md:w-[130px] shrink-0">
+                            <img
+                                src={movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image}
+                                alt={movie?.MovieName || movie?.movieName || movie?.title}
+                                className="w-full rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                            />
+                        </div>
+
+                        {/* Details Stack */}
+                        <div className="flex-1 space-y-1 pt-1 md:pt-2">
+                            <h2 className="text-[22px] md:text-[28px] font-bold text-gray-900 dark:text-white leading-tight mb-2 md:mb-3">
                                 {movie?.MovieName || movie?.movieName || movie?.title}
-                            </p>
+                            </h2>
+
+                            <div className="flex items-center gap-2 flex-wrap pb-1">
+                                {movie?.certification && (
+                                    <div className="inline-flex items-center justify-center px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
+                                        <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300">
+                                            {movie.certification}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="text-[13px] text-gray-500 dark:text-gray-400 leading-[1.6] space-y-0.5 flex flex-col">
+                                {(movie?.Genre || movie?.genre) && (
+                                    <span>
+                                        {Array.isArray(movie.Genre) ? movie.Genre.join(', ') : movie.genre || movie.Genre}
+                                    </span>
+                                )}
+                                {(movie?.Duration || movie?.duration) && (
+                                    <span>
+                                        {typeof (movie.Duration || movie.duration) === 'string'
+                                            ? (movie.Duration || movie.duration)
+                                            : `${Math.floor(movie.duration / 60)}h ${String(movie.duration % 60)}m`}
+                                    </span>
+                                )}
+                                <span>
+                                    {movie?.language || 'Tamil'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
-                {/* Movie Info Banner Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-[32px] border border-gray-100 dark:border-gray-700 p-6 md:p-8 mb-8 shadow-sm">
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        {/* Poster */}
-                        <div className="w-40 md:w-48 shrink-0 relative group">
-                            <img
-                                src={movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image}
-                                alt={movie?.MovieName || movie?.movieName || movie?.title}
-                                className="w-full aspect-[2/3] object-cover rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
+            <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
+                {/* Showtimes Section - Date Selector on Left */}
+                <div className="mb-10">
+                    <DateSelector
+                        selectedDate={selectedDate}
+                        onDateSelect={setSelectedDate}
+                        releaseDate={movie?.releaseDate}
+                    />
 
-                        {/* Details */}
-                        <div className="flex-1 pt-2">
-                            <h2 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-4">
-                                {movie?.MovieName || movie?.movieName || movie?.title}
-                            </h2>
-
-                            <div className="flex flex-wrap items-center gap-3 mb-6">
-                                {movie?.certification && (
-                                    <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
-                                        {movie.certification}
-                                    </span>
-                                )}
-                                {(movie?.Duration || movie?.duration) && (
-                                    <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
-                                        {typeof (movie.Duration || movie.duration) === 'string'
-                                            ? (movie.Duration || movie.duration)
-                                            : `${Math.floor(movie.duration / 60)}:${String(movie.duration % 60).padStart(2, '0')}:00`}
-                                    </span>
-                                )}
-                                {movie?.Genre && Array.isArray(movie.Genre) && movie.Genre.map((g, i) => (
-                                    <span key={i} className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
-                                        {g}
-                                    </span>
-                                ))}
-                                {!movie?.Genre && movie?.genre && (
-                                    <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
-                                        {movie.genre}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="space-y-3">
-
-                                <p className="text-xs md:text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-relaxed max-w-lg">
-                                    Select a showtime below to proceed to seat selection.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="h-px w-full bg-gray-100 dark:bg-gray-800 mb-12" />
-
-                {/* Showtimes Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
-                    <div className="space-y-2">
+                    {/* <div className="mt-8">
                         <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                            Showtimes for <span className="text-indigo-600 dark:text-indigo-400">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) === new Date().toLocaleDateString('en-US', { weekday: 'long' }) ? "Today" : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                            Showtimes for <span className="text-indigo-600 dark:text-indigo-400">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) === new Date().toDateString() ? "Today" : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}</span>
                         </h2>
-                    </div>
-
-                    <div className="flex-shrink-0">
-                        <DateSelector
-                            selectedDate={selectedDate}
-                            onDateSelect={setSelectedDate}
-                            releaseDate={movie?.releaseDate}
-                        />
-                    </div>
+                    </div> */}
                 </div>
 
-                {/* Cinema List - Grid Layout to match Figma */}
+                {/* Cinema List - Clean layout to match Figma */}
+                <h2 className="text-[18px] font-medium text-gray-800 dark:text-gray-100 mb-5 px-1 mt-6">Available Theatres</h2>
                 {sortedTheaters.length > 0 ? (
-                    <div className="grid gap-12">
+                    <div className="space-y-4">
                         {sortedTheaters.map((theater) => {
                             // Group shows by screenName and format within this theater
                             const groupedByScreen = (theater.filteredShows || []).reduce((acc, show) => {
@@ -390,24 +372,29 @@ const TheaterSelectionPage = () => {
                                 return acc;
                             }, {});
 
+                            // Extract unique formats and languages for the theater headers
+                            const availableFormats = [...new Set((theater.filteredShows || []).map(s => s.format))].filter(Boolean);
+                            const availableLanguages = [...new Set((theater.filteredShows || []).map(s => s.movieLanguage))].filter(Boolean);
+
                             return (
-                                <div key={theater.id || theater._id} className="space-y-8">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MapPin className="w-5 h-5 text-indigo-500" />
-                                        <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                                <div key={theater.id || theater._id} className="bg-white dark:bg-gray-800 rounded-[10px] p-5 pb-6 border border-gray-200 dark:border-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                                    <div className="flex flex-col mb-4">
+                                        <h3 className="text-[17px] font-medium text-[#333333] dark:text-white mb-2.5">
                                             {theater.name}
                                         </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableFormats.map(fmt => (
+                                                <span key={fmt} className="px-2.5 py-0.5 bg-white border border-[#427cae]/40 rounded-full text-[10px] font-medium text-[#427cae] uppercase">{fmt}</span>
+                                            ))}
+                                            {availableLanguages.map(lang => (
+                                                <span key={lang} className="px-2.5 py-0.5 bg-white border border-[#427cae]/40 rounded-full text-[10px] font-medium text-[#427cae] uppercase">{lang}</span>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     {Object.values(groupedByScreen).map((group, gIdx) => (
-                                        <div key={gIdx} className="space-y-4 pl-0 md:pl-7">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 dark:text-indigo-500 shrink-0">
-                                                    {group.screenName} • {group.format} {group.movieLanguage ? `• ${group.movieLanguage}` : ''} {group.subtitles ? `(Sub: ${group.subtitles})` : ''}
-                                                </span>
-                                                <div className="h-[1px] w-full bg-gray-100 dark:bg-gray-800" />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div key={gIdx} className="mt-4">
+                                            <div className="flex flex-wrap gap-3">
                                                 {group.shows.map((show) => (
                                                     <ShowtimeCard
                                                         key={show.id || show._id}
@@ -424,7 +411,7 @@ const TheaterSelectionPage = () => {
                         })}
                     </div>
                 ) : (
-                    <div className="py-24 text-center bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="py-24 text-center bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
                         <div className="w-16 h-16 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <MapPin className="w-8 h-8 text-gray-300" />
                         </div>
@@ -499,63 +486,68 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
     });
 
     return (
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x">
-            {dates.map((date) => {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                const dateStr = `${year}-${month}-${day}`;
-                const isSelected = dateStr === selectedDate;
+        <div className="mb-10 w-full">
+            <h2 className="text-[17px] text-gray-800 dark:text-gray-100 mb-4 px-1">Select Date</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
+                {dates.map((date, index) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+                    const isSelected = dateStr === selectedDate;
 
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-                const dayNum = date.getDate();
-                const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+                    let dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    if (index === 0 && date.toDateString() === new Date().toDateString()) dayLabel = 'Today';
+                    if (index === 1 && date.toDateString() === new Date(new Date().setDate(new Date().getDate() + 1)).toDateString()) dayLabel = 'Tomorrow';
 
-                return (
-                    <button
-                        key={dateStr}
-                        onClick={() => onDateSelect(dateStr)}
-                        className={`
-                            flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
-                            ${isSelected
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 border-indigo-600'
-                                : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700 hover:border-gray-300'
-                            } border-2
-                        `}
-                    >
-                        <span className={`text-[9px] font-black tracking-widest mb-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
-                            {dayName}
-                        </span>
-                        <span className="text-xl font-black tracking-tighter leading-none mb-1">
-                            {dayNum}
-                        </span>
-                        <span className={`text-[9px] font-black tracking-widest ${isSelected ? 'text-white/80' : 'text-gray-300'}`}>
-                            {monthName}
-                        </span>
-                    </button>
-                );
-            })}
+                    const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                    const dayNum = date.getDate();
+
+                    return (
+                        <button
+                            key={dateStr}
+                            onClick={() => onDateSelect(dateStr)}
+                            className={`
+                                flex-shrink-0 min-w-[85px] py-1.5 px-3 rounded flex flex-col items-center justify-center transition-all duration-200
+                                ${isSelected
+                                    ? 'bg-[#427cae] text-white shadow-md'
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700 hover:bg-gray-50'
+                                }
+                            `}
+                        >
+                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'} mb-0.5`}>
+                                {dayLabel}
+                            </span>
+                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'}`}>
+                                {monthName} {dayNum}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     );
 };
 
 const ShowtimeCard = ({ show, theater, onSelect }) => {
-    const total = show.totalSeats || (show.availableSeats + (show.bookedSeats || 0));
+    // Exact response data mapping
+    const total = show.totalSeats || 0;
+    const available = show.availableSeats || 0;
     const booked = show.bookedSeats || 0;
-    const available = total > 0 ? total - booked : show.availableSeats || 0;
 
+    // Status logic based on actual availability
     const occupancyPercent = total > 0 ? ((total - available) / total) * 100 : 0;
-    const isFull = available <= 0 || occupancyPercent >= 100;
+    const isFull = available <= 0;
 
     let statusText = 'Available';
-    let statusColor = 'text-emerald-500';
+    let statusColor = 'text-[#2eac78]'; // Green from Figma
 
     if (isFull) {
         statusText = 'Filled';
         statusColor = 'text-gray-400';
-    } else if (occupancyPercent >= 90) {
+    } else if (available < (total * 0.1) || available <= 10) {
         statusText = 'Fast Filling';
-        statusColor = 'text-orange-500';
+        statusColor = 'text-[#f59e0b]'; // Orange/amber
     }
 
     return (
@@ -563,43 +555,21 @@ const ShowtimeCard = ({ show, theater, onSelect }) => {
             onClick={isFull ? null : onSelect}
             disabled={isFull}
             className={`
-                group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-xl transition-all duration-500 text-left relative overflow-hidden
-                ${isFull ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 cursor-not-allowed opacity-75' : 'hover:-translate-y-1'}
+                group bg-white dark:bg-gray-800 rounded-[5px] border border-gray-200 dark:border-gray-700 py-2.5 px-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 dark:hover:border-gray-500 transition-colors text-center flex flex-col items-center justify-center min-w-[95px]
+                ${isFull ? 'bg-gray-50 dark:bg-gray-900 cursor-not-allowed opacity-70' : ''}
             `}
         >
-            <div className="flex justify-between items-start mb-6">
-                <span className={`text-xl font-black tracking-tight ${isFull ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-white'}`}>
-                    {show.startTime}
+            <span className={`text-[12px] font-medium mb-1.5 ${isFull ? 'text-gray-400' : 'text-[#333333] dark:text-white'}`}>
+                {show.startTime}
+            </span>
+            <div className="flex items-center gap-1">
+                <span className="text-[9px] px-1 py-[1px] rounded-[3px] border border-[#a1a1aa] dark:border-gray-500 text-[#52525b] dark:text-gray-300 font-medium leading-none uppercase">
+                    {show.format || '2D'}
                 </span>
-                <div className={`${isFull ? 'bg-gray-100 dark:bg-gray-800' : 'bg-emerald-50 dark:bg-emerald-900/20'} px-2 py-1 rounded-lg border ${isFull ? 'border-gray-200 dark:border-gray-700' : 'border-emerald-100 dark:border-emerald-800'}`}>
-                    <span className={`text-xs font-black ${isFull ? 'text-gray-400 dark:text-gray-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        ₹{show.basePrice || 100}
-                    </span>
-                </div>
+                <span className={`text-[9px] font-medium pl-0.5 leading-none ${statusColor}`}>
+                    {statusText}
+                </span>
             </div>
-
-            {/* Availability Bar - Match Figma */}
-            <div className="space-y-3">
-                <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full rounded-full transition-all duration-1000 ${isFull ? 'bg-gray-300 dark:bg-gray-600' : (occupancyPercent >= 90 ? 'bg-orange-500' : 'bg-indigo-600')}`}
-                        style={{ width: `${occupancyPercent}%` }}
-                    />
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        {available} SEATS LEFT
-                    </span>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${statusColor}`}>
-                        {statusText}
-                    </span>
-                </div>
-            </div>
-
-            {/* Subtle glow effect on hover */}
-            {!isFull && (
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            )}
         </button>
     );
 };

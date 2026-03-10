@@ -289,76 +289,105 @@ const SeatSelectionPage = () => {
         };
     }, [show, showId, theaterName, showDate]);
 
+    // Derive seat categories for legend and modal
+    const seatCategories = React.useMemo(() => {
+        if (!seats || seats.length === 0) {
+            // Fallback to show.pricing if seats layout isn't loaded yet
+            return show?.pricing?.filter(p => !['path', 'aisle', 'empty', 'wheelchair'].includes((p.seatType || '').toLowerCase())).map(p => ({
+                label: p.label || p.seatClass?.name || (p.seatType || 'NORMAL').toUpperCase(),
+                price: p.basePrice || p.price || 0,
+                status: 'AVAILABLE'
+            })) || [];
+        }
+
+        // Deriving from actual seats layout for accuracy
+        const categoriesMap = new Map();
+        seats.flat().forEach(seat => {
+            const type = (seat.originalType || seat.type || '').toLowerCase();
+            if (seat && type !== 'path' && type !== 'aisle' && type !== 'empty') {
+                const label = seat.categoryName || seat.seatClass?.name || (seat.type || 'NORMAL').toUpperCase();
+                const price = seat.basePrice || seat.price || 0;
+                const key = `${label}-${price}`;
+
+                if (!categoriesMap.has(key)) {
+                    categoriesMap.set(key, {
+                        label: label,
+                        price: price,
+                        status: 'AVAILABLE'
+                    });
+                }
+            }
+        });
+
+        // Sort by price descending (Premium first)
+        return Array.from(categoriesMap.values()).sort((a, b) => b.price - a.price);
+    }, [seats, show]);
+
+    const handleRemoveSeat = (seatToRemove) => {
+        setSelectedSeats(prev => prev.filter(s => s.id !== seatToRemove.id));
+    };
+
     if (loading) return <LoadingScreen message="Scanning Layout" />;
     if (error) return <ErrorState error={error} title="Issue Detected" buttonText="TRY AGAIN" />;
     if (!show || !showId) return <NotFoundState title="Show Not Found" message="We couldn't find the showtime you're looking for." />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col transition-colors duration-300">
             <SEO title="Select Seats - XYNEMA" description="Choose your preferred movie seats" />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* Sub-Header: Information & Controls — Positioned in-flow below global navbar */}
-            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-4">
-                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-                    {/* Left: Navigation Buttons */}
-                    <div className="flex items-center gap-2">
+            {/* Sub-Header: Information & Controls — New Figma Design */}
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-4 w-full transition-colors duration-300">
+                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between">
+                    {/* Left: Back Button & Movie Info */}
+                    <div className="flex items-center gap-6">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-gray-700 flex items-center justify-center text-[#1a2b4b] dark:text-gray-100 hover:bg-slate-100 dark:hover:bg-gray-700 active:scale-95 transition-all group"
+                            className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
                         >
-                            <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
+                            <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <button
-                            onClick={() => setIsCountModalOpen(true)}
-                            className="h-10 px-4 rounded-xl bg-[#1a2b4b] text-white flex items-center gap-2 hover:bg-[#111c32] active:scale-95 transition-all group shadow-sm"
-                        >
-                            <Settings className="w-4 h-4 transition-transform group-hover:rotate-45" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">
-                                {selectedSeatCount} {selectedSeatCount === 1 ? 'Seat' : 'Seats'}
-                            </span>
-                        </button>
-                    </div>
 
-                    {/* Center: Movie/Theatre info */}
-                    <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
-                        <div className="flex items-center gap-2 mb-0.5 w-full justify-center">
-                            <h1 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide truncate">
+                        <div className="flex flex-col">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
                                 {displayShow.movie?.title}
                             </h1>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate">
-                                {displayShow.theatre?.name}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-[#1a2b4b]" />
-                                <span className="text-[10px] font-black text-[#1a2b4b] dark:text-indigo-400 uppercase tracking-widest">
-                                    {displayShow.startTime}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <Ticket className="w-3 h-3 text-slate-400" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {showDate ? new Date(showDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : ''}
-                                </span>
+                            <div className="flex items-center text-[13px] text-gray-500 dark:text-gray-400 mt-1 gap-1.5 flex-wrap">
+                                <span>{displayShow.theatre?.name}</span>
+                                <span className="text-gray-300 dark:text-gray-700">|</span>
+                                <span>{displayShow.startTime}</span>
+                                <span className="text-gray-300 dark:text-gray-700">|</span>
+                                <span>{showDate ? new Date(showDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}</span>
+                                <span className="text-gray-300 dark:text-gray-700">|</span>
+                                <span>IMAX</span> {/* Add dynamic format here if available in displayShow */}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right: Info button */}
-                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-gray-800 text-slate-300 dark:text-gray-600">
-                        <Info className="w-4 h-4" />
+                    {/* Right: Selected Tickets Count */}
+                    <div
+                        onClick={() => setIsCountModalOpen(true)}
+                        className="flex flex-col items-end pr-4 cursor-pointer hover:opacity-80 transition-all group"
+                    >
+                        <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-0.5 group-hover:text-gray-600 dark:group-hover:text-gray-300">
+                            Tickets Selected
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-3xl font-bold text-[#427cae] dark:text-[#5c98ce] leading-none">
+                                {selectedSeatCount}
+                            </span>
+                            <Settings className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-[#427cae] transition-colors" />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Area - Split View — Flexible height below sub-header */}
-            <main className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row overflow-hidden">
-                {/* Left Side: Seat Layout */}
-                <div className="flex-1 p-4 lg:p-6 overflow-hidden h-[60vh] lg:h-full relative rounded-tr-xl lg:rounded-tr-none">
+            {/* Main Content Area - Split View — New Figma Layout */}
+            <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 p-6 lg:p-8 overflow-hidden bg-[#f9fafb] dark:bg-gray-950 min-h-[calc(100vh-80px)] transition-colors duration-300">
+
+                {/* Left Side: Seat Layout Card */}
+                <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative flex flex-col h-[60vh] lg:h-full transition-colors duration-300">
                     <SeatLayout
                         showId={showId}
                         selectedSeats={selectedSeats}
@@ -368,18 +397,20 @@ const SeatSelectionPage = () => {
                     />
                 </div>
 
-                {/* Right Side: Summary Section */}
-                <div className="w-full lg:w-[400px] bg-white dark:bg-gray-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-gray-800 shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.1)] flex flex-col h-[60vh] lg:h-full z-30 shrink-0">
+                {/* Right Side: Summary Section Card */}
+                <div className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-auto lg:h-full shrink-0 transition-colors duration-300">
                     <BookingSummary
                         movie={displayShow}
                         show={showForSummary}
                         selectedSeats={selectedSeats}
                         requiredSeatCount={selectedSeatCount}
+                        seatCategories={seatCategories}
                         buttonText={sessionStorage.getItem('booking_is_food_available') === 'false' ? "Process" : "Process"}
                         buttonIcon={<ChevronRight className="w-5 h-5" />}
                         onConfirm={handleProceedToPayment}
                         onCancel={handleCancelBooking}
                         onClearAll={() => setSelectedSeats([])}
+                        onRemoveSeat={handleRemoveSeat}
                         onEditCount={() => setIsCountModalOpen(true)}
                     />
                 </div>
@@ -393,40 +424,7 @@ const SeatSelectionPage = () => {
                     setSelectedSeatCount(count);
                     setIsCountModalOpen(false);
                 }}
-                pricing={(() => {
-                    if (!seats || seats.length === 0) {
-                        // Fallback to show.pricing if seats layout isn't loaded yet
-                        return show?.pricing?.filter(p => !['path', 'aisle', 'empty', 'wheelchair'].includes((p.seatType || '').toLowerCase())).map(p => ({
-                            label: p.label || p.seatClass?.name || (p.seatType || 'NORMAL').toUpperCase(),
-                            price: p.basePrice || p.price || 0,
-                            status: 'AVAILABLE'
-                        })) || [];
-                    }
-
-                    // Deriving from actual seats layout for accuracy
-                    const categoriesMap = new Map();
-                    seats.flat().forEach(seat => {
-                        // Support both raw seats and processed matrix seats
-                        const type = (seat.originalType || seat.type || '').toLowerCase();
-                        if (seat && type !== 'path' && type !== 'aisle' && type !== 'empty') {
-                            // Extract label matching SeatLayout.jsx logic
-                            const label = seat.categoryName || seat.seatClass?.name || (seat.type || 'NORMAL').toUpperCase();
-                            const price = seat.basePrice || seat.price || 0;
-                            const key = `${label}-${price}`;
-
-                            if (!categoriesMap.has(key)) {
-                                categoriesMap.set(key, {
-                                    label: label,
-                                    price: price,
-                                    status: 'AVAILABLE'
-                                });
-                            }
-                        }
-                    });
-
-                    // Sort by price descending (Premium first)
-                    return Array.from(categoriesMap.values()).sort((a, b) => b.price - a.price);
-                })()}
+                pricing={seatCategories}
             />
 
             {/* Confirmation Modal */}

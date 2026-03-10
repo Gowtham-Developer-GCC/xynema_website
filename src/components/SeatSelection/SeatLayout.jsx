@@ -7,20 +7,37 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Synchronize internal state when parent clears selectedSeats
+    // Synchronize internal matrix state with external selectedSeats prop
     useEffect(() => {
-        if (selectedSeats.length === 0 && seats.length > 0) {
-            const hasSelected = seats.some(row => row.some(seat => seat && seat.status === 'selected'));
-            if (hasSelected) {
-                setSeats(prevSeats =>
-                    prevSeats.map(row =>
-                        row.map(seat =>
-                            (seat && seat.status === 'selected') ? { ...seat, status: 'available' } : seat
-                        )
-                    )
-                );
-            }
-        }
+        if (seats.length === 0) return;
+
+        // Check if any sync is actually needed to avoid loops or redundant renders
+        const needsSync = seats.some(row =>
+            row.some(seat => {
+                if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved') return false;
+                const isSelectedInProp = selectedSeats.some(s => s.id === seat.id);
+                return (isSelectedInProp && seat.status !== 'selected') || (!isSelectedInProp && seat.status === 'selected');
+            })
+        );
+
+        if (!needsSync) return;
+
+        setSeats(prevSeats =>
+            prevSeats.map(row =>
+                row.map(seat => {
+                    if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved') return seat;
+
+                    const isSelectedInProp = selectedSeats.some(s => s.id === seat.id);
+                    if (isSelectedInProp && seat.status !== 'selected') {
+                        return { ...seat, status: 'selected' };
+                    }
+                    if (!isSelectedInProp && seat.status === 'selected') {
+                        return { ...seat, status: 'available' };
+                    }
+                    return seat;
+                })
+            )
+        );
     }, [selectedSeats, seats.length]);
 
     // Fetch real seat layout for the specific show
@@ -96,7 +113,10 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
         fetchLayout();
     }, [showId]);
 
+    const [isAnimating, setIsAnimating] = React.useState(false);
+
     const handleSeatClick = (rowIndex, colIndex) => {
+        if (isAnimating) return;
         const seat = seats[rowIndex][colIndex];
         if (!seat) return;
         if (seat.type === 'path' || seat.originalType === 'path' || seat.status === 'booked' || seat.status === 'reserved' || seat.status === 'disabled') return;
@@ -158,19 +178,38 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                 }
             }
 
-            // Update state with all found seats
-            const newSeats = seats.map((row, ri) =>
-                row.map((cell, ci) => {
-                    if (seatsToSelect.some(target => target.r === ri && target.c === ci)) {
-                        return { ...cell, status: 'selected' };
-                    }
-                    return cell;
-                })
-            );
-            setSeats(newSeats);
-            if (onSeatChange) {
-                onSeatChange(newSeats.flat().filter(s => s && s.status === 'selected'));
-            }
+            // STAGGERED ANIMATION SELECTION
+            setIsAnimating(true);
+
+            // We'll update the seats one by one
+            let currentSelectionIdx = 0;
+            const animateSelection = () => {
+                if (currentSelectionIdx >= seatsToSelect.length) {
+                    setIsAnimating(false);
+                    return;
+                }
+
+                const target = seatsToSelect[currentSelectionIdx];
+                setSeats(prev => prev.map((row, ri) =>
+                    row.map((cell, ci) => {
+                        if (ri === target.r && ci === target.c) {
+                            return { ...cell, status: 'selected' };
+                        }
+                        return cell;
+                    })
+                ));
+
+                // Notify parent immediately for smooth summary update
+                const currentlyApplied = seatsToSelect.slice(0, currentSelectionIdx + 1);
+                const allSelected = [...currentlySelected, ...currentlyApplied.map(t => seats[t.r][t.c])];
+                if (onSeatChange) onSeatChange(allSelected);
+
+                currentSelectionIdx++;
+                setTimeout(animateSelection, 40); // 40ms stagger
+            };
+
+            animateSelection();
+
         } else {
             // Standard single selection (if already started or max is 1)
             if (currentlySelected.length >= maxSeatCount) {
@@ -249,37 +288,32 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                                     return (
                                         <React.Fragment key={rowIndex}>
                                             {showHeader && (
-                                                <div className="w-full flex items-center gap-4 my-6 opacity-60">
-                                                    <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-300 dark:via-gray-700 to-transparent"></div>
-                                                    <div className="text-[10px] font-black tracking-[0.2em] text-slate-400 dark:text-gray-500 uppercase flex items-center gap-2">
-                                                        <span>₹{firstCell.basePrice}</span>
-                                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-700"></span>
+                                                <div className="w-full flex flex-col items-center my-4">
+                                                    <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 tracking-wide">
                                                         <span>{currentCategory}</span>
+                                                        <span className="font-medium text-gray-800 dark:text-gray-200 tracking-normal">₹{firstCell.basePrice}</span>
                                                     </div>
-                                                    <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-slate-300 dark:via-gray-700 to-transparent"></div>
                                                 </div>
                                             )}
-                                            <div className="flex gap-1.5 items-center shrink-0 w-full justify-center">
-                                                {/* Row Label */}
-                                                <div className="w-6 text-center text-xs font-bold text-slate-400 dark:text-gray-600 mr-2 shrink-0">
+                                            <div className="flex gap-2 min-w-max items-center justify-center p-1">
+                                                {/* Left Row Label */}
+                                                <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 mr-2 shrink-0">
                                                     {rowLabel}
                                                 </div>
 
                                                 {/* Seats */}
                                                 {row.map((seat, colIndex) => {
                                                     if (!seat || seat.type === 'path' || seat.originalType === 'path' || seat.originalType === 'empty' || seat.originalType === 'aisle') {
-                                                        return <div key={`path-${seat?.id || colIndex}`} className="w-8 h-8 md:w-10 md:h-10 shrink-0 opacity-0" />;
+                                                        return <div key={`path-${seat?.id || colIndex}`} className="w-8 h-8 md:w-[34px] md:h-[34px] shrink-0 opacity-0" />;
                                                     }
 
-                                                    // Styles — exact TMS logic
-                                                    let seatStyle = "border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-indigo-400 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 shadow-sm";
+                                                    // Styles based on Figma
+                                                    let seatStyle = "border-[#cbd5e1] dark:border-gray-700 bg-white dark:bg-gray-800 text-[#475569] dark:text-gray-400 hover:border-[#64748b] dark:hover:border-gray-500 transition-colors";
 
                                                     if (seat.status === 'booked' || seat.status === 'reserved') {
-                                                        seatStyle = "bg-slate-100 dark:bg-gray-800/50 text-slate-300 dark:text-gray-700 cursor-not-allowed border-transparent shadow-none";
+                                                        seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none"; // Solid gray booked state with visible text
                                                     } else if (seat.status === 'selected') {
-                                                        seatStyle = "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/50 transform scale-110 z-10 font-black";
-                                                    } else if (isPremiumCategory) {
-                                                        seatStyle = "border-amber-400 dark:border-amber-600/50 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20";
+                                                        seatStyle = "bg-[#1e3a8a] border-[#1e3a8a] text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid dark blue selected state with pop effect
                                                     }
 
                                                     return (
@@ -288,43 +322,28 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                                                             onClick={() => handleSeatClick(rowIndex, colIndex)}
                                                             disabled={seat.status === 'booked' || seat.status === 'reserved'}
                                                             title={`${seat.row}${seat.number} - ₹${seat.basePrice}`}
-                                                            className={`relative w-8 h-8 md:w-10 md:h-10 rounded-lg shrink-0 flex items-center justify-center transition-all duration-300 border shadow-sm text-[10px] md:text-xs font-black ${seatStyle}`}
+                                                            className={`relative w-8 h-8 md:w-[34px] md:h-[34px] rounded-[6px] shrink-0 flex items-center justify-center border text-[10px] font-medium leading-none transition-all duration-300 transform active:scale-90 ${seatStyle}`}
                                                         >
-                                                            {seat.status === 'booked' || seat.status === 'reserved' ? '×' : seat.number}
+                                                            {seat.number}
                                                         </button>
                                                     );
                                                 })}
+
+                                                {/* Right Row Label */}
+                                                <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 ml-2 shrink-0">
+                                                    {rowLabel}
+                                                </div>
                                             </div>
                                         </React.Fragment>
                                     );
                                 });
                             })()}
 
-                            {/* Repositioned Screen Element */}
-                            <div className="w-full max-w-[600px] px-8 perspective-1000 mt-16 mb-8 opacity-90">
-                                <div className="h-10 md:h-12 w-full border-b-[3px] md:border-b-4 border-indigo-500/80 rounded-[50%/0_0_100%_100%] shadow-[0_10px_30px_rgba(99,102,241,0.2)] flex items-start justify-center pt-2">
-                                    <span className="text-slate-400 dark:text-gray-600 text-[9px] md:text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Screen</span>
-                                </div>
-                            </div>
-
-                            {/* Repositioned Legend */}
-                            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 px-5 py-3 md:py-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/60 dark:border-gray-700 text-xs font-bold text-slate-500 dark:text-gray-400 mt-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm"></div>
-                                    <span>Available</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded border border-amber-300/50 dark:border-amber-600/50 bg-amber-50 dark:bg-amber-900/20 shadow-sm"></div>
-                                    <span className="text-amber-600 dark:text-amber-400">Premium</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.4)]"></div>
-                                    <span className="text-indigo-600 dark:text-indigo-400">Selected</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded bg-slate-100 dark:bg-gray-700 text-slate-300 dark:text-gray-600 border border-slate-200 dark:border-gray-700 font-bold flex items-center justify-center">×</div>
-                                    <span>Booked</span>
-                                </div>
+                            {/* Repositioned Screen Element (Figma Style) */}
+                            <div className="w-full max-w-[800px] mt-24 mb-16 opacity-90 relative flex flex-col items-center">
+                                <span className="text-gray-400 dark:text-gray-500 text-[10px] font-semibold tracking-widest uppercase mb-4">Screen This Way</span>
+                                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
+                                <div className="h-2 w-full bg-gradient-to-b from-gray-100 dark:from-gray-800 to-transparent opacity-50"></div>
                             </div>
                         </div>
                     </TransformComponent>

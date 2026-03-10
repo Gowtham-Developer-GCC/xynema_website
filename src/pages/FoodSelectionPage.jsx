@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Loader, Zap, Info } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Loader, Zap, Info, AlertCircle, X } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
@@ -9,6 +9,14 @@ import ErrorState from '../components/ErrorState';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
+
+const Toast = ({ message, type, onClose }) => (
+    <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
+        {type === 'error' ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+        <span className="text-xs font-black uppercase tracking-wider">{message}</span>
+        <button onClick={onClose} className="ml-4 opacity-50 hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
+    </div>
+);
 
 const FoodSelectionPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -59,6 +67,12 @@ const FoodSelectionPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [show, setShow] = useState(null);
     const [showSeats, setShowSeats] = useState([]);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     const hasProceededRef = useRef(false);
     const seatsRef = useRef(seats);
@@ -117,6 +131,11 @@ const FoodSelectionPage = () => {
 
     const addToCart = (item) => {
         try {
+            const currentTotalItems = Object.values(cart).reduce((acc, qty) => acc + qty, 0);
+            if (currentTotalItems >= 10) {
+                showToast("Maximum 10 items allowed per order", "warning");
+                return;
+            }
             setCart(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
         } catch (err) {
             console.error('Add to cart error:', err);
@@ -181,56 +200,59 @@ const FoodSelectionPage = () => {
     const totalAmount = ticketsTotal + snackTotal;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col transition-colors duration-300">
             <SEO title="Food & Snacks - XYNEMA" description="Add snacks and drinks to your movie experience" />
 
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
-                <div className="w-[80%] max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Go Back
-                    </button>
-                    <div className="text-center">
-                        <h1 className="text-sm font-bold text-gray-900 dark:text-white">Food & Beverages</h1>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">
-                            Optional • Add to your booking
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3 w-20 justify-end">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {/* Header: Simplified Back & Title */}
+            <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-6 transition-colors duration-300">
+                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
                         <button
-                            onClick={() => {
-                                setCart({});
-                                handleProceedToPayment();
-                            }}
-                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+                            onClick={() => navigate(-1)}
+                            className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
                         >
-                            Skip
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
+                        <div className="flex flex-col">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                                Pre-Order Snacks
+                            </h1>
+                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                Optional • Save time at the counter
+                            </p>
+                        </div>
                     </div>
+                    <button
+                        onClick={handleProceedToPayment}
+                        className="text-[14px] font-semibold text-[#427cae] dark:text-[#5c98ce] hover:underline"
+                    >
+                        Skip & Continue
+                    </button>
                 </div>
             </header>
 
-            <main className="w-[80%] max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-8">
+            <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 bg-[#f9fafb] dark:bg-gray-950 transition-colors duration-300">
                 <div className="flex-1">
-                    {/* Categories */}
-                    <div className="mb-8 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    {/* Category Pills */}
+                    <div className="mb-10 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                         {categories.map(category => (
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${selectedCategory === category ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                className={`px-6 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap border ${selectedCategory === category
+                                    ? 'bg-[#3b7298] text-white border-[#3b7298]'
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                    }`}
                             >
                                 {category}
                             </button>
                         ))}
                     </div>
 
-                    {/* Menu Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {/* Menu Grid - 2 Column as requested */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {filteredItems.map((item) => (
                             <FoodCard
                                 key={item.id}
@@ -243,26 +265,24 @@ const FoodSelectionPage = () => {
                     </div>
                 </div>
 
-                {/* Cart Sidebar via BookingSummary */}
-                <div className="w-full lg:w-[400px] h-auto lg:h-[calc(100vh-80px)] lg:sticky top-[80px] bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 shadow-xl rounded-2xl overflow-hidden z-30 shrink-0">
+                {/* Sticky Summary Sidebar */}
+                <div className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-fit lg:sticky top-10 shrink-0 transition-colors duration-300">
                     <BookingSummary
-                        movie={{ // Mocking structure expected by BookingSummary from previous step
-                            movie: { title: sessionStorage.getItem('booking_movie_title'), portraitPosterUrl: sessionStorage.getItem('booking_movie_poster') },
-                            theatre: { name: sessionStorage.getItem('booking_theater_name') }
+                        movie={{
+                            movie: {
+                                title: sessionStorage.getItem('booking_movie_title') || show?.movie?.title,
+                                portraitPosterUrl: sessionStorage.getItem('booking_movie_poster') || show?.movie?.portraitPosterUrl
+                            },
+                            theatre: { name: sessionStorage.getItem('booking_theater_name') || show?.theatre?.name }
                         }}
-                        show={{ // Mocking structure
-                            time: sessionStorage.getItem('booking_show_time'),
+                        show={{
+                            time: sessionStorage.getItem('booking_show_time') || show?.startTime,
+                            date: selectedDate,
                             basePrice: show?.basePrice || 150
                         }}
                         selectedSeats={showSeats.filter(s => seats.includes(s.id || s._id))}
-                        buttonText={Object.keys(cart).length > 0 ? "Process" : "Skip & Process"}
-                        buttonIcon={<Zap className="w-4 h-4" />}
+                        buttonText="Continue to Checkout"
                         onConfirm={handleProceedToPayment}
-                        showSkip={true}
-                        onSkip={() => {
-                            setCart({}); // clear cart before proceeding
-                            setTimeout(handleProceedToPayment, 50);
-                        }}
                         snacksTotal={snackTotal}
                         snackDetails={Object.entries(cart).map(([id, qty]) => {
                             const item = foodItems.find(f => String(f.id) === String(id));
@@ -273,92 +293,87 @@ const FoodSelectionPage = () => {
                                 total: (item?.price || 0) * qty
                             };
                         })}
+                        onSkip={() => {
+                            setCart({});
+                            setTimeout(handleProceedToPayment, 50);
+                        }}
                     />
-                </div>
-            </main>
-            {/* Mobile Sticky Cart Footer */}
-            {Object.keys(cart).length > 0 && (
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-8 animate-in slide-in-from-bottom-2">
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{Object.keys(cart).length} Items</p>
-                            <p className="text-xl font-bold text-gray-900 dark:text-white">₹{totalAmount.toLocaleString()}</p>
-                        </div>
+                    <div className="p-6 pt-0 text-center">
                         <button
                             onClick={() => {
-                                const cartElement = document.querySelector('aside');
-                                if (cartElement) cartElement.scrollIntoView({ behavior: 'smooth' });
+                                setCart({});
+                                setTimeout(handleProceedToPayment, 50);
                             }}
-                            className="text-xs font-bold text-xynemaRose uppercase tracking-wider underline opacity-0 hidden" // Hidden for now, just auto proceed
+                            className="text-[13px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4"
                         >
-                            View Cart
+                            Skip snacks
                         </button>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 border-t border-gray-50 dark:border-gray-800 pt-4">
+                            You can modify your snack order at the counter
+                        </p>
                     </div>
-                    <button
-                        onClick={handleProceedToPayment}
-                        className="w-full py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                        <Zap className="w-4 h-4 fill-current" />
-                        Proceed to Payment
-                    </button>
                 </div>
-            )}
+            </main>
         </div>
     );
 };
 
 const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
-    // Check if image is a URL or emoji
     const isImageUrl = item.image && (item.image.startsWith('http') || item.image.startsWith('https') || item.image.startsWith('/'));
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all text-center">
-            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-700/50 rounded-2xl mx-auto flex items-center justify-center mb-4 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
+            {/* Top Large Image Section */}
+            <div className="aspect-[4/3] bg-[#f8f9fa] dark:bg-gray-800/50 flex items-center justify-center relative p-8 group transition-colors duration-300">
                 {isImageUrl ? (
                     <img
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-full object-cover rounded-2xl"
-                        onError={(e) => {
-                            // Fallback to emoji if image fails to load
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                        }}
+                        className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 group-hover:scale-110"
                     />
-                ) : null}
-                <span className={`text-4xl ${isImageUrl ? 'hidden' : ''}`}>
-                    {item.image || '🍿'}
-                </span>
-            </div>
-
-            <div className="space-y-1 mb-4">
-                <h3 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">{item.name}</h3>
-                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{item.category}</p>
-            </div>
-
-            <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">
-                ₹{item.price}
-            </div>
-
-            <div className="h-10">
-                {quantity === 0 ? (
-                    <button
-                        onClick={onAdd}
-                        className="w-full h-full rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-bold text-[10px] uppercase tracking-wider hover:border-indigo-600 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
-                    >
-                        Add to Cart
-                    </button>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-between bg-indigo-600 text-white rounded-lg px-3">
-                        <button onClick={onRemove} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
-                            <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="font-bold text-sm">{quantity}</span>
-                        <button onClick={onAdd} className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded">
-                            <Plus className="w-3 h-3" />
-                        </button>
-                    </div>
+                    <span className="text-7xl">{item.image || '🍿'}</span>
                 )}
+            </div>
+
+            {/* Bottom Content Section */}
+            <div className="p-6 flex flex-col gap-4">
+                <div className="flex justify-between items-start">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight">{item.name}</h3>
+                            {item.isPopular && (
+                                <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider">
+                                    Combo
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[13px] text-gray-400 dark:text-gray-500 line-clamp-1">{item.description || 'Delicious snack option'}</p>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center mt-2">
+                    <span className="text-[18px] font-bold text-gray-900 dark:text-white">₹{item.price}</span>
+
+                    {quantity === 0 ? (
+                        <button
+                            onClick={onAdd}
+                            className="px-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-[#3b7298] dark:text-[#5c98ce] font-bold text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95"
+                        >
+                            Add
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-4 bg-[#3b7298] text-white rounded-lg px-3 py-2 shadow-sm">
+                            <button onClick={onRemove} className="hover:bg-white/20 rounded p-0.5 transition-colors">
+                                <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="font-bold text-[15px] min-w-[20px] text-center">{quantity}</span>
+                            <button onClick={onAdd} className="hover:bg-white/20 rounded p-0.5 transition-colors">
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

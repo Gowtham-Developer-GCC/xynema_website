@@ -6,17 +6,18 @@ import { optimizeImage } from '../utils/helpers';
 const MovieCard = memo(({ movie }) => (
     <Link
         to={`/movie/${movie.slug || movie.id}`}
-        className={`group relative flex flex-col space-y-3 animate-slide-up opacity-0 ${movie.delayClass || ''}`}
+        className={`group relative flex flex-col space-y-2 animate-slide-up opacity-0 ${movie.delayClass || ''}`}
     >
-        <div className="aspect-[2/3] rounded-2xl overflow-hidden relative bg-gray-200 dark:bg-gray-800 transition-all duration-500 group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] dark:group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] group-hover:-translate-y-2">
+        {/* Full width within its slide to eliminate visual gap between cards */}
+        <div className="w-full aspect-[1/1.58] rounded-md overflow-hidden relative bg-gray-200 dark:bg-gray-800 transition-all duration-500">
             <img
-                src={optimizeImage(movie.posterUrl, { width: 400, quality: 75 })}
+                src={optimizeImage(movie.posterUrl, { width: 400, quality: 100 })}
                 alt={movie.title}
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out"
             />
             {/* Hover details overlay with Glassmorphism */}
-            <div className="absolute inset-x-0 bottom-0 min-h-[10%] bg-black/40 dark:bg-black/60 backdrop-blur-sm border-t border-white/20 dark:border-white/10 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none p-3 pb-4 translate-y-2 group-hover:translate-y-0 text-white">
+            <div className="absolute inset-x-0 bottom-0 min-h-[10%] bg-black/40 dark:bg-black/60 backdrop-blur-sm border-t border-white/20 dark:border-white/10 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none p-3 pb-4 text-white">
                 {!movie.isAvailable ? (
                     <div className="flex flex-col gap-1 w-full px-1">
                         <div className="flex items-center justify-between">
@@ -43,10 +44,22 @@ const MovieCard = memo(({ movie }) => (
             </div>
         </div>
 
-        <div className="px-1 pt-1">
-            <h3 className="text-[17px] font-bold text-[#3B4154] dark:text-gray-100 group-hover:text-xynemaRose dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-1" style={{ letterSpacing: '-0.01em' }}>
+        {/* Text is aligned with the image above */}
+        <div className="pt-1 flex flex-col w-full">
+            <h3 className="text-[17px] font-bold text-[#3B4154] dark:text-gray-100 group-hover:text-xynemaRose dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-2" style={{ letterSpacing: '-0.01em' }}>
                 {movie.title}
             </h3>
+            <p className="text-[14px] text-gray-500 dark:text-gray-400 font-medium mt-0.5 truncate">
+                {(() => {
+                    if (!movie.genre) return movie.language || 'Action / Thriller';
+                    const list = Array.isArray(movie.genre)
+                        ? movie.genre
+                        : typeof movie.genre === 'string'
+                            ? movie.genre.split(',').map(g => g.trim())
+                            : [];
+                    return list.slice(0, 2).join(' / ');
+                })()}
+            </p>
         </div>
     </Link>
 ));

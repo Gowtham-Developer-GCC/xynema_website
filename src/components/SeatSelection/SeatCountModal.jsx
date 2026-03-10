@@ -44,19 +44,19 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                 `}
             </style>
 
-            <div className="relative w-full max-w-[560px] bg-white dark:bg-gray-900 rounded-[38px] shadow-[0_45px_110px_-25px_rgba(0,0,0,0.18)] dark:shadow-none border border-transparent dark:border-gray-800 overflow-hidden animate-in zoom-in-95 duration-500 max-h-[85vh] overflow-y-auto no-scrollbar">
+            <div className="relative w-full max-w-[480px] bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_45px_110px_-25px_rgba(0,0,0,0.18)] dark:shadow-none border border-transparent dark:border-gray-800 overflow-hidden animate-in zoom-in-95 duration-500 max-h-[85vh] overflow-y-auto no-scrollbar">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-8 right-8 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-200 dark:text-gray-700 transition-colors z-40"
+                    className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-200 dark:text-gray-700 transition-colors z-40"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="p-8 md:p-10 flex flex-col items-center">
+                <div className="p-6 md:p-8 flex flex-col items-center">
                     {/* Ticket Stack Illustration */}
-                    <div className="relative w-full max-w-[320px] aspect-[16/9] mb-8 flex items-center justify-center">
-                        <div className="relative w-[220px] h-[135px]">
+                    <div className="relative w-full max-w-[280px] aspect-[16/9] mb-6 flex items-center justify-center">
+                        <div className="relative w-[180px] h-[110px]">
                             {animateTickets && [...Array(selectedCount)].map((_, i) => {
                                 const reverseIndex = selectedCount - 1 - i;
                                 const rotation = - (reverseIndex * 3);
@@ -79,11 +79,11 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                         <div className={`absolute top-0 right-0 w-8 h-8 bg-indigo-600 dark:bg-indigo-500/20 rounded-bl-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
                                         <div className={`absolute bottom-0 left-0 w-8 h-8 bg-indigo-600 dark:bg-indigo-500/20 rounded-tr-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
 
-                                        <div className="w-full h-full p-5 flex flex-col justify-between relative">
+                                        <div className="w-full h-full p-4 flex flex-col justify-between relative">
                                             <div className={`flex justify-between items-start transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-20'}`}>
                                                 <div className="space-y-0.5">
-                                                    <p className="text-[9px] font-bold text-slate-300 dark:text-gray-500 uppercase tracking-[0.18em]">Ticket</p>
-                                                    <h2 className="text-5xl font-black text-indigo-600 dark:text-indigo-400 leading-none">#{selectedCount}</h2>
+                                                    <p className="text-[8px] font-bold text-slate-300 dark:text-gray-500 uppercase tracking-[0.18em]">Ticket</p>
+                                                    <h2 className="text-4xl font-black text-indigo-600 dark:text-indigo-400 leading-none">#{i + 1}</h2>
                                                 </div>
 
                                                 <div className="w-12 h-12 rounded-full bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center text-white shadow-xl mt-0.5">
@@ -104,14 +104,14 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                     </div>
 
                     {/* Number Selector */}
-                    <div className="w-full relative mb-10 px-2 group/track">
-                        <div className="flex justify-center items-center gap-3 py-2 relative z-10 px-4">
+                    <div className="w-full relative mb-8 px-2 group/track">
+                        <div className="flex justify-center items-center gap-1.5 py-2 relative z-10 px-2">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                                 <button
                                     key={num}
                                     onClick={() => setSelectedCount(num)}
                                     className={`
-                                        w-10 h-10 rounded-full flex items-center justify-center text-base font-black transition-all duration-500 shrink-0
+                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-500 shrink-0
                                         ${selectedCount === num
                                             ? 'bg-indigo-600 text-white shadow-[0_12px_25px_rgba(79,70,229,0.3)] dark:shadow-indigo-500/20 scale-110 ring-4 ring-indigo-50 dark:ring-indigo-900/30'
                                             : 'bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-300 dark:text-gray-600 hover:border-indigo-500 dark:hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400'}
@@ -121,7 +121,7 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                 </button>
                             ))}
                         </div>
-                        <div className="absolute bottom-[-10px] left-[10%] right-[10%] h-[4px] bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div className="absolute bottom-[-10px] left-[15%] right-[15%] h-[3px] bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-indigo-500 transition-all duration-500 rounded-full"
                                 style={{ width: `${(selectedCount / 10) * 100}%` }}
@@ -129,17 +129,17 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                         </div>
                     </div>
 
-                    {/* Category Pricing Summary */}
-                    <div className="w-full grid grid-cols-3 gap-4 mb-10">
+                    {/* Category Pricing Summary - Single line, no borders/hover */}
+                    <div className="w-full flex items-center justify-center gap-6 mb-10 overflow-x-auto no-scrollbar pb-2">
                         {categories.map((cat, i) => (
-                            <div key={i} className="flex flex-col items-center p-4 rounded-[28px] bg-slate-50/5 dark:bg-gray-800/20 border border-slate-100/50 dark:border-gray-800/50 hover:bg-white dark:hover:bg-gray-800 hover:border-slate-200 dark:hover:border-gray-700 transition-all duration-500 group">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center leading-tight group-hover:text-slate-500 dark:group-hover:text-gray-400 transition-colors truncate w-full">
+                            <div key={i} className="flex flex-col items-center min-w-fit px-2 transition-colors">
+                                <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 text-center leading-tight whitespace-nowrap">
                                     {cat.label}
                                 </span>
-                                <span className="text-lg font-black text-slate-900 dark:text-white">₹{cat.price}</span>
-                                <div className="mt-3 px-2 py-0.5 rounded-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 flex items-center gap-1.5 shadow-sm">
-                                    <div className={`w-1 h-1 rounded-full ${cat.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                                    <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest leading-none">
+                                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">₹{cat.price}</span>
+                                <div className="mt-2.5 flex items-center gap-1.5">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${cat.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                    <span className="text-[9px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-widest leading-none">
                                         {cat.status}
                                     </span>
                                 </div>

@@ -28,7 +28,7 @@ const Footer = () => {
                         <div className="space-y-4">
                             <a href="tel:+919874563210" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
                                 <Phone className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
-                                <span className="text-sm">+91 9874563210</span>
+                                <span className="text-sm">0484 4531182</span>
                             </a>
                             <a href="mailto:support@xynema.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
                                 <Mail className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
@@ -36,7 +36,7 @@ const Footer = () => {
                             </a>
                             <div className="flex items-center gap-3 text-gray-400">
                                 <MapPin className="w-4 h-4 text-[#3874c8] shrink-0" />
-                                <span className="text-sm">Ernakulam, Kerala, India</span>
+                                <span className="text-sm">Cochin, Kerala, India</span>
                             </div>
                         </div>
                     </div>

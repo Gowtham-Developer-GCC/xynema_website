@@ -4,20 +4,20 @@ import { optimizeImage } from '../utils/helpers';
 
 const StoreCard = memo(({ item }) => {
     return (
-        <div className="bg-white dark:bg-[#1a1c23] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:-translate-y-2 group cursor-pointer">
+        <div className="bg-white dark:bg-[#1a1c23] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
             <Link to={`/store/${item.id}`} className="block w-full">
-                <div className="relative aspect-square overflow-hidden bg-[#f9f9f9] dark:bg-gray-900/50 p-6 flex items-center justify-center">
+                <div className="relative aspect-square overflow-hidden bg-white p-6 flex items-center justify-center">
                     <img
-                        src={optimizeImage(item.imageUrl, { width: 500, quality: 85 }) || 'https://via.placeholder.com/500x500?text=No+Image'}
+                        src={optimizeImage(item.imageUrl, { width: 600, quality: 95 }) || 'https://via.placeholder.com/600x600?text=No+Image'}
                         alt={item.name}
                         loading="lazy"
-                        className="max-w-full max-h-full object-contain transition-transform duration-700 ease-in-out group-hover:scale-110 drop-shadow-xl"
+                        className="max-w-full max-h-full object-contain transition-transform duration-700 ease-in-out drop-shadow-xl"
                     />
                 </div>
             </Link>
             <div className="p-5 flex flex-col flex-grow bg-white dark:bg-[#1a1c23] border-t border-gray-50 dark:border-gray-800">
                 <Link to={`/store/${item.id}`} className="mb-2 block">
-                    <h3 className="font-bold text-gray-800 dark:text-white text-base md:text-[17px] leading-snug truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="font-bold text-gray-800 dark:text-white text-base md:text-[17px] leading-snug truncate transition-colors">
                         {item.name}
                     </h3>
                 </Link>

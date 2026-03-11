@@ -79,6 +79,7 @@ const HomePage = ({ selectedCity }) => {
             <SEO
                 title={`${selectedCity} - Book Movie Tickets Online | XYNEMA`}
                 description="Book your favorite movies with ease and elegance."
+                preloads={bannerMovies.map(m => optimizeImage(m.bannerImageUrl || m.backdropUrl || m.posterUrl, { width: 1400, quality: 85 }))}
             />
 
             {/* Flat Carousel Banner */}
@@ -86,11 +87,11 @@ const HomePage = ({ selectedCity }) => {
                 <HeroCarousel movies={bannerMovies} />
             </div>
 
-            <main className="w-[85%] mx-auto pb-8 space-y-12 overflow-hidden">
+            <main className="w-[70%] mx-auto pb-8 space-y-12 overflow-hidden">
                 {/* Now Showing Section */}
-                <section className="relative group/nowshowing">
+               {/* <section className="relative group/nowshowing">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                             Now showing
                         </h2>
                         <Link to="/movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -121,23 +122,23 @@ const HomePage = ({ selectedCity }) => {
                                     />
                                 </SwiperSlide>
                             ))}
-                        </Swiper>
-
+                        </Swiper> 
+                    */}
                         {/* Custom Navigation Arrows */}
-                        <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
+                      {/*  <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
                             <ChevronRight className="w-5 h-5 rotate-180" />
                         </button>
                         <button className="now-showing-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
-                </section>
+                </section> */}
 
                 {/* Recommended for you Section */}
                 {upcomingMovies.length > 0 && (
                     <section id="recommended-section" className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Recommended for you
                             </h2>
                             <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -182,10 +183,10 @@ const HomePage = ({ selectedCity }) => {
                 )}
 
                 {/* Upcoming Movies Section */}
-                {upcomingMovies.length > 0 && (
+                {/* {upcomingMovies.length > 0 && (
                     <section className="relative mt-16 group/upcoming">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Upcoming movies
                             </h2>
                             <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -208,27 +209,27 @@ const HomePage = ({ selectedCity }) => {
                                     1024: { slidesPerView: 6.2, spaceBetween: 12 },
                                 }}
                                 className="!pb-4 !overflow-visible"
-                            >
-                                {displayedUpcoming.map((movie, idx) => (
-                                    <SwiperSlide key={`upcoming-new-${movie.id}`}>
+                            >*/}
+                              {/*  {displayedUpcoming.map((movie, idx) => (
+                                    <SwiperSlide key={`upcoming-new-${movie.id}`}>*/}
                                         {/* Using the same MovieCard to benefit from the newly added glass effect */}
-                                        <MovieCard
+                                      {/*  <MovieCard
                                             movie={{ ...movie, delayClass: `delay-[${(idx + 1) * 100}ms]` }}
                                         />
                                     </SwiperSlide>
-                                ))}
-                            </Swiper>
+                                ))} 
+                            </Swiper>*/}
 
                             {/* Custom Navigation Arrows designed based on visual high-contrast */}
-                            <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-xynemaRose dark:hover:text-pink-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
+                           {/* <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="upcoming-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-xynemaRose dark:hover:text-pink-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
+                            <button className="upcoming-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
                     </section>
-                )}
+                )} */}
 
                 {/* Highlight Banner Section (16:9) */}
                 {highlightsMovies?.length > 0 && (
@@ -283,7 +284,7 @@ const HomePage = ({ selectedCity }) => {
                 {events?.length > 0 && (
                     <section className="relative mt-16 group/events">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Trending events
                             </h2>
                             <Link to="/events" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -316,10 +317,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="events-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                            <button className="events-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="events-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                            <button className="events-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -330,7 +331,7 @@ const HomePage = ({ selectedCity }) => {
                 {MOCK_STORE_ITEMS.length > 0 && (
                     <section className="relative mt-16 mb-8 group/store">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Official merchandise
                             </h2>
                             <Link to="/store" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
@@ -364,10 +365,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#2563EB] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -404,7 +405,7 @@ const EventCard = memo(({ event }) => {
             </Link>
             <div className="p-5 flex flex-col flex-grow">
                 <Link to={eventLink} className="mb-2 block">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-display uppercase">
                         {event.name}
                     </h3>
                 </Link>
@@ -421,12 +422,12 @@ const EventCard = memo(({ event }) => {
                 </div>
 
                 <div className="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
-                    <span className="font-bold text-[#1a5b8a] dark:text-blue-400 text-lg">
+                    <span className="font-bold text-primary dark:text-primary text-lg">
                         ₹{event.price ? event.price.toLocaleString() : 'Free'}
                     </span>
                     <Link
                         to={eventLink}
-                        className="px-5 py-2 bg-[#427cae] text-white text-sm font-medium rounded-lg shadow-sm transition-all"
+                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-display uppercase tracking-wider hover:brightness-110 active:scale-95"
                     >
                         Book Now
                     </Link>
@@ -456,8 +457,8 @@ const HeroCarousel = memo(({ movies }) => {
                     transition: all 0.3s ease;
                 }
                 .hero-swiper .swiper-pagination-bullet-active {
-                    width: 32px;
-                    background: #475e7a;
+                    width: 64px;
+                    background: #FD4960;
                 }
                 .dark .hero-swiper .swiper-pagination-bullet {
                     background: #475569;
@@ -469,8 +470,8 @@ const HeroCarousel = memo(({ movies }) => {
             </style>
             <Swiper
                 modules={[Pagination, Autoplay]}
-                spaceBetween={20}
-                slidesPerView={1.15} // Adjusted to peek sides exactly like Figma
+                spaceBetween={16}
+                slidesPerView={1.30} // Adjusted to peek sides exactly like Figma
                 centeredSlides={true}
                 loop={true}
                 speed={500}
@@ -482,6 +483,11 @@ const HeroCarousel = memo(({ movies }) => {
                     clickable: true,
                     dynamicBullets: false,
                 }}
+                watchSlidesProgress={true}
+                preloadImages={true}
+                loopedSlides={5}
+                observer={true}
+                observeParents={true}
                 breakpoints={{
                     320: { slidesPerView: 1.1, spaceBetween: 12 },
                     640: { slidesPerView: 1.15, spaceBetween: 16 },
@@ -494,7 +500,7 @@ const HeroCarousel = memo(({ movies }) => {
 
                     return (
                         <SwiperSlide key={`${movie.id}-${index}`}>
-                            <div className="w-full aspect-[2/1] md:aspect-[21/6] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div className="w-full aspect-[3/1] md:aspect-[21/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                 <a
                                     href={linkUrl}
                                     className="block w-full h-full cursor-pointer"
@@ -503,7 +509,8 @@ const HeroCarousel = memo(({ movies }) => {
                                         src={optimizeImage(movie.bannerImageUrl || movie.backdropUrl || movie.posterUrl, { width: 1400, quality: 85 }) || 'https://via.placeholder.com/1400x400?text=No+Image'}
                                         alt={movie.title}
                                         className="w-full h-full object-cover object-center"
-                                        loading={index === 0 ? "eager" : "lazy"}
+                                        loading="eager"
+                                        fetchpriority="high"
                                     />
                                 </a>
                             </div>

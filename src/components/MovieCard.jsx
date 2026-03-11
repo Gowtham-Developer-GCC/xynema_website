@@ -33,8 +33,8 @@ const MovieCard = memo(({ movie }) => (
                 ) : (
                     <div className="flex items-center justify-between w-full px-1">
                         <div className="flex items-center gap-1.5 focus:outline-none">
-                            <Star className="w-4 h-4 text-xynemaRose fill-xynemaRose dark:text-blue-400 dark:fill-blue-400 drop-shadow-md" />
-                            <span className="text-[15px] font-bold drop-shadow-md">{movie.rating > 0 ? movie.rating.toFixed(1) : '0.0'}</span>
+                            <Star className="w-4 h-4 text-primary fill-primary drop-shadow-md" />
+                            <span className="text-[15px] font-bold font-display drop-shadow-md">{movie.rating > 0 ? movie.rating.toFixed(1) : '0.0'}</span>
                         </div>
                         <span className="text-[11.5px] font-semibold text-white/90 dark:text-gray-200 drop-shadow-sm uppercase tracking-wider">
                             {movie.voteCount > 1000 ? `${(movie.voteCount / 1000).toFixed(0)}k votes` : `${movie.voteCount || 0} votes`}
@@ -46,7 +46,7 @@ const MovieCard = memo(({ movie }) => (
 
         {/* Text is aligned with the image above */}
         <div className="pt-1 flex flex-col w-full">
-            <h3 className="text-[17px] font-bold text-[#3B4154] dark:text-gray-100 group-hover:text-xynemaRose dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-2" style={{ letterSpacing: '-0.01em' }}>
+            <h3 className="text-[17px] font-bold text-[#3B4154] dark:text-gray-100 group-hover:text-primary dark:group-hover:text-primary transition-colors leading-tight line-clamp-2 font-display uppercase tracking-tight">
                 {movie.title}
             </h3>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 font-medium mt-0.5 truncate">

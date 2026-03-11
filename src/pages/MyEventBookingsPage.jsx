@@ -299,9 +299,9 @@ const EventBookingCard = ({ booking }) => {
 
 const LoadingState = () => (
     <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-6 p-8">
-        <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#3e7cb1' }} />
+        <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#E33D52' }} />
         <div className="text-center">
-            <p className="text-[#3e7cb1] font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Events</p>
+            <p className="text-[#E33D52] font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Events</p>
             <h2 className="text-xl font-bold text-gray-400">XYNEMA</h2>
         </div>
     </div>

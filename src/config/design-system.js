@@ -7,27 +7,27 @@
 export const colors = {
   // Primary Brand Colors (Xynema Premium Blue)
   primary: {
-    50: '#f0f4ff',
-    100: '#e0e9fe',
-    200: '#c2d4fe',
-    300: '#98b7fd',
-    400: '#648ef9',
-    500: '#00296b',     // Main Brand Blue (xynemaRose)
-    600: '#002054',     // Darker shade
-    700: '#00183d',
-    800: '#001029',
-    900: '#000814',
+    50: '#fff1f2',
+    100: '#ffe4e6',
+    200: '#fecdd3',
+    300: '#fda4af',
+    400: '#fe6b7f',
+    500: '#FD4960',     // Main Brand Pink (xynemaRose)
+    600: '#e33d52',     // Darker shade
+    700: '#be123c',
+    800: '#9f1239',
+    900: '#881337',
   },
 
   // Secondary/Accent Colors (Xynema Gold/Blue)
-  secondary: {
+  secondary: { // rebranded from charcoalSlate
     50: '#fdfcfe',
     100: '#fbf9fd',
     200: '#f5f0f9',
     300: '#efe6f5',
     400: '#dfcbf0',
     500: '#81a4cd',     // Accent (premiumGold)
-    600: '#3e7cb1',     // Charcoal Slate
+    600: '#E33D52',     // Charcoal Slate
     700: '#2c5980',
     800: '#1d3b55',
     900: '#0f1d2b',
@@ -37,8 +37,8 @@ export const colors = {
   status: {
     success: '#4abd5d',
     warning: '#ff9800',
-    error: '#00296b',     // Xynema Rose for high-contrast alerts
-    info: '#00296b',
+    error: '#FD4960',     // Xynema Rose for high-contrast alerts
+    info: '#FD4960',
     pending: '#ff9800',
   },
 
@@ -67,7 +67,7 @@ export const colors = {
 
   // Gradients
   gradients: {
-    primary: 'linear-gradient(90deg, #00296b 0%, #3e7cb1 100%)',
+    primary: 'linear-gradient(90deg, #FD4960 0%, #e33d52 100%)',
     overlay: 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)',
     light: 'linear-gradient(180deg, #ffffff 0%, #F5F5F5 100%)',
   },
@@ -150,7 +150,7 @@ export const shadows = {
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
   '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
   elevation: '0 20px 40px -20px rgba(0, 0, 0, 0.3)',
-  premium: '0 20px 60px -20px rgba(0, 41, 107, 0.1)',
+  premium: '0 20px 60px -20px rgba(253, 73, 96, 0.1)',
 };
 
 // ============= Border Radius =============
@@ -183,7 +183,7 @@ export const componentStyles = {
       active: colors.primary[700],
       disabled: colors.neutral[300],
     },
-    secondary: {
+    secondary: { // rebranded from charcoalSlate
       bg: colors.secondary[500],
       text: 'white',
       hover: colors.secondary[600],

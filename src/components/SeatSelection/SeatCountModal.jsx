@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users } from 'lucide-react';
 
+
 const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
     const [selectedCount, setSelectedCount] = useState(2);
     const [animateTickets, setAnimateTickets] = useState(false);
@@ -44,7 +45,7 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                 `}
             </style>
 
-            <div className="relative w-full max-w-[480px] bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_45px_110px_-25px_rgba(0,0,0,0.18)] dark:shadow-none border border-transparent dark:border-gray-800 overflow-hidden animate-in zoom-in-95 duration-500 max-h-[85vh] overflow-y-auto no-scrollbar">
+            <div className="relative w-full max-w-[480px] bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_45px_110px_-25px_rgba(0,0,0,0.18)] dark:shadow-none border border-transparent dark:border-gray-800 overflow-hidden animate-in zoom-in-95 duration-500 max-h-[85vh] overflow-y-auto no-scrollbar font-sans">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -76,23 +77,23 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                             animationDelay: `${delay}ms`,
                                         }}
                                     >
-                                        <div className={`absolute top-0 right-0 w-8 h-8 bg-indigo-600 dark:bg-indigo-500/20 rounded-bl-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
-                                        <div className={`absolute bottom-0 left-0 w-8 h-8 bg-indigo-600 dark:bg-indigo-500/20 rounded-tr-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
+                                        <div className={`absolute top-0 right-0 w-8 h-8 bg-primary dark:bg-primary/20 rounded-bl-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
+                                        <div className={`absolute bottom-0 left-0 w-8 h-8 bg-primary dark:bg-primary/20 rounded-tr-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
 
                                         <div className="w-full h-full p-4 flex flex-col justify-between relative">
                                             <div className={`flex justify-between items-start transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-20'}`}>
                                                 <div className="space-y-0.5">
                                                     <p className="text-[8px] font-bold text-slate-300 dark:text-gray-500 uppercase tracking-[0.18em]">Ticket</p>
-                                                    <h2 className="text-4xl font-black text-indigo-600 dark:text-indigo-400 leading-none">#{i + 1}</h2>
+                                                    <h2 className="text-4xl font-bold text-primary dark:text-primary leading-none font-display">#{i + 1}</h2>
                                                 </div>
 
-                                                <div className="w-12 h-12 rounded-full bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center text-white shadow-xl mt-0.5">
+                                                <div className="w-12 h-12 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white shadow-xl mt-0.5">
                                                     <Users className="w-6 h-6" />
                                                 </div>
                                             </div>
 
                                             <div className={`w-full flex justify-center items-center py-3 border-t border-slate-50/50 dark:border-gray-800 mt-3 transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-10'}`}>
-                                                <span className="text-[8px] font-black text-slate-350 dark:text-gray-600 uppercase tracking-[0.45em] whitespace-nowrap">
+                                                <span className="text-[8px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-[0.45em] whitespace-nowrap">
                                                     Admit One
                                                 </span>
                                             </div>
@@ -111,10 +112,10 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                     key={num}
                                     onClick={() => setSelectedCount(num)}
                                     className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-500 shrink-0
+                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 shrink-0
                                         ${selectedCount === num
-                                            ? 'bg-indigo-600 text-white shadow-[0_12px_25px_rgba(79,70,229,0.3)] dark:shadow-indigo-500/20 scale-110 ring-4 ring-indigo-50 dark:ring-indigo-900/30'
-                                            : 'bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-300 dark:text-gray-600 hover:border-indigo-500 dark:hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400'}
+                                            ? 'bg-primary text-white shadow-[0_12px_25px_rgba(253,73,96,0.3)] dark:shadow-primary/20 scale-110 ring-4 ring-primary/10 dark:ring-primary/20'
+                                            : 'bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-300 dark:text-gray-600 hover:border-primary dark:hover:border-primary hover:text-primary dark:hover:text-primary'}
                                     `}
                                 >
                                     {num}
@@ -123,7 +124,7 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                         </div>
                         <div className="absolute bottom-[-10px] left-[15%] right-[15%] h-[3px] bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-indigo-500 transition-all duration-500 rounded-full"
+                                className="h-full bg-primary transition-all duration-500 rounded-full"
                                 style={{ width: `${(selectedCount / 10) * 100}%` }}
                             />
                         </div>
@@ -150,7 +151,7 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                     {/* Primary CTA */}
                     <button
                         onClick={handleSelect}
-                        className="w-full py-5 rounded-[28px] bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.4em] shadow-[0_20px_40px_-10px_rgba(79,70,229,0.3)] dark:shadow-indigo-500/20 hover:bg-indigo-700 hover:-translate-y-1 transition-all active:scale-[0.98] active:translate-y-0"
+                        className="w-full py-5 rounded-[28px] bg-primary text-white font-bold text-xs uppercase tracking-[0.4em] shadow-[0_20px_40px_-10px_rgba(253,73,96,0.3)] dark:shadow-primary/20 hover:bg-primary/90 hover:-translate-y-1 transition-all active:scale-[0.98] active:translate-y-0 font-display"
                     >
                         SELECT {selectedCount} {selectedCount === 1 ? 'SEAT' : 'SEATS'}
                     </button>

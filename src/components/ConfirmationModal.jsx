@@ -57,7 +57,7 @@ const ConfirmationModal = ({
 
                     {/* Content */}
                     <div className="space-y-1.5 mb-7">
-                        <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">
                             {title}
                         </h3>
                         <p className="text-[13px] text-slate-500 dark:text-gray-400 font-medium leading-relaxed px-4">
@@ -72,13 +72,13 @@ const ConfirmationModal = ({
                                 onConfirm();
                                 onClose();
                             }}
-                            className={`w-full py-3.5 rounded-xl text-white font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all ${currentStyle.button}`}
+                            className={`w-full py-3.5 rounded-xl text-white font-bold text-[10px] uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all ${currentStyle.button}`}
                         >
                             {confirmText}
                         </button>
                         <button
                             onClick={onClose}
-                            className="w-full py-3.5 rounded-xl bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-gray-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
+                            className="w-full py-3.5 rounded-xl bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
                         >
                             {cancelText}
                         </button>

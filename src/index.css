@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Roboto:wght@400;500;700;900&display=swap');
+
+:root {
+    --primary-color: #FD4960;
+    --primary-hover: #E33D52;
+}
+
 
 @tailwind base;
 @tailwind components;
@@ -149,11 +155,11 @@
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: #3874c8;
+        background: var(--primary-color);
     }
 
     .dark ::-webkit-scrollbar-thumb:hover {
-        background: #427cae;
+        background: var(--primary-color);
     }
 
     .scrollbar-hide::-webkit-scrollbar {

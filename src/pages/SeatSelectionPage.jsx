@@ -374,10 +374,10 @@ const SeatSelectionPage = () => {
                             Tickets Selected
                         </span>
                         <div className="flex items-center gap-2">
-                            <span className="text-3xl font-bold text-[#427cae] dark:text-[#5c98ce] leading-none">
+                            <span className="text-3xl font-bold text-primary dark:text-[#5c98ce] leading-none">
                                 {selectedSeatCount}
                             </span>
-                            <Settings className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-[#427cae] transition-colors" />
+                            <Settings className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors" />
                         </div>
                     </div>
                 </div>

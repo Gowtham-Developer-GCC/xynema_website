@@ -28,29 +28,29 @@ export const buttonStyles = {
 
   variant: {
     primary: `
-      bg-gradient-to-r from-[#00296b] to-[#3e7cb1]
+      bg-gradient-to-r from-[#FD4960] to-[#E33D52]
       text-white
-      hover:from-[#002054] hover:to-[#2c5980]
+      hover:from-[#E33D52] hover:to-[#FD4960]
       shadow-md hover:shadow-lg
-      focus:ring-[#00296b]
+      focus:ring-[#FD4960]
     `,
     secondary: `
-      bg-gradient-to-r from-[#81a4cd] to-[#3e7cb1]
+      bg-gradient-to-r from-[#81a4cd] to-[#FD4960]
       text-white
-      hover:from-[#6b8eaa] hover:to-[#2c5980]
+      hover:from-[#6b8eaa] hover:to-[#E33D52]
       shadow-md hover:shadow-lg
       focus:ring-[#81a4cd]
     `,
     outline: `
-      border-2 border-[#00296b]
-      text-[#00296b]
-      hover:bg-[#f0f4ff]
-      focus:ring-[#00296b]
+      border-2 border-[#FD4960]
+      text-[#FD4960]
+      hover:bg-[#fff1f2]
+      focus:ring-[#FD4960]
     `,
     ghost: `
-      text-[#00296b]
-      hover:bg-[#f0f4ff]
-      focus:ring-[#00296b]
+      text-[#FD4960]
+      hover:bg-[#fff1f2]
+      focus:ring-[#FD4960]
     `,
   },
 };
@@ -65,7 +65,7 @@ export const inputStyles = {
     rounded-lg
     font-${designSystem.typography.fontWeight.normal}
     transition-all ${designSystem.transitions.base}
-    focus:outline-none focus:border-[#00296b] focus:ring-2 focus:ring-[#f0f4ff]
+    focus:outline-none focus:border-[#FD4960] focus:ring-2 focus:ring-[#fff1f2]
     disabled:bg-gray-100 disabled:cursor-not-allowed
     placeholder:text-gray-400
   `,
@@ -129,11 +129,11 @@ export const badgeStyles = {
   `,
 
   variant: {
-    primary: 'bg-[#f0f4ff] text-[#00296b]',
+    primary: 'bg-[#fff1f2] text-[#FD4960]',
     secondary: 'bg-[#f5f0f9] text-[#81a4cd]',
     success: 'bg-green-100 text-green-800',
     warning: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-[#f0f4ff] text-[#00296b]', // High contrast brand color for errors
+    error: 'bg-[#fff1f2] text-[#FD4960]', // High contrast brand color for errors
   },
 };
 
@@ -282,7 +282,7 @@ export const loadingStates = {
   spinner: `
     inline-block h-8 w-8 animate-spin
     rounded-full border-4 border-gray-300
-    border-t-[#00296b]
+    border-t-[#FD4960]
   `,
 
   shimmer: `
@@ -302,7 +302,7 @@ export const loadingStates = {
  */
 export const a11yStyles = {
   focusRing: `
-    focus:outline-none focus:ring-2 focus:ring-[#00296b] focus:ring-offset-2
+    focus:outline-none focus:ring-2 focus:ring-[#FD4960] focus:ring-offset-2
     focus:rounded-lg
   `,
 
@@ -321,7 +321,7 @@ export const a11yStyles = {
   skipLink: `
     ${designSystem.a11y.skipLink.clip}
     focus:clip-auto focus:absolute focus:top-0 focus:left-0
-    focus:z-50 focus:p-2 focus:bg-[#00296b] focus:text-white
+    focus:z-50 focus:p-2 focus:bg-[#FD4960] focus:text-white
   `,
 };
 

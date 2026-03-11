@@ -26,8 +26,8 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen(o => !o)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all select-none ${activeCount > 0
-                    ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500/50'
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all select-none font-display uppercase tracking-wide ${activeCount > 0
+                    ? 'border-primary text-primary bg-primary/5 dark:bg-primary/20'
                     : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1a1d24] hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
             >
@@ -50,8 +50,8 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
                             <button
                                 key={item}
                                 onClick={() => onToggle(item)}
-                                className={`text-left px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selected.includes(item)
-                                    ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                                className={`text-left px-3 py-1.5 rounded-lg text-sm font-bold transition-colors font-display uppercase tracking-tight ${selected.includes(item)
+                                    ? 'bg-primary/10 text-primary'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                                     }`}
                             >
@@ -156,8 +156,8 @@ const MoviesPage = ({ selectedCity }) => {
             {/* ── Hero Header ───────────────────────────────── */}
             <div className="bg-white dark:bg-[#0f1115] border-b border-gray-100 dark:border-gray-800">
                 <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">Movies</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Discover and book tickets for the latest blockbusters</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 font-display uppercase">Movies</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">Discover and book tickets for the latest blockbusters</p>
                 </div>
             </div>
 
@@ -172,8 +172,8 @@ const MoviesPage = ({ selectedCity }) => {
                                 <button
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
-                                    className={`px-5 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-display uppercase tracking-wider ${activeTab === tab.id
+                                        ? 'border-primary text-primary'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                                         }`}
                                 >
@@ -223,7 +223,7 @@ const MoviesPage = ({ selectedCity }) => {
 
                             <Link
                                 to="/cinemas"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-display uppercase tracking-wider transition-colors shadow-lg shadow-primary/20"
                             >
                                 <Building2 className="w-4 h-4" />
                                 Browse by cinemas
@@ -280,8 +280,8 @@ const MoviesPage = ({ selectedCity }) => {
                                 <button
                                     key={p}
                                     onClick={() => goToPage(p)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${pagination.page === p
-                                        ? 'bg-blue-600 text-white shadow-md'
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-display transition-all ${pagination.page === p
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110'
                                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}
                                 >

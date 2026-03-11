@@ -89,7 +89,7 @@ const StorePage = () => {
                     <div className="lg:col-span-3">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-32">
-                                <div className="w-12 h-12 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#00296b' }} />
+                                <div className="w-12 h-12 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#FD4960' }} />
                                 <p className="text-xynemaRose font-display font-bold mt-4 text-sm tracking-widest uppercase animate-pulse">Syncing Catalog</p>
                             </div>
                         ) : (

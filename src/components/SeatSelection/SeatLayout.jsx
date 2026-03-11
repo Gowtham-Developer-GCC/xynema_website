@@ -224,8 +224,8 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">
-                <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                <p className="text-sm font-bold text-slate-400 tracking-widest uppercase">Fetching live seat layout...</p>
+                <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-sm font-bold text-slate-400 tracking-widest uppercase font-display">Fetching live seat layout...</p>
             </div>
         );
     }
@@ -239,7 +239,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
     }
 
     return (
-        <div className="relative w-full h-[calc(100vh-220px)] md:h-[calc(100vh-190px)] min-h-[500px] overflow-hidden bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-slate-200/60 dark:border-gray-800 shadow-sm group">
+        <div className="relative w-full h-[calc(100vh-220px)] md:h-[calc(100vh-190px)] min-h-[500px] overflow-hidden bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-slate-200/60 dark:border-gray-800 shadow-sm group font-sans">
 
             {/* Zoom Controls Overlay */}
             <div className="absolute top-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg rounded-xl flex items-center p-1.5 gap-1 border border-slate-200/50 dark:border-gray-700/50">
@@ -289,7 +289,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                                         <React.Fragment key={rowIndex}>
                                             {showHeader && (
                                                 <div className="w-full flex flex-col items-center my-4">
-                                                    <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 tracking-wide">
+                                                    <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 tracking-wide font-display">
                                                         <span>{currentCategory}</span>
                                                         <span className="font-medium text-gray-800 dark:text-gray-200 tracking-normal">₹{firstCell.basePrice}</span>
                                                     </div>
@@ -313,7 +313,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                                                     if (seat.status === 'booked' || seat.status === 'reserved') {
                                                         seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none"; // Solid gray booked state with visible text
                                                     } else if (seat.status === 'selected') {
-                                                        seatStyle = "bg-[#1e3a8a] border-[#1e3a8a] text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid dark blue selected state with pop effect
+                                                        seatStyle = "bg-primary border-primary text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid primary color selected state with pop effect
                                                     }
 
                                                     return (

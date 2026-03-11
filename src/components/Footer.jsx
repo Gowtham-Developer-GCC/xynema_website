@@ -14,11 +14,15 @@ const Footer = () => {
                     {/* Brand Column */}
                     <div className="col-span-1 lg:col-span-4 flex flex-col items-start pr-0 lg:pr-12">
                         {/* Logo Area */}
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-white shadow-md rounded-md flex items-center justify-center p-1.5 shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                                <img src="/favicon.ico" alt="Xynema Logo Symbol" className="w-full h-full object-contain" />
-                            </div>
-                            <span className="text-2xl font-display font-bold text-white tracking-tight">Xynema</span>
+                        <div className="flex items-center mb-6">
+                            <Link to="/" className="flex items-center gap-3 hover:scale-105 transition-transform duration-300 transform-gpu">
+                                <img 
+                                    src="/assets/primary_Logo.png" 
+                                    alt="Xynema Logo Symbol" 
+                                    className="h-10 md:h-14 w-auto brightness-1" 
+                                />
+                                <span className="text-2xl font-display font-bold text-white uppercase">Xynema</span>
+                            </Link>
                         </div>
 
                         <p className="text-sm text-gray-400 leading-relaxed mb-8">
@@ -26,17 +30,17 @@ const Footer = () => {
                         </p>
 
                         <div className="space-y-4">
-                            <a href="tel:+919874563210" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
-                                <Phone className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
-                                <span className="text-sm">0484 4531182</span>
+                            <a href="tel:+04844531182" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
+                                <Phone className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                <span className="text-sm font-medium">0484 4531182</span>
                             </a>
-                            <a href="mailto:support@xynema.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
-                                <Mail className="w-4 h-4 text-[#3874c8] group-hover:text-blue-400 transition-colors" />
-                                <span className="text-sm">support@xynema.com</span>
+                            <a href="mailto:support@xynema.com" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
+                                <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                <span className="text-sm font-medium">support@xynema.com</span>
                             </a>
-                            <div className="flex items-center gap-3 text-gray-400">
-                                <MapPin className="w-4 h-4 text-[#3874c8] shrink-0" />
-                                <span className="text-sm">Cochin, Kerala, India</span>
+                            <div className="flex items-center gap-3 text-gray-400 font-sans">
+                                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                                <span className="text-sm font-medium">Cochin, Kerala, India</span>
                             </div>
                         </div>
                     </div>
@@ -44,42 +48,42 @@ const Footer = () => {
                     {/* Links Columns */}
                     <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div>
-                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Movies</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Movies</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Now Showing</Link></li>
-                                <li><Link to="/upcoming-movies" className="text-gray-400 hover:text-white transition-colors">Coming Soon</Link></li>
-                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Recommended</Link></li>
-                                <li><Link to="/movies" className="text-gray-400 hover:text-white transition-colors">Top Rated</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Now Showing</Link></li>
+                                <li><Link to="/upcoming-movies" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Recommended</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Top Rated</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Events</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Events</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Public Events</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Private Hosting</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Concerts</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors">Comedy Shows</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Public Events</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Private Hosting</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Concerts</Link></li>
+                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Comedy Shows</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Company</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Company</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
-                                <li><Link to="/careers" className="text-gray-400 hover:text-white transition-colors">Careers</Link></li>
-                                <li><Link to="/press" className="text-gray-400 hover:text-white transition-colors">Press & Media</Link></li>
-                                <li><Link to="/advertise" className="text-gray-400 hover:text-white transition-colors">Advertise With Us</Link></li>
+                                <li><Link to="/about" className="text-gray-400 hover:text-primary transition-colors">About Us</Link></li>
+                                <li><Link to="/careers" className="text-gray-400 hover:text-primary transition-colors">Careers</Link></li>
+                                <li><Link to="/press" className="text-gray-400 hover:text-primary transition-colors">Press & Media</Link></li>
+                                <li><Link to="/advertise" className="text-gray-400 hover:text-primary transition-colors">Advertise With Us</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-medium mb-6 text-sm tracking-wide">Support</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Support</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/help" className="text-gray-400 hover:text-white transition-colors">Help Center</Link></li>
-                                <li><Link to="/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</Link></li>
-                                <li><Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
-                                <li><Link to="/refund" className="text-gray-400 hover:text-white transition-colors">Refund Policy</Link></li>
+                                <li><Link to="/help" className="text-gray-400 hover:text-primary transition-colors">Help Center</Link></li>
+                                <li><Link to="/terms" className="text-gray-400 hover:text-primary transition-colors">Terms of Service</Link></li>
+                                <li><Link to="/privacy" className="text-gray-400 hover:text-primary transition-colors">Privacy Policy</Link></li>
+                                <li><Link to="/refund" className="text-gray-400 hover:text-primary transition-colors">Refund Policy</Link></li>
                             </ul>
                         </div>
                     </div>
@@ -87,17 +91,17 @@ const Footer = () => {
 
                 {/* Newsletter Sub-Section */}
                 <div className="border-t border-gray-800/60 pt-12 pb-8 flex flex-col items-center justify-center mb-4">
-                    <h3 className="text-xl font-semibold text-gray-200 mb-2">Subscribe to Our Newsletter</h3>
-                    <p className="text-sm text-gray-400 text-center mb-8 max-w-xl">
+                    <h3 className="text-xl font-bold text-gray-200 mb-2 font-display uppercase">Subscribe to Our Newsletter</h3>
+                    <p className="text-sm text-gray-400 text-center mb-8 max-w-xl font-sans font-medium">
                         Get the latest movie releases, event updates, and exclusive offers delivered to your inbox.
                     </p>
                     <div className="flex w-full max-w-md gap-3">
                         <input
                             type="email"
                             placeholder="Enter your email address"
-                            className="flex-1 bg-[#252a37] border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#3874c8] transition-colors"
+                            className="flex-1 bg-[#252a37] border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all font-sans"
                         />
-                        <button className="bg-[#3874c8] hover:bg-[#2b5a9e] text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors">
+                        <button className="bg-primary hover:brightness-110 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-bold font-display uppercase tracking-wider text-xs transition-all shadow-lg shadow-primary/20 active:scale-95">
                             <Send className="w-4 h-4" />
                             <span>Subscribe</span>
                         </button>
@@ -110,7 +114,7 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6">
                     <div className="flex items-center gap-4">
                         {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-                            <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#252a37] flex items-center justify-center text-gray-400 hover:bg-[#3874c8] hover:text-white transition-all group">
+                            <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#252a37] flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all group scale-90 hover:scale-105">
                                 <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             </a>
                         ))}

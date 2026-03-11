@@ -40,12 +40,12 @@ const LoginModal = () => {
                         </div>
                     </div>
 
-                    <h2 className="text-3xl font-display font-black text-gray-900 uppercase tracking-tighter leading-none mb-3">
+                    <h2 className="text-3xl font-display font-bold text-gray-900 uppercase tracking-tight leading-none mb-3">
                         Entrance <br /> <span className="text-xynemaRose">Required</span>
                     </h2>
                     <div className="flex items-center justify-center gap-2">
                         <div className="h-px w-4 bg-gray-100" />
-                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Identify Yourself</p>
+                        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Identify Yourself</p>
                         <div className="h-px w-4 bg-gray-100" />
                     </div>
                 </div>
@@ -62,7 +62,7 @@ const LoginModal = () => {
                                 width="300"
                             />
                         </div>
-                        <p className="mt-8 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center leading-relaxed max-w-[200px]">
+                        <p className="mt-8 text-[9px] font-bold text-gray-400 uppercase tracking-widest text-center leading-relaxed max-w-[200px]">
                             By proceeding, you unlock the <span className="text-xynemaRose">Premium Content</span> & Universal Booking Engine
                         </p>
                     </div>

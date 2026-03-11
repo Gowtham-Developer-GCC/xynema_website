@@ -177,12 +177,12 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-display font-medium text-[#111827] dark:text-gray-100 mb-2 tracking-tight">Events</h1>
-                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base">Discover curated experiences near you.</p>
+                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight uppercase">Events</h1>
+                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">Discover curated experiences near you.</p>
                     </div>
                     <button
                         onClick={() => handleTabChange('private_events')}
-                        className="flex items-center gap-2 text-sm font-semibold text-[#374151] dark:text-gray-300 hover:text-[#00296b] dark:hover:text-blue-400 transition-colors"
+                        className="flex items-center gap-2 text-sm font-black text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display uppercase tracking-widest"
                     >
                         <Sparkles className="w-4 h-4" />
                         Host Your Event
@@ -202,8 +202,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     setEventFilters(prev => ({ ...prev, tags: [] }));
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${eventFilters.tags.length === 0
-                                    ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 0
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                     : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                     }`}
                             >
@@ -218,8 +218,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                         setEventFilters(prev => ({ ...prev, tags: [tag] }));
                                         setIsMoreFiltersOpen(false);
                                     }}
-                                    className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
-                                        ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                    className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                        ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
                                 >
@@ -233,8 +233,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                             <div className="relative shrink-0" ref={moreFiltersRef}>
                                 <button
                                     onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                    className={`px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all border flex items-center gap-2 ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
-                                        ? 'bg-[#00296B] dark:bg-blue-600 text-white border-[#00296B] dark:border-blue-600 shadow-sm'
+                                    className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border flex items-center gap-2 font-display uppercase tracking-wider ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
+                                        ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
                                 >
@@ -256,7 +256,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                                     <div className="relative flex items-center justify-center">
                                                         <input
                                                             type="checkbox"
-                                                            className="peer appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 checked:bg-[#00296B] dark:checked:bg-blue-600 checked:border-[#00296B] dark:checked:border-blue-600 transition-all cursor-pointer"
+                                                            className="peer appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 checked:bg-primary checked:border-primary transition-all cursor-pointer"
                                                             checked={eventFilters.tags.includes(tag)}
                                                             onChange={(e) => {
                                                                 if (e.target.checked) {
@@ -268,7 +268,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                                         />
                                                         <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#00296B] dark:group-hover:text-blue-400 transition-colors">
+                                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-display uppercase tracking-tight">
                                                         {tag}
                                                     </span>
                                                 </label>
@@ -323,7 +323,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         {/* All Global Events */}
                         {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
                             <div className="mt-8">
-                                <h2 className="text-[28px] font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight mb-8">All events</h2>
+                                <h2 className="text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-8 uppercase">All events</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {filteredGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
@@ -349,13 +349,14 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
 const PrivateEventBanner = ({ onNavigate }) => {
     return (
-        <div className="w-full bg-[#1E4B6E] rounded-xl text-white p-10 md:p-14 overflow-hidden relative shadow-lg">
+        <div className="w-full bg-[#1E2532] dark:bg-[#1a1d24] border border-white/10 rounded-xl text-white p-10 md:p-14 overflow-hidden relative shadow-2xl">
             {/* Subtle background glow effect if desired */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
 
             <div className="relative z-10 max-w-3xl">
-                <h2 className="text-3xl md:text-4xl font-display font-medium mb-4 tracking-tight">Host Your Private Event</h2>
-                <p className="text-blue-100/80 text-sm md:text-base leading-relaxed mb-10 max-w-2xl">
+                <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 tracking-tight uppercase">Host Your Private Event</h2>
+                <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-10 max-w-2xl font-sans">
                     From corporate gatherings to private screenings, we help you create memorable
                     experiences. Submit your request and our team will reach out to you.
                 </p>
@@ -391,10 +392,10 @@ const PrivateEventBanner = ({ onNavigate }) => {
                         </div>
                     </div>
                 </div>
-
+                
                 <button
                     onClick={onNavigate}
-                    className="bg-white text-[#1E4B6E] px-8 py-3.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                    className="bg-primary text-white px-8 py-3.5 rounded-lg text-sm font-black font-display uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 active:scale-95"
                 >
                     Submit Request
                 </button>
@@ -404,9 +405,9 @@ const PrivateEventBanner = ({ onNavigate }) => {
 };
 
 const FilterChip = ({ label, onRemove }) => (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-xynemaRose/10 text-xynemaRose text-[10px] font-bold border border-xynemaRose/20 animate-in fade-in zoom-in duration-200">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20 animate-in fade-in zoom-in duration-200 font-display">
         <span className="uppercase tracking-wider">{label}</span>
-        <button onClick={onRemove} className="hover:bg-xynemaRose/20 rounded-full p-0.5">
+        <button onClick={onRemove} className="hover:bg-primary/20 rounded-full p-0.5">
             <X className="w-3 h-3" />
         </button>
     </div>
@@ -436,7 +437,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                             <button
                                 key={status}
                                 onClick={() => onFilterChange({ ...filters, status })}
-                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.status === status ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
+                                className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border font-display ${filters.status === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
                             >
                                 {status}
                             </button>
@@ -451,7 +452,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                             <button
                                 key={date}
                                 onClick={() => onFilterChange({ ...filters, date })}
-                                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${filters.date === date ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
+                                className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border font-display ${filters.date === date ? 'bg-primary text-white border-primary shadow-md' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
                             >
                                 {date}
                             </button>
@@ -473,7 +474,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                                             : [...filters.tags, tag];
                                         onFilterChange({ ...filters, tags: nextTags });
                                     }}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all border ${isSelected ? 'bg-xynemaRose/10 dark:bg-blue-500/10 border-xynemaRose dark:border-blue-500 text-xynemaRose dark:text-blue-400' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500'}`}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border font-display ${isSelected ? 'bg-primary/10 border-primary text-primary' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500'}`}
                                 >
                                     {tag}
                                 </button>
@@ -483,10 +484,10 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                 </div>
             </div>
             <div className="mt-8 pt-6 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center transition-colors">
-                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest hover:text-xynemaRose dark:hover:text-blue-400 transition-colors">Reset All</button>
+                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest hover:text-primary transition-colors font-display">Reset All</button>
                 <button
                     onClick={() => onFilterChange(filters)}
-                    className="px-8 py-3 rounded-xl bg-xynemaRose dark:bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-xynemaRose/20 dark:shadow-blue-900/40"
+                    className="px-8 py-3 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 font-display"
                 >
                     Apply Filters
                 </button>
@@ -540,7 +541,7 @@ const EventCard = ({ event }) => {
             </div>
 
             <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-lg font-medium text-[#111827] dark:text-gray-100 mb-6 tracking-tight line-clamp-2">
+                <h3 className="text-lg font-bold text-[#111827] dark:text-gray-100 mb-6 tracking-tight line-clamp-2 font-display uppercase">
                     {event.name}
                 </h3>
 
@@ -556,11 +557,11 @@ const EventCard = ({ event }) => {
                 </div>
 
                 <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                    <div className="flex items-baseline gap-1.5">
-                        <span className="text-lg font-medium text-[#006699] dark:text-blue-400">₹{event.price || 'Free'}</span>
-                        <span className="text-xs font-medium text-[#6B7280] dark:text-gray-500">onwards</span>
+                    <div className="flex items-baseline gap-1.5 font-display">
+                        <span className="text-lg font-bold text-primary uppercase">₹{event.price || 'Free'}</span>
+                        <span className="text-[10px] font-black text-[#6B7280] dark:text-gray-500 uppercase tracking-widest">onwards</span>
                     </div>
-                    <div className="text-xs font-semibold text-[#4B5563] dark:text-gray-400 flex items-center gap-1 group-hover:text-[#111827] dark:group-hover:text-white transition-colors">
+                    <div className="text-[11px] font-black text-[#4B5563] dark:text-gray-400 flex items-center gap-1 group-hover:text-primary transition-colors font-display uppercase tracking-widest">
                         View details
                         <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M7 17L17 7" />
@@ -611,21 +612,21 @@ const PrivateEventsSection = ({ onCancel }) => {
     return (
         <div className="animate-in fade-in duration-500 bg-[#F5F7F9] dark:bg-[#0f1115]">
             {/* Dark Blue Hero Banner - No margins around it */}
-            <div className="w-full bg-[#1E4B6E] text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+            <div className="w-full bg-[#1E2532] dark:bg-[#1a1d24] text-white overflow-hidden relative border-b border-white/10">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
                 <div className="text-center max-w-2xl mx-auto pt-24 pb-32 px-4 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full text-xs font-semibold tracking-wider mb-8">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/20 rounded-full text-[10px] font-black tracking-widest mb-8 border border-primary/30 font-display uppercase">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
                         <span className="text-white">PRIVATE EVENT HOSTING</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6">
+                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6 uppercase">
                         Host Your Private Event
                     </h2>
 
-                    <p className="text-lg text-blue-100/90 leading-relaxed font-normal">
+                    <p className="text-lg text-gray-300 leading-relaxed font-sans">
                         Create unforgettable experiences with our premium venues and personalized event management. Fill out the form below and our team will craft the perfect event for you.
                     </p>
                 </div>
@@ -635,11 +636,11 @@ const PrivateEventsSection = ({ onCancel }) => {
             {/* Form Section Floating on top */}
             <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
                 <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 dark:border-gray-700 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
-                    <div className="mb-10 text-left border-b border-white/20 dark:border-gray-700 pb-6">
-                        <h3 className="text-[28px] font-display font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+                    <div className="mb-10 text-left border-b border-gray-100 dark:border-gray-700 pb-6">
+                        <h3 className="text-[28px] font-display font-black text-gray-900 dark:text-gray-100 tracking-tighter uppercase italic">
                             Event Request Form
                         </h3>
-                        <p className="text-gray-600/90 dark:text-gray-400 text-base mt-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-sans">
                             Please provide us with the details of your event and we'll get back to you shortly.
                         </p>
                     </div>
@@ -661,7 +662,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                                     value={formData.fullName}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
                                     placeholder="Enter your full name"
                                 />
                             </div>
@@ -673,7 +674,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                                     value={formData.phone}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
                                     placeholder="Enter your phone number"
                                 />
                             </div>
@@ -688,7 +689,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors"
+                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
                                     placeholder="Enter your email address"
                                 />
                             </div>
@@ -700,7 +701,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                                         value={formData.eventType}
                                         onChange={handleChange}
                                         required
-                                        className={`w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors appearance-none ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`}
+                                        className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none font-sans ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`}
                                         style={{ colorScheme: 'dark' }}
                                     >
                                         <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">Select event type</option>
@@ -722,7 +723,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                                 onChange={handleChange}
                                 required
                                 rows="4"
-                                className="w-full px-4 py-3 bg-white/40 dark:bg-gray-900/40 border border-white/60 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#3B6A8B] focus:ring-1 focus:ring-[#3B6A8B] transition-colors resize-y"
+                                className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-sans"
                                 placeholder="Tell us about your event, requirements, preferences, or special arrangements..."
                             />
                         </div>
@@ -741,7 +742,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full sm:w-auto px-10 py-3.5 bg-[#3B6A8B] text-white rounded-lg font-medium hover:bg-[#2A516E] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-lg font-black font-display uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                             >
                                 {loading ? (
                                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -757,24 +758,24 @@ const PrivateEventsSection = ({ onCancel }) => {
             {/* Feature Cards Grid */}
             <div className="max-w-4xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 pb-24">
                 {/* 1 */}
-                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                         <Clock className="w-6 h-6" />
                     </div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Quick Response</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Our team will review your request and contact you within 24-48 hours.</p>
                 </div>
                 {/* 2 */}
-                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                         <Building className="w-6 h-6" />
                     </div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Premium Venues</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Access to exclusive venues across multiple cities and locations.</p>
                 </div>
                 {/* 3 */}
-                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#1E4B6E] dark:text-blue-300 rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                         <Sparkles className="w-6 h-6" />
                     </div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Custom Experience</h4>
@@ -795,7 +796,7 @@ const EmptyState = ({ onReset }) => (
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
         <button
             onClick={onReset}
-            className="mt-8 px-8 py-3 bg-xynemaRose dark:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg dark:shadow-blue-900/20"
+            className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-display"
         >
             Reset Explore
         </button>
@@ -808,7 +809,7 @@ const LoadingState = () => (
     <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-8 p-8">
         <div className="relative w-20 h-20">
             <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
-            <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: '#00296b' }} />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: '#FD4960' }} />
         </div>
         <div className="text-center space-y-1">
             <p className="text-xynemaRose font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Scanning Library</p>

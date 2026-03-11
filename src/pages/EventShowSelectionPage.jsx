@@ -145,7 +145,7 @@ const EventShowSelectionPage = () => {
                                         {event.eventCategory}
                                     </span>
                                 )}
-                                <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg text-[10px] md:text-xs font-black text-indigo-400 dark:text-indigo-300 uppercase border border-indigo-100 dark:border-indigo-800">
+                                <span className="px-2.5 py-1 bg-primary/10 dark:bg-primary/40 rounded-lg text-[10px] md:text-xs font-black text-primary dark:text-primary uppercase border border-primary/20 dark:border-primary">
                                     Multi-Day Event
                                 </span>
                             </div>
@@ -171,7 +171,7 @@ const EventShowSelectionPage = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
                     <div className="space-y-2">
                         <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                            Showtimes for <span className="text-indigo-600 dark:text-indigo-400">
+                            Showtimes for <span className="text-primary dark:text-primary">
                                 {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) : ''}
                             </span>
                         </h2>
@@ -198,7 +198,7 @@ const EventShowSelectionPage = () => {
                                             className={`
                                                 flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
                                                 ${isSelected
-                                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 border-indigo-600'
+                                                    ? 'bg-primary text-white shadow-lg shadow-primary/20 dark:shadow-primary/40 border-primary'
                                                     : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700 hover:border-gray-300'
                                                 } border-2
                                             `}
@@ -235,17 +235,17 @@ const EventShowSelectionPage = () => {
                                         group bg-white dark:bg-gray-800 rounded-3xl border transition-all duration-500 text-left relative overflow-hidden
                                         hover:-translate-y-1 p-5 shadow-sm hover:shadow-xl
                                         ${isSelected
-                                            ? 'border-indigo-600 dark:border-indigo-500 ring-2 ring-indigo-600/20 shadow-indigo-100 dark:shadow-indigo-900/20'
+                                            ? 'border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/20 dark:shadow-indigo-900/20'
                                             : 'border-gray-100 dark:border-gray-700'
                                         }
                                     `}
                                 >
                                     <div className="flex justify-between items-start mb-4">
-                                        <span className={`text-xl font-black tracking-tight ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-white'}`}>
+                                        <span className={`text-xl font-black tracking-tight ${isSelected ? 'text-primary dark:text-primary' : 'text-gray-900 dark:text-white'}`}>
                                             {show.startTime}
                                         </span>
-                                        <div className={`px-2 py-1 rounded-lg border transition-colors ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-[#427cae]/10 border-[#427cae]/20'}`}>
-                                            <span className={`text-xs font-black flex items-center gap-1.5 ${isSelected ? 'text-white' : 'text-[#427cae] dark:text-blue-400'}`}>
+                                        <div className={`px-2 py-1 rounded-lg border transition-colors ${isSelected ? 'bg-primary border-primary' : 'bg-primary/10 border-primary/20'}`}>
+                                            <span className={`text-xs font-black flex items-center gap-1.5 ${isSelected ? 'text-white' : 'text-primary dark:text-primary'}`}>
                                                 {isSelected ? 'Selected' : 'Select'} <Check className="w-3 h-3" />
                                             </span>
                                         </div>
@@ -265,7 +265,7 @@ const EventShowSelectionPage = () => {
                                     </div>
 
                                     {/* Subtle glow effect on hover */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br transition-opacity pointer-events-none ${isSelected ? 'from-indigo-600/10 opacity-100' : 'from-[#427cae]/5 opacity-0 group-hover:opacity-100'}`} />
+                                    <div className={`absolute inset-0 bg-gradient-to-br transition-opacity pointer-events-none ${isSelected ? 'from-primary/10 opacity-100' : 'from-primary/5 opacity-0 group-hover:opacity-100'}`} />
                                 </button>
                             );
                         })}
@@ -297,7 +297,7 @@ const EventShowSelectionPage = () => {
                                 <button
                                     onClick={handleProceedToSummary}
                                     disabled={isReserving}
-                                    className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-[#427cae] text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#326796] active:scale-95 shadow-lg shadow-[#427cae]/30 disabled:opacity-50"
+                                    className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-primary text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
                                 >
                                     {isReserving ? (
                                         <div className="flex items-center gap-2">

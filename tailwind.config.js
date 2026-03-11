@@ -1,3 +1,5 @@
+import { themeColors, themeFonts } from './src/theme.js';
+
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: 'class',
@@ -8,14 +10,20 @@ export default {
     theme: {
         extend: {
             colors: {
-                xynemaRose: '#00296b',
+                primary: themeColors.primary,
+                xynemaRose: themeColors.primary,
+                background: themeColors.background,
+                darkBackground: themeColors.darkBackground,
+                text: themeColors.text,
+                darkText: themeColors.darkText,
                 charcoalSlate: '#3e7cb1',
                 premiumGold: '#81a4cd',
                 whiteSmoke: '#F5F5F5',
             },
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
-                display: ['Poppins', 'sans-serif'],
+                sans: themeFonts.sans,
+                display: themeFonts.display,
+                roboto: themeFonts.roboto,
             },
             keyframes: {
                 'slide-up': {

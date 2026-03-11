@@ -153,7 +153,7 @@ const TheaterDetailsPage = () => {
                                     {theater?.name}
                                 </h1>
                                 <div
-                                    className="flex items-center gap-2 text-gray-500 mt-2 cursor-pointer hover:text-[#00296b] transition-colors w-fit"
+                                    className="flex items-center gap-2 text-gray-500 mt-2 cursor-pointer hover:text-[#FD4960] transition-colors w-fit"
                                     onClick={handleDirections}
                                 >
                                     <MapPin className="w-4 h-4 shrink-0" />
@@ -221,7 +221,7 @@ const TheaterDetailsPage = () => {
                                     key={i}
                                     onClick={() => setSelectedDate(dateStr)}
                                     className={`flex flex-col items-center justify-center min-w-[60px] h-[64px] rounded-xl transition-all border ${isSelected
-                                        ? 'bg-[#00296b] text-white border-[#00296b] shadow-md shadow-blue-900/20'
+                                        ? 'bg-[#FD4960] text-white border-[#FD4960] shadow-md shadow-blue-900/20'
                                         : 'bg-white text-gray-500 border-transparent hover:bg-gray-50'
                                         }`}
                                 >
@@ -261,7 +261,7 @@ const TheaterDetailsPage = () => {
 
                 {moviesLoading ? (
                     <div className="py-24 flex flex-col items-center justify-center space-y-4">
-                        <Loader className="w-8 h-8 text-[#00296b] animate-spin" />
+                        <Loader className="w-8 h-8 text-[#FD4960] animate-spin" />
                         <p className="text-sm font-medium text-gray-400">Loading schedules...</p>
                     </div>
                 ) : movies.length > 0 ? (
@@ -306,7 +306,7 @@ const TheaterDetailsPage = () => {
                                         <div className="flex-1">
                                             <div className="hidden md:block mb-6">
                                                 <h3
-                                                    className="text-xl font-bold text-gray-900 cursor-pointer hover:text-[#00296b] transition-colors w-fit"
+                                                    className="text-xl font-bold text-gray-900 cursor-pointer hover:text-[#FD4960] transition-colors w-fit"
                                                     onClick={() => navigate(`/movie/${movie.slug || movie.id}`)}
                                                 >
                                                     {movie.title}
@@ -375,7 +375,7 @@ const LoadingState = () => (
     <div className="min-h-screen bg-whiteSmoke flex flex-col items-center justify-center space-y-12 p-8 text-center font-display">
         <div className="relative w-32 h-32">
             <div className="absolute inset-0 rounded-[40px] border-4 border-gray-100" />
-            <div className="absolute inset-0 rounded-[40px] border-4 border-transparent animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #00296b)', borderRadius: '40px' }} />
+            <div className="absolute inset-0 rounded-[40px] border-4 border-transparent animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #FD4960)', borderRadius: '40px' }} />
         </div>
         <div className="space-y-4">
             <p className="text-xynemaRose font-black text-[10px] uppercase tracking-[0.5em] animate-pulse">Syncing Cinema Link</p>

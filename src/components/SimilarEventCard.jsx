@@ -63,7 +63,7 @@ const SimilarEventCard = memo(({ event }) => {
 
                 <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                     <div className="flex items-baseline gap-1.5">
-                        <span className="text-lg font-medium text-[#427cae] dark:text-[#60a5fa]">₹{event.price || '0'}</span>
+                        <span className="text-lg font-medium text-primary dark:text-[#60a5fa]">₹{event.price || '0'}</span>
                         <span className="text-xs font-medium text-[#6B7280] dark:text-gray-500">onwards</span>
                     </div>
                     <div className="text-xs font-semibold text-[#4B5563] dark:text-gray-400 flex items-center gap-1 group-hover:text-[#111827] dark:group-hover:text-white transition-colors">

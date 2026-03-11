@@ -283,7 +283,7 @@ const EventDetailsPage = () => {
                         onClick={() => navigate(-1)}
                         className="group flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                     >
-                        <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-[#427cae] dark:group-hover:text-blue-400" />
+                        <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary" />
                     </button>
                     <h1 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[200px] md:max-w-md">
                         {event.name}
@@ -342,13 +342,13 @@ const EventDetailsPage = () => {
                             {/* Glass reflection gradient */}
                             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-[32px] pointer-events-none" />
                             {/* Colorful ambient glow inside card based on image (simulated with standard modern colors) */}
-                            <div className="absolute -top-32 -right-32 w-64 h-64 bg-blue-500/20 blur-[80px] rounded-full pointer-events-none" />
+                            <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
 
                             <div className="relative z-10 space-y-6">
                                 {/* Top Labels */}
                                 <div className="flex flex-wrap items-center gap-3">
                                     {event.eventCategory && (
-                                        <span className="px-3 py-1 bg-[#427cae]/80 backdrop-blur-md text-white border border-[#427cae]/50 text-xs font-bold rounded-full shadow-sm">
+                                        <span className="px-3 py-1 bg-primary/80 backdrop-blur-md text-white border border-primary/50 text-xs font-bold rounded-full shadow-sm">
                                             {event.eventCategory}
                                         </span>
                                     )}
@@ -398,7 +398,7 @@ const EventDetailsPage = () => {
                                         onClick={() => {
                                             document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                         }}
-                                        className="w-full sm:w-auto px-10 py-4 bg-[#427cae] hover:bg-[#326796] text-white text-[15px] font-bold rounded-xl transition-all shadow-[0_8px_20px_rgba(66,124,174,0.3)] hover:shadow-[0_12px_24px_rgba(66,124,174,0.5)] hover:-translate-y-1 active:translate-y-0 active:scale-95"
+                                        className="w-full sm:w-auto px-10 py-4 bg-primary hover:bg-[#E33D52] text-white text-[15px] font-bold rounded-xl transition-all shadow-[0_8px_20px_rgba(66,124,174,0.3)] hover:shadow-[0_12px_24px_rgba(66,124,174,0.5)] hover:-translate-y-1 active:translate-y-0 active:scale-95"
                                     >
                                         Book Tickets
                                     </button>
@@ -469,7 +469,7 @@ const EventDetailsPage = () => {
                             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Location</h3>
                             <div className="flex gap-6 items-start">
                                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl shrink-0">
-                                    <MapPin className="w-6 h-6 text-[#427cae] dark:text-blue-400" />
+                                    <MapPin className="w-6 h-6 text-primary dark:text-primary" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900 dark:text-gray-100 font-bold text-lg mb-1">
@@ -480,7 +480,7 @@ const EventDetailsPage = () => {
                                     </p>
                                     <button
                                         onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.address}, ${event.city}`)}`, '_blank')}
-                                        className="text-[#427cae] dark:text-blue-400 font-semibold text-sm hover:underline"
+                                        className="text-primary dark:text-primary font-semibold text-sm hover:underline"
                                     >
                                         Open in Google Maps
                                     </button>
@@ -561,10 +561,10 @@ const EventDetailsPage = () => {
                                     </Swiper>
 
                                     {/* Custom Navigation Arrows */}
-                                    <button className="similar-events-prev absolute -left-4 top-[45%] -translate-y-1/2 -translate-x-4 lg:-translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#427cae] dark:hover:text-blue-400 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0 hover:scale-105 active:scale-95">
+                                    <button className="similar-events-prev absolute -left-4 top-[45%] -translate-y-1/2 -translate-x-4 lg:-translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0 hover:scale-105 active:scale-95">
                                         <ChevronRight className="w-6 h-6 rotate-180" />
                                     </button>
-                                    <button className="similar-events-next absolute -right-4 top-[45%] -translate-y-1/2 translate-x-4 lg:translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#427cae] dark:hover:text-blue-400 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0 hover:scale-105 active:scale-95">
+                                    <button className="similar-events-next absolute -right-4 top-[45%] -translate-y-1/2 translate-x-4 lg:translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0 hover:scale-105 active:scale-95">
                                         <ChevronRight className="w-6 h-6" />
                                     </button>
                                 </div>
@@ -605,10 +605,10 @@ const EventDetailsPage = () => {
                                 </Swiper>
 
                                 {/* Custom Navigation Arrows */}
-                                <button className="event-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#427cae] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
+                                <button className="event-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
                                     <ChevronRight className="w-6 h-6 rotate-180" />
                                 </button>
-                                <button className="event-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-[#427cae] dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
+                                <button className="event-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
                                     <ChevronRight className="w-6 h-6" />
                                 </button>
                             </div>
@@ -619,11 +619,11 @@ const EventDetailsPage = () => {
                     <div className="lg:col-span-4 space-y-8" id="tickets-section">
                         <div className="sticky top-24 space-y-6">
                             <div className="bg-white dark:bg-[#1a1c23] rounded-[32px] p-8 border border-gray-100 dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] relative overflow-hidden group/tickets transition-colors duration-300">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 dark:bg-blue-900/20 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
 
                                 <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center border border-blue-100/50 dark:border-blue-800/50">
-                                        <Ticket className="w-5 h-5 text-[#427cae] dark:text-blue-400" />
+                                    <div className="w-10 h-10 rounded-xl bg-primary/5 dark:bg-primary/40 flex items-center justify-center border border-primary/10 dark:border-primary/20">
+                                        <Ticket className="w-5 h-5 text-primary dark:text-primary" />
                                     </div>
                                     Select Tickets
                                 </h3>
@@ -638,14 +638,14 @@ const EventDetailsPage = () => {
                                             <div
                                                 key={ticket.id}
                                                 className={`p-5 rounded-2xl border transition-all duration-300 ${isSelected
-                                                    ? 'border-[#427cae] dark:border-blue-500 bg-[#427cae]/[0.03] dark:bg-blue-500/[0.05] shadow-[0_10px_20px_rgba(66,124,174,0.08)]'
+                                                    ? 'border-primary dark:border-primary bg-primary/[0.03] dark:bg-primary/[0.05] shadow-[0_10px_20px_rgba(66,124,174,0.08)]'
                                                     : 'border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-md'
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <div className="space-y-1">
                                                         <p className="font-bold text-gray-900 dark:text-gray-100 tracking-tight">{ticket.className}</p>
-                                                        <p className="text-2xl font-black text-[#427cae] dark:text-blue-400 tracking-tighter">
+                                                        <p className="text-2xl font-black text-primary dark:text-primary tracking-tighter">
                                                             ₹{ticket.price.toLocaleString()}
                                                         </p>
                                                     </div>
@@ -692,7 +692,7 @@ const EventDetailsPage = () => {
                             <div className="bg-white dark:bg-[#1a1c23] rounded-[24px] p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group/organizer hover:shadow-md transition-all duration-300">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#427cae] to-blue-400 flex items-center justify-center text-lg font-black text-white shadow-lg group-hover/organizer:rotate-12 transition-transform duration-500">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary flex items-center justify-center text-lg font-black text-white shadow-lg group-hover/organizer:rotate-12 transition-transform duration-500">
                                             {event.organizerName ? event.organizerName.charAt(0) : 'O'}
                                         </div>
                                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full shadow-sm" />
@@ -704,7 +704,7 @@ const EventDetailsPage = () => {
                                         </p>
                                     </div>
                                 </div>
-                                <button className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-blue-50 dark:hover:bg-blue-900/40 hover:text-[#427cae] dark:hover:text-blue-400 transition-all">
+                                <button className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-primary/5 dark:hover:bg-primary/40 hover:text-primary dark:hover:text-primary transition-all">
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                             </div>
@@ -728,7 +728,7 @@ const EventDetailsPage = () => {
                             <button
                                 onClick={handleReserveTickets}
                                 disabled={isReserving}
-                                className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-[#427cae] text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#326796] active:scale-95 shadow-lg shadow-[#427cae]/30 disabled:opacity-50"
+                                className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-primary text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
                             >
                                 {isReserving ? (
                                     <div className="flex items-center gap-2">

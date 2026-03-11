@@ -206,7 +206,7 @@ const BookingSummaryPage = () => {
     const displayScreen = rawScreen.toLowerCase().includes('screen') ? rawScreen : `Screen ${rawScreen}`;
 
     return (
-        <div className="min-h-screen bg-whiteSmoke dark:bg-gray-950 transition-colors duration-300">
+        <div className="min-h-screen bg-whiteSmoke dark:bg-gray-950 transition-colors duration-300 font-sans text-text dark:text-darkText">
             <SEO title={`Order Summary - ${displayTitle}`} />
 
             {/* Header */}
@@ -215,7 +215,7 @@ const BookingSummaryPage = () => {
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors">
                         <ArrowLeft size={24} className="text-gray-900 dark:text-gray-100" />
                     </button>
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Booking Summary</h1>
+                    <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight font-display uppercase italic">Booking Summary</h1>
                 </div>
             </header>
 
@@ -224,7 +224,7 @@ const BookingSummaryPage = () => {
                 {/* Movie Card */}
                 <div className="bg-white dark:bg-gray-900 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-6 relative overflow-hidden">
                     {/* Decorative gradient blob */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
 
                     <div className="w-28 h-40 sm:w-32 sm:h-44 rounded-2xl overflow-hidden shadow-xl shadow-black/5 flex-shrink-0 relative group">
                         <img
@@ -237,11 +237,11 @@ const BookingSummaryPage = () => {
                         </div>
                     </div>
                     <div className="flex flex-col justify-center flex-1 py-1">
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest w-fit mb-3">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black uppercase tracking-widest w-fit mb-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                             {displayLanguage}
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-5 tracking-tight">{displayTitle}</h2>
+                        <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-5 tracking-tight font-display uppercase">{displayTitle}</h2>
                         <div className="grid grid-cols-2 gap-y-4 gap-x-6 sm:gap-x-8">
                             <div className="flex items-start gap-2.5">
                                 <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
@@ -314,8 +314,8 @@ const BookingSummaryPage = () => {
                                     <p className="text-gray-900 dark:text-gray-200 font-bold">₹{(parseFloat(price) * items.length).toLocaleString()}</p>
                                 </div>
                             ))}
-                            <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800">
-                                <p className="text-gray-900 dark:text-white">Tickets Subtotal</p>
+                            <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800 font-display">
+                                <p className="text-gray-900 dark:text-white uppercase tracking-tight">Tickets Subtotal</p>
                                 <p className="text-gray-900 dark:text-white">₹{ticketsTotal.toLocaleString()}</p>
                             </div>
                         </div>
@@ -338,8 +338,8 @@ const BookingSummaryPage = () => {
                                         );
                                     })}
                                 </div>
-                                <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800">
-                                    <p className="text-gray-900 dark:text-white">Food & Beverages Subtotal</p>
+                                <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800 font-display">
+                                    <p className="text-gray-900 dark:text-white uppercase tracking-tight">Food & Beverages Subtotal</p>
                                     <p className="text-gray-900 dark:text-white">₹{snackTotal.toLocaleString()}</p>
                                 </div>
                             </div>
@@ -364,9 +364,9 @@ const BookingSummaryPage = () => {
                         </div>
 
                         {/* Total Highlight */}
-                        <div className="mt-4 bg-xynemaRose/10 dark:bg-rose-950/30 p-4 rounded-xl flex justify-between items-center">
-                            <p className="text-sm font-bold text-xynemaRose dark:text-rose-400 uppercase tracking-wider">Total Payable</p>
-                            <p className="text-xl font-extrabold text-xynemaRose dark:text-rose-400">₹{grandTotal.toLocaleString()}</p>
+                        <div className="mt-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-xl flex justify-between items-center border border-primary/20">
+                            <p className="text-sm font-black text-primary uppercase tracking-widest font-display">Total Payable</p>
+                            <p className="text-xl font-black text-primary font-display">₹{grandTotal.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
@@ -382,7 +382,7 @@ const BookingSummaryPage = () => {
                     <button
                         onClick={handleProceedToPayment}
                         disabled={isLocking}
-                        className={`flex-1 text-white h-14 rounded-2xl font-display font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:brightness-110 active:scale-95 transition-all ${isLocking ? 'bg-indigo-400 cursor-not-allowed shadow-none' : 'bg-xynemaRose shadow-xynemaRose/10'}`}
+                        className={`flex-1 text-white h-14 rounded-2xl font-display font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em] ${isLocking ? 'bg-primary/50 cursor-not-allowed shadow-none' : 'bg-primary shadow-primary/20'}`}
                     >
                         {isLocking ? 'Securing Tickets...' : 'Make Payment'} <ChevronRight size={20} />
                     </button>

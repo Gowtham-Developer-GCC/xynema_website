@@ -282,7 +282,7 @@ const PaymentPage = () => {
     if (success) return <SuccessScreen booking={confirmedBooking} />;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 text-text dark:text-darkText">
             <SEO title={`Payment - ${localDisplayTitle}`} />
 
             {/* Standard Header */}
@@ -318,7 +318,7 @@ const PaymentPage = () => {
 
                         {/* Contact Details Section */}
                         <section className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 transition-colors duration-300">
-                            <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-6">Contact Details</h2>
+                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-6 font-display uppercase italic">Contact Details</h2>
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-[13px] text-gray-600 dark:text-gray-400 mb-2">
@@ -329,7 +329,7 @@ const PaymentPage = () => {
                                         value={mobileNumber}
                                         onChange={(e) => setMobileNumber(e.target.value)}
                                         placeholder="Enter 10 digit mobile number"
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-indigo-400 focus:bg-white dark:focus:bg-gray-850 transition-colors"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
                                     />
                                     <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Tickets will be sent to this number via SMS</p>
                                 </div>
@@ -342,7 +342,7 @@ const PaymentPage = () => {
                                         value={emailDetails}
                                         onChange={(e) => setEmailDetails(e.target.value)}
                                         placeholder="Enter email for ticket confirmation"
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-indigo-400 focus:bg-white dark:focus:bg-gray-850 transition-colors"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
                                     />
                                 </div>
                             </div>
@@ -350,7 +350,7 @@ const PaymentPage = () => {
 
                         {/* Payment Method Section */}
                         <section className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 transition-colors duration-300">
-                            <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-8">Choose Payment Method</h2>
+                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-8 font-display uppercase italic">Choose Payment Method</h2>
 
                             {/* UPI Quick Pay Box */}
                             <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 bg-[#fafafa] dark:bg-gray-800/30 relative mb-10 transition-colors duration-300">
@@ -366,7 +366,7 @@ const PaymentPage = () => {
                                     {/* Google Pay */}
                                     <button
                                         onClick={() => setSelectedMethod('upi')}
-                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-[#3b7298] shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-primary shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                     >
                                         {/* Simplified generic representation since we lack specific SVG files */}
                                         <div className="w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 flex items-center justify-center shadow-sm">
@@ -383,7 +383,7 @@ const PaymentPage = () => {
                                     {/* PhonePe */}
                                     <button
                                         onClick={() => setSelectedMethod('upi')}
-                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-[#3b7298] shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-primary shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                     >
                                         <div className="w-8 h-8 bg-[#5f259f] rounded-full flex items-center justify-center text-white font-bold italic shadow-sm">
                                             पे
@@ -394,10 +394,10 @@ const PaymentPage = () => {
                                     {/* Paytm */}
                                     <button
                                         onClick={() => setSelectedMethod('upi')}
-                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-[#3b7298] shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                        className={`bg-white dark:bg-gray-900 border rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-all ${selectedMethod === 'upi' ? 'border-primary shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                     >
                                         <div className="h-8 flex items-center px-1">
-                                            <span className="text-[#002970] dark:text-blue-200 font-black text-lg tracking-tighter">Pay</span><span className="text-[#00baf2] font-black text-lg tracking-tighter">tm</span>
+                                            <span className="text-[#FD4960] dark:text-blue-200 font-black text-lg tracking-tighter">Pay</span><span className="text-[#00baf2] font-black text-lg tracking-tighter">tm</span>
                                         </div>
                                         <span className="text-[12px] font-bold text-gray-700 dark:text-gray-300">Paytm</span>
                                     </button>
@@ -414,7 +414,7 @@ const PaymentPage = () => {
                             <div className="space-y-4">
                                 <button
                                     onClick={() => setSelectedMethod('card')}
-                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'card' ? 'border-[#3b7298] bg-[#f8f9fa] dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'card' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                 >
                                     <div className="p-2 bg-[#f8f9fa] dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700"><CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400" /></div>
                                     <div className="flex-1">
@@ -425,7 +425,7 @@ const PaymentPage = () => {
 
                                 <button
                                     onClick={() => setSelectedMethod('wallet')}
-                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'wallet' ? 'border-[#3b7298] bg-[#f8f9fa] dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'wallet' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                 >
                                     <div className="p-2 bg-[#f8f9fa] dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700"><Wallet className="w-5 h-5 text-gray-500 dark:text-gray-400" /></div>
                                     <div className="flex-1">
@@ -436,7 +436,7 @@ const PaymentPage = () => {
 
                                 <button
                                     onClick={() => setSelectedMethod('netbanking')}
-                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'netbanking' ? 'border-[#3b7298] bg-[#f8f9fa] dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${selectedMethod === 'netbanking' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                 >
                                     <div className="p-2 bg-[#f8f9fa] dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700"><Building className="w-5 h-5 text-gray-500 dark:text-gray-400" /></div>
                                     <div className="flex-1">
@@ -461,8 +461,8 @@ const PaymentPage = () => {
                                 />
                                 <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/90 to-transparent"></div>
                                 <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
-                                    <h2 className="text-2xl font-bold text-white uppercase tracking-wider">{localDisplayTitle}</h2>
-                                    <span className="text-[10px] text-white/70 border border-white/20 px-2 py-0.5 rounded backdrop-blur-sm uppercase">{localDisplayFormat}</span>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-wider font-display">{localDisplayTitle}</h2>
+                                    <span className="text-[10px] text-white/70 border border-white/20 px-2 py-0.5 rounded backdrop-blur-sm uppercase font-display">{localDisplayFormat}</span>
                                 </div>
                             </div>
 
@@ -490,7 +490,7 @@ const PaymentPage = () => {
                                             const r = s.row || '';
                                             const n = s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || '';
                                             return (
-                                                <span key={s.id || s._id} className="bg-[#3b7298] dark:bg-blue-900/50 text-white dark:text-blue-200 px-3 py-1 rounded-full text-[12px] font-medium shadow-sm">
+                                                <span key={s.id || s._id} className="bg-primary text-white px-3 py-1 rounded-full text-[12px] font-black font-display shadow-sm shadow-primary/20">
                                                     {r}{n}
                                                 </span>
                                             );
@@ -505,11 +505,11 @@ const PaymentPage = () => {
                                 {/* Total & Pay Button */}
                                 <div>
                                     <div className="flex items-center justify-between mb-6">
-                                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-1 cursor-pointer hover:text-[#3b7298] dark:hover:text-[#5c98ce]">
+                                        <span className="font-black text-gray-800 dark:text-gray-200 flex items-center gap-1 cursor-pointer hover:text-primary dark:hover:text-primary font-display uppercase tracking-wider">
                                             Total Amount
                                             <ChevronRight className="w-4 h-4 rotate-90" />
                                         </span>
-                                        <span className="text-2xl font-bold text-[#3b7298] dark:text-[#5c98ce]">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                                        <span className="text-2xl font-black text-primary font-display">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                     </div>
 
                                     <button
@@ -519,8 +519,8 @@ const PaymentPage = () => {
                                             ${!isFormValid
                                                 ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                                                 : isProcessing
-                                                    ? 'bg-[#859eb3] dark:bg-blue-900/40 text-white opacity-100 pointer-events-none'
-                                                    : 'bg-[#98AFC2] dark:bg-[#3b7298] hover:bg-[#859eb3] dark:hover:bg-[#4a8dbb] text-white active:scale-95'
+                                                    ? 'bg-primary/50 text-white opacity-100 pointer-events-none'
+                                                    : 'bg-primary hover:brightness-110 text-white active:scale-95 shadow-xl shadow-primary/20 uppercase tracking-widest font-display'
                                             }`}
                                     >
                                         {isProcessing ? (
@@ -556,32 +556,32 @@ const SuccessScreen = ({ booking }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors duration-300">
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors duration-300 font-sans">
             <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[40px] p-10 text-center shadow-2xl dark:shadow-none space-y-10 animate-in zoom-in duration-500 border border-transparent dark:border-gray-800">
-                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto border-2 border-indigo-100 dark:border-indigo-800/30 shadow-xl shadow-indigo-100/50 dark:shadow-none">
-                    <CheckCircle className="w-12 h-12 text-indigo-600" />
+                <div className="w-24 h-24 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20 dark:border-primary/30 shadow-xl shadow-primary/10 dark:shadow-none">
+                    <CheckCircle className="w-12 h-12 text-primary" />
                 </div>
 
                 <div className="space-y-4">
                     <div className="space-y-1">
-                        <h1 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em]">BOOKING CONFIRMED</h1>
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">YOU'RE ALL SET!</h2>
+                        <h1 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] font-display">BOOKING CONFIRMED</h1>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-display italic">YOU'RE ALL SET!</h2>
                     </div>
                     <p className="text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-4 uppercase tracking-wider">
-                        Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-indigo-600/20 pb-0.5">{booking?.movieTitle}</span> are ready.
+                        Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-primary/20 pb-0.5">{booking?.movieTitle}</span> are ready.
                     </p>
                 </div>
 
                 <div className="space-y-4 pt-6">
                     <button
                         onClick={() => navigate(`/bookings/${booking?.id}`)}
-                        className="w-full bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full bg-primary text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] font-display"
                     >
                         VIEW DIGITAL TICKET
                     </button>
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-slate-900 transition-colors"
+                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-primary transition-colors font-display"
                     >
                         BACK TO HOME
                     </button>
@@ -589,7 +589,7 @@ const SuccessScreen = ({ booking }) => {
 
                 <div className="pt-4 flex items-center justify-center gap-2">
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sent to your registered email</span>
+                    <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-display">Sent to your registered email</span>
                 </div>
             </div>
         </div>

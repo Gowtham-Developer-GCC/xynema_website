@@ -115,7 +115,7 @@ const UpcomingMoviesPage = () => {
                 <div className="md:hidden mb-4">
                     <button
                         onClick={() => setIsMobileFiltersOpen(true)}
-                        className="w-full py-3 bg-white border border-gray-200 rounded-lg font-bold text-xynemaRose flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-white border border-gray-200 rounded-lg font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest font-display text-xs"
                     >
                         <Search className="w-4 h-4" />
                         Filters
@@ -126,9 +126,9 @@ const UpcomingMoviesPage = () => {
                     {/* LEFT SIDEBAR FILTERS */}
                     <aside className="hidden md:block w-1/4 shrink-0 space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Filters</h2>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 font-display uppercase tracking-tight">Filters</h2>
                             {(selectedLanguages.length > 0 || selectedGenres.length > 0 || selectedFormats.length > 0) && (
-                                <button onClick={clearFilters} className="text-xs text-gray-500 dark:text-gray-400 hover:text-xynemaRose dark:hover:text-blue-400 transition-colors">Clear All</button>
+                                <button onClick={clearFilters} className="text-xs text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors font-bold uppercase tracking-widest font-display">Clear All</button>
                             )}
                         </div>
 
@@ -141,10 +141,10 @@ const UpcomingMoviesPage = () => {
                     <main className="flex-1">
                         <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Upcoming Movies</h1>
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display uppercase tracking-tight">Upcoming Movies</h1>
                                 <Link
                                     to="/movies"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-xynemaRose dark:hover:border-blue-400 text-gray-700 dark:text-gray-300 hover:text-xynemaRose dark:hover:text-blue-400 rounded-full font-bold text-sm transition-all shadow-sm hover:shadow-md active:scale-95 group"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary rounded-full font-black text-xs transition-all shadow-sm hover:shadow-md active:scale-95 group font-display uppercase tracking-widest"
                                 >
                                     <Search className="w-4 h-4" />
                                     <span>Explore Movies</span>
@@ -158,9 +158,9 @@ const UpcomingMoviesPage = () => {
                                     <button
                                         key={lang}
                                         onClick={() => toggleFilter(setSelectedLanguages, lang)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${selectedLanguages.includes(lang)
-                                            ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600'
-                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-xynemaRose dark:hover:text-blue-400'
+                                        className={`px-4 py-1.5 rounded-full text-[10px] font-black border transition-all font-display uppercase tracking-widest ${selectedLanguages.includes(lang)
+                                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-primary dark:hover:text-primary'
                                             }`}
                                     >
                                         {lang}
@@ -185,8 +185,8 @@ const UpcomingMoviesPage = () => {
                             </div>
                         ) : (
                             <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 transition-colors">
-                                <Search className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-                                <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400">No Movies Found</h3>
+                                <Search className="w-12 h-12 text-gray-200 dark:text-gray-800 mx-auto mb-4" />
+                                <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400 font-display uppercase">No Movies Found</h3>
                                 <p className="text-sm text-gray-400 dark:text-gray-600">Try adjusting your filters</p>
                             </div>
                         )}
@@ -199,7 +199,7 @@ const UpcomingMoviesPage = () => {
                     <div className="absolute inset-0 bg-black/60" onClick={() => setIsMobileFiltersOpen(false)} />
                     <div className="absolute inset-y-0 right-0 w-full max-w-xs bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-200">
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                            <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                            <h2 className="text-lg font-bold text-gray-900 font-display uppercase">Filters</h2>
                             <button onClick={() => setIsMobileFiltersOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
@@ -242,12 +242,12 @@ const FilterSection = ({ title, items, selected, onToggle }) => {
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
             >
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 flex-1 flex items-center gap-2">
+                <span className="text-sm font-black text-gray-900 dark:text-gray-100 flex-1 flex items-center gap-2 font-display uppercase tracking-tight">
                     {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
                     {title}
                 </span>
                 {selected.length > 0 && (
-                    <span className="text-[10px] bg-xynemaRose/10 dark:bg-blue-500/20 text-xynemaRose dark:text-blue-400 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black font-display">
                         {selected.length}
                     </span>
                 )}
@@ -259,8 +259,8 @@ const FilterSection = ({ title, items, selected, onToggle }) => {
                             <button
                                 key={item}
                                 onClick={() => onToggle(item)}
-                                className={`px-3 py-1.5 text-xs border rounded-lg transition-all ${selected.includes(item)
-                                    ? 'bg-xynemaRose dark:bg-blue-600 text-white border-xynemaRose dark:border-blue-600'
+                                className={`px-3 py-1.5 text-[10px] border rounded-lg transition-all font-display font-black uppercase tracking-tight ${selected.includes(item)
+                                    ? 'bg-primary text-white border-primary shadow-md'
                                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
                             >
@@ -284,7 +284,7 @@ const MovieCard = ({
 }) => {
     return (
         <Link to={`/movie/${movie.slug || movie.id}`} className="flex flex-col group h-full animate-fade-in">
-            <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-gray-100 mb-3 shadow-sm group-hover:shadow-xl group-hover:shadow-xynemaRose/10 transition-all duration-300">
+            <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-gray-100 mb-3 shadow-sm group-hover:shadow-xl group-hover:shadow-primary/10 transition-all duration-300 border border-gray-200 dark:border-gray-800">
                 <img
                     src={optimizeImage(movie.posterUrl, { width: 400, quality: 80 })}
                     alt={movie.title}
@@ -316,14 +316,14 @@ const MovieCard = ({
                 {/* Favorite Button */}
                 <button
                     onClick={(e) => { e.preventDefault(); onToggleFavorite(movie.id); }}
-                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-20 ${isFavorite ? 'bg-white text-rose-600 shadow-sm' : 'bg-black/30 text-white/70 hover:bg-black/50 hover:text-white'}`}
+                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-20 ${isFavorite ? 'bg-white text-primary shadow-sm' : 'bg-black/30 text-white/70 hover:bg-black/50 hover:text-white'}`}
                 >
                     <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
             </div>
 
             <div className="px-1">
-                <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100 leading-tight mb-1 group-hover:text-xynemaRose dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-[15px] font-black text-gray-900 dark:text-gray-100 leading-tight mb-1 group-hover:text-primary transition-colors font-display uppercase tracking-tight">
                     {movie.title}
                 </h3>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">

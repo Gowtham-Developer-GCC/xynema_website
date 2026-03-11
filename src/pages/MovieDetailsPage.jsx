@@ -218,15 +218,15 @@ const MovieDetailsPage = () => {
                         {/* Movie Details Content Area */}
                         <div className="flex-1 flex flex-col gap-5 text-center md:text-left max-w-3xl pt-2 md:pt-4">
                             {/* Title Area */}
-                            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-black tracking-tight leading-tight text-white drop-shadow-2xl">
+                            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-bold tracking-tight leading-tight text-white drop-shadow-2xl font-display uppercase">
                                 {movie.title}
                             </h1>
 
                             {/* Metadata Line */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm md:text-base font-medium text-white/90">
                                 {movie.isAvailable && (
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[#333545] rounded-md text-white font-bold shadow-md">
-                                        <Star className="w-5 h-5 fill-rose-500 text-rose-500" />
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-display shadow-lg border border-white/10">
+                                        <Star className="w-5 h-5 fill-primary text-primary" />
                                         <span>{movie.rating ? `${movie.rating}/10` : 'New'}</span>
                                         {movie.voteCount > 0 && (
                                             <span className="text-xs font-normal text-white/70 ml-1">
@@ -305,8 +305,8 @@ const MovieDetailsPage = () => {
                                 <button
                                     onClick={handleBookingClick}
                                     disabled={!movie.isAvailable}
-                                    className={`w-full sm:w-[350px] px-8 py-3.5 rounded-lg font-bold tracking-wide transition-all text-center shadow-lg active:scale-95 ${movie.isAvailable
-                                        ? 'bg-[#F84464] hover:bg-[#e03150] text-white border-transparent'
+                                    className={`w-full sm:w-[350px] px-8 py-3.5 rounded-lg font-bold tracking-wide transition-all text-center shadow-2xl active:scale-95 font-display uppercase ${movie.isAvailable
+                                        ? 'bg-primary hover:brightness-110 text-white border-transparent shadow-primary/20'
                                         : 'bg-gray-600 text-white/50 cursor-not-allowed border-transparent'
                                         }`}
                                 >
@@ -317,7 +317,7 @@ const MovieDetailsPage = () => {
                                     <button
                                         onClick={toggleFavorite}
                                         className={`flex items-center justify-center w-12 h-12 rounded-lg border transition-all active:scale-95 shadow-md ${isFavorite
-                                            ? 'bg-white border-white text-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.2)]'
+                                            ? 'bg-white border-white text-primary shadow-[0_0_20px_rgba(253,73,96,0.3)]'
                                             : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                                             }`}
                                         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
@@ -399,7 +399,7 @@ const MovieDetailsPage = () => {
                     onClick={handleBookingClick}
                     disabled={!movie.isAvailable}
                     className={`w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
-                        ? 'bg-xynemaRose text-white shadow-xynemaRose/20'
+                        ? 'bg-primary text-white shadow-primary/30 font-display italic'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                 >
@@ -470,11 +470,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
             {movie.cast?.length > 0 && (
                 <section id="cast" className="space-y-6 pt-6 animate-slide-up opacity-0 delay-200">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto">Cast</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-display uppercase">Cast</h3>
                         {movie.cast?.length > 5 && (
                             <button
                                 onClick={onShowAllCast}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-display"
                             >
                                 See All
                             </button>
@@ -527,11 +527,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
             {movie.crew?.length > 0 && (
                 <section id="crew" className="space-y-6 pt-8 border-t border-gray-100 dark:border-gray-800 transition-colors animate-slide-up opacity-0 delay-300">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto">Crew</h3>
+                        <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-display uppercase italic">Crew</h3>
                         {movie.crew?.length > 5 && (
                             <button
                                 onClick={onShowAllCrew}
-                                className="text-[10px] font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 transition-opacity hidden md:block"
+                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-display"
                             >
                                 See All
                             </button>
@@ -618,10 +618,10 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="merch-prev absolute -left-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
+                        <button className="merch-prev absolute -left-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
                             <ChevronRight className="w-6 h-6 rotate-180" />
                         </button>
-                        <button className="merch-next absolute -right-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
+                        <button className="merch-next absolute -right-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
                             <ChevronRight className="w-6 h-6" />
                         </button>
                     </div>
@@ -636,14 +636,14 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                 <section id="reviews" className="space-y-6 animate-slide-up opacity-0 delay-400">
                     <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 transition-colors pb-2">
                         <div className="space-y-1">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Top reviews</h3>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">Summary of {movie.reviews?.length} reviews.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight font-display uppercase">Top reviews</h3>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 font-sans">Summary of {movie.reviews?.length} reviews.</p>
                         </div>
                         {movie.reviews?.length > 0 && (
                             <Link
                                 to={`/movie/${movie.slug}/reviews`}
                                 state={{ movieId: movie.id, movieName: movie.title }}
-                                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-xynemaRose dark:text-blue-400 hover:opacity-80 transition-opacity"
+                                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity font-display"
                             >
                                 {movie.reviews.length} reviews
                                 <ChevronRight className="w-4 h-4" />
@@ -760,10 +760,10 @@ const SimilarMovies = ({ currentMovie }) => {
                     ))}
                 </Swiper>
 
-                <button className="similar-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
+                <button className="similar-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
                     <ChevronRight className="w-6 h-6 rotate-180" />
                 </button>
-                <button className="similar-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-blue-400 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
+                <button className="similar-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 flex items-center justify-center text-[#1E2532] dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hidden md:flex opacity-0 group-hover/similar:opacity-100 disabled:opacity-0">
                     <ChevronRight className="w-6 h-6" />
                 </button>
             </div>
@@ -797,20 +797,18 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
                             <button
                                 key={star}
                                 onClick={() => setRating(star)}
-                                className="transition-transform active:scale-90"
+                                className={`transition-transform active:scale-90 ${rating >= star ? 'text-primary' : 'text-gray-300 dark:text-gray-700'}`}
                             >
-                                <Star
-                                    className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 dark:text-gray-700'}`}
-                                />
+                                <Star className={`w-8 h-8 ${rating >= star ? 'fill-current' : ''}`} />
                             </button>
                         ))}
                     </div>
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Your Experience (Optional)</label>
+                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest font-display">Your Experience (Optional)</label>
                         <textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-xynemaRose dark:focus:ring-blue-500 transition-all resize-none"
+                            className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none shadow-inner"
                             placeholder="Share your thoughts on the movie..."
                         />
                     </div>
@@ -819,7 +817,7 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
                     <button
                         onClick={() => onSubmit(rating, comment)}
                         disabled={rating === 0 || isSubmitting}
-                        className="w-full py-4 bg-xynemaRose text-white rounded-xl font-black text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-rose-700 transition-all shadow-lg shadow-xynemaRose/20 flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 font-display"
                     >
                         {isSubmitting ? (
                             <Loader className="w-5 h-5 animate-spin" />
@@ -829,7 +827,7 @@ const ReviewModal = ({ movie, onClose, onSubmit, isSubmitting }) => {
                     </button>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

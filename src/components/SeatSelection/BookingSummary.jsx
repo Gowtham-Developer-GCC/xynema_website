@@ -38,7 +38,7 @@ const BookingSummary = ({
     return (
         <div className="h-full flex flex-col bg-white dark:bg-gray-900 z-20 transition-colors duration-300 rounded-2xl">
             <div className="p-8 pb-6">
-                <h3 className="text-[20px] font-medium text-[#111827] dark:text-white">
+                <h3 className="text-[20px] font-bold text-[#111827] dark:text-white font-display uppercase tracking-tight">
                     Booking Summary
                 </h3>
             </div>
@@ -51,7 +51,7 @@ const BookingSummary = ({
                         {selectedSeats.length > 0 && (
                             <button
                                 onClick={onClearAll}
-                                className="text-[11px] text-[#3b7298] dark:text-[#5c98ce] hover:text-[#2c5877] dark:hover:text-[#4a7ba5] font-medium transition-colors"
+                                className="text-[11px] text-primary dark:text-primary hover:text-primary/80 font-medium transition-colors"
                             >
                                 Clear All
                             </button>
@@ -66,7 +66,7 @@ const BookingSummary = ({
                             {selectedSeats.map((seat, idx) => {
                                 const seatNum = seat.number || seat.seatNumber || seat.seatLabel || seat.label || seat.seat_number || '';
                                 return (
-                                    <div key={seat.id || idx} className="px-3 py-[4px] bg-[#3b7298] dark:bg-[#1e3a8a] text-white rounded-full text-[11px] flex items-center gap-1.5 shadow-sm transform transition-all hover:scale-105">
+                                    <div key={seat.id || idx} className="px-3 py-[4px] bg-primary text-white rounded-full text-[11px] flex items-center gap-1.5 shadow-sm transform transition-all hover:scale-105">
                                         <span>{seat.row || ''}{seatNum}</span>
                                         <X
                                             className="w-3 h-3 opacity-70 hover:opacity-100 cursor-pointer transition-opacity"
@@ -103,9 +103,9 @@ const BookingSummary = ({
 
                 <div className="h-[1px] bg-gray-100 dark:bg-gray-800 w-full mb-8"></div>
 
-                <div className="flex justify-between items-center text-lg font-medium text-[#111827] dark:text-white mb-8">
+                <div className="flex justify-between items-center text-lg font-bold text-[#111827] dark:text-white mb-8 font-display">
                     <span>Total Amount</span>
-                    <span className="text-[#3b7298] dark:text-[#5c98ce]">₹{finalTotal.toFixed(2)}</span>
+                    <span className="text-primary">₹{finalTotal.toFixed(2)}</span>
                 </div>
 
                 {/* Action Buttons */}
@@ -113,7 +113,7 @@ const BookingSummary = ({
                     <button
                         disabled={selectedSeats.length === 0 || (requiredSeatCount > 0 && selectedSeats.length !== requiredSeatCount)}
                         onClick={onConfirm}
-                        className="w-full py-[14px] rounded-[6px] bg-[#3b7298] dark:bg-[#1e3a8a] dark:hover:bg-blue-800 hover:bg-[#2c5877] text-white font-normal text-[14px] transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-600 disabled:cursor-not-allowed"
+                        className="w-full py-[14px] rounded-[12px] bg-primary hover:bg-primary/90 text-white font-bold text-[14px] transition-all flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-600 disabled:cursor-not-allowed font-display uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-[0.98]"
                     >
                         Continue
                     </button>

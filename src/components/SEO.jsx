@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, image, url, type = 'website' }) => {
+const SEO = ({ title, description, image, url, type = 'website', preloads = [] }) => {
     const siteTitle = 'Xynema - Premium Movie & Events';
     const siteDescription = 'Experience pure cinema with Xynema. Book tickets for the latest movies and events with our premium light theme experience.';
     const siteUrl = window.location.origin;
@@ -17,6 +17,17 @@ const SEO = ({ title, description, image, url, type = 'website' }) => {
             {/* Standard Meta Tags */}
             <title>{seoTitle}</title>
             <meta name="description" content={seoDescription} />
+
+            {/* Preload Critical Assets */}
+            {preloads.map((href, index) => (
+                <link 
+                    key={`preload-${index}`} 
+                    rel="preload" 
+                    as="image" 
+                    href={href} 
+                    fetchpriority="high" 
+                />
+            ))}
 
             {/* Open Graph / Facebook */}
             <meta property="og:type" content={type} />
@@ -34,7 +45,7 @@ const SEO = ({ title, description, image, url, type = 'website' }) => {
 
             {/* Additional Meta Tags */}
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-            <meta name="theme-color" content="#00296b" />
+            <meta name="theme-color" content="#FD4960" />
         </Helmet>
     );
 };

@@ -200,7 +200,7 @@ const FoodSelectionPage = () => {
     const totalAmount = ticketsTotal + snackTotal;
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col transition-colors duration-300">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col transition-colors duration-300 font-sans">
             <SEO title="Food & Snacks - XYNEMA" description="Add snacks and drinks to your movie experience" />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -216,7 +216,7 @@ const FoodSelectionPage = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex flex-col">
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-display uppercase">
                                 Pre-Order Snacks
                             </h1>
                             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
@@ -226,7 +226,7 @@ const FoodSelectionPage = () => {
                     </div>
                     <button
                         onClick={handleProceedToPayment}
-                        className="text-[14px] font-semibold text-[#427cae] dark:text-[#5c98ce] hover:underline"
+                        className="text-[14px] font-bold text-primary dark:text-primary hover:underline font-display uppercase tracking-wider"
                     >
                         Skip & Continue
                     </button>
@@ -241,9 +241,9 @@ const FoodSelectionPage = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap border ${selectedCategory === category
-                                    ? 'bg-[#3b7298] text-white border-[#3b7298]'
-                                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border font-display uppercase tracking-wide ${selectedCategory === category
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary hover:text-primary'
                                     }`}
                             >
                                 {category}
@@ -341,7 +341,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight">{item.name}</h3>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight font-display">{item.name}</h3>
                             {item.isPopular && (
                                 <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider">
                                     Combo
@@ -353,17 +353,17 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                    <span className="text-[18px] font-bold text-gray-900 dark:text-white">₹{item.price}</span>
+                    <span className="text-[18px] font-bold text-gray-900 dark:text-white font-display">₹{item.price}</span>
 
                     {quantity === 0 ? (
                         <button
                             onClick={onAdd}
-                            className="px-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-[#3b7298] dark:text-[#5c98ce] font-bold text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95"
+                            className="px-8 py-2 rounded-lg border border-primary text-primary font-bold text-[13px] hover:bg-primary/5 transition-all active:scale-95 font-display uppercase tracking-wider"
                         >
                             Add
                         </button>
                     ) : (
-                        <div className="flex items-center gap-4 bg-[#3b7298] text-white rounded-lg px-3 py-2 shadow-sm">
+                        <div className="flex items-center gap-4 bg-primary text-white rounded-lg px-3 py-2 shadow-sm font-display">
                             <button onClick={onRemove} className="hover:bg-white/20 rounded p-0.5 transition-colors">
                                 <Minus className="w-4 h-4" />
                             </button>
@@ -380,11 +380,11 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
 };
 
 const LoadingState = () => (
-    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 p-8">
-        <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #00296b)' }} />
+    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 p-8 font-sans">
+        <div className="w-16 h-16 rounded-full border-4 border-primary/20 animate-spin" style={{ borderTopColor: 'var(--primary, #FD4960)' }} />
         <div className="text-center">
-            <p className="text-xynemaRose font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Menu</p>
-            <h2 className="text-xl font-bold text-gray-400">XYNEMA</h2>
+            <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] font-display mb-1 animate-pulse">Loading Menu</p>
+            <h2 className="text-xl font-black text-gray-400 font-display tracking-tighter">XYNEMA</h2>
         </div>
     </div>
 );

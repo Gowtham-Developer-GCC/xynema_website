@@ -269,7 +269,7 @@ const TheaterSelectionPage = () => {
     if (!movie) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for or it may not be available in this region." />;
 
     return (
-        <div className="min-h-screen bg-[#f9fafb] dark:bg-gray-950 w-full max-w-[100vw] overflow-x-hidden">
+        <div className="min-h-screen bg-[#f9fafb] dark:bg-gray-950 w-full max-w-[100vw] overflow-x-hidden font-roboto">
             <SEO
                 title={`Select Theater - ${movie?.title} | XYNEMA`}
                 description="Choose your preferred cinema theater and select your seats"
@@ -346,7 +346,7 @@ const TheaterSelectionPage = () => {
 
                     {/* <div className="mt-8">
                         <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                            Showtimes for <span className="text-indigo-600 dark:text-indigo-400">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) === new Date().toDateString() ? "Today" : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                            Showtimes for <span className="text-primary dark:text-primary/60">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) === new Date().toDateString() ? "Today" : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}</span>
                         </h2>
                     </div> */}
                 </div>
@@ -384,10 +384,10 @@ const TheaterSelectionPage = () => {
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
                                             {availableFormats.map(fmt => (
-                                                <span key={fmt} className="px-2.5 py-0.5 bg-white border border-[#427cae]/40 rounded-full text-[10px] font-medium text-[#427cae] uppercase">{fmt}</span>
+                                                <span key={fmt} className="px-2.5 py-0.5 bg-white border border-primary/40 rounded-full text-[10px] font-medium text-primary uppercase">{fmt}</span>
                                             ))}
                                             {availableLanguages.map(lang => (
-                                                <span key={lang} className="px-2.5 py-0.5 bg-white border border-[#427cae]/40 rounded-full text-[10px] font-medium text-[#427cae] uppercase">{lang}</span>
+                                                <span key={lang} className="px-2.5 py-0.5 bg-white border border-primary/40 rounded-full text-[10px] font-medium text-primary uppercase">{lang}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -459,7 +459,7 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
                                 onSelect(opt.id);
                                 setIsOpen(false);
                             }}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${activeValue === opt.id ? 'text-xynemaRose' : 'text-gray-600 dark:text-gray-300'
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${activeValue === opt.id ? 'text-primary' : 'text-gray-600 dark:text-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-2">
@@ -510,7 +510,7 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
                             className={`
                                 flex-shrink-0 min-w-[85px] py-1.5 px-3 rounded flex flex-col items-center justify-center transition-all duration-200
                                 ${isSelected
-                                    ? 'bg-[#427cae] text-white shadow-md'
+                                    ? 'bg-primary text-white shadow-md'
                                     : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700 hover:bg-gray-50'
                                 }
                             `}

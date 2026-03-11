@@ -48,8 +48,8 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                 <div className="p-8 pb-4 bg-white z-10">
                     <div className="flex items-center justify-between mb-8">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Select Location</h2>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Cinematic experiences near you</p>
+                            <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Select Location</h2>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Cinematic experiences near you</p>
                         </div>
                         {currentCity && (
                             <button
@@ -90,13 +90,13 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center p-12 space-y-4">
                             <Loader className="w-8 h-8 animate-spin text-xynemaRose" />
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fetching Cities...</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fetching Cities...</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
                             {!searchQuery && (
                                 <div className="flex items-center gap-4">
-                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Available Cities</h3>
+                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Available Cities</h3>
                                     <div className="h-[1px] w-full bg-gray-100" />
                                 </div>
                             )}
@@ -123,7 +123,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                             {filteredCities.length === 0 && (
                                 <div className="text-center py-12 px-6 bg-gray-50 rounded-[28px] border-2 border-dashed border-gray-100">
                                     <p className="text-sm font-bold text-gray-400">No cities found matching "{searchQuery}"</p>
-                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-1">Try another search term</p>
+                                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">Try another search term</p>
                                 </div>
                             )}
                         </div>

@@ -83,7 +83,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
                         </button>
 
                         <div className="text-center mb-6">
-                            <h2 className="text-2xl font-black text-gray-900 mb-2">How was the movie?</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">How was the movie?</h2>
                             <p className="text-sm text-gray-500 font-medium mb-4">
                                 Share your thoughts on <span className="text-xynemaRose font-bold">{booking.movieTitle}</span>
                             </p>
@@ -119,7 +119,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
                         </div>
 
                         <div className="space-y-4 mb-8">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Your Review</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">Your Review</label>
                             <div className="relative">
                                 <MessageSquare className="absolute top-4 left-4 w-5 h-5 text-gray-300" />
                                 <textarea
@@ -140,7 +140,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${loading
+                            className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${loading
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-xynemaRose text-white shadow-xl shadow-xynemaRose/30 hover:scale-[1.02] active:scale-95'
                                 }`}
@@ -173,7 +173,7 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-10 h-10 text-green-500" />
                         </div>
-                        <h2 className="text-2xl font-black text-gray-900 mb-2">Thank You!</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h2>
                         <p className="text-gray-500 font-medium">Your feedback helps us make XYNEMA better for everyone.</p>
                     </div>
                 )}

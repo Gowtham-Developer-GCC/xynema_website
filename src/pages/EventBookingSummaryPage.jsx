@@ -287,11 +287,11 @@ const EventBookingSummaryPage = () => {
 
                                 <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-start gap-4">
                                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                        <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-primary" />
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-black text-blue-900 dark:text-blue-300 uppercase tracking-tighter mb-1">Encrypted Checkout</h4>
-                                        <p className="text-[10px] font-medium text-blue-700/70 dark:text-blue-400/70 leading-relaxed">
+                                        <p className="text-[10px] font-medium text-blue-700/70 dark:text-primary/70 leading-relaxed">
                                             Your payment details are encrypted and processed securely. We occupy zero knowledge of your private data.
                                         </p>
                                     </div>

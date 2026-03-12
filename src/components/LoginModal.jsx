@@ -1,19 +1,36 @@
-import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 
 const LoginModal = () => {
-    const { loginUser, isLoginModalOpen, closeLogin } = useAuth();
+    const { loginUser, isLoginModalOpen, closeLogin, loginCallback } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
     const onClose = closeLogin;
 
     if (!isLoginModalOpen) return null;
 
     const handleGoogleSuccess = async (credentialResponse) => {
         console.log('Google login success response:', credentialResponse);
-        const success = await loginUser(credentialResponse.credential);
-        console.log('Application login result:', success);
-        if (success) onClose();
+        const loggedUser = await loginUser(credentialResponse.credential);
+        console.log('Application login result:', loggedUser);
+        if (loggedUser) {
+            // Check for redirection from ProtectedRoute
+            const from = location.state?.from?.pathname || null;
+            const state = location.state?.from?.state || {};
+
+            onClose();
+
+            // 1. If we have a specific callback (e.g. from stay-on-page action)
+            if (loginCallback) {
+                loginCallback(loggedUser); // Pass the user object here
+            }
+            // 2. If we were redirected from a protected route
+            else if (from) {
+                navigate(from, { state, replace: true });
+            }
+        }
     };
 
     return (

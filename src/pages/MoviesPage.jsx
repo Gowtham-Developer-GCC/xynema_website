@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { Search, ChevronDown, ChevronRight, X, Building2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
@@ -80,8 +80,20 @@ const MoviesPage = ({ selectedCity }) => {
         goToPage,
     } = useData();
 
+    const location = useLocation();
+    
     // Tab state: 'now-showing' | 'upcoming' | 're-releases'
     const [activeTab, setActiveTab] = useState('now-showing');
+
+    // Sync tab from query parameter
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const tab = params.get('tab');
+        if (tab && ['now-showing', 'upcoming', 're-releases'].includes(tab)) {
+            setActiveTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [location.search]);
 
     // Filter States
     const [selectedLanguages, setSelectedLanguages] = useState([]);
@@ -140,7 +152,7 @@ const MoviesPage = ({ selectedCity }) => {
     const TABS = [
         { id: 'now-showing', label: 'Now Showing' },
         { id: 'upcoming', label: 'Upcoming' },
-        { id: 're-releases', label: 'Re-Releases' },
+        
     ];
 
     if (loading && !movies?.length) return <LoadingScreen message="Loading Movies..." />;

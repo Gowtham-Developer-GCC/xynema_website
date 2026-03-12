@@ -149,7 +149,7 @@ const HomePage = ({ selectedCity }) => {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Recommended for you
                             </h2>
-                            <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+                            <Link to="/movies?tab=now-showing" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
                             </Link>
                         </div>
@@ -199,7 +199,7 @@ const HomePage = ({ selectedCity }) => {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                                 Upcoming movies
                             </h2>
-                            <Link to="/upcoming-movies" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+                            <Link to="/movies?tab=upcoming" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
                             </Link>
                         </div>

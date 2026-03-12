@@ -92,7 +92,7 @@ const TheaterSelectionPage = () => {
 
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const { selectedCity: cityFromContext, movies, loading: isContextLoading } = useData();
-    const { user } = useAuth();
+    const { user, openLogin } = useAuth();
     const selectedCity = cityFromContext || localStorage.getItem('selected_city') || '';
 
     // Sync movie details and adjust initial date if needed
@@ -166,7 +166,14 @@ const TheaterSelectionPage = () => {
         return () => { isStopped.current = true; };
     }, [fetchData]);
 
-    const handleTheaterSelect = (showId, theater) => {
+    const handleTheaterSelect = (showId, theater, injectedUser = null) => {
+        const currentUser = injectedUser || user;
+
+        if (!currentUser) {
+            openLogin((userFromLogin) => handleTheaterSelect(showId, theater, userFromLogin));
+            return;
+        }
+
         try {
             const slug = movie.slug;
             const theaterSlug = theater?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'theater';
@@ -191,7 +198,7 @@ const TheaterSelectionPage = () => {
             sessionStorage.setItem('booking_movie_subtitles', subtitles);
             sessionStorage.setItem('booking_is_food_available', String(theater?.isFoodAndBeveragesAvailable ?? true));
 
-            bookingSessionManager.startSession(showId, theater?.name || '', user?.id || user?._id);
+            bookingSessionManager.startSession(showId, theater?.name || '', currentUser?.id || currentUser?._id);
 
             navigate(`/movie/${slug}/${theaterSlug}/seats`, {
                 state: {

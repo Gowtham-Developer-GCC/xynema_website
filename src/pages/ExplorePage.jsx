@@ -184,7 +184,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                     </div>
                     <button
                         onClick={() => handleTabChange('private_events')}
-                        className="flex items-center gap-2 text-sm font-black text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display uppercase tracking-widest"
+                        className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display uppercase tracking-widest"
                     >
                         <Sparkles className="w-4 h-4" />
                         Host Your Event
@@ -204,7 +204,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     setEventFilters(prev => ({ ...prev, tags: [] }));
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 0
+                                className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 0
                                     ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                     : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                     }`}
@@ -220,7 +220,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                         setEventFilters(prev => ({ ...prev, tags: [tag] }));
                                         setIsMoreFiltersOpen(false);
                                     }}
-                                    className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
                                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
@@ -235,7 +235,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                             <div className="relative shrink-0" ref={moreFiltersRef}>
                                 <button
                                     onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                    className={`px-6 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all border flex items-center gap-2 font-display uppercase tracking-wider ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
+                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-2 font-display uppercase tracking-wider ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
                                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
@@ -618,7 +618,7 @@ const PrivateEventsSection = ({ onCancel }) => {
             <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
                 <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 dark:border-gray-700 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
                     <div className="mb-10 text-left border-b border-gray-100 dark:border-gray-700 pb-6">
-                        <h3 className="text-[28px] font-display font-black text-gray-900 dark:text-gray-100 tracking-tighter uppercase italic">
+                        <h3 className="text-[28px] font-display font-black text-gray-900 dark:text-gray-100 tracking-tighter uppercase">
                             Event Request Form
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-sans">

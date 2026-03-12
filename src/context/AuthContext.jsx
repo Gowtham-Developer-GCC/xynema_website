@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [loginCallback, setLoginCallback] = useState(null);
 
     // Initialize auth state from storage
     useEffect(() => {
@@ -56,30 +57,28 @@ export const AuthProvider = ({ children }) => {
     /**
      * Login with Google OAuth
      */
-    const loginUser = useCallback(async token => {
+    const loginUser = useCallback(async (idToken) => {
         setLoading(true);
         setError(null);
         try {
-            console.log('Attempting login with token:', token?.substring(0, 20) + '...');
-            const result = await loginWithGoogle(token);
-            console.log('loginWithGoogle result:', result);
-            const userData = new User(result.data);
-
-            // Store and set user
-            storeUser(userData.toJson());
-            setUser(userData);
-            console.log('User state updated successfully');
-
-            return true;
+            const loginResult = await loginWithGoogle(idToken);
+            console.log('Login result from service:', loginResult);
+            if (loginResult && loginResult.success) {
+                const userData = loginResult.user || loginResult.data;
+                setUser(userData);
+                localStorage.setItem('user', JSON.stringify(userData));
+                if (userData.token) {
+                    localStorage.setItem('token', userData.token);
+                }
+                return userData; // Return the user object instead of just true
+            } else {
+                setError('Login failed. Please try again.');
+                return null;
+            }
         } catch (err) {
-            const errorMsg = err.response?.data?.message || err.message || 'Login failed';
-            setError(errorMsg);
-            console.error('Login User Error details:', {
-                message: err.message,
-                status: err.response?.status,
-                data: err.response?.data
-            });
-            return false;
+            console.error('Login error:', err);
+            setError(err.message || 'Login failed');
+            return null;
         } finally {
             setLoading(false);
         }
@@ -118,8 +117,17 @@ export const AuthProvider = ({ children }) => {
     /**
      * Login Modal Handlers
      */
-    const openLogin = useCallback(() => setIsLoginModalOpen(true), []);
-    const closeLogin = useCallback(() => setIsLoginModalOpen(false), []);
+    const openLogin = useCallback((callback = null) => {
+        if (callback) {
+            setLoginCallback(() => callback);
+        }
+        setIsLoginModalOpen(true);
+    }, []);
+
+    const closeLogin = useCallback(() => {
+        setIsLoginModalOpen(false);
+        setLoginCallback(null);
+    }, []);
 
     /**
      * Check if user is authenticated
@@ -132,6 +140,8 @@ export const AuthProvider = ({ children }) => {
         error,
         isAuthenticated,
         isLoginModalOpen,
+        loginCallback,
+        setLoginCallback,
         openLogin,
         closeLogin,
         loginUser,

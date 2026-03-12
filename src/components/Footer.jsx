@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Youtube, Phone, Mail, MapPin, Send } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Linkedin, Phone, Mail, MapPin, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -72,9 +72,8 @@ const Footer = () => {
                             <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Movies</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Now Showing</Link></li>
-                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
+                                <li><Link to="/movies?tab=upcoming" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Recommended</Link></li>
-                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Top Rated</Link></li>
                             </ul>
                         </div>
 
@@ -82,9 +81,7 @@ const Footer = () => {
                             <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Events</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Public Events</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Private Hosting</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Concerts</Link></li>
-                                <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Comedy Shows</Link></li>
+                                <li><Link to="/private-events" className="text-gray-400 hover:text-primary transition-colors">Private Hosting</Link></li>
                             </ul>
                         </div>
 
@@ -134,9 +131,14 @@ const Footer = () => {
                 {/* Social & Legal Row */}
                 <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6">
                     <div className="flex items-center gap-4">
-                        {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-                            <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#252a37] flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all group scale-90 hover:scale-105">
-                                <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        {[
+                            { Icon: Facebook, url: "https://www.facebook.com/profile.php?id=61583680624803" },
+                            { Icon: Instagram, url: "https://www.instagram.com/xynema.pvt.ltd/" },
+                            { Icon: Youtube, url: "https://www.youtube.com/channel/UCzg6LrONPKNcZFbrt-gSSgw" },
+                            { Icon: Linkedin, url: "https://www.linkedin.com/company/gcc-dynamics" }
+                        ].map((social, i) => (
+                            <a key={i} href={social.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#252a37] flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all group scale-90 hover:scale-105">
+                                <social.Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             </a>
                         ))}
                     </div>

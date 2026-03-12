@@ -84,9 +84,8 @@ export default function App() {
     }, []);
 
     const handleCityChange = (city) => {
-        setSelectedCity(city);
         localStorage.setItem('selected_city', city);
-        setIsCityModalManualOpen(false);
+        window.location.reload();
     };
 
     return (

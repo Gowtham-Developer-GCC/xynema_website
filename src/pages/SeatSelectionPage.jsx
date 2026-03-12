@@ -53,7 +53,7 @@ const SeatSelectionPage = () => {
     const [selectedShow, setSelectedShow] = useState(null);
     const [selectedSeats, setSelectedSeats] = useState([]);
     const [isCountModalOpen, setIsCountModalOpen] = useState(true);
-    const [selectedSeatCount, setSelectedSeatCount] = useState(2);
+    const [selectedSeatCount, setSelectedSeatCount] = useState(1);
     const [movieData, setMovieData] = useState(null); // Real movie data fetched from API
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 

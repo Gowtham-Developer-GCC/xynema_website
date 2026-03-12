@@ -9,6 +9,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail,
 import SEO from '../components/SEO';
 import { getEventDetails, reserveEventTickets, getAllEventsList } from '../services/eventService';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import SimilarEventCard from '../components/SimilarEventCard';
@@ -18,6 +19,7 @@ const EventDetailsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { selectedCity } = useData();
+    const { user, openLogin } = useAuth();
     const [event, setEvent] = useState(location.state?.event || null);
     const [loading, setLoading] = useState(!event);
     const [error, setError] = useState(null);
@@ -98,7 +100,14 @@ const EventDetailsPage = () => {
         return Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0);
     };
 
-    const handleReserveTickets = async () => {
+    const handleReserveTickets = async (injectedUser = null) => {
+        const currentUser = injectedUser || user;
+
+        if (!currentUser) {
+            openLogin((userFromLogin) => handleReserveTickets(userFromLogin));
+            return;
+        }
+
         const totalTickets = getTotalTickets();
         if (totalTickets === 0) {
             alert('Please select at least one ticket');

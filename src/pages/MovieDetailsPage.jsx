@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp, Eye, EyeOff, Volume2, VolumeX, Maximize } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies, getSimilarMovies } from '../services/movieService';
 import SEO from '../components/SEO';
@@ -27,6 +27,12 @@ const getInitials = (name) => {
         return `${names[0][0]}${names[1][0]}`.toUpperCase();
     }
     return name[0].toUpperCase();
+};
+
+const getYouTubeId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))([^"&?\/\s]{11})/i);
+    return match ? match[1] : null;
 };
 
 const getAvatarColor = (name) => {
@@ -70,6 +76,10 @@ const MovieDetailsPage = () => {
     const [selectedFormat, setSelectedFormat] = useState('2D');
     const [showFullCast, setShowFullCast] = useState(false);
     const [showFullCrew, setShowFullCrew] = useState(false);
+    const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
+    const [isGlassHidden, setIsGlassHidden] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
+    const heroRef = useRef(null);
     const [favorites, setFavorites] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -149,7 +159,20 @@ const MovieDetailsPage = () => {
 
     const handleWatchTrailer = () => {
         if (movie.trailerUrl) {
-            window.open(movie.trailerUrl, '_blank');
+            setIsPlayingTrailer(!isPlayingTrailer);
+            setIsGlassHidden(false);
+            if (!isPlayingTrailer) setIsMuted(true);
+        }
+    };
+
+    const toggleFullScreen = () => {
+        if (!heroRef.current) return;
+        if (!document.fullscreenElement) {
+            heroRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
         }
     };
 
@@ -178,23 +201,72 @@ const MovieDetailsPage = () => {
             />
 
             {/* Hero Section with Sophisticated Banner */}
-            <div className="relative w-full overflow-hidden bg-black min-h-[60vh] md:min-h-[70vh] flex items-center pt-24 pb-16">
-                {/* Background Image with Multi-layered Masking */}
+            <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[60vh] md:min-h-[70vh] flex items-center pt-24 pb-16">
+                {/* Background Image/Video with Multi-layered Masking */}
                 <div className="absolute inset-0 overflow-hidden">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center md:bg-fixed"
-                        style={{
-                            backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})`,
-                            filter: 'blur( 0px)',
-                            opacity: 1
-                        }}
-                    />
-                    {/* <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" /> */}
-                    {/* <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" /> */}
+                    {isPlayingTrailer && getYouTubeId(movie.trailerUrl) ? (
+                        <div className="absolute inset-0 w-full h-full">
+                            <iframe
+                                className="w-full h-[150%] -translate-y-[15%] pointer-events-none"
+                                src={`https://www.youtube.com/embed/${getYouTubeId(movie.trailerUrl)}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${getYouTubeId(movie.trailerUrl)}&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&enablejsapi=1&origin=${window.location.origin}`}
+                                allow="autoplay; encrypted-media"
+                                frameBorder="0"
+                            />
+                            <div className="absolute inset-0 bg-black/30" />
+                        </div>
+                    ) : (
+                        <div
+                            className="absolute inset-0 bg-cover bg-center md:bg-fixed transition-all duration-700"
+                            style={{
+                                backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})`,
+                                filter: 'blur( 0px)',
+                                opacity: 1
+                            }}
+                        />
+                    )}
                 </div>
 
                 <div className="relative z-10 max-w-[80%] mx-auto px-4 md:px-8 w-full mt-4">
-                    <div className="flex flex-col md:flex-row gap-8 md:gap-14 items-center md:items-start text-white p-6 md:p-10 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-saturate-150 relative overflow-hidden">
+                    {/* Immersive View Toggle - Eye Icon (Top Right of Glass/Hero area) */}
+                    {isPlayingTrailer && !isGlassHidden && (
+                        <button
+                            onClick={() => setIsGlassHidden(true)}
+                            className="absolute -top-12 right-8 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all z-50 shadow-xl"
+                            title="Hide Details"
+                        >
+                            <EyeOff className="w-6 h-6" />
+                        </button>
+                    )}
+
+                    {/* Immersive Controls Bar - Bottom Right */}
+                    {isPlayingTrailer && isGlassHidden && (
+                        <div className="fixed bottom-10 right-10 flex items-center gap-3 z-[100] animate-in slide-in-from-right duration-500">
+                            <button
+                                onClick={() => setIsMuted(!isMuted)}
+                                className="p-4 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-white hover:bg-primary transition-all shadow-2xl group"
+                                title={isMuted ? "Unmute" : "Mute"}
+                            >
+                                {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                            </button>
+                            <button
+                                onClick={toggleFullScreen}
+                                className="p-4 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-white hover:bg-primary transition-all shadow-2xl group"
+                                title="Fullscreen"
+                            >
+                                <Maximize className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={() => setIsGlassHidden(false)}
+                                className="p-4 rounded-full bg-primary text-white hover:scale-110 transition-all shadow-2xl group"
+                                title="Show Details"
+                            >
+                                <Eye className="w-6 h-6" />
+                            </button>
+                        </div>
+                    )}
+
+                    <div className={`flex flex-col md:flex-row gap-8 md:gap-14 items-center md:items-start text-white p-6 md:p-10 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-saturate-150 relative overflow-hidden transition-all duration-700 ease-in-out ${isGlassHidden ? 'translate-y-[120%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+                        }`}>
                         {/* Soft Highlight for Glass Edge */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                         <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 via-transparent to-transparent"></div>
@@ -297,9 +369,14 @@ const MovieDetailsPage = () => {
                                 {movie.trailerUrl && (
                                     <button
                                         onClick={handleWatchTrailer}
-                                        className="w-full sm:w-[180px] px-8 py-3.5 rounded-lg border border-white bg-white/10 backdrop-blur-sm text-white font-bold tracking-wide hover:bg-white/20 transition-all text-center shadow-lg active:scale-95"
+                                        className={`w-full sm:w-[180px] px-8 py-3.5 rounded-lg border border-white font-bold tracking-wide transition-all text-center shadow-lg active:scale-95 flex items-center justify-center gap-2 ${isPlayingTrailer ? 'bg-primary border-primary' : 'bg-white/10 backdrop-blur-sm'}`}
                                     >
-                                        Watch trailer
+                                        {isPlayingTrailer ? (
+                                            <>
+                                                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                                                Playing
+                                            </>
+                                        ) : 'Watch trailer'}
                                     </button>
                                 )}
                                 <button

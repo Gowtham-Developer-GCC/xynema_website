@@ -113,7 +113,7 @@ const BookingSummary = ({
                     <button
                         disabled={selectedSeats.length === 0 || (requiredSeatCount > 0 && selectedSeats.length !== requiredSeatCount)}
                         onClick={onConfirm}
-                        className="w-full py-[14px] rounded-[12px] bg-primary hover:bg-primary/90 text-white font-bold text-[14px] transition-all flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-600 disabled:cursor-not-allowed font-display uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-[0.98]"
+                        className="w-full py-[14px] rounded-[12px] bg-primary hover:bg-primary/90 text-white font-bold text-[14px] transition-all flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-600 disabled:cursor-not-allowed font-display uppercase tracking-widest shadow-lg shadow-primary/20 disabled:shadow-lg active:scale-[0.98]"
                     >
                         Continue
                     </button>

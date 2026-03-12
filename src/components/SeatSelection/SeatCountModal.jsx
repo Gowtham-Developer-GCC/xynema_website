@@ -3,7 +3,7 @@ import { X, Users } from 'lucide-react';
 
 
 const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
-    const [selectedCount, setSelectedCount] = useState(2);
+    const [selectedCount, setSelectedCount] = useState(1);
     const [animateTickets, setAnimateTickets] = useState(false);
 
     useEffect(() => {

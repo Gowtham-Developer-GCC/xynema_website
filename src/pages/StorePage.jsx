@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Search, Filter, ArrowLeft, Loader } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useAuth } from '../context/AuthContext';
 import ErrorState from '../components/ErrorState';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
@@ -9,6 +10,7 @@ import { getMerchandise } from '../services/storeService';
 
 const StorePage = () => {
     const navigate = useNavigate();
+    const { user, openLogin } = useAuth();
     const [cart, setCart] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -53,6 +55,17 @@ const StorePage = () => {
             ...prev,
             [item.id]: (prev[item.id] || 0) + 1
         }));
+    };
+
+    const handleCheckout = (injectedUser = null) => {
+        const currentUser = injectedUser || user;
+
+        if (!currentUser) {
+            openLogin((userFromLogin) => handleCheckout(userFromLogin));
+            return;
+        }
+        // Proceed to payment logic here (or next page)
+        console.log('Proceeding to payment for cart total:', cartTotal);
     };
 
     if (error) return <ErrorState error={error} onRetry={fetchStoreData} title="Order Interrupted" />;
@@ -197,7 +210,10 @@ const StorePage = () => {
                                             <span className="text-2xl font-bold text-gray-900">₹{cartTotal}</span>
                                         </div>
 
-                                        <button className="w-full py-4 rounded-lg font-display font-bold text-white text-sm bg-xynemaRose transition-all shadow-lg active:scale-98">
+                                        <button 
+                                            onClick={handleCheckout}
+                                            className="w-full py-4 rounded-lg font-display font-bold text-white text-sm bg-xynemaRose transition-all shadow-lg active:scale-98"
+                                        >
                                             Proceed to Payment
                                         </button>
                                         <p className="text-[10px] text-gray-400 text-center mt-3 font-medium font-sans">Safe & Secure Transactions</p>
@@ -234,7 +250,10 @@ const StorePage = () => {
                             View Cart
                         </button>
                     </div>
-                    <button className="w-full py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-xynemaRose/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <button 
+                        onClick={handleCheckout}
+                        className="w-full py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-xynemaRose/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
                         Proceed to Payment
                     </button>
                 </div>

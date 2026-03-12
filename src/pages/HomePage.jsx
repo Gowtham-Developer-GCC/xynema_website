@@ -48,6 +48,14 @@ const HomePage = ({ selectedCity }) => {
         return promoted.length > 0 ? promoted.slice(0, 5) : movies.slice(0, 5);
     }, [highlightsMovies, movies]);
 
+    const randomSectionBanner = useMemo(() => {
+        if (!highlightsMovies?.length) return null;
+        const activeBanners = highlightsMovies.filter(m => m.isActive && m.isSectionImageUrlActive && m.sectionImageUrl);
+        if (activeBanners.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * activeBanners.length);
+        return activeBanners[randomIndex];
+    }, [highlightsMovies]);
+
     const recommendedMovies = useMemo(() => {
         if (!movies?.length) return [];
         // 1. Get Promoted Movies
@@ -87,9 +95,9 @@ const HomePage = ({ selectedCity }) => {
                 <HeroCarousel movies={bannerMovies} />
             </div>
 
-            <main className="w-[70%] mx-auto pb-8 space-y-12 overflow-hidden">
+            <main className="max-w-7xl w-full mx-auto pb-8 space-y-12 overflow-hidden px-4 sm:px-6 lg:px-8">
                 {/* Now Showing Section */}
-               {/* <section className="relative group/nowshowing">
+                {/* <section className="relative group/nowshowing">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
                             Now showing
@@ -124,8 +132,8 @@ const HomePage = ({ selectedCity }) => {
                             ))}
                         </Swiper> 
                     */}
-                        {/* Custom Navigation Arrows */}
-                      {/*  <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
+                {/* Custom Navigation Arrows */}
+                {/*  <button className="now-showing-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
                             <ChevronRight className="w-5 h-5 rotate-180" />
                         </button>
                         <button className="now-showing-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/nowshowing:opacity-100 disabled:opacity-0">
@@ -149,16 +157,18 @@ const HomePage = ({ selectedCity }) => {
                         <div className="relative">
                             <Swiper
                                 modules={[Navigation]}
-                                spaceBetween={12}
-                                slidesPerView={2.2}
+                                spaceBetween={16}
+                                slidesPerView={2}
                                 navigation={{
                                     nextEl: '.recommended-next',
                                     prevEl: '.recommended-prev',
                                 }}
                                 breakpoints={{
-                                    640: { slidesPerView: 3.2, spaceBetween: 12 },
-                                    768: { slidesPerView: 4.2, spaceBetween: 12 },
-                                    1024: { slidesPerView: 6.2, spaceBetween: 12 },
+                                    640: { slidesPerView: 3, spaceBetween: 16 },
+                                    768: { slidesPerView: 3, spaceBetween: 16 },
+                                    1024: { slidesPerView: 4, spaceBetween: 16 },
+                                    1280: { slidesPerView: 5, spaceBetween: 32 },
+                                    1536: { slidesPerView: 5, spaceBetween: 32 },
                                 }}
                                 className="!pb-4 !overflow-visible"
                             >
@@ -172,10 +182,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="recommended-prev absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
-                            <button className="recommended-next absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -210,18 +220,18 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-4 !overflow-visible"
                             >*/}
-                              {/*  {displayedUpcoming.map((movie, idx) => (
+                {/*  {displayedUpcoming.map((movie, idx) => (
                                     <SwiperSlide key={`upcoming-new-${movie.id}`}>*/}
-                                        {/* Using the same MovieCard to benefit from the newly added glass effect */}
-                                      {/*  <MovieCard
+                {/* Using the same MovieCard to benefit from the newly added glass effect */}
+                {/*  <MovieCard
                                             movie={{ ...movie, delayClass: `delay-[${(idx + 1) * 100}ms]` }}
                                         />
                                     </SwiperSlide>
                                 ))} 
                             </Swiper>*/}
 
-                            {/* Custom Navigation Arrows designed based on visual high-contrast */}
-                           {/* <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
+                {/* Custom Navigation Arrows designed based on visual high-contrast */}
+                {/* <button className="upcoming-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
                             <button className="upcoming-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/upcoming:opacity-100 disabled:opacity-0">
@@ -231,51 +241,25 @@ const HomePage = ({ selectedCity }) => {
                     </section>
                 )} */}
 
-                {/* Highlight Banner Section (16:9) */}
-                {highlightsMovies?.length > 0 && (
+                {/* Highlight Banner Section (16:9) - Random Single Banner */}
+                {randomSectionBanner && (
                     <section className="relative mt-16 group/highlight-banner">
-                        <div className="relative rounded-2xl overflow-hidden shadow-lg">
-                            <Swiper
-                                modules={[Navigation]}
-                                spaceBetween={24}
-                                slidesPerView={1}
-                                navigation={{
-                                    nextEl: '.highlight-banner-next',
-                                    prevEl: '.highlight-banner-prev',
-                                }}
+                        <div className="relative rounded-xl overflow-hidden shadow-md">
+                            <a
+                                href={randomSectionBanner.linkUrl || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full aspect-video md:aspect-[4/3] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
                             >
-                                {highlightsMovies.map((movie, idx) => {
-                                    const linkUrl = movie.linkUrl || (movie.slug || movie.id ? `/movie/${movie.slug || movie.id}` : '#');
-
-                                    return (
-                                        <SwiperSlide key={`highlight-section-${movie.id}-${idx}`}>
-                                            <a
-                                                href={linkUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="block w-full aspect-video md:aspect-[4/3] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
-                                            >
-                                                <img
-                                                    src={optimizeImage(movie.sectionImageUrl || movie.bannerImageUrl || movie.backdropUrl, { width: 1920, quality: 85 })}
-                                                    alt={movie.title}
-                                                    loading="lazy"
-                                                    className="w-full h-full object-cover transition-transform duration-700 ease-out"
-                                                />
-                                                {/* Optional gradient overlay for text readability if titles are added later */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300"></div>
-                                            </a>
-                                        </SwiperSlide>
-                                    );
-                                })}
-                            </Swiper>
-
-                            {/* Banner Navigation Arrows - visually distinct, inside the banner */}
-                            <button className="highlight-banner-prev absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/30 backdrop-blur-md rounded-full shadow-lg border border-white/20 flex items-center justify-center text-white hover:bg-black/50 transition-all hidden md:flex opacity-0 group-hover/highlight-banner:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6 rotate-180" />
-                            </button>
-                            <button className="highlight-banner-next absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/30 backdrop-blur-md rounded-full shadow-lg border border-white/20 flex items-center justify-center text-white hover:bg-black/50 transition-all hidden md:flex opacity-0 group-hover/highlight-banner:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6" />
-                            </button>
+                                <img
+                                    src={optimizeImage(randomSectionBanner.sectionImageUrl, { width: 1920, quality: 100 })}
+                                    alt={randomSectionBanner.title}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-700 ease-out"
+                                />
+                                {/* Optional gradient overlay for text readability if titles are added later */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300"></div>
+                            </a>
                         </div>
                     </section>
                 )}
@@ -304,8 +288,9 @@ const HomePage = ({ selectedCity }) => {
                                 breakpoints={{
                                     640: { slidesPerView: 2, spaceBetween: 24 },
                                     768: { slidesPerView: 3, spaceBetween: 24 },
-                                    1024: { slidesPerView: 4, spaceBetween: 24 },
-                                    1280: { slidesPerView: 4, spaceBetween: 24 },
+                                    1024: { slidesPerView: 3, spaceBetween: 24 },
+                                    1280: { slidesPerView: 3, spaceBetween: 24 },
+                                    1536: { slidesPerView: 3, spaceBetween: 24 },
                                 }}
                                 className="!pb-6"
                             >
@@ -317,10 +302,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="events-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                            <button className="events-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="events-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
+                            <button className="events-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -354,6 +339,7 @@ const HomePage = ({ selectedCity }) => {
                                     768: { slidesPerView: 3, spaceBetween: 24 },
                                     1024: { slidesPerView: 4, spaceBetween: 24 },
                                     1280: { slidesPerView: 4, spaceBetween: 24 },
+                                    1536: { slidesPerView: 4, spaceBetween: 24 },
                                 }}
                                 className="!pb-6"
                             >
@@ -365,10 +351,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6 rotate-180" />
                             </button>
-                            <button className="store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-full z-10 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
+                            <button className="store-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                         </div>
@@ -471,7 +457,7 @@ const HeroCarousel = memo(({ movies }) => {
             <Swiper
                 modules={[Pagination, Autoplay]}
                 spaceBetween={16}
-                slidesPerView={1.30} // Adjusted to peek sides exactly like Figma
+                slidesPerView={1} // Adjusted to peek sides exactly like Figma
                 centeredSlides={true}
                 loop={true}
                 speed={500}
@@ -489,9 +475,9 @@ const HeroCarousel = memo(({ movies }) => {
                 observer={true}
                 observeParents={true}
                 breakpoints={{
-                    320: { slidesPerView: 1.1, spaceBetween: 12 },
-                    640: { slidesPerView: 1.15, spaceBetween: 16 },
-                    1024: { slidesPerView: 1.25, spaceBetween: 24 }, // Slightly wider peek on desktop
+                    320: { slidesPerView: 1.0, spaceBetween: 12 },
+                    640: { slidesPerView: 1.0, spaceBetween: 16 },
+                    1024: { slidesPerView: 1.0, spaceBetween: 24 }, // Slightly wider peek on desktop
                 }}
                 className="hero-swiper w-full max-w-[1800px] mx-auto"
             >
@@ -587,31 +573,31 @@ const HomeSkeleton = () => (
 const MOCK_STORE_ITEMS = [
     {
         id: "store-1",
-        name: "Cold white Tshirt",
-        price: 849,
-        sellers: 3,
-        imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=95&w=800"
+        name: "KBFC Jersy",
+        price: 1499,
+        sellers: 6,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/kbfc.jpg"
     },
     {
         id: "store-2",
-        name: "Charlie movie shirt",
-        price: 849,
-        sellers: 3,
-        imageUrl: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=95&w=800"
+        name: "Reebok Cricket bat",
+        price: 5599,
+        sellers: 2,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/reebok.jpg"
     },
     {
         id: "store-3",
-        name: "Spiderverse T Shirt",
-        price: 849,
-        sellers: 3,
-        imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=95&w=800"
+        name: "Star Wars T-Shirt",
+        price: 499,
+        sellers: 4,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Star+Wars+Space+Life+T-Shirt.webp"
     },
     {
         id: "store-4",
-        name: "Premium Black Tee",
-        price: 849,
-        sellers: 3,
-        imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=95&w=800"
+        name: "Nike High-Top Football Boot",
+        price: 2599,
+        sellers: 1,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Nike+Mercurial+Superfly+10+Academy+Multi-Ground+High-Top+Football+Boot.jpeg"
     }
 ];
 

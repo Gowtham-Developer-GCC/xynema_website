@@ -58,9 +58,12 @@ export class Movie {
 
         // Highlights / Banners
         this.bannerImageUrl = data.bannerImageUrl || data.imageUrl || '';
-        this.sectionImageUrl = data.sectionImageUrl || this.bannerImageUrl;
+        this.sectionImageUrl = data.sectionImageUrl || ''; // Do NOT fall back to bannerImageUrl — used for section banner only
         this.linkUrl = data.linkUrl || '';
         this.highlightType = data.highlightType || '';
+        this.isActive = data.isActive ?? false;
+        this.isBannerImageUrlActive = data.isBannerImageUrlActive ?? false;
+        this.isSectionImageUrlActive = data.isSectionImageUrlActive ?? false;
 
         // Availability flag for Upcoming logic - Handle boolean and string 'true'
         // Default to false (Upcoming) if missing or explicitly false

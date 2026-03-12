@@ -36,7 +36,6 @@ const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const TheaterDetailsPage = lazy(() => import('./pages/TheaterDetailsPage'));
 const EventBookingDetailsPage = lazy(() => import('./pages/EventBookingDetailsPage'));
 const MyEventBookingsPage = lazy(() => import('./pages/MyEventBookingsPage'));
-const UpcomingMoviesPage = lazy(() => import('./pages/UpcomingMoviesPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const Footer = lazy(() => import('./components/Footer'));
@@ -123,7 +122,6 @@ export default function App() {
                                     <Routes>
                                         <Route path="/" element={<HomePage selectedCity={selectedCity} />} />
                                         <Route path="/movies" element={<MoviesPage selectedCity={selectedCity} />} />
-                                        <Route path="/upcoming-movies" element={<UpcomingMoviesPage />} />
                                         <Route path="/movie/:slug" element={<MovieDetailsPage />} />
                                         <Route path="/movie/:slug/reviews" element={<AllReviewsPage />} />
                                         <Route path="/movie/:slug/theaters" element={<TheaterSelectionPage selectedCity={selectedCity} />} />

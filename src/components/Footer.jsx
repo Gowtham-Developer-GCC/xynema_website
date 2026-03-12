@@ -34,11 +34,32 @@ const Footer = () => {
                                 <Phone className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">0484 4531182</span>
                             </a>
-                            <a href="mailto:support@xynema.com" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
-                                <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                                <span className="text-sm font-medium">support@xynema.com</span>
-                            </a>
-                            <div className="flex items-center gap-3 text-gray-400 font-sans">
+                            
+                            <div className="pt-2 space-y-3">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For customers</span>
+                                    <a href="mailto:care@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
+                                        <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                        <span className="text-sm font-medium">care@xynema.in</span>
+                                    </a>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For clients</span>
+                                    <a href="mailto:support@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
+                                        <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                        <span className="text-sm font-medium">support@xynema.in</span>
+                                    </a>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For additional queries</span>
+                                    <a href="mailto:info@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
+                                        <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                        <span className="text-sm font-medium">info@xynema.in</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-gray-400 font-sans pt-2">
                                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                                 <span className="text-sm font-medium">Cochin, Kerala, India</span>
                             </div>
@@ -51,7 +72,7 @@ const Footer = () => {
                             <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Movies</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Now Showing</Link></li>
-                                <li><Link to="/upcoming-movies" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
+                                <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Recommended</Link></li>
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Top Rated</Link></li>
                             </ul>

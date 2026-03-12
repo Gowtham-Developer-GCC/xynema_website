@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
@@ -8,6 +8,8 @@ import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
 import { getEvents, getAllEventsList, submitPrivateEventEnquiry } from '../services/eventService';
 import { useData } from '../context/DataContext';
+import { optimizeImage } from '../utils/helpers';
+import { memo } from 'react';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
@@ -392,7 +394,7 @@ const PrivateEventBanner = ({ onNavigate }) => {
                         </div>
                     </div>
                 </div>
-                
+
                 <button
                     onClick={onNavigate}
                     className="bg-primary text-white px-8 py-3.5 rounded-lg text-sm font-black font-display uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 active:scale-95"
@@ -419,7 +421,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
         <div className="bg-white dark:bg-[#1a1c23] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl mb-8 animate-in slide-in-from-top-4 duration-300 transition-colors">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Location</label>
+                    <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Location</label>
                     <select
                         value={filters.city}
                         onChange={(e) => onFilterChange({ ...filters, city: e.target.value })}
@@ -496,83 +498,62 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
     );
 };
 
-const EventCard = ({ event }) => {
-    const navigate = useNavigate();
+const EventCard = memo(({ event }) => {
+    // Format the date precisely as requested
+    const formattedDate = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    }).format(new Date(event.startDate || Date.now()));
 
-    const getFormattedDate = () => {
-        if (!event.startDate) return 'TBA';
-        try {
-            const start = new Date(event.startDate);
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    // Use absolute routing for events based on slug or ID
+    const eventLink = `/event/${event.slug || event.id}`;
 
-            if (event.eventType === 'multi-day' && event.endDate && event.endDate !== event.startDate) {
-                const end = new Date(event.endDate);
-                if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-                    return `${start.getDate()} - ${end.getDate()} ${start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
-                }
-                if (start.getFullYear() === end.getFullYear()) {
-                    return `${start.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-                }
-                return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
-            }
-            return start.toLocaleDateString('en-US', options);
-        } catch (e) {
-            return event.startDate;
-        }
-    };
-
-    const formattedDate = getFormattedDate();
-
-    // Figma Design details:
-    // - Clean white card with rounded border
-    // - No dark gradient
-    // - Simple "View details ↗"
     return (
-        <div
-            onClick={() => navigate(`/event/${event.slug}`, { state: { event } })}
-            className={`group cursor-pointer flex flex-col bg-white dark:bg-[#1a1c23] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm transition-all hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 ${event.delayClass || ''}`}
-        >
-            <div className="relative aspect-[3/2] overflow-hidden">
-                <img
-                    src={event.imageUrl}
-                    alt={event.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-            </div>
+        <div className={`bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 cursor-pointer group ${event.delayClass || ''}`}>
+            <Link to={eventLink} className="block w-full">
+                <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+                    <img
+                        src={optimizeImage(event.imageUrl, { width: 600, height: 375, quality: 80 }) || 'https://via.placeholder.com/600x375?text=No+Image'}
+                        alt={event.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                    />
+                </div>
+            </Link>
+            <div className="p-5 flex flex-col flex-grow">
+                <Link to={eventLink} className="mb-2 block">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-display uppercase group-hover:text-primary">
+                        {event.name}
+                    </h3>
+                </Link>
 
-            <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-lg font-bold text-[#111827] dark:text-gray-100 mb-6 tracking-tight line-clamp-2 font-display uppercase">
-                    {event.name}
-                </h3>
-
-                <div className="space-y-3 mt-auto mb-5">
-                    <div className="flex items-center gap-3 text-[#4B5563] dark:text-gray-400">
-                        <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500 stroke-[1.5]" />
-                        <span className="text-sm font-medium">{formattedDate}</span>
+                <div className="flex flex-col gap-2 mb-5">
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
+                        <span>{formattedDate}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[#4B5563] dark:text-gray-400">
-                        <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 stroke-[1.5]" />
-                        <span className="text-sm font-medium truncate">{event.city || event.venue}</span>
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
+                        <span className="truncate">{event.city || event.venue}</span>
                     </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                    <div className="flex items-baseline gap-1.5 font-display">
-                        <span className="text-lg font-bold text-primary uppercase">₹{event.price || 'Free'}</span>
-                        <span className="text-[10px] font-black text-[#6B7280] dark:text-gray-500 uppercase tracking-widest">onwards</span>
-                    </div>
-                    <div className="text-[11px] font-black text-[#4B5563] dark:text-gray-400 flex items-center gap-1 group-hover:text-primary transition-colors font-display uppercase tracking-widest">
-                        View details
-                        <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M7 17L17 7" />
-                            <path d="M7 7h10v10" />
-                        </svg>
-                    </div>
+                <div className="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <span className="font-bold text-primary dark:text-primary text-lg">
+                        ₹{event.price ? event.price.toLocaleString() : 'Free'}
+                    </span>
+                    <Link
+                        to={eventLink}
+                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-display uppercase tracking-wider hover:brightness-110 active:scale-95"
+                    >
+                        Book Now
+                    </Link>
                 </div>
             </div>
         </div>
     );
-};
+});
 
 const PrivateEventsSection = ({ onCancel }) => {
     const [formData, setFormData] = useState({

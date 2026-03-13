@@ -17,6 +17,7 @@ export const ENDPOINTS = {
     EVENTS: {
         LIST: '/movies/events',
         DETAILS: (eventId) => `/movies/events/${eventId}`,
+        SIMILAR: (eventId) => `/movies/similar-events/${eventId}`,
         ENQUIRY: '/events/enquiry',
     },
 

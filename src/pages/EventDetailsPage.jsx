@@ -7,7 +7,7 @@ import 'swiper/css/navigation';
 import StoreCard from '../components/StoreCard';
 import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper, ShoppingBag } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getEventDetails, reserveEventTickets, getAllEventsList } from '../services/eventService';
+import { getEventDetails, reserveEventTickets, getSimilarEvents } from '../services/eventService';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import LoadingScreen from '../components/LoadingScreen';
@@ -46,14 +46,18 @@ const EventDetailsPage = () => {
     const fetchEventDetails = async () => {
         try {
             setLoading(true);
-            const [foundEvent, allEvents] = await Promise.all([
-                getEventDetails(slug),
-                getAllEventsList().catch(() => [])
-            ]);
+            const foundEvent = await getEventDetails(slug);
 
             if (foundEvent) {
                 setEvent(foundEvent);
-                setSimilarEvents(allEvents || []);
+                // Fetch similar events using the actual event ID
+                try {
+                    const similar = await getSimilarEvents(foundEvent.id);
+                    setSimilarEvents(similar || []);
+                } catch (err) {
+                    console.error('Failed to fetch similar events:', err);
+                    setSimilarEvents([]);
+                }
             } else {
                 setError('Event not found');
             }

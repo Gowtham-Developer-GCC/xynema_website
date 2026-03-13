@@ -59,6 +59,16 @@ export const getEventDetails = async (eventIdOrSlug) => {
     });
 };
 
+export const getSimilarEvents = async (eventId) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.EVENTS.SIMILAR(eventId));
+        if (response.data.success && response.data.data) {
+            return response.data.data.map(e => new Event(e));
+        }
+        return [];
+    });
+};
+
 export const getEventBookings = async (page = 1) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST, { params: { page } });

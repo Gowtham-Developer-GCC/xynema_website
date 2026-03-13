@@ -150,7 +150,7 @@ const TheaterCard = ({ theater }) => {
 
                 <div className="flex-grow min-w-0">
                     <div className="flex items-start justify-between gap-2 overflow-hidden">
-                        <h3 className="text-base font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors truncate uppercase tracking-tight line-clamp-2">
+                        <h3 className="text-base font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors truncate line-clamp-2">
                             {theater.name}
                         </h3>
                     </div>
@@ -161,12 +161,12 @@ const TheaterCard = ({ theater }) => {
 
                     <div className="mt-4 flex items-center gap-3">
                         {theater.rating > 0 && (
-                            <div className="flex items-center gap-1 text-[10px] font-black text-green-600 uppercase tracking-widest">
+                            <div className="flex items-center gap-1 text-[10px] font-black text-green-600">
                                 <Star className="w-3 h-3 fill-current" />
                                 {theater.rating}
                             </div>
                         )}
-                        <div className="flex items-center gap-1 text-[10px] font-black text-primary/60 dark:text-primary/40 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 text-[10px] font-black text-primary/60 dark:text-primary/40 group-hover:opacity-100 transition-opacity">
                             View Details <ChevronRight className="w-3 h-3" />
                         </div>
                     </div>

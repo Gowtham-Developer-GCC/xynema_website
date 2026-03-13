@@ -179,12 +179,12 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight uppercase">Events</h1>
+                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight">Events</h1>
                         <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">Discover curated experiences near you.</p>
                     </div>
                     <button
                         onClick={() => handleTabChange('private_events')}
-                        className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display uppercase tracking-widest"
+                        className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display"
                     >
                         <Sparkles className="w-4 h-4" />
                         Host Your Event
@@ -204,7 +204,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     setEventFilters(prev => ({ ...prev, tags: [] }));
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 0
+                                className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display ${eventFilters.tags.length === 0
                                     ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                     : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                     }`}
@@ -220,7 +220,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                         setEventFilters(prev => ({ ...prev, tags: [tag] }));
                                         setIsMoreFiltersOpen(false);
                                     }}
-                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display uppercase tracking-wider ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border font-display ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
                                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
@@ -235,7 +235,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                             <div className="relative shrink-0" ref={moreFiltersRef}>
                                 <button
                                     onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-2 font-display uppercase tracking-wider ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
+                                    className={`px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-2 font-display ${eventFilters.tags.some(t => availableEventTags.slice(4).includes(t))
                                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                         : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
                                         }`}
@@ -247,7 +247,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                 {isMoreFiltersOpen && (
                                     <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
                                         <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left">
-                                            <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Additional Categories</span>
+                                            <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest">Additional Categories</span>
                                         </div>
                                         <div className="max-h-64 overflow-y-auto no-scrollbar px-2">
                                             {availableEventTags.slice(4).map(tag => (
@@ -270,7 +270,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                                         />
                                                         <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                                                     </div>
-                                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-display uppercase tracking-tight">
+                                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-display tracking-tight">
                                                         {tag}
                                                     </span>
                                                 </label>
@@ -283,7 +283,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                                         const otherTags = eventFilters.tags.filter(t => !availableEventTags.slice(4).includes(t));
                                                         setEventFilters(prev => ({ ...prev, tags: otherTags }));
                                                     }}
-                                                    className="w-full py-1.5 text-[10px] font-bold text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 text-center uppercase tracking-wider transition-colors"
+                                                    className="w-full py-1.5 text-[10px] font-bold text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 text-center transition-colors"
                                                 >
                                                     Clear selection
                                                 </button>
@@ -408,7 +408,7 @@ const PrivateEventBanner = ({ onNavigate }) => {
 
 const FilterChip = ({ label, onRemove }) => (
     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20 animate-in fade-in zoom-in duration-200 font-display">
-        <span className="uppercase tracking-wider">{label}</span>
+        <span className="tracking-wider">{label}</span>
         <button onClick={onRemove} className="hover:bg-primary/20 rounded-full p-0.5">
             <X className="w-3 h-3" />
         </button>
@@ -486,7 +486,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
                 </div>
             </div>
             <div className="mt-8 pt-6 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center transition-colors">
-                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest hover:text-primary transition-colors font-display">Reset All</button>
+                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 tracking-widest hover:text-primary transition-colors font-display">Reset All</button>
                 <button
                     onClick={() => onFilterChange(filters)}
                     className="px-8 py-3 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 font-display"

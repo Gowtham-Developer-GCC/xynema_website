@@ -542,22 +542,22 @@ const CastCrewModal = ({ title, items, onClose }) => {
 
 const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast, onShowAllCrew, onWriteReview }) => {
     return (
-        <div className="space-y-4 md:space-y-12">
+        <div className="space-y-4 md:space-y-1">
             {/* Cast Section */}
             {movie.cast?.length > 0 && (
                 <section id="cast" className="space-y-6 pt-6 animate-slide-up opacity-0 delay-200">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-display uppercase">Cast</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-roboto">Cast</h3>
                         {movie.cast?.length > 5 && (
                             <button
                                 onClick={onShowAllCast}
-                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-display"
+                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-roboto"
                             >
                                 See All
                             </button>
                         )}
                     </div>
-                    <div className="flex overflow-x-auto gap-4 md:gap-6 pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
+                    <div className="flex overflow-x-auto gap-4 md:gap-6 pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
                         {movie.cast.map((actor, idx) => {
                             const name = actor.name || '';
                             const role = actor.role || '';
@@ -602,19 +602,19 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
             {/* Crew Section */}
             {movie.crew?.length > 0 && (
-                <section id="crew" className="space-y-6 pt-8 border-t border-gray-100 dark:border-gray-800 transition-colors animate-slide-up opacity-0 delay-300">
+                <section id="crew" className="space-y-6 pt-1 border-t border-gray-100 dark:border-gray-800 transition-colors animate-slide-up opacity-0 delay-300">
                     <div className="flex items-center justify-between pb-2">
-                        <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-display uppercase italic">Crew</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-roboto">Crew</h3>
                         {movie.crew?.length > 5 && (
                             <button
                                 onClick={onShowAllCrew}
-                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-display"
+                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-roboto"
                             >
                                 See All
                             </button>
                         )}
                     </div>
-                    <div className="flex overflow-x-auto gap-4 md:gap-6 pb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
+                    <div className="flex overflow-x-auto gap-4 md:gap-6 pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
                         {movie.crew.map((member, idx) => {
                             const name = member.name || '';
                             const role = member.role || '';
@@ -659,8 +659,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
             {/* Official Merchandise Section */}
             {!merchLoading && merchandise.length > 0 && (
-                <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 dark:border-gray-800 transition-colors group/store animate-slide-up opacity-0 delay-400">
-                    <div className="flex items-center justify-between pb-2">
+                <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 dark:border-gray-800 transition-colors group/store animate-slide-up opacity-0 delay-400">                    <div className="flex items-center justify-between pb-2">
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Official merchandise</h3>
                         <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-colors group/link">
                             <ShoppingBag className="w-4 h-4 text-gray-400 dark:text-gray-500 transition-colors" />
@@ -679,11 +678,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                 prevEl: '.merch-prev',
                             }}
                             breakpoints={{
-                                480: { slidesPerView: 1.5, spaceBetween: 20 },
-                                640: { slidesPerView: 2.2, spaceBetween: 24 },
-                                768: { slidesPerView: 2.5, spaceBetween: 24 },
-                                1024: { slidesPerView: 3, spaceBetween: 24 },
-                                1280: { slidesPerView: 3.5, spaceBetween: 24 },
+                                480: { slidesPerView: 2, spaceBetween: 20 },
+                                640: { slidesPerView: 3, spaceBetween: 24 },
+                                768: { slidesPerView: 3, spaceBetween: 24 },
+                                1024: { slidesPerView: 5, spaceBetween: 24 },
+                                1280: { slidesPerView: 5, spaceBetween: 24 },
                             }}
                             className="!pb-8"
                         >

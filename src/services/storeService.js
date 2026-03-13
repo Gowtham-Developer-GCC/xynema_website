@@ -80,29 +80,40 @@ export const getFoodItems = async () => {
 export const getMerchandise = async () => {
     return [
         {
-            id: 'm1',
-            name: '"Galaxy Runners" Premium T-Shirt',
-            imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=95&w=800',
-            price: 799,
-            category: 'Apparel',
-            sellers: 3,
-        },
-        {
-            id: 'm2',
-            name: 'Interstellar Cinema Cap',
-            imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&q=95&w=800',
-            price: 449,
-            category: 'Accessories',
-            sellers: 5,
-        },
-        {
-            id: 'm3',
-            name: 'Collector Edition Movie Poster',
-            imageUrl: 'https://images.unsplash.com/photo-1594909122845-11baa439b7ea?auto=format&fit=crop&q=95&w=800',
-            price: 299,
-            category: 'Collectibles',
-            sellers: 2,
-        }
+        id: "store-1",
+        name: "KBFC Jersy",
+        price: 1499,
+        sellers: 6,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/kbfc.jpg"
+    },
+    {
+        id: "store-2",
+        name: "Reebok Cricket bat",
+        price: 5599,
+        sellers: 2,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/reebok.jpg"
+    },
+    {
+        id: "store-3",
+        name: "Star Wars T-Shirt",
+        price: 499,
+        sellers: 4,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Star+Wars+Space+Life+T-Shirt.webp"
+    },
+    {
+        id: "store-4",
+        name: "Nike High-Top Football Boot",
+        price: 2599,
+        sellers: 1,
+        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Nike+Mercurial+Superfly+10+Academy+Multi-Ground+High-Top+Football+Boot.jpeg"
+    },
+    {
+        id: "store-5",
+        name: "Dolby Atmos",
+        price: 8999,
+        sellers: 1,
+        imageUrl: "https://professional.dolby.com/siteassets/products/cs126mh/a16306.11_16x9.jpg?width=500&mode=min"
+    }
     ];
 };
 

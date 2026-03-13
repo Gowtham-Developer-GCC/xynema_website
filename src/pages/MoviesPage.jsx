@@ -26,7 +26,7 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen(o => !o)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all select-none font-display uppercase tracking-wide ${activeCount > 0
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all select-none font-roboto ${activeCount > 0
                     ? 'border-primary text-primary bg-primary/5 dark:bg-primary/20'
                     : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1a1d24] hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
@@ -50,7 +50,7 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
                             <button
                                 key={item}
                                 onClick={() => onToggle(item)}
-                                className={`text-left px-3 py-1.5 rounded-lg text-sm font-bold transition-colors font-display uppercase tracking-tight ${selected.includes(item)
+                                className={`text-left px-3 py-1.5 rounded-lg text-sm font-bold transition-colors font-roboto ${selected.includes(item)
                                     ? 'bg-primary/10 text-primary'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                                     }`}
@@ -174,9 +174,9 @@ const MoviesPage = ({ selectedCity }) => {
             </div>
 
             {/* ── Tabs + Filters Bar ────────────────────────── */}
-            <div className="bg-white dark:bg-[#0f1115]/80 dark:backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 sticky top-[64px] z-20 shadow-sm transition-colors duration-300">
+            <div className="bg-white dark:bg-[#0f1115]/90 dark:backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800 sticky top-16 md:top-20 z-40 shadow-sm transition-all duration-300">
                 <div className="w-[90%] sm:w-[80%] mx-auto px-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap py-0 text-slate-950 dark:text-white">
+                    <div className="flex items-center justify-between gap-4 flex-wrap py-3 text-slate-950 dark:text-white">
 
                         {/* Left: Tabs */}
                         <div className="flex items-center gap-0">
@@ -184,7 +184,7 @@ const MoviesPage = ({ selectedCity }) => {
                                 <button
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
-                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-display uppercase tracking-wider ${activeTab === tab.id
+                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-display ${activeTab === tab.id
                                         ? 'border-primary text-primary'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                                         }`}
@@ -235,10 +235,10 @@ const MoviesPage = ({ selectedCity }) => {
 
                             <Link
                                 to="/cinemas"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-display uppercase tracking-wider transition-colors shadow-lg shadow-primary/20"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-display transition-colors shadow-lg shadow-primary/20"
                             >
                                 <Ticket className="w-4 h-4" />
-                                BROWSE BY CINEMAS
+                                Browse by Cinemas
                             </Link>
                         </div>
                     </div>

@@ -304,7 +304,7 @@ const TheaterDetailsPage = () => {
 
                             <div className="flex flex-wrap gap-2 mt-4">
                                 {theater?.amenities?.map((amenity, i) => (
-                                    <span key={i} className="px-3 py-1 rounded-md bg-gray-50 dark:bg-[#0f1115] border border-gray-100 dark:border-gray-800 text-[11px] font-bold text-gray-500 uppercase flex items-center gap-1.5">
+                                    <span key={i} className="px-3 py-1 rounded-md bg-gray-50 dark:bg-[#0f1115] border border-gray-100 dark:border-gray-800 text-[11px] font-bold text-gray-500 flex items-center gap-1.5">
                                         {getFacilityIcon(amenity)}
                                         {amenity}
                                     </span>
@@ -326,9 +326,9 @@ const TheaterDetailsPage = () => {
             </div>
 
             {/* Sticky Date and Filter Bar */}
-            <div className="sticky top-0 z-40 bg-white/95 dark:bg-[#1a1d24]/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="sticky top-16 md:top-20 z-40 bg-white/95 dark:bg-[#1a1d24]/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300">
                 <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
                         {/* Date Strip */}
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             {[...Array(7)].map((_, i) => {
@@ -353,13 +353,13 @@ const TheaterDetailsPage = () => {
                                                     : 'bg-white dark:bg-[#0f1115] border border-gray-100 dark:border-gray-800 text-gray-500 hover:border-primary/40'
                                             }`}
                                     >
-                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+                                        <span className="text-[10px] font-bold opacity-80">
                                             {date.toLocaleDateString('en-US', { weekday: 'short' })}
                                         </span>
                                         <span className="text-lg font-black mt-0.5">
                                             {date.getDate()}
                                         </span>
-                                        <span className="text-[10px] font-bold uppercase opacity-80">
+                                        <span className="text-[10px] font-bold opacity-80">
                                             {date.toLocaleDateString('en-US', { month: 'short' })}
                                         </span>
                                     </button>
@@ -370,10 +370,10 @@ const TheaterDetailsPage = () => {
                         {/* Filters */}
                         <div className="flex items-center gap-3">
                             <div className="hidden md:flex items-center gap-3 pr-4 border-r border-gray-200 dark:border-gray-800">
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <div className="text-[10px] font-black text-gray-400 flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-green-500"></div> Available
                                 </div>
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <div className="text-[10px] font-black text-gray-400 flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-orange-500"></div> Fast Filling
                                 </div>
                             </div>

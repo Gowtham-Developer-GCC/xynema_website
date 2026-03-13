@@ -97,7 +97,7 @@ const MyEventBookingsPage = () => {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Go Back
@@ -107,8 +107,8 @@ const MyEventBookingsPage = () => {
                         <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Event History</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/30">
-                            <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <div className="w-10 h-10 rounded-full bg-primary/5 dark:bg-primary/20 flex items-center justify-center border border-primary/10 dark:border-primary/80">
+                            <Calendar className="w-4 h-4 text-primary dark:text-primary" />
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ const MyEventBookingsPage = () => {
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-6 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${filterStatus === status ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                            className={`px-6 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${filterStatus === status ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 dark:shadow-primary/30' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-primary/30 dark:hover:border-primary/60'}`}
                         >
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                         </button>
@@ -129,18 +129,18 @@ const MyEventBookingsPage = () => {
 
                 {/* Search Bar */}
                 <div className="max-w-md mx-auto mb-8 relative group">
-                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${searchTerm ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400'}`} />
+                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${searchTerm ? 'text-primary' : 'text-gray-400 dark:text-gray-500 group-focus-within:text-primary'}`} />
                     <input
                         type="text"
                         placeholder="Search events by name or venue..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     />
                     {searchTerm && (
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 uppercase tracking-widest"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 dark:text-gray-500 hover:text-primary uppercase tracking-widest"
                         >
                             Clear
                         </button>
@@ -163,7 +163,7 @@ const MyEventBookingsPage = () => {
                         <p className="text-gray-400 dark:text-gray-500 text-sm mb-8">You haven't booked any event tickets yet.</p>
                         <button
                             onClick={() => navigate('/explore')}
-                            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-indigo-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20"
+                            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 dark:shadow-primary/30"
                         >
                             Explore Events
                         </button>
@@ -194,16 +194,16 @@ const EventBookingCard = ({ booking }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all overflow-hidden group">
+        <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-lg hover:border-primary/20 dark:hover:border-primary/50 transition-all overflow-hidden group">
             <div className="flex flex-col md:flex-row h-full">
 
                 {/* Left Side - Date/Time Block */}
-                <div className="bg-gradient-to-b from-indigo-700 to-indigo-900 p-6 flex flex-col items-center justify-center text-white md:w-40 shrink-0 relative overflow-hidden">
+                <div className="bg-primary p-6 flex flex-col items-center justify-center text-white md:w-40 shrink-0 relative overflow-hidden">
                     {/* Decorative Elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10" />
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-xl -ml-6 -mb-6" />
 
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 relative z-10 mb-2">{new Date(booking.showDate).getFullYear()}</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 relative z-10 mb-2">{new Date(booking.showDate).getFullYear()}</span>
                     <span className="text-4xl font-black relative z-10 leading-none tracking-tighter shadow-sm">
                         {new Date(booking.showDate).getDate()}
                     </span>
@@ -211,7 +211,7 @@ const EventBookingCard = ({ booking }) => {
 
                     <div className="w-full h-px bg-white/20 my-4 relative z-10 mx-6" />
 
-                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider relative z-10 text-indigo-100">
+                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider relative z-10 text-white/80">
                         <Clock className="w-3.5 h-3.5" />
                         {formatTime(booking.showTime)}
                     </div>
@@ -229,7 +229,7 @@ const EventBookingCard = ({ booking }) => {
                     {/* Top Section */}
                     <div>
                         <div className="flex justify-between items-start gap-4 mb-2">
-                            <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                            <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2">
                                 {booking.event?.eventName || booking.eventName}
                             </h3>
                             <div className="shrink-0 text-right">
@@ -242,11 +242,11 @@ const EventBookingCard = ({ booking }) => {
 
                         <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <MapPin className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                                <MapPin className="w-4 h-4 text-primary" />
                                 <span className="truncate max-w-[200px] sm:max-w-[300px]">{booking.event?.venue?.name || booking.venue?.name}, {booking.event?.venue?.city || booking.venue?.city}</span>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <User className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                                <User className="w-4 h-4 text-primary" />
                                 <span>{primaryAttendee}</span>
                             </div>
                         </div>
@@ -262,14 +262,14 @@ const EventBookingCard = ({ booking }) => {
                         <div className="flex-1 min-w-[80px]">
                             <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Quantity</p>
                             <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
-                                <Ticket className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                                <Ticket className="w-4 h-4 text-primary" />
                                 {ticketCount} {ticketCount > 1 ? 'Tickets' : 'Ticket'}
                             </div>
                         </div>
                         <div className="w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
                         <div className="flex-1 min-w-[100px]">
                             <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Amount</p>
-                            <p className="text-base font-black text-indigo-600 dark:text-indigo-400">
+                            <p className="text-base font-black text-primary dark:text-primary">
                                 {booking.currency === 'INR' || !booking.currency ? '₹' : booking.currency}
                                 {booking.totalAmount?.toLocaleString() || '0.00'}
                             </p>
@@ -285,7 +285,7 @@ const EventBookingCard = ({ booking }) => {
 
                         <button
                             onClick={() => navigate(`/event-bookings/${booking.bookingId}`)}
-                            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
+                            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary hover:bg-primary dark:hover:bg-primary hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
                         >
                             <QrCode className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                             View Digital Ticket
@@ -299,9 +299,9 @@ const EventBookingCard = ({ booking }) => {
 
 const LoadingState = () => (
     <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-6 p-8">
-        <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#E33D52' }} />
+        <div className="w-16 h-16 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #FD4960)' }} />
         <div className="text-center">
-            <p className="text-[#E33D52] font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Events</p>
+            <p className="text-primary font-bold text-xs uppercase tracking-widest mb-1 animate-pulse">Loading Events</p>
             <h2 className="text-xl font-bold text-gray-400">XYNEMA</h2>
         </div>
     </div>

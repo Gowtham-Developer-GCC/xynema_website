@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
-import { Search, ChevronDown, ChevronRight, X, Building2 } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, X, Building2, Ticket } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
@@ -237,8 +237,8 @@ const MoviesPage = ({ selectedCity }) => {
                                 to="/cinemas"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-display uppercase tracking-wider transition-colors shadow-lg shadow-primary/20"
                             >
-                                <Building2 className="w-4 h-4" />
-                                Browse by cinemas
+                                <Ticket className="w-4 h-4" />
+                                BROWSE BY CINEMAS
                             </Link>
                         </div>
                     </div>

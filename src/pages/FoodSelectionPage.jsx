@@ -379,15 +379,6 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
     );
 };
 
-const LoadingState = () => (
-    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 p-8 font-sans">
-        <div className="w-16 h-16 rounded-full border-4 border-primary/20 animate-spin" style={{ borderTopColor: 'var(--primary, #FD4960)' }} />
-        <div className="text-center">
-            <p className="text-primary font-bold text-xs uppercase tracking-[0.3em] font-display mb-1 animate-pulse">Loading Menu</p>
-            <h2 className="text-xl font-black text-gray-400 font-display tracking-tighter">XYNEMA</h2>
-        </div>
-    </div>
-);
 
 // ErrorState removed - imported from components
 

@@ -92,7 +92,8 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                 <input
                     type="text"
                     placeholder={isNavbar ? "Search Movies, Theaters..." : "Search Movies, Theaters, Events..."}
-                    value={query}
+                    name="global-search-input"
+                    autoComplete="off"
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length >= 2 && setShowResults(true)}
                     className={`w-full transition-all font-medium ${isNavbar

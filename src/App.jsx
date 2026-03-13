@@ -34,6 +34,7 @@ const BookingSummaryPage = lazy(() => import('./pages/BookingSummaryPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const TheaterDetailsPage = lazy(() => import('./pages/TheaterDetailsPage'));
+const CinemasListPage = lazy(() => import('./pages/CinemasListPage'));
 const EventBookingDetailsPage = lazy(() => import('./pages/EventBookingDetailsPage'));
 const MyEventBookingsPage = lazy(() => import('./pages/MyEventBookingsPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
@@ -85,7 +86,7 @@ export default function App() {
 
     const handleCityChange = (city) => {
         localStorage.setItem('selected_city', city);
-        window.location.reload();
+        window.location.href = '/';
     };
 
     return (
@@ -148,6 +149,7 @@ export default function App() {
                                         <Route path="/privacy" element={<PrivacyPolicy />} />
                                         <Route path="/terms" element={<TermsOfUse />} />
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
+                                        <Route path="/cinemas" element={<CinemasListPage />} />
                                         <Route path="/favorites" element={<FavoritesPage />} />
                                         <Route path="/*" element={<NotFoundState title="Page Not Found" message="We couldn't find the page you're looking for." />} />
                                     </Routes>

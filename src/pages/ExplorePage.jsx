@@ -8,7 +8,7 @@ import ErrorState from '../components/ErrorState';
 import { animationStyles } from '../styles/components';
 import { getEvents, getAllEventsList, submitPrivateEventEnquiry } from '../services/eventService';
 import { useData } from '../context/DataContext';
-import { optimizeImage } from '../utils/helpers';
+import { errorHandler, optimizeImage } from '../utils/helpers';
 import { memo } from 'react';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
@@ -584,7 +584,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                 // setTimeout(() => onCancel(), 3000);
             }
         } catch (err) {
-            setStatusMessage({ type: 'error', text: err.message || 'Failed to submit enquiry. Please try again.' });
+            setStatusMessage({ type: 'error', text: errorHandler.getUserMessage(err) });
         } finally {
             setLoading(false);
         }

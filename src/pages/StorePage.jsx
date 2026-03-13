@@ -4,6 +4,7 @@ import { ShoppingCart, Search, Filter, ArrowLeft, Loader } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 import ErrorState from '../components/ErrorState';
+import LoadingScreen from '../components/LoadingScreen';
 import { designSystem } from '../config/design-system';
 import { animationStyles } from '../styles/components';
 import { getMerchandise } from '../services/storeService';
@@ -58,9 +59,11 @@ const StorePage = () => {
     };
 
     const handleCheckout = (injectedUser = null) => {
-        const currentUser = injectedUser || user;
+        // Ensure injectedUser is actually a user object, not a React event
+        const validInjectedUser = (injectedUser && typeof injectedUser === 'object' && !injectedUser.nativeEvent) ? injectedUser : null;
+        const currentUser = validInjectedUser || user;
 
-        if (!currentUser) {
+        if (!currentUser || !currentUser.token) {
             openLogin((userFromLogin) => handleCheckout(userFromLogin));
             return;
         }
@@ -101,10 +104,7 @@ const StorePage = () => {
                     {/* Store Main Content */}
                     <div className="lg:col-span-3">
                         {loading ? (
-                            <div className="flex flex-col items-center justify-center py-32">
-                                <div className="w-12 h-12 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#FD4960' }} />
-                                <p className="text-xynemaRose font-display font-bold mt-4 text-sm tracking-widest uppercase animate-pulse">Syncing Catalog</p>
-                            </div>
+                            <LoadingScreen message="Syncing Catalog" />
                         ) : (
                             <>
                                 {/* Controls */}
@@ -211,7 +211,7 @@ const StorePage = () => {
                                         </div>
 
                                         <button 
-                                            onClick={handleCheckout}
+                                            onClick={() => handleCheckout()}
                                             className="w-full py-4 rounded-lg font-display font-bold text-white text-sm bg-xynemaRose transition-all shadow-lg active:scale-98"
                                         >
                                             Proceed to Payment
@@ -251,7 +251,7 @@ const StorePage = () => {
                         </button>
                     </div>
                     <button 
-                        onClick={handleCheckout}
+                        onClick={() => handleCheckout()}
                         className="w-full py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-xynemaRose/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                         Proceed to Payment

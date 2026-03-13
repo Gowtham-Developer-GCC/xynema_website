@@ -1,80 +1,178 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Film, Loader } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
+import { ArrowLeft, MapPin, Star, Heart, Info, Clock, CheckCircle2, ChevronRight, Filter, Film, Ticket } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getUpcomingMovies } from '../services/movieService';
+import { getTheatersByCity, getTheaterDetails } from '../services/movieService';
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import bookingSessionManager from '../utils/bookingSessionManager';
 import ErrorState from '../components/ErrorState';
+import LoadingScreen from '../components/LoadingScreen';
 
 const TheaterDetailsPage = () => {
-    const { id, slug } = useParams(); // Route uses :slug or :id depending on version
-    const theaterIdentifier = id || slug;
+    const { slug } = useParams();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const location = useLocation();
 
-    const city = searchParams.get('city') || localStorage.getItem('selected_city') || '';
+    const city = searchParams.get('city') || localStorage.getItem('selected_city') || 'Kochi';
 
     const [theater, setTheater] = useState(location.state?.theater || null);
-    const [movies, setMovies] = useState([]);
+    const [maxShowEndDate] = useState(() => {
+        const d = location.state?.maxShowEndDate;
+        if (d) {
+            const parsed = new Date(d);
+            parsed.setHours(23, 59, 59, 999);
+            console.log(`📅 Theater maxShowEndDate from nav state: ${parsed.toISOString()}`);
+            return parsed;
+        }
+        return null;
+    });
     const [loading, setLoading] = useState(!theater);
-    const [moviesLoading, setMoviesLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    const [selectedFormat, setSelectedFormat] = useState('All');
+    const [selectedPriceRange, setSelectedPriceRange] = useState('All');
+    const [selectedTiming, setSelectedTiming] = useState('All');
+    const { user, openLogin } = useAuth();
 
     const fetchTheaterInfo = useCallback(async () => {
-        if (theater) {
-            setLoading(false);
-            return;
-        }
-
         try {
             setLoading(true);
-            const res = await getUpcomingMovies(city);
-            // Identifier can be ID or Name/Slug. Since API returns list, we try to match by ID or check if slug matches name?
-            // Usually theater slug logic might differ. For now, let's assume if it's an ID match it.
-            // If it's a slug, we might need a better matching strategy if slug isn't in the object.
 
-            const foundTheater = res.theaters.find(t =>
-                String(t.id) === String(theaterIdentifier) ||
-                String(t._id) === String(theaterIdentifier)
-            );
+            // 1. Try fetching directly by ID (slug often contains the ID)
+            const theaterData = await getTheaterDetails(slug, selectedDate);
 
-            if (foundTheater) {
-                setTheater(foundTheater);
+            if (theaterData) {
+                setTheater(prev => {
+                    if (!prev) return theaterData;
+                    // Merge: preserve theater metadata (name, address) from initial load
+                    return {
+                        ...prev,
+                        ...theaterData,
+                        name: (theaterData.name && theaterData.name !== 'Unknown Theatre') ? theaterData.name : prev.name,
+                        address: theaterData.address || prev.address,
+                        city: theaterData.city || prev.city
+                    };
+                });
             } else {
-                throw new Error('Theater not found in this city.');
+                // 2. Fallback: Search among theaters in the city if ID fetch fails
+                // This handles cases where slug might be name-based but not the ID
+                const theaters = await getTheatersByCity(city);
+                const slugLower = slug?.toLowerCase();
+                const foundTheater = theaters.find(t =>
+                    t.id === slug ||
+                    (t.name && (
+                        t.name.toLowerCase().replace(/\s+/g, '-').includes(slugLower) ||
+                        slugLower.includes(t.name.toLowerCase().replace(/\s+/g, '-')) ||
+                        t.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(slugLower)
+                    ))
+                );
+
+                if (foundTheater) {
+                    // Fetch full details for the matched theater to get movies/shows
+                    const fullDetails = await getTheaterDetails(foundTheater.id, selectedDate);
+                    setTheater(fullDetails || foundTheater);
+                } else {
+                    throw new Error('Cinema not found in this city.');
+                }
             }
         } catch (err) {
             console.error('Error fetching theater details:', err);
-            setError(err);
+            setError(err.message || 'Could not load cinema details.');
         } finally {
             setLoading(false);
         }
-    }, [theaterIdentifier, city, theater]);
-
-    const fetchMoviesAtTheater = useCallback(async () => {
-        try {
-            setMoviesLoading(true);
-            const res = await getUpcomingMovies(city);
-            const filteredMovies = res.movies.filter(movie =>
-                movie.theaters.some(t => String(t.id) === String(theaterIdentifier) || String(t._id) === String(theaterIdentifier))
-            );
-            setMovies(filteredMovies);
-        } catch (err) {
-            console.error('Error fetching movies at theater:', err);
-        } finally {
-            setMoviesLoading(false);
-        }
-    }, [theaterIdentifier, city]);
+    }, [slug, city, selectedDate]);
 
     useEffect(() => {
         fetchTheaterInfo();
-        fetchMoviesAtTheater();
-    }, [fetchTheaterInfo, fetchMoviesAtTheater, selectedDate]);
+    }, [fetchTheaterInfo]);
 
-    if (loading) return <LoadingState />;
-    if (error) return <ErrorState error={error} onRetry={fetchTheaterInfo} title="Cinema Link Failed" buttonText="Restore Session" />;
+    const filteredMovies = useMemo(() => {
+        if (!theater?.movies) return [];
+
+        const parseTime = (timeStr) => {
+            const [time, modifier] = timeStr.split(' ');
+            let [hours, minutes] = time.split(':');
+            if (hours === '12') hours = '00';
+            if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+            return parseInt(hours, 10);
+        };
+
+        const isTimeMatch = (timeStr, filter) => {
+            if (filter === 'All') return true;
+            const hours = parseTime(timeStr);
+            if (filter === 'Morning') return hours >= 6 && hours < 12;
+            if (filter === 'Afternoon') return hours >= 12 && hours < 16;
+            if (filter === 'Evening') return hours >= 16 && hours < 21;
+            if (filter === 'Night') return hours >= 21 || hours < 6;
+            return true;
+        };
+
+        const isPriceMatch = (schedules, filter) => {
+            if (filter === 'All') return true;
+            return schedules.some(sched =>
+                sched.pricing.some(p => {
+                    const price = p.basePrice || p.price || 0;
+                    if (filter === '0-200') return price <= 200;
+                    if (filter === '200-400') return price > 200 && price <= 400;
+                    if (filter === '400+') return price > 400;
+                    return true;
+                })
+            );
+        };
+
+        return theater.movies.map(movie => {
+            // Filter schedules that are valid for the selected date
+            const validSchedules = movie.schedules.filter(sched => {
+                const startDate = sched.showStartDate ? new Date(sched.showStartDate) : null;
+                const endDate = sched.showEndDate ? new Date(sched.showEndDate) : null;
+                const target = new Date(selectedDate);
+
+                if (startDate) startDate.setHours(0, 0, 0, 0);
+                if (endDate) endDate.setHours(23, 59, 59, 999);
+                target.setHours(12, 0, 0, 0);
+
+                const dateMatches = (!startDate || target >= startDate) && (!endDate || target <= endDate);
+                if (!dateMatches) return false;
+
+                // Check if any showtime in this schedule matches the timing filter
+                const hasMatchingTime = sched.showTimes.some(time => isTimeMatch(time, selectedTiming));
+                if (!hasMatchingTime) return false;
+
+                // Price filter applied at movie level if it matches ANY schedule
+                return true;
+            });
+
+            if (validSchedules.length === 0) return null;
+
+            // Final check for price match across all valid schedules for this movie
+            if (!isPriceMatch(validSchedules, selectedPriceRange)) return null;
+
+            // Further filter the showTimes within each schedule to only show matching ones if timing filter is on
+            const doubleFilteredSchedules = validSchedules.map(sched => ({
+                ...sched,
+                showTimes: sched.showTimes.filter(time => isTimeMatch(time, selectedTiming))
+            })).filter(sched => sched.showTimes.length > 0);
+
+            if (doubleFilteredSchedules.length === 0) return null;
+
+            // Extract all shows from the doubleFilteredSchedules to keep it flat
+            const shows = doubleFilteredSchedules.flatMap(sched =>
+                (sched.shows || []).map(s => ({
+                    ...s,
+                    // Ensure format is legacy-compatible if missing on show
+                    format: s.format || s.screen?.screenType || sched.format || '2D'
+                }))
+            );
+
+            return { ...movie, schedules: doubleFilteredSchedules, allShows: shows };
+        }).filter(Boolean);
+    }, [theater, selectedDate, selectedTiming, selectedPriceRange]);
+
+    if (loading) return <LoadingScreen message="Linking to Cinema..." />;
+    if (error) return <ErrorState error={error} onRetry={fetchTheaterInfo} title="Cinema Link Interrupted" buttonText="Try Again" />;
+    if (!theater) return <ErrorState error="Cinema not found" onRetry={() => navigate('/cinemas')} title="Not Found" />;
 
     const experiences = theater?.screens?.map(s => s.type || 'Standard')
         .filter((v, i, a) => a.indexOf(v) === i) || ['Standard'];
@@ -104,286 +202,294 @@ const TheaterDetailsPage = () => {
     };
 
     const handleDirections = () => {
-        // Attempt to extract coordinates from various formats
         let lat, lng;
         if (theater?.coordinates?.lat && theater?.coordinates?.lng) {
             lat = theater.coordinates.lat;
             lng = theater.coordinates.lng;
         } else if (Array.isArray(theater?.coordinates)) {
-            [lng, lat] = theater.coordinates; // GeoJSON format [lng, lat]
-        } else if (typeof theater?.location === 'string' && theater.location.includes('[') && theater.location.includes(']')) {
-            // Handle the weird stringified format from sample response
-            const match = theater.location.match(/\[\s*([\d.]+),\s*([\d.]+)\s*\]/);
-            if (match) {
-                lng = match[1];
-                lat = match[2];
-            }
+            [lng, lat] = theater.coordinates;
+        } else if (theater?.location?.coordinates) {
+            [lng, lat] = theater.location.coordinates;
         }
 
         if (lat && lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
         } else {
-            // Fallback to name search
             window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${theater?.name} ${theater?.city}`)}`, '_blank');
         }
     };
 
+
+    const handleShowSelection = (movie, sched, timeOrShow) => {
+        if (!user) {
+            openLogin(() => handleShowSelection(movie, sched, timeOrShow));
+            return;
+        }
+
+        const show = typeof timeOrShow === 'object' ? timeOrShow : null;
+        const time = show ? show.startTime : timeOrShow;
+        const showId = show?.id || show?._id || show?.showId || sched.id;
+
+        try {
+            const movieSlug = movie.slug || movie.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const theaterSlug = theater.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+            // Persist details for the booking flow
+            sessionStorage.setItem('booking_movie_title', movie.name);
+            sessionStorage.setItem('booking_movie_poster', movie.posterUrl);
+            sessionStorage.setItem('booking_show_date', selectedDate);
+            sessionStorage.setItem('booking_show_time', time);
+            sessionStorage.setItem('booking_screen_name', show?.screen?.name || sched.screen?.name || '1');
+            sessionStorage.setItem('booking_theater_name', theater.name);
+
+            // Get language from schedule if available (array or string)
+            const lang = Array.isArray(sched.movieLanguage) ? sched.movieLanguage[0] : (sched.movieLanguage || show?.movieLanguage || 'Malayalam');
+            sessionStorage.setItem('booking_movie_language', lang);
+            sessionStorage.setItem('booking_movie_format', show?.format || sched.format || '2D');
+            sessionStorage.setItem('booking_is_food_available', 'true');
+
+            bookingSessionManager.startSession(showId, theater.name, user?.id || user?._id);
+
+            navigate(`/movie/${movieSlug}/${theaterSlug}/seats`, {
+                state: {
+                    movieId: movie.movieId,
+                    movieTitle: movie.name,
+                    moviePoster: movie.posterUrl,
+                    theaterId: theater.id,
+                    theaterName: theater.name,
+                    date: selectedDate,
+                    startTime: time
+                }
+            });
+        } catch (err) {
+            console.error('Navigation error:', err);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] font-sans text-gray-900 dark:text-gray-100 transition-colors">
             <SEO
-                title={`${theater?.name} - Cinema Details | XYNEMA`}
-                description={`View movie showtimes and facilities at ${theater?.name}, ${theater?.city}.`}
+                title={`${theater?.name} - Showtimes | XYNEMA`}
+                description={`Book tickets for movies at ${theater?.name}, ${theater?.city}. View latest showtimes and prices.`}
             />
 
-            {/* Simple Minimal Header */}
-            <div className="border-b border-gray-100 bg-white">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors mb-6"
+            {/* Theater Info Header */}
+            <div className="bg-white dark:bg-[#1a1d24] border-b border-gray-200 dark:border-gray-800">
+                <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+                    <Link
+                        to="/cinemas"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary transition-colors mb-6"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back
-                    </button>
+                        Back to Cinemas
+                    </Link>
 
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                        <div className="space-y-4">
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+                        <div className="max-w-2xl">
+                            <div className="flex items-center gap-3 mb-2">
+                                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
                                     {theater?.name}
                                 </h1>
-                                <div
-                                    className="flex items-center gap-2 text-gray-500 mt-2 cursor-pointer hover:text-[#FD4960] transition-colors w-fit"
-                                    onClick={handleDirections}
-                                >
-                                    <MapPin className="w-4 h-4 shrink-0" />
-                                    <span className="text-sm font-medium">{theater?.city || 'Location unavailable'}</span>
-                                </div>
+                                <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                                    <Heart className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-primary" />
+                                </button>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                                {experiences.map((exp, i) => (
-                                    <span key={i} className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold border border-gray-200">
-                                        {exp}
+                            <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 group cursor-pointer" onClick={handleDirections}>
+                                <MapPin className="w-4 h-4 shrink-0 mt-1" />
+                                <p className="text-sm leading-relaxed group-hover:text-primary transition-colors">
+                                    {theater?.address || `${theater?.city}, Kerala`}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                {theater?.amenities?.map((amenity, i) => (
+                                    <span key={i} className="px-3 py-1 rounded-md bg-gray-50 dark:bg-[#0f1115] border border-gray-100 dark:border-gray-800 text-[11px] font-bold text-gray-500 uppercase flex items-center gap-1.5">
+                                        {getFacilityIcon(amenity)}
+                                        {amenity}
                                     </span>
                                 ))}
-                                {theater?.rating > 0 && (
-                                    <div className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100 flex items-center gap-1">
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <span>{theater.rating}</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-col items-end gap-3">
                             <button
                                 onClick={handleDirections}
-                                className="px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+                                className="flex items-center gap-2 text-primary font-bold text-sm hover:underline"
                             >
-                                Get Directions
+                                <Info className="w-4 h-4" />
+                                Cinema Info
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Facilities - Clean Row */}
-                    {facilities.length > 0 && (
-                        <div className="mt-8 pt-6 border-t border-gray-100">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Amenities</h3>
-                            <div className="flex flex-wrap gap-x-6 gap-y-3">
-                                {facilities.map((f, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-gray-600">
-                                        <div className="text-gray-400">
-                                            {getFacilityIcon(f)}
-                                        </div>
-                                        <span className="text-sm font-medium">{f}</span>
-                                    </div>
-                                ))}
+            {/* Sticky Date and Filter Bar */}
+            <div className="sticky top-0 z-40 bg-white/95 dark:bg-[#1a1d24]/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+                <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-3">
+                        {/* Date Strip */}
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            {[...Array(7)].map((_, i) => {
+                                const date = new Date();
+                                date.setDate(date.getDate() + i);
+                                const dateStr = date.toISOString().split('T')[0];
+                                const isSelected = selectedDate === dateStr;
+
+                                // Disable dates beyond the max show end date from the browse API
+                                const isAfterMax = maxShowEndDate && date > maxShowEndDate;
+
+                                return (
+                                    <button
+                                        key={i}
+                                        disabled={isAfterMax}
+                                        onClick={() => !isAfterMax && setSelectedDate(dateStr)}
+                                        className={`flex flex-col items-center justify-center min-w-[56px] h-[64px] rounded-lg transition-all ${
+                                            isSelected
+                                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                                : isAfterMax
+                                                    ? 'bg-gray-100 dark:bg-gray-800/20 text-gray-300 dark:text-gray-700 cursor-not-allowed border border-transparent'
+                                                    : 'bg-white dark:bg-[#0f1115] border border-gray-100 dark:border-gray-800 text-gray-500 hover:border-primary/40'
+                                            }`}
+                                    >
+                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+                                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                        </span>
+                                        <span className="text-lg font-black mt-0.5">
+                                            {date.getDate()}
+                                        </span>
+                                        <span className="text-[10px] font-bold uppercase opacity-80">
+                                            {date.toLocaleDateString('en-US', { month: 'short' })}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Filters */}
+                        <div className="flex items-center gap-3">
+                            <div className="hidden md:flex items-center gap-3 pr-4 border-r border-gray-200 dark:border-gray-800">
+                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-green-500"></div> Available
+                                </div>
+                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-orange-500"></div> Fast Filling
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {/* Date Selector - Minimal Sticky */}
-            <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-2 py-3 overflow-x-auto no-scrollbar">
-                        {[...Array(7)].map((_, i) => {
-                            const minDate = new Date();
-                            const date = new Date(minDate);
-                            date.setDate(minDate.getDate() + i);
-                            const dateStr = date.toISOString().split('T')[0];
-                            const isSelected = selectedDate === dateStr;
-
-                            return (
-                                <button
-                                    key={i}
-                                    onClick={() => setSelectedDate(dateStr)}
-                                    className={`flex flex-col items-center justify-center min-w-[60px] h-[64px] rounded-xl transition-all border ${isSelected
-                                        ? 'bg-[#FD4960] text-white border-[#FD4960] shadow-md shadow-blue-900/20'
-                                        : 'bg-white text-gray-500 border-transparent hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
-                                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                                    </span>
-                                    <span className="text-lg font-bold leading-none mt-1">
-                                        {date.getDate()}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl font-black text-gray-900">Now Showing</h2>
-
-                    {/* Format Filter */}
-                    <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-                        {['All', '2D', '3D', 'IMAX'].map((format) => (
-                            <button
-                                key={format}
-                                onClick={() => setSelectedFormat(format)}
-                                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${selectedFormat === format
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                            <select
+                                value={selectedPriceRange}
+                                onChange={(e) => setSelectedPriceRange(e.target.value)}
+                                className="bg-white dark:bg-[#0f1115] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary"
                             >
-                                {format}
-                            </button>
-                        ))}
+                                <option value="All">Filter Price</option>
+                                <option value="0-200">0 - 200</option>
+                                <option value="200-400">200 - 400</option>
+                                <option value="400+">400+</option>
+                            </select>
+
+                            <select
+                                value={selectedTiming}
+                                onChange={(e) => setSelectedTiming(e.target.value)}
+                                className="bg-white dark:bg-[#0f1115] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                                <option value="All">Filter Timings</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                                <option value="Evening">Evening</option>
+                                <option value="Night">Night</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                {moviesLoading ? (
-                    <div className="py-24 flex flex-col items-center justify-center space-y-4">
-                        <Loader className="w-8 h-8 text-[#FD4960] animate-spin" />
-                        <p className="text-sm font-medium text-gray-400">Loading schedules...</p>
-                    </div>
-                ) : movies.length > 0 ? (
-                    <div className="space-y-6">
-                        {movies.map((movie) => {
-                            const theaterInMovie = movie.theaters.find(t => String(t.id) === String(theaterId));
-                            const allShowsAtDate = theaterInMovie?.screens?.flatMap(screen =>
-                                screen.shows.filter(show => {
-                                    const showDate = show.date || show.showDate;
-                                    const dateMatch = showDate?.split('T')[0] === selectedDate;
-                                    const formatMatch = selectedFormat === 'All' || show.format === selectedFormat;
-                                    return dateMatch && formatMatch;
-                                }).map(s => ({ ...s, screenName: screen.name, screenType: screen.type }))
-                            ) || [];
-
-                            if (allShowsAtDate.length === 0 && selectedFormat !== 'All') return null;
-
-                            return (
-                                <div key={movie.id} className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex flex-col md:flex-row gap-6">
-                                        {/* Movie Poster & Info */}
-                                        <div className="flex md:flex-col gap-4 md:w-48 shrink-0">
-                                            <div
-                                                className="relative w-24 md:w-full aspect-[2/3] rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
-                                                onClick={() => navigate(`/movie/${movie.slug || movie.id}`)}
-                                            >
-                                                <img
-                                                    src={movie.posterUrl}
-                                                    alt={movie.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1 md:hidden">
-                                                <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{movie.title}</h3>
-                                                <div className="text-xs text-gray-500 font-medium">
-                                                    {movie.language} • {movie.genre?.split(',')[0]}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Desktop Info & Showtimes */}
-                                        <div className="flex-1">
-                                            <div className="hidden md:block mb-6">
-                                                <h3
-                                                    className="text-xl font-bold text-gray-900 cursor-pointer hover:text-[#FD4960] transition-colors w-fit"
-                                                    onClick={() => navigate(`/movie/${movie.slug || movie.id}`)}
-                                                >
-                                                    {movie.title}
+            {/* Movies and Showtimes List */}
+            <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {filteredMovies.length > 0 ? (
+                    <div className="space-y-4">
+                        {filteredMovies.map((movie) => (
+                            <div key={movie.movieId} className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+                                <div className="flex flex-col lg:flex-row gap-8">
+                                    {/* Left: Movie Info */}
+                                    <div className="lg:w-1/3 flex gap-4">
+                                        <button className="shrink-0 p-1 hover:scale-110 transition-transform">
+                                            <Heart className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                                        </button>
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h3 className="text-lg font-bold uppercase tracking-tight text-gray-900 dark:text-white hover:text-primary transition-colors">
+                                                    <Link to={`/movie/${movie.movieId}`}>{movie.name}</Link>
                                                 </h3>
-                                                <div className="flex items-center gap-3 mt-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                                    <span className="px-2 py-0.5 border border-gray-200 rounded text-gray-600 font-bold">{movie.certification || 'U/A'}</span>
-                                                    <span>{movie.language}</span>
-                                                    <span>•</span>
-                                                    <span>{movie.genre?.split(',').slice(0, 2).join(', ')}</span>
-                                                    <span>•</span>
-                                                    <span>{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
-                                                </div>
+                                                <span className="shrink-0 text-[10px] font-black px-1.5 py-0.5 border border-gray-200 dark:border-gray-700 rounded text-gray-400 uppercase">UA</span>
                                             </div>
-
-                                            {allShowsAtDate.length > 0 ? (
-                                                <div className="flex flex-wrap gap-3">
-                                                    {allShowsAtDate
-                                                        .sort((a, b) => new Date(`1970/01/01 ${a.startTime || a.showTime}`) - new Date(`1970/01/01 ${b.startTime || b.showTime}`))
-                                                        .map((show) => (
-                                                            <button
-                                                                key={show.id || show._id}
-                                                                onClick={() => navigate(`/seats?movieId=${movie.id}&theaterId=${theaterId}&showId=${show.id || show._id}&date=${selectedDate}`)}
-                                                                className={`
-                                                                    flex flex-col items-center justify-center min-w-[90px] py-2 px-3 rounded-lg border transition-all text-sm
-                                                                    ${show.availableSeats > 0
-                                                                        ? 'bg-white border-green-200 hover:border-green-500 hover:shadow-sm'
-                                                                        : 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed'
-                                                                    }
-                                                                `}
-                                                            >
-                                                                <span className={`font-bold ${show.availableSeats > 0 ? 'text-green-700' : 'text-gray-400'}`}>
-                                                                    {show.startTime || show.showTime}
-                                                                </span>
-                                                                <span className="text-[10px] text-gray-400 font-medium mt-0.5">
-                                                                    {show.screenType || 'Standard'}
-                                                                </span>
-                                                            </button>
-                                                        ))}
-                                                </div>
-                                            ) : (
-                                                <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                                    <p className="text-xs font-medium text-gray-400">No shows available for this filter</p>
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide">
+                                                <span className="flex items-center gap-1"><Info className="w-3 h-3" /> Info</span>
+                                                <span>•</span>
+                                                <span className="text-primary/80">
+                                                    {movie.schedules[0]?.movieLanguage?.join(', ') || movie.schedules[0]?.movieLanguage || 'Malayalam'}, {movie.schedules[0]?.format || '2D'}
+                                                </span>
+                                            </div>
                                         </div>
+                                    </div>
+
+                                    {/* Right: Showtimes Grid */}
+                                    <div className="flex-1">
+                                        <div className="flex flex-wrap gap-4">
+                                            {(movie.allShows || movie.schedules.flatMap(sched => sched.showTimes.map(t => ({ startTime: t, id: sched.id, format: sched.format, pricing: sched.pricing })))).map((show, idx) => (
+                                                <div key={`${show.id}-${idx}`} className="group relative">
+                                                    <button
+                                                        onClick={() => handleShowSelection(movie, movie.schedules[0] || {}, show)}
+                                                        className="w-[100px] h-[44px] flex flex-col items-center justify-center rounded-lg border border-green-200 dark:border-green-500/20 bg-white dark:bg-[#0f1115] hover:border-green-500 transition-all font-medium text-[13px] text-green-600 dark:text-green-500"
+                                                    >
+                                                        {show.startTime || show.showTime}
+                                                        <span className="text-[9px] opacity-70 font-bold uppercase">{show.format || '2D'}</span>
+                                                    </button>
+                                                    {/* Tooltip on hover */}
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white p-3 rounded-lg text-[11px] opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xl">
+                                                        <div className="space-y-2">
+                                                            {(show.pricing || []).map((p, ix) => (
+                                                                <div key={ix} className="flex justify-between items-center">
+                                                                    <span className="capitalize">{p.label}:</span>
+                                                                    <span className="font-bold">₹{p.basePrice || p.price}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="mt-2 pt-2 border-t border-white/10 text-[9px] font-bold text-green-400 uppercase tracking-tighter">
+                                                            Available
+                                                        </div>
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900"></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {/*<div className="mt-3 flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                                            <div className="w-2 h-2 rounded-full border border-gray-200"></div> Cancellation Available
+                                        </div>*/}
                                     </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
                 ) : (
-                    <div className="py-20 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Film className="w-6 h-6 text-gray-300" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">No Shows Available</h3>
-                        <p className="text-gray-500 text-sm mt-1">Try selecting a different date</p>
+                    <div className="py-32 flex flex-col items-center justify-center bg-white dark:bg-[#1a1d24] rounded-2xl border border-dashed border-gray-300 dark:border-gray-800">
+                        <Film className="w-16 h-16 text-gray-200 dark:text-gray-800 mb-4" />
+                        <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300">No shows available</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs leading-relaxed">
+                            There are no shows scheduled for this cinema on {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.
+                        </p>
+                        <button
+                            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                            className="mt-6 text-primary font-bold hover:underline"
+                        >
+                            Reset to today
+                        </button>
                     </div>
                 )}
             </div>
         </div>
     );
 };
-
-const LoadingState = () => (
-    <div className="min-h-screen bg-whiteSmoke flex flex-col items-center justify-center space-y-12 p-8 text-center font-display">
-        <div className="relative w-32 h-32">
-            <div className="absolute inset-0 rounded-[40px] border-4 border-gray-100" />
-            <div className="absolute inset-0 rounded-[40px] border-4 border-transparent animate-spin" style={{ borderTopColor: 'var(--xynemaRose, #FD4960)', borderRadius: '40px' }} />
-        </div>
-        <div className="space-y-4">
-            <p className="text-xynemaRose font-black text-[10px] uppercase tracking-[0.5em] animate-pulse">Syncing Cinema Link</p>
-            <h2 className="text-5xl font-black text-gray-200 uppercase tracking-tighter">XYNEMA</h2>
-        </div>
-    </div>
-);
-
-// ErrorState removed - imported from components
 
 export default TheaterDetailsPage;

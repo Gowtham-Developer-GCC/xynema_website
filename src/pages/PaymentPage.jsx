@@ -36,7 +36,7 @@ const PaymentPage = () => {
     const seatsRef = useRef([]);
 
     // Validation
-    const isFormValid = mobileNumber.trim().length >= 10;
+    const isFormValid = mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber);
 
     // Keep seats ref in sync for cleanup closure
     useEffect(() => {
@@ -318,7 +318,7 @@ const PaymentPage = () => {
 
                         {/* Contact Details Section */}
                         <section className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 transition-colors duration-300">
-                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-6 font-display uppercase italic">Contact Details</h2>
+                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-6 font-roboto uppercase">Contact Details</h2>
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-[13px] text-gray-600 dark:text-gray-400 mb-2">
@@ -327,8 +327,11 @@ const PaymentPage = () => {
                                     <input
                                         type="tel"
                                         value={mobileNumber}
-                                        onChange={(e) => setMobileNumber(e.target.value)}
+                                        onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                         placeholder="Enter 10 digit mobile number"
+                                        maxLength={10}
+                                        name="mobile"
+                                        autoComplete="tel"
                                         className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
                                     />
                                     <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Tickets will be sent to this number via SMS</p>
@@ -342,6 +345,8 @@ const PaymentPage = () => {
                                         value={emailDetails}
                                         onChange={(e) => setEmailDetails(e.target.value)}
                                         placeholder="Enter email for ticket confirmation"
+                                        name="email"
+                                        autoComplete="email"
                                         className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
                                     />
                                 </div>
@@ -350,7 +355,7 @@ const PaymentPage = () => {
 
                         {/* Payment Method Section */}
                         <section className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 transition-colors duration-300">
-                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-8 font-display uppercase italic">Choose Payment Method</h2>
+                            <h2 className="text-[18px] font-black text-gray-900 dark:text-white mb-8 font-roboto uppercase">Choose Payment Method</h2>
 
                             {/* UPI Quick Pay Box */}
                             <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 bg-[#fafafa] dark:bg-gray-800/30 relative mb-10 transition-colors duration-300">
@@ -505,11 +510,11 @@ const PaymentPage = () => {
                                 {/* Total & Pay Button */}
                                 <div>
                                     <div className="flex items-center justify-between mb-6">
-                                        <span className="font-black text-gray-800 dark:text-gray-200 flex items-center gap-1 cursor-pointer hover:text-primary dark:hover:text-primary font-display uppercase tracking-wider">
+                                        <span className="font-black text-gray-800 dark:text-gray-200 flex items-center gap-1 cursor-pointer hover:text-primary dark:hover:text-primary font-roboto uppercase tracking-wider">
                                             Total Amount
                                             <ChevronRight className="w-4 h-4 rotate-90" />
                                         </span>
-                                        <span className="text-2xl font-black text-primary font-display">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                                        <span className="text-2xl font-black text-primary font-roboto">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                     </div>
 
                                     <button
@@ -564,8 +569,8 @@ const SuccessScreen = ({ booking }) => {
 
                 <div className="space-y-4">
                     <div className="space-y-1">
-                        <h1 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] font-display">BOOKING CONFIRMED</h1>
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-display italic">YOU'RE ALL SET!</h2>
+                        <h1 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] font-roboto">BOOKING CONFIRMED</h1>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-roboto">YOU'RE ALL SET!</h2>
                     </div>
                     <p className="text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-4 uppercase tracking-wider">
                         Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-primary/20 pb-0.5">{booking?.movieTitle}</span> are ready.
@@ -575,13 +580,13 @@ const SuccessScreen = ({ booking }) => {
                 <div className="space-y-4 pt-6">
                     <button
                         onClick={() => navigate(`/bookings/${booking?.id}`)}
-                        className="w-full bg-primary text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] font-display"
+                        className="w-full bg-primary text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] font-roboto"
                     >
                         VIEW DIGITAL TICKET
                     </button>
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-primary transition-colors font-display"
+                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-primary transition-colors font-roboto"
                     >
                         BACK TO HOME
                     </button>
@@ -589,7 +594,7 @@ const SuccessScreen = ({ booking }) => {
 
                 <div className="pt-4 flex items-center justify-center gap-2">
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-display">Sent to your registered email</span>
+                    <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-roboto">Sent to your registered email</span>
                 </div>
             </div>
         </div>

@@ -66,16 +66,18 @@ export const confirmBooking = async (showId, bookingData) => {
 export const getUserBookings = async (page = 1) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.BOOKING.MY_BOOKINGS, { params: { page } });
-        if (response.data.success) {
-            const data = response.data.data;
-            // Handle both nested { bookings: [] } and direct [] response
+        let body = response.data;
+        if (Array.isArray(body)) body = body[0] || {};
+
+        if (body.success) {
+            const data = body.data;
             const bookings = Array.isArray(data) ? data : (data?.bookings || []);
 
             return {
                 bookings: Array.isArray(bookings) ? bookings.map(b => Booking.fromApiJson(b)) : [],
-                totalPages: data?.totalPages || 1,
-                currentPage: data?.currentPage || 1,
-                total: data?.total || (Array.isArray(data) ? data.length : 0)
+                totalPages: body.totalPages || 1,
+                currentPage: body.currentPage || 1,
+                total: body.totalCount || (Array.isArray(bookings) ? bookings.length : 0)
             };
         }
         return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };

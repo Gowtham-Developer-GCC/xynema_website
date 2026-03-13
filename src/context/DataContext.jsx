@@ -128,8 +128,8 @@ export const DataProvider = ({ children, selectedCity }) => {
                 apiCacheManager.getOrFetchEventBookings(() => getEventBookings())
             ]);
 
-            const movieBookingsArray = Array.isArray(movieBookings) ? movieBookings : [];
-            const eventBookingsArray = Array.isArray(eventBookings) ? eventBookings : [];
+            const movieBookingsArray = movieBookings?.bookings || (Array.isArray(movieBookings) ? movieBookings : []);
+            const eventBookingsArray = eventBookings?.bookings || (Array.isArray(eventBookings) ? eventBookings : []);
 
             setUserMovieBookings(movieBookingsArray);
             setUserEventBookings(eventBookingsArray);

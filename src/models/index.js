@@ -75,6 +75,7 @@ export class Movie {
         if (hasTheaters) {
             this.isAvailable = true;
         }
+        this.availability = data.availability || {};
     }
 
     _parseCastCrew(arr, type = 'cast') {
@@ -117,11 +118,11 @@ export class CrewMember {
 
 export class Theater {
     constructor(data = {}) {
-        this.id = data.theatreId || data._id || data.id || '';
+        this.id = data.theaterId || data.theatreId || data._id || data.id || '';
         this.name = data.theatreName || data.theaterName || data.name || 'Unknown Theatre';
-        this.city = data.city || data.location || '';
+        this.city = data.city || (typeof data.location === 'object' ? data.location.city : data.location) || '';
         this.address = data.address || '';
-        this.coordinates = data.coordinates || { lat: 0, lng: 0 };
+        this.coordinates = data.coordinates || (data.location?.coordinates ? { lng: data.location.coordinates[0], lat: data.location.coordinates[1] } : { lat: 0, lng: 0 });
         this.screens = (data.screens || []).map(s => new Screen(s));
         this.amenities = data.amenities || [];
         this.contact = data.contact || {};
@@ -132,6 +133,21 @@ export class Theater {
         this.basePrice = data.basePrice || 0;
         this.features = data.features || (data.amenities ? data.amenities.slice(0, 3) : []);
         this.isFoodAndBeveragesAvailable = data.isFoodAndBeveragesAvailable ?? true;
+        
+        // Nested representation from browse-movies API
+        this.movies = (data.movies || []).map(m => new TheaterMovie(m));
+
+        // Calculate max show end date across all movies in this theater
+        let maxEnd = null;
+        this.movies.forEach(movie => {
+            (movie.schedules || []).forEach(sched => {
+                if (sched.showEndDate) {
+                    const d = new Date(sched.showEndDate);
+                    if (!maxEnd || d > maxEnd) maxEnd = d;
+                }
+            });
+        });
+        this.maxShowEndDate = maxEnd ? maxEnd.toISOString() : null;
 
         // Convenience: Flatten all shows from all screens
         this.allShows = this.screens.reduce((acc, screen) => {
@@ -149,6 +165,58 @@ export class Theater {
     }
 }
 
+export class TheaterMovie {
+    constructor(data = {}) {
+        this.movieId = data.movieId || '';
+        this.name = data.movieName || '';
+        this.posterUrl = data.posterUrl || '';
+        this.releaseDate = data.releaseDate || '';
+        this.slug = data.slug || (data.movieName ? data.movieName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '');
+        
+        // Handle new response structure: data has `shows` and `scheduleInfo`
+        if (Array.isArray(data.shows)) {
+            // Group shows into a single virtual schedule for the UI to iterate over easily
+            // or keep them separate if they are already grouped on backend
+            this.schedules = [new TheaterSchedule({
+                ...data.scheduleInfo,
+                shows: data.shows,
+                // Map the new flat show structure to legacy format expectations
+                showTimes: data.shows.map(s => s.showTime),
+                // Incorporate screen info from the first show if available
+                screen: data.shows[0]?.screen || {},
+                format: data.scheduleInfo?.format === "true" ? "2D" : (data.scheduleInfo?.format || "2D") 
+            })];
+            this.shows = data.shows.map(s => new Show(s));
+        } else {
+            this.schedules = (data.schedules || []).map(s => new TheaterSchedule(s));
+        }
+    }
+}
+
+export class TheaterSchedule {
+    constructor(data = {}) {
+        this.id = data.scheduleId || '';
+        this.screen = data.screen || {};
+        this.showsPerDay = data.showsPerDay || 0;
+        this.showTimes = data.showTimes || [];
+        this.pricing = data.pricing || [];
+        this.showStartDate = data.showStartDate || '';
+        this.showEndDate = data.showEndDate || '';
+        this.movieLanguage = data.movieLanguage || [];
+        this.subtitles = data.subtitles || '';
+        this.format = data.format || '';
+        this.isActive = data.isActive ?? true;
+
+        // Handle nested show objects if present
+        if (Array.isArray(data.shows)) {
+            this.shows = data.shows.map(s => new Show(s));
+            if (this.showTimes.length === 0) {
+                this.showTimes = data.shows.map(s => s.showTime);
+            }
+        }
+    }
+}
+
 export class Screen {
     constructor(data = {}) {
         this.id = data.screenId || data._id || data.id || '';
@@ -156,17 +224,17 @@ export class Screen {
         this.totalSeats = data.totalSeats || 0;
         this.type = data.screenType || data.type || '2D';
         this.facilities = data.facilities || [];
-        this.shows = (data.showTimes || data.shows || []).map(s => {
+        this.shows = (data.shows || data.showTimes || []).map(s => {
             if (typeof s === 'string') {
-                return new Show({
-                    startTime: s,
+                return new Show({ 
+                    showTime: s, 
                     format: this.type,
-                    screenId: this.id,
-                    showDate: data.showStartDate
+                    screenId: this.id
                 });
             }
             return new Show({ ...s, format: s.format || this.type });
         });
+        this.showEndDate = data.showEndDate || null;
     }
 
     static fromJson(json) {

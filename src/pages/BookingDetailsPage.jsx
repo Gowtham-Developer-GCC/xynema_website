@@ -6,6 +6,7 @@ import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
 import BookingQr from '../components/BookingQr';
 import ErrorState from '../components/ErrorState';
+import LoadingScreen from '../components/LoadingScreen';
 import ReviewModal from '../components/ReviewModal';
 
 const BookingDetailsPage = () => {
@@ -43,7 +44,7 @@ const BookingDetailsPage = () => {
         fetchBookingDetails();
     }, [id, userBookings]);
 
-    if (loading) return <LoadingState />;
+    if (loading) return <LoadingScreen message="Ticket Readying" />;
     if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings')} title="Ticket Missing" buttonText="My Bookings" />;
 
     const bookingDateRaw = booking.showDate || booking.date;
@@ -101,12 +102,12 @@ const BookingDetailsPage = () => {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/bookings')}
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div className="text-center flex items-center gap-2">
-                        <Ticket size={16} className="text-indigo-500" />
+                        <Ticket size={16} className="text-primary" />
                         <h1 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Boarding Pass</h1>
                     </div>
                     <div className="w-10" />
@@ -115,7 +116,7 @@ const BookingDetailsPage = () => {
 
             <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* Main High-Fidelity Ticket Card */}
-                <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-indigo-900/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
+                <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-primary/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
 
                     {/* Top Section: Hero Image & Movie Info */}
                     <div className="relative w-full h-56 bg-gray-900 overflow-hidden">
@@ -162,7 +163,7 @@ const BookingDetailsPage = () => {
                         <div className="grid grid-cols-2 gap-8">
                             {/* Date & Time */}
                             <div className="col-span-2 sm:col-span-1 space-y-1">
-                                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <p className="text-[10px] font-black text-primary dark:text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                     <Calendar size={12} /> Show Time
                                 </p>
                                 <p className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{bookingDate}</p>
@@ -171,7 +172,7 @@ const BookingDetailsPage = () => {
 
                             {/* Location */}
                             <div className="col-span-2 sm:col-span-1 space-y-1 sm:text-right">
-                                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center sm:justify-end gap-2">
+                                <p className="text-[10px] font-black text-primary dark:text-primary uppercase tracking-[0.2em] flex items-center sm:justify-end gap-2">
                                     <MapPin size={12} /> Venue
                                 </p>
                                 <p className="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase line-clamp-2">{booking.theatre?.theatreName || booking.theaterName}</p>
@@ -179,9 +180,9 @@ const BookingDetailsPage = () => {
                             </div>
 
                             {/* Seats */}
-                            <div className="col-span-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl p-6 border border-indigo-100 dark:border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="col-span-2 bg-primary/5 dark:bg-primary/10 rounded-3xl p-6 border border-primary/10 dark:border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <p className="text-[10px] font-black text-primary dark:text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                         <Armchair size={12} /> Your Seats
                                     </p>
                                     <p className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{getSeatString()}</p>
@@ -215,7 +216,7 @@ const BookingDetailsPage = () => {
                                 <div className="bg-white p-3 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700">
                                     <BookingQr booking={booking} size={140} />
                                 </div>
-                                <div className="mt-4 flex items-center justify-center gap-1.5 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">
+                                <div className="mt-4 flex items-center justify-center gap-1.5 text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full">
                                     <Shield size={12} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">{booking.status}</span>
                                 </div>
@@ -257,7 +258,7 @@ const BookingDetailsPage = () => {
                                             <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">Total</p>
                                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Paid via {(booking.payment?.method || booking.paymentMethod)?.toUpperCase()}</p>
                                         </div>
-                                        <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter leading-none">
+                                        <span className="text-3xl font-black text-primary dark:text-primary tracking-tighter leading-none">
                                             ₹{(booking.pricing?.total || booking.totalAmount)?.toLocaleString()}
                                         </span>
                                     </div>
@@ -313,9 +314,9 @@ const BookingDetailsPage = () => {
                             </div>
                             <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">How was the movie?</h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-6">Rate your experience to help our community.</p>
-                            <button
+                             <button
                                 onClick={() => setShowReviewModal(true)}
-                                className="w-full max-w-xs h-14 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all"
+                                className="w-full max-w-xs h-14 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 dark:shadow-primary/30 hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all"
                             >
                                 Rate Movie
                             </button>
@@ -356,7 +357,7 @@ const BookingDetailsPage = () => {
 
 const DetailItem = ({ icon, label, value, subValue, className = '' }) => (
     <div className={`space-y-1 ${className}`}>
-        <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2">
+        <p className="text-[9px] font-black text-primary dark:text-primary uppercase tracking-[0.2em] flex items-center gap-2">
             {icon} {label}
         </p>
         <div>
@@ -375,14 +376,6 @@ const ReceiptRow = ({ label, value, isDiscount }) => (
     </div>
 );
 
-const LoadingState = () => (
-    <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col items-center justify-center space-y-6 transition-colors duration-300">
-        <div className="w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-800 border-t-indigo-600 dark:border-t-indigo-500 animate-spin" />
-        <div className="text-center font-display">
-            <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">Ticket Readying</p>
-        </div>
-    </div>
-);
 
 // ErrorState removed - imported from components
 

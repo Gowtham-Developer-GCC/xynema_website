@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
                         <p className="text-gray-500 font-medium mb-10 text-sm">Our theater systems encountered a momentary glitch. Our technicians are on it.</p>
                         <button
                             onClick={() => window.location.reload()}
-                            className="px-12 py-4 bg-charcoalSlate text-white font-display font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-xynemaRose transition-all shadow-xl shadow-blue-100 active:scale-95"
+                            className="px-12 py-4 bg-primary text-white font-display font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-xynemaRose transition-all shadow-xl shadow-blue-100 active:scale-95"
                         >
                             Refresh Page
                         </button>

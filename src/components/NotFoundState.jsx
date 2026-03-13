@@ -21,7 +21,7 @@ const NotFoundState = ({
 
             <Link
                 to={linkTo}
-                className="inline-block px-8 py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm shadow-xl shadow-xynemaRose/20 hover:bg-charcoalSlate transition-colors active:scale-95"
+                className="inline-block px-8 py-3.5 rounded-xl bg-xynemaRose text-white font-bold text-sm shadow-xl shadow-xynemaRose/20 hover:bg-primary transition-colors active:scale-95"
             >
                 {buttonText}
             </Link>

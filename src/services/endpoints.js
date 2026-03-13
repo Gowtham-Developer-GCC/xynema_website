@@ -9,6 +9,8 @@ export const ENDPOINTS = {
         INTEREST: (movieId) => `/movies/interest/${movieId}`,
         THEATRES: (movieId) => `/movies/${movieId}/theatres`,
         SIMILAR: (movieId) => `/movies/similar-movies/${movieId}`,
+        BROWSE_CINEMAS: '/movies/browse-movies',
+        THEATER_DETAILS: (theaterId) => `/movies/browse-movies/${theaterId}`,
     },
 
     // Events

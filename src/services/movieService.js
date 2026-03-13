@@ -159,6 +159,53 @@ export const getSimilarMovies = async (movieId) => {
     });
 };
 
+export const getTheatersByCity = async (city) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.MOVIES.BROWSE_CINEMAS, { params: { city } });
+        if (response.data.success) {
+            const resultData = response.data.data;
+            if (Array.isArray(resultData)) {
+                return resultData.map(t => new Theater(t));
+            }
+        }
+        return [];
+    });
+};
+
+export const getTheaterDetails = async (theaterId, date) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.MOVIES.THEATER_DETAILS(theaterId), {
+            params: { date }
+        });
+
+        let body = response.data;
+        if (Array.isArray(body)) body = body[0] || {};
+
+        if (body.success) {
+            let theaterData = body.data;
+
+            // If data is an array (movies list), we need to reconstruct the Theater object
+            if (Array.isArray(theaterData)) {
+                // Pick theater info from the first show if available
+                const firstMovie = theaterData[0];
+                const firstShow = firstMovie?.shows?.[0];
+                const theatreInfo = firstShow?.theatre || {};
+
+                return new Theater({
+                    ...theatreInfo,
+                    theaterId: theaterId,
+                    movies: theaterData, // The list of movies with shows
+                    summary: body.summary,
+                    filters: body.filters
+                });
+            }
+
+            return theaterData ? new Theater(theaterData) : null;
+        }
+        return null;
+    });
+};
+
 export const movieService = {
     getCities,
     getNotNowMovies,
@@ -168,4 +215,6 @@ export const movieService = {
     getNowShowingMovies,
     getUpcomingMovies,
     getSimilarMovies,
+    getTheatersByCity,
+    getTheaterDetails,
 };

@@ -321,8 +321,18 @@ export const errorHandler = {
             return error;
         }
 
-        if (error.response?.data?.message) {
-            return error.response.data.message;
+        if (error.response?.data) {
+            // Check for list of field errors (Express Validator style)
+            if (Array.isArray(error.response.data.errors) && error.response.data.errors.length > 0) {
+                return error.response.data.errors[0].msg || error.response.data.errors[0].message;
+            }
+            // Check for single message
+            if (error.response.data.message) {
+                return error.response.data.message;
+            }
+            if (error.response.data.error) {
+                return error.response.data.error;
+            }
         }
 
         if (error.message) {

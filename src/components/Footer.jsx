@@ -29,7 +29,7 @@ const Footer = () => {
                             Your ultimate destination for booking movie tickets, discovering events, and streaming premium content.
                         </p>
 
-                        <div className="space-y-4">
+                        <div className="space-y-8">
                             <a href="tel:+04844531182" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                 <Phone className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">0484 4531182</span>
@@ -37,21 +37,21 @@ const Footer = () => {
                             
                             <div className="pt-2 space-y-3">
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For customers</span>
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For customers service</span>
                                     <a href="mailto:care@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">care@xynema.in</span>
                                     </a>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For clients</span>
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For partner support</span>
                                     <a href="mailto:support@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">support@xynema.in</span>
                                     </a>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For additional queries</span>
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For corporate information</span>
                                     <a href="mailto:info@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">info@xynema.in</span>

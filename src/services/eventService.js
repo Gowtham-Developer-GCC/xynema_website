@@ -59,24 +59,38 @@ export const getEventDetails = async (eventIdOrSlug) => {
     });
 };
 
-export const getEventBookings = async () => {
+export const getEventBookings = async (page = 1) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST);
-        if (response.data.success) {
-            const bookings = response.data.data || [];
-            return Array.isArray(bookings)
-                ? bookings.map(b => EventBooking.fromJson(b))
-                : [];
+        const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST, { params: { page } });
+        let body = response.data;
+        if (Array.isArray(body)) body = body[0] || {};
+
+        if (body.success) {
+            const data = body.data;
+            const bookings = Array.isArray(data) ? data : (data?.bookings || []);
+            
+            return {
+                bookings: Array.isArray(bookings) ? bookings.map(b => EventBooking.fromJson(b)) : [],
+                totalPages: body.totalPages || 1,
+                currentPage: body.currentPage || 1,
+                total: body.totalCount || (Array.isArray(bookings) ? bookings.length : 0)
+            };
         }
-        return [];
+        return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };
     });
 };
 
 export const getEventBookingDetails = async (bookingId) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.EVENT_BOOKING.DETAILS(bookingId));
-        if (response.data.success) {
-            return response.data.data;
+        let body = response.data;
+
+        if (Array.isArray(body)) {
+            body = body[0] || {};
+        }
+
+        if (body.success && body.data) {
+            return body.data;
         }
         return null;
     });

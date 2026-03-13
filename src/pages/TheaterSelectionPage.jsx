@@ -41,10 +41,25 @@ const TheaterSelectionPage = () => {
         timeSlot: 'All'
     });
 
-    const dynamicFilterOptions = useMemo(() => {
+    const { dynamicFilterOptions, maxEndDate } = useMemo(() => {
         const formats = new Set(['All']);
         const timeSlots = new Set(['All']);
         const prices = [];
+        let maxEnd = null;
+
+        // Calculate maxEnd from movie availability if available (full range)
+        if (movie?.availability?.theatres) {
+            movie.availability.theatres.forEach(theater => {
+                (theater.screens || []).forEach(screen => {
+                    if (screen.showEndDate) {
+                        const date = new Date(screen.showEndDate);
+                        if (!maxEnd || date > maxEnd) {
+                            maxEnd = date;
+                        }
+                    }
+                });
+            });
+        }
 
         theaters.forEach(theater => {
             (theater.allShows || []).forEach(show => {
@@ -59,6 +74,18 @@ const TheaterSelectionPage = () => {
                 const price = show.basePrice || 0;
                 if (price > 0) prices.push(price);
             });
+
+            // Fallback: check screens from fetched theaters if movie availability is missing
+            if (!maxEnd) {
+                (theater.screens || []).forEach(screen => {
+                    if (screen.showEndDate) {
+                        const date = new Date(screen.showEndDate);
+                        if (!maxEnd || date > maxEnd) {
+                            maxEnd = date;
+                        }
+                    }
+                });
+            }
         });
 
         const sortedPrices = [...new Set(prices)].sort((a, b) => a - b);
@@ -83,12 +110,15 @@ const TheaterSelectionPage = () => {
         }
 
         return {
-            formats: Array.from(formats).map(f => ({ id: f, label: f })),
-            timeSlots: Array.from(timeSlots).map(t => ({ id: t, label: t })),
-            priceRanges,
-            thresholds
+            dynamicFilterOptions: {
+                formats: Array.from(formats).map(f => ({ id: f, label: f })),
+                timeSlots: Array.from(timeSlots).map(t => ({ id: t, label: t })),
+                priceRanges,
+                thresholds
+            },
+            maxEndDate: maxEnd
         };
-    }, [theaters]);
+    }, [theaters, movie]);
 
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const { selectedCity: cityFromContext, movies, loading: isContextLoading } = useData();
@@ -349,6 +379,7 @@ const TheaterSelectionPage = () => {
                         selectedDate={selectedDate}
                         onDateSelect={setSelectedDate}
                         releaseDate={movie?.releaseDate}
+                        maxEndDate={maxEndDate}
                     />
 
                     {/* <div className="mt-8">
@@ -482,7 +513,7 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
     );
 };
 
-const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
+const DateSelector = ({ selectedDate, onDateSelect, releaseDate, maxEndDate }) => {
     let minDate = releaseDate ? new Date(releaseDate) : new Date();
     if (minDate < new Date().setHours(0, 0, 0, 0)) minDate = new Date();
 
@@ -503,6 +534,14 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
                     const dateStr = `${year}-${month}-${day}`;
                     const isSelected = dateStr === selectedDate;
 
+                    const dateObj = new Date(dateStr);
+                    dateObj.setHours(0, 0, 0, 0);
+
+                    const maxDateObj = maxEndDate ? new Date(maxEndDate) : null;
+                    if (maxDateObj) maxDateObj.setHours(0, 0, 0, 0);
+
+                    const isAvailable = !maxDateObj || dateObj <= maxDateObj;
+
                     let dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
                     if (index === 0 && date.toDateString() === new Date().toDateString()) dayLabel = 'Today';
                     if (index === 1 && date.toDateString() === new Date(new Date().setDate(new Date().getDate() + 1)).toDateString()) dayLabel = 'Tomorrow';
@@ -513,19 +552,22 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate }) => {
                     return (
                         <button
                             key={dateStr}
-                            onClick={() => onDateSelect(dateStr)}
+                            onClick={() => isAvailable && onDateSelect(dateStr)}
+                            disabled={!isAvailable}
                             className={`
                                 flex-shrink-0 min-w-[85px] py-1.5 px-3 rounded flex flex-col items-center justify-center transition-all duration-200
                                 ${isSelected
                                     ? 'bg-primary text-white shadow-md'
-                                    : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700 hover:bg-gray-50'
+                                    : isAvailable
+                                        ? 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700 hover:bg-gray-50'
+                                        : 'bg-gray-100 dark:bg-gray-900 text-gray-400 border border-gray-200 dark:border-gray-800 opacity-50 cursor-not-allowed'
                                 }
                             `}
                         >
-                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'} mb-0.5`}>
+                            <span className={`text-[13px] ${isSelected ? 'text-white' : isAvailable ? 'text-gray-500' : 'text-gray-400'} mb-0.5`}>
                                 {dayLabel}
                             </span>
-                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'}`}>
+                            <span className={`text-[13px] ${isSelected ? 'text-white' : isAvailable ? 'text-gray-500' : 'text-gray-400'}`}>
                                 {monthName} {dayNum}
                             </span>
                         </button>

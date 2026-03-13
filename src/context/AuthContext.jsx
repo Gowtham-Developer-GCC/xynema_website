@@ -66,11 +66,7 @@ export const AuthProvider = ({ children }) => {
             if (loginResult && loginResult.success) {
                 const userData = loginResult.user || loginResult.data;
                 setUser(userData);
-                localStorage.setItem('user', JSON.stringify(userData));
-                if (userData.token) {
-                    localStorage.setItem('token', userData.token);
-                }
-                return userData; // Return the user object instead of just true
+                return userData;
             } else {
                 setError('Login failed. Please try again.');
                 return null;

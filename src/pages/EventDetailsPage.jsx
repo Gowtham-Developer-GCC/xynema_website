@@ -101,9 +101,11 @@ const EventDetailsPage = () => {
     };
 
     const handleReserveTickets = async (injectedUser = null) => {
-        const currentUser = injectedUser || user;
+        // Ensure injectedUser is actually a user object, not a React event
+        const validInjectedUser = (injectedUser && typeof injectedUser === 'object' && !injectedUser.nativeEvent) ? injectedUser : null;
+        const currentUser = validInjectedUser || user;
 
-        if (!currentUser) {
+        if (!currentUser || !currentUser.token) {
             openLogin((userFromLogin) => handleReserveTickets(userFromLogin));
             return;
         }
@@ -735,7 +737,7 @@ const EventDetailsPage = () => {
                             </div>
 
                             <button
-                                onClick={handleReserveTickets}
+                                onClick={() => handleReserveTickets()}
                                 disabled={isReserving}
                                 className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-primary text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
                             >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun } from 'lucide-react';
+import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
@@ -21,10 +21,14 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     }, [location, user, openLogin]);
 
     const sidebarItems = [
-        { icon: Ticket, title: 'Your Orders', description: 'View all your bookings & purchases', path: '/bookings' },
-        { icon: Heart, title: 'Favorites', description: 'Your saved movies & events', path: '/favorites' },
-        { icon: Menu, title: 'Store', description: 'Rented & Purchased Movies', path: '/store' },
-        { icon: Settings, title: 'Accounts & Settings', description: 'Location, Payments, Permissions & More', path: '/profile' },
+        { icon: Wallet, title: 'Wallet', path: '/profile' },
+        { icon: Ticket, title: 'My tickets', path: '/bookings' },
+        { icon: CreditCard, title: 'Payment methods', path: '/profile' },
+        { icon: Gift, title: 'Offers & Promos', path: '/' },
+        { icon: Bell, title: 'Notifications', path: '/' },
+        { icon: Shield, title: 'Account privacy', path: '/profile' },
+        { icon: MapPin, title: 'Location', path: '/' },
+        { icon: HelpCircle, title: 'Help & support', path: '/contact' },
     ];
 
     return (
@@ -147,73 +151,107 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
             </nav >
 
-            {/* Side Drawer Overlay - Moved OUTSIDE <nav> to avoid filter/transform issues */}
+            {/* Side Drawer Overlay — Liquid Glass Effect */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/40 z-[100] transition-opacity"
+                    className="fixed inset-0 z-[100]"
                     onClick={() => setIsSidebarOpen(false)}
                 >
+                    {/* Frosted overlay backdrop */}
+                    <div className={`absolute inset-0 backdrop-blur-[2px] transition-colors duration-500 ${isDarkMode ? 'bg-black/40' : 'bg-black/20'}`} />
+
+                    {/* Glass Panel */}
                     <div
-                        className="absolute right-0 top-0 h-full w-full max-w-[380px] bg-white dark:bg-gray-900 shadow-2xl flex flex-col animate-slide-in"
+                        className="absolute right-0 top-0 h-full w-full max-w-[320px] flex flex-col animate-slide-in"
+                        style={{
+                            background: isDarkMode 
+                                ? 'linear-gradient(180deg, rgba(30,32,40,0.92) 0%, rgba(20,22,28,0.88) 40%, rgba(15,17,21,0.85) 100%)'
+                                : 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(245,245,250,0.82) 40%, rgba(240,240,245,0.78) 100%)',
+                            backdropFilter: 'blur(60px) saturate(2)',
+                            WebkitBackdropFilter: 'blur(60px) saturate(2)',
+                            borderLeft: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.5)',
+                            boxShadow: isDarkMode 
+                                ? '-10px 0 60px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.05)'
+                                : '-10px 0 60px rgba(0,0,0,0.06), inset 1px 0 0 rgba(255,255,255,0.7)',
+                        }}
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="p-8 pb-10 bg-gradient-to-br from-primary via-secondary to-secondary text-white relative overflow-hidden shrink-0">
-                            {/* Decorative background circle */}
-                            <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full blur-3xl animate-pulse" />
+                        {/* Profile Header */}
+                        <div className="relative px-6 pt-7 pb-6 shrink-0">
+                            {/* Edit icon — top right */}
+                            <Link
+                                to="/profile"
+                                onClick={() => setIsSidebarOpen(false)}
+                                className={`absolute top-6 right-5 z-20 p-2 rounded-full transition-all ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}
+                            >
+                                <Edit3 className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                            </Link>
 
-                            <div className="flex items-center justify-between relative z-10 pt-4">
-                                <div className="space-y-1.5 flex-1 min-w-0">
-                                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.4em]">Personal Hub</p>
-                                    <h2 className="text-3xl font-display font-bold tracking-tight uppercase leading-tight truncate pr-4">
-                                        {user ? user.displayName : 'Welcome!'}
-                                    </h2>
-                                    {user ? (
-                                        <div className="flex items-center gap-4 pt-1">
-                                            <Link
-                                                to="/profile"
-                                                onClick={() => setIsSidebarOpen(false)}
-                                                className="text-[9px] text-primary font-bold uppercase tracking-[0.2em] bg-white px-3 py-1 rounded-full shadow-lg shadow-black/20 flex items-center gap-1 hover:scale-105 transition-all"
-                                            >
-                                                Account <ChevronRight className="w-2 h-2" />
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-[0.2em]">Enter the premium experience</p>
-                                    )}
-                                </div>
+                            {/* Avatar */}
+                            <div className="flex justify-start mb-4">
                                 {user ? (
                                     <div className="relative">
                                         <img
                                             src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`}
                                             alt=""
-                                            className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-2xl"
+                                            className="w-14 h-14 rounded-full object-cover"
+                                            style={{ 
+                                                border: isDarkMode ? '2.5px solid rgba(255,255,255,0.15)' : '2.5px solid rgba(255,255,255,0.8)', 
+                                                boxShadow: '0 4px 20px rgba(0,0,0,0.2)' 
+                                            }}
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-secondary rounded-full" />
                                     </div>
                                 ) : (
-                                    <button
-                                        onClick={openLogin}
-                                        className="text-[9px] text-primary font-bold uppercase tracking-[0.2em] bg-white px-3 py-1 rounded-full shadow-lg shadow-black/20 flex items-center gap-1 hover:scale-105 transition-all">Sign In</button>
+                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                                        <span className={`text-lg font-bold ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>?</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Name & Email */}
+                            <div className="space-y-0.5">
+                                <h2 className={`text-[15px] font-bold leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                    {user ? user.displayName : 'Welcome!'}
+                                </h2>
+                                {user?.email && (
+                                    <p className={`text-[12px] font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        {user.email}
+                                    </p>
                                 )}
                             </div>
                         </div>
 
-                        {/* List */}
-                        <div className="flex-1 overflow-y-auto py-4 space-y-1">
+                        {/* Separator */}
+                        <div className="mx-5 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }} />
+
+                        {/* Menu Items */}
+                        <div className="flex-1 overflow-y-auto py-3 px-3">
                             {/* Mobile Only Browsing Links */}
-                            <div className="lg:hidden pb-2 mb-2 border-b border-gray-50 dark:border-gray-800">
-                                <Link to="/#recommended-section" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname === '/' ? 'bg-primary/10 border-xynemaRose' : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                                    <div className="w-5 flex justify-center"><Heart className={`w-4 h-4 transition-colors ${location.pathname === '/' ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`} /></div>
-                                    <span className={`text-sm font-medium ${location.pathname === '/' ? 'text-primary' : 'text-gray-800 dark:text-gray-200'}`}>For You</span>
-                                </Link>
-                                <Link to="/movies" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10 border-xynemaRose' : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                                    <div className="w-5 flex justify-center"><Play className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`} /></div>
-                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary' : 'text-gray-800 dark:text-gray-200'}`}>Movies</span>
-                                </Link>
-                                <Link to="/events" onClick={() => setIsSidebarOpen(false)} className={`flex items-center gap-4 px-6 py-3 border-l-4 transition-all group ${location.pathname.startsWith('/events') ? 'bg-primary/10 border-xynemaRose' : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                                    <div className="w-5 flex justify-center"><Calendar className={`w-4 h-4 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`} /></div>
-                                    <span className={`text-sm font-medium ${location.pathname.startsWith('/events') ? 'text-primary' : 'text-gray-800 dark:text-gray-200'}`}>Events</span>
-                                </Link>
+                            <div className="lg:hidden pb-2 mb-2">
+                                {[
+                                    { to: '/#recommended-section', label: 'For You', icon: Heart, active: location.pathname === '/' },
+                                    { to: '/movies', label: 'Movies', icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
+                                    { to: '/events', label: 'Events', icon: Calendar, active: location.pathname.startsWith('/events') },
+                                ].map((nav) => (
+                                    <Link
+                                        key={nav.to}
+                                        to={nav.to}
+                                        onClick={() => setIsSidebarOpen(false)}
+                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${
+                                            nav.active 
+                                                ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5') 
+                                                : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
+                                        }`}
+                                    >
+                                        <nav.icon className={`w-[18px] h-[18px] ${
+                                            nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
+                                        } transition-colors`} />
+                                        <span className={`text-[14px] font-medium ${
+                                            nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-300' : 'text-gray-700')
+                                        }`}>{nav.label}</span>
+                                    </Link>
+                                ))}
+                                <div className="mt-2 mx-3 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }} />
                             </div>
 
                             {sidebarItems.map((item, idx) => (
@@ -221,33 +259,39 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     key={idx}
                                     to={item.path}
                                     onClick={() => setIsSidebarOpen(false)}
-                                    className="flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group"
+                                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${
+                                        isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'
+                                    }`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <item.icon className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-800">{item.title}</p>
-                                            {item.description && (
-                                                <p className="text-[10px] text-gray-400 mt-0.5">{item.description}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-gray-200 group-hover:text-gray-400 transition-colors" />
+                                    <item.icon className={`w-[18px] h-[18px] transition-colors ${
+                                        isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'
+                                    }`} />
+                                    <span className={`text-[14px] font-medium transition-colors ${
+                                        isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'
+                                    }`}>{item.title}</span>
                                 </Link>
                             ))}
                         </div>
 
-                        {/* Sign Out */}
+                        {/* Log out */}
                         {user && (
-                            <div className="p-6 border-t border-gray-100">
+                            <div className="px-5 pb-6 pt-2">
                                 <button
                                     onClick={() => {
                                         logoutUser();
                                         setIsSidebarOpen(false);
                                     }}
-                                    className="w-full py-3 text-red-500 font-bold border border-red-100 bg-red-50/50 hover:bg-red-50 rounded-lg text-xs transition-all"
+                                    className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
+                                        isDarkMode ? 'hover:bg-red-500/10' : 'hover:bg-red-50'
+                                    }`}
+                                    style={{
+                                        color: '#ef4444',
+                                        border: isDarkMode ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(239, 68, 68, 0.25)',
+                                        background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.03)',
+                                    }}
                                 >
-                                    Sign Out
+                                    <LogOut className="w-4 h-4" />
+                                    Log out
                                 </button>
                             </div>
                         )}

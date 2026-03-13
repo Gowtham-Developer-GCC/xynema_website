@@ -161,7 +161,7 @@ const MovieDetailsPage = () => {
         if (movie.trailerUrl) {
             setIsPlayingTrailer(!isPlayingTrailer);
             setIsGlassHidden(false);
-            if (!isPlayingTrailer) setIsMuted(true);
+            if (!isPlayingTrailer) setIsMuted(true) , setIsGlassHidden(true);
         }
     };
 

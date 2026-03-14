@@ -136,37 +136,32 @@ const StorePage = () => {
                                     </div>
                                 </div>
 
-                                {/* Items Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* Items Grid - Two items per row on mobile */}
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                                     {filteredItems.map(item => (
                                         <div
                                             key={item.id}
-                                            className="group bg-white rounded-xl border border-gray-100 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
+                                            className="group bg-white rounded-xl border border-gray-100 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col"
                                         >
-                                            <div className="relative overflow-hidden bg-gray-50 p-0 flex items-center justify-center h-100">
+                                            <div className="relative overflow-hidden bg-gray-50 flex items-center justify-center aspect-square md:h-100">
                                                 {item.imageUrl || item.image ? (
                                                     <img
                                                         src={item.imageUrl || item.image}
                                                         alt={item.title || item.name}
-                                                        className="h-full object-contain transition-transform group-hover:scale-110"
+                                                        className="w-full h-full object-contain transition-transform group-hover:scale-110"
                                                     />
                                                 ) : (
-                                                    <div className="text-6xl">🍿</div>
+                                                    <div className="text-4xl md:text-6xl">🍿</div>
                                                 )}
-                                                {/* <div className="absolute top-4 right-4 px-2 py-1 rounded bg-black/5 text-[9px] font-bold text-gray-500 uppercase tracking-wider">
-                                                    {item.category}
-                                                </div> */}
                                             </div>
-                                            <div className="p-6">
-                                                <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{item.title || item.name}</h3>
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <p className="text-lg font-display font-bold text-xynemaRose">
-                                                        {typeof item.price === 'number' ? `₹${item.price}` : item.price}
-                                                    </p>
-                                                </div>
+                                            <div className="p-3 md:p-6 flex flex-col flex-1">
+                                                <h3 className="font-bold text-gray-900 text-[10px] md:text-sm mb-1 line-clamp-1">{item.title || item.name}</h3>
+                                                <p className="text-xs md:text-lg font-display font-black text-xynemaRose mb-3">
+                                                    {typeof item.price === 'number' ? `₹${item.price}` : item.price}
+                                                </p>
                                                 <button
                                                     onClick={() => handleAddToCart(item)}
-                                                    className="w-full py-3 rounded-lg font-bold text-white text-xs bg-xynemaRose transition-all shadow-md active:scale-95"
+                                                    className="mt-auto w-full py-2.5 md:py-3 rounded-lg font-black text-white text-[9px] md:text-xs bg-xynemaRose transition-all shadow-md active:scale-95 uppercase tracking-wider"
                                                 >
                                                     Add to Order
                                                 </button>

@@ -320,47 +320,49 @@ const MovieDetailsPage = () => {
                         </div>
 
                         {/* Movie Details Content Area */}
-                        <div className="flex-1 flex flex-col gap-4 md:gap-5 text-center md:text-left pt-2 md:pt-4">
+                        <div className="flex-1 flex flex-col gap-3 md:gap-5 text-center md:text-left pt-2 md:pt-4 w-full">
                             {/* Title Area */}
-                            <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-roboto font-black tracking-tight leading-[1.1] text-white drop-shadow-2xl">
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-roboto font-black tracking-tight leading-tight text-white drop-shadow-2xl px-2 md:px-0">
                                 {movie.title}
                             </h1>
 
                             {/* Metadata Line */}
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm md:text-base font-medium text-white/90">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-[12px] md:text-base font-medium text-white/90">
                                 {movie.isAvailable && (
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10">
-                                        <Star className="w-5 h-5 fill-primary text-primary" />
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0">
+                                        <Star className="w-4 h-4 fill-primary text-primary" />
                                         <span>{movie.rating ? `${movie.rating}/10` : 'New'}</span>
                                         {movie.voteCount > 0 && (
-                                            <span className="text-xs font-normal text-white/70 ml-1">
-                                                {movie.voteCount > 1000 ? `${(movie.voteCount / 1000).toFixed(1)}K Votes` : `${movie.voteCount} Votes`}
+                                            <span className="text-[10px] font-normal text-white/70 ml-0.5">
+                                                {movie.voteCount > 1000 ? `${(movie.voteCount / 1000).toFixed(1)}K` : `${movie.voteCount}`} Votes
                                             </span>
                                         )}
                                     </div>
                                 )}
-                                {movie.releaseDate && (
-                                    <>
+                                <div className="flex items-center gap-3">
+                                    {movie.releaseDate && (
                                         <span className="font-semibold">{new Date(movie.releaseDate).getFullYear()}</span>
-                                        <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                                    </>
-                                )}
-                                {movie.duration > 0 && (
-                                    <>
-                                        <span className="font-semibold">{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
-                                        <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                                    </>
-                                )}
-                                {movie.certification && (
-                                    <span className="bg-white/10 px-2 py-0.5 rounded border border-white/50 text-xs font-bold tracking-wider">{movie.certification}</span>
-                                )}
+                                    )}
+                                    {movie.duration > 0 && (
+                                        <>
+                                            <span className="w-1 h-1 rounded-full bg-white/40" />
+                                            <span className="font-semibold">{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
+                                        </>
+                                    )}
+                                    {movie.certification && (
+                                        <>
+                                            <span className="w-1 h-1 rounded-full bg-white/40" />
+                                            <span className="bg-white/10 px-1.5 py-0.5 rounded border border-white/40 text-[10px] font-bold tracking-wider">{movie.certification}</span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Genre Pills */}
                             {movie.genre && (
-                                <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-1">
+                                <div className="flex flex-wrap justify-center md:justify-start gap-1.5 mt-1 px-4 md:px-0">
                                     {movie.genre.split(',').map((g, i) => (
-                                        <span key={i} className="px-4 py-1.5 rounded-full border border-white/30 text-xs font-semibold hover:bg-white/10 transition-colors cursor-default backdrop-blur-sm bg-black/20 text-white/90">
+                                        <span key={i} className="px-3 py-1 rounded-full border border-white/20 text-[10px] md:text-xs font-semibold backdrop-blur-sm bg-black/20 text-white/90 whitespace-nowrap">
                                             {g.trim()}
                                         </span>
                                     ))}
@@ -368,7 +370,7 @@ const MovieDetailsPage = () => {
                             )}
 
                             {/* Synopsis */}
-                            <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal mt-2 md:mt-4 max-w-2xl">
+                            <p className="text-xs md:text-base text-white/80 leading-relaxed font-normal mt-2 md:mt-4 max-w-2xl px-4 md:px-0 line-clamp-3 md:line-clamp-none">
                                 {movie.description}
                             </p>
 

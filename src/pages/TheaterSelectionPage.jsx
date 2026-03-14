@@ -313,49 +313,54 @@ const TheaterSelectionPage = () => {
             />
 
             {/* Redesigned Minimalist Header & Movie Info - Matches Figma */}
-            <div className="bg-white dark:bg-gray-900 pt-6 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 relative z-10 w-full">
-                <div className="w-[95%] sm:w-[90%] lg:max-w-[80%] mx-auto flex items-start gap-3 md:gap-6">
-                    {/* Simple Back Button */}
+            <div className="bg-white dark:bg-gray-900 pt-5 pb-6 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 relative z-10 w-full">
+                <div className="w-full max-w-[1200px] mx-auto flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 text-center md:text-left">
+                    {/* Fixed Back Button for Mobile */}
                     <button
                         onClick={() => navigate(-1)}
-                        className="mt-1 md:mt-2 p-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 -ml-1"
+                        className="absolute top-4 left-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 md:relative md:top-2 md:left-0 md:-ml-2"
                     >
-                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 stroke-[1.5]" />
+                        <ChevronLeft className="w-6 h-6 stroke-[2]" />
                     </button>
 
-                    {/* Movie Details - Clean Stack */}
-                    <div className="flex gap-5 md:gap-6 items-start w-full">
-                        {/* Poster */}
-                        <div className="w-[100px] md:w-[130px] shrink-0">
+                    {/* Movie Details - Improved Mobile Stack */}
+                    <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center md:items-start w-full">
+                        {/* Poster - Center on mobile */}
+                        <div className="w-[100px] md:w-[130px] shrink-0 mt-2 md:mt-0">
                             <img
                                 src={movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image}
-                                alt={movie?.MovieName || movie?.movieName || movie?.title}
-                                className="w-full rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                                alt={movie?.title}
+                                className="w-full rounded-[12px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 dark:border-gray-800"
                             />
                         </div>
 
                         {/* Details Stack */}
-                        <div className="flex-1 space-y-1 pt-1 md:pt-2">
-                            <h2 className="text-[22px] md:text-[28px] font-bold text-gray-900 dark:text-white leading-tight mb-2 md:mb-3">
-                                {movie?.MovieName || movie?.movieName || movie?.title}
-                            </h2>
-
-                            <div className="flex items-center gap-2 flex-wrap pb-1">
-                                {movie?.certification && (
-                                    <div className="inline-flex items-center justify-center px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
-                                        <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300">
+                        <div className="flex-1 space-y-2 md:pt-2 flex flex-col items-center md:items-start w-full">
+                            <div className="flex flex-col items-center md:items-start gap-1">
+                                <h1 className="text-[20px] md:text-[28px] font-black text-gray-900 dark:text-white leading-tight tracking-tight font-roboto px-4 md:px-0">
+                                    {movie?.title}
+                                </h1>
+                                
+                                <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
+                                    {movie?.certification && (
+                                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                             {movie.certification}
                                         </span>
-                                    </div>
-                                )}
+                                    )}
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600 hidden md:block" />
+                                    <span className="text-[11px] md:text-sm font-bold text-gray-500 dark:text-gray-400 capitalize">
+                                        {movie?.language || 'Tamil'}
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="text-[13px] text-gray-500 dark:text-gray-400 leading-[1.6] space-y-0.5 flex flex-col">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1 text-[11px] md:text-sm font-medium text-gray-400 dark:text-gray-500">
                                 {(movie?.Genre || movie?.genre) && (
-                                    <span>
+                                    <span className="flex items-center gap-1.5">
                                         {Array.isArray(movie.Genre) ? movie.Genre.join(', ') : movie.genre || movie.Genre}
                                     </span>
                                 )}
+                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
                                 {(movie?.Duration || movie?.duration) && (
                                     <span>
                                         {typeof (movie.Duration || movie.duration) === 'string'
@@ -363,9 +368,6 @@ const TheaterSelectionPage = () => {
                                             : `${Math.floor(movie.duration / 60)}h ${String(movie.duration % 60)}m`}
                                     </span>
                                 )}
-                                <span>
-                                    {movie?.language || 'Tamil'}
-                                </span>
                             </div>
                         </div>
                     </div>

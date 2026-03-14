@@ -187,6 +187,11 @@ const FoodSelectionPage = () => {
         return sum;
     }, [showSeats, seats, show]);
 
+    const summaryRef = useRef(null);
+    const scrollToSummary = () => {
+        summaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     if (loading) return <LoadingScreen message="Preparing Menu" />;
     if (error) return <ErrorState error={error} title="Oops!" buttonText="Try Again" />;
 
@@ -205,43 +210,43 @@ const FoodSelectionPage = () => {
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* Header: Simplified Back & Title */}
-            <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-6 transition-colors duration-300">
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+            {/* Header: Global Navigation - Simplified for Mobile */}
+            <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-4 md:py-6 transition-colors duration-300">
+                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 md:gap-6 flex-1 min-w-0">
                         <button
                             onClick={() => navigate(-1)}
-                            className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
+                            className="p-1.5 md:p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <div className="flex flex-col">
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-roboto">
+                        <div className="flex flex-col min-w-0">
+                            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-roboto truncate">
                                 Pre-Order Snacks
                             </h1>
-                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                            <p className="text-[11px] md:text-[13px] text-gray-500 dark:text-gray-400 font-medium truncate">
                                 Optional • Save time at the counter
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={handleProceedToPayment}
-                        className="text-[14px] font-bold text-primary dark:text-primary hover:underline font-roboto tracking-wider"
+                        className="text-[12px] md:text-[14px] font-bold text-primary dark:text-primary hover:underline font-roboto tracking-wider whitespace-nowrap px-2"
                     >
-                        Skip & Continue
+                        Skip
                     </button>
                 </div>
             </header>
 
             <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 bg-[#f9fafb] dark:bg-gray-950 transition-colors duration-300">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     {/* Category Pills */}
-                    <div className="mb-10 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    <div className="mb-6 md:mb-10 flex gap-2 md:gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
                         {categories.map(category => (
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border font-roboto tracking-wide ${selectedCategory === category
+                                className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[11px] md:text-[13px] font-bold transition-all whitespace-nowrap border font-roboto tracking-wide ${selectedCategory === category
                                     ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                                     : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary hover:text-primary'
                                     }`}
@@ -251,8 +256,8 @@ const FoodSelectionPage = () => {
                         ))}
                     </div>
 
-                    {/* Menu Grid - 2 Column as requested */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Menu Grid - 2 Column for all devices as requested */}
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 md:gap-8">
                         {filteredItems.map((item) => (
                             <FoodCard
                                 key={item.id}
@@ -266,7 +271,7 @@ const FoodSelectionPage = () => {
                 </div>
 
                 {/* Sticky Summary Sidebar */}
-                <div className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-fit lg:sticky top-10 shrink-0 transition-colors duration-300">
+                <div ref={summaryRef} className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-fit lg:sticky top-10 shrink-0 transition-colors duration-300 mb-20 lg:mb-0">
                     <BookingSummary
                         movie={{
                             movie: {
@@ -314,6 +319,31 @@ const FoodSelectionPage = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Mobile Fixed Bottom Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-[60] lg:hidden bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 p-4 transition-all animate-in slide-in-from-bottom duration-500">
+                <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">₹{(totalAmount * 1.18 + (seats.length * 30)).toFixed(2)}</span>
+                            <button 
+                                onClick={scrollToSummary}
+                                className="text-[10px] font-bold text-primary dark:text-primary/80 uppercase tracking-wide hover:underline underline-offset-2"
+                            >
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleProceedToPayment}
+                        className="flex-1 max-w-[160px] py-3 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wider shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:shadow-none"
+                    >
+                        Continue
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
@@ -322,9 +352,9 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
     const isImageUrl = item.image && (item.image.startsWith('http') || item.image.startsWith('https') || item.image.startsWith('/'));
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full">
             {/* Top Large Image Section */}
-            <div className="aspect-[4/3] bg-[#f8f9fa] dark:bg-gray-800/50 flex items-center justify-center relative p-8 group transition-colors duration-300">
+            <div className="aspect-square md:aspect-[4/3] bg-[#fdfdfd] dark:bg-gray-800/50 flex items-center justify-center relative p-4 md:p-8 group transition-colors duration-300">
                 {isImageUrl ? (
                     <img
                         src={item.image}
@@ -332,44 +362,44 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                         className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
-                    <span className="text-7xl">{item.image || '🍿'}</span>
+                    <span className="text-4xl md:text-7xl">{item.image || '🍿'}</span>
                 )}
             </div>
 
             {/* Bottom Content Section */}
-            <div className="p-6 flex flex-col gap-4">
+            <div className="p-3 md:p-6 flex flex-col flex-1 gap-2 md:gap-4">
                 <div className="flex justify-between items-start">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight font-roboto">{item.name}</h3>
+                    <div className="flex flex-col gap-0.5 md:gap-1 min-w-0 w-full">
+                        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-[13px] md:text-[16px] leading-tight font-roboto truncate flex-2">{item.name}</h3>
                             {item.isPopular && (
-                                <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider">
-                                    Combo
+                                <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider shrink-0">
+                                    
                                 </span>
                             )}
                         </div>
-                        <p className="text-[13px] text-gray-400 dark:text-gray-500 line-clamp-1">{item.description || 'Delicious snack option'}</p>
+                        <p className="text-[11px] md:text-[13px] text-gray-400 dark:text-gray-500 line-clamp-2">{item.description || 'Delicious snack'}</p>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-2">
-                    <span className="text-[18px] font-bold text-gray-900 dark:text-white font-roboto">₹{item.price}</span>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-auto gap-3">
+                    <span className="text-[15px] md:text-[18px] font-black text-gray-900 dark:text-white font-roboto">₹{item.price}</span>
 
                     {quantity === 0 ? (
                         <button
                             onClick={onAdd}
-                            className="px-8 py-2 rounded-lg border border-primary text-primary font-bold text-[13px] hover:bg-primary/5 transition-all active:scale-95 font-roboto tracking-wider"
+                            className="w-full md:w-auto px-4 md:px-8 py-1.5 md:py-2 rounded-lg border border-primary/30 dark:border-primary/20 text-primary font-bold text-[11px] md:text-[13px] hover:bg-primary hover:text-white transition-all active:scale-95 font-roboto tracking-wider"
                         >
                             Add
                         </button>
                     ) : (
-                        <div className="flex items-center gap-4 bg-primary text-white rounded-lg px-3 py-2 shadow-sm font-roboto">
+                        <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-3 md:gap-4 bg-primary text-white rounded-lg px-2.5 md:px-3 py-1.5 md:py-2 shadow-sm font-roboto">
                             <button onClick={onRemove} className="hover:bg-white/20 rounded p-0.5 transition-colors">
-                                <Minus className="w-4 h-4" />
+                                <Minus className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </button>
-                            <span className="font-bold text-[15px] min-w-[20px] text-center">{quantity}</span>
+                            <span className="font-bold text-[13px] md:text-[15px] min-w-[15px] md:min-w-[20px] text-center">{quantity}</span>
                             <button onClick={onAdd} className="hover:bg-white/20 rounded p-0.5 transition-colors">
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </button>
                         </div>
                     )}

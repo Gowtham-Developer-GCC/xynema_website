@@ -222,66 +222,60 @@ const BookingSummaryPage = () => {
             <main className="max-w-6xl mx-auto p-6 space-y-6">
 
                 {/* Movie Card */}
-                <div className="bg-white dark:bg-gray-900 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-6 relative overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-[24px] md:rounded-[28px] p-5 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col md:flex-row gap-5 md:gap-6 relative overflow-hidden transition-colors">
                     {/* Decorative gradient blob */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
 
-                    <div className="w-28 h-40 sm:w-32 sm:h-44 rounded-2xl overflow-hidden shadow-xl shadow-black/5 flex-shrink-0 relative group">
+                    <div className="w-24 h-36 sm:w-32 sm:h-44 rounded-xl md:rounded-2xl overflow-hidden shadow-lg mx-auto md:mx-0 flex-shrink-0 relative group">
                         <img
                             src={displayPoster}
                             alt={displayTitle}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute inset-x-0 bottom-0 pb-3 pt-12 bg-gradient-to-t from-black/80 to-transparent px-3 text-white">
-                            <p className="text-[10px] font-black tracking-widest shadow-sm">{displayFormat}</p>
+                        <div className="absolute inset-x-0 bottom-0 pb-2 pt-10 bg-gradient-to-t from-black/80 to-transparent px-3 text-white text-center">
+                            <p className="text-[9px] font-black tracking-widest uppercase">{displayFormat}</p>
                         </div>
                     </div>
-                    <div className="flex flex-col justify-center flex-1 py-1">
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black tracking-widest w-fit mb-3">
+                    
+                    <div className="flex flex-col justify-center flex-1 py-1 text-center md:text-left">
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black tracking-widest w-fit mb-2 mx-auto md:mx-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                             {displayLanguage}
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-5 tracking-tight font-roboto">{displayTitle}</h2>
-                        <div className="grid grid-cols-2 gap-y-4 gap-x-6 sm:gap-x-8">
-                            <div className="flex items-start gap-2.5">
-                                <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
-                                    <MapPin className="w-3.5 h-3.5" />
-                                </div>
+                        <h2 className="text-lg md:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-4 tracking-tight font-roboto">{displayTitle}</h2>
+                        
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-4 md:gap-x-8">
+                            <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-2.5 text-center md:text-left">
+                                <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Cinema</p>
+                                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-0.5 font-roboto">Cinema</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTheater.includes(' - ') ? displayTheater.split(' - ')[0] : displayTheater}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2.5">
-                                <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
-                                    <MonitorPlay className="w-3.5 h-3.5" />
-                                </div>
+                            <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-2.5 text-center md:text-left">
+                                <MonitorPlay className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Screen</p>
+                                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-0.5 font-roboto">Screen</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTheater.includes(' - ') ? (displayTheater.split(' - ')[1] || displayScreen) : displayScreen}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2.5">
-                                <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
-                                    <Calendar className="w-3.5 h-3.5" />
-                                </div>
+                            <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-2.5 text-center md:text-left">
+                                <Calendar className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Date</p>
+                                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-0.5 font-roboto">Date</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2.5">
-                                <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
-                                    <Clock className="w-3.5 h-3.5" />
-                                </div>
+                            <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-2.5 text-center md:text-left">
+                                <Clock className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Time</p>
+                                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-0.5 font-roboto">Time</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTime}
                                     </p>
@@ -373,18 +367,18 @@ const BookingSummaryPage = () => {
             </main>
 
             {/* Sticky Bottom Action */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-none z-50">
-                <div className="max-w-6xl mx-auto flex items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-                    <div className="font-roboto">
-                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5">Grand Total</p>
-                        <p className="text-2xl font-black text-gray-900 dark:text-white">₹{grandTotal.toLocaleString()}</p>
+            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-50">
+                <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 md:gap-8 overflow-hidden">
+                    <div className="font-roboto flex flex-col shrink-0">
+                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-[0.2em] uppercase mb-0.5">Grand Total</p>
+                        <p className="text-xl md:text-2xl font-black text-gray-900 dark:text-white leading-none">₹{grandTotal.toLocaleString()}</p>
                     </div>
                     <button
                         onClick={handleProceedToPayment}
                         disabled={isLocking}
-                        className={`flex-1 text-white h-14 rounded-2xl font-roboto font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:brightness-110 active:scale-95 transition-all tracking-[0.2em] ${isLocking ? 'bg-primary/50 cursor-not-allowed shadow-none' : 'bg-primary shadow-primary/20'}`}
+                        className={`flex-1 max-w-[280px] md:max-w-sm text-white h-12 md:h-14 rounded-xl md:rounded-2xl font-roboto font-black text-sm md:text-lg flex items-center justify-center gap-2 md:gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest ${isLocking ? 'bg-primary/50' : 'bg-primary shadow-lg shadow-primary/20'}`}
                     >
-                        {isLocking ? 'Securing Tickets...' : 'Make Payment'} <ChevronRight size={20} />
+                        {isLocking ? 'Securing...' : 'Make Payment'} <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                 </div>
             </div>

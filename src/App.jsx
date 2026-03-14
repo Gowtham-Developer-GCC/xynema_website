@@ -42,6 +42,10 @@ const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
+const OffersPage = lazy(() => import('./pages/OffersPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const PaymentMethodsPage = lazy(() => import('./pages/PaymentMethodsPage'));
+const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'));
 const Footer = lazy(() => import('./components/Footer'));
 const LoginModal = lazy(() => import('./components/LoginModal'));
 const CitySelectionModal = lazy(() => import('./components/CitySelectionModal'));
@@ -157,6 +161,10 @@ export default function App() {
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                         <Route path="/cinemas" element={<CinemasListPage />} />
                                         <Route path="/favorites" element={<FavoritesPage />} />
+                                        <Route path="/offers" element={<OffersPage />} />
+                                        <Route path="/notifications" element={<NotificationsPage />} />
+                                        <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
+                                        <Route path="/account-settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
                                         <Route path="/*" element={<NotFoundState title="Page Not Found" message="We couldn't find the page you're looking for." />} />
                                     </Routes>
                                 </Suspense>

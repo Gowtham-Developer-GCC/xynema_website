@@ -169,7 +169,7 @@ const EventShowSelectionPage = () => {
                     <div className="space-y-1">
                         <h2 className="text-base md:text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
                             Shows for <span className="text-primary dark:text-primary">
-                                {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) : ''}
+                                {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }) : ''}
                             </span>
                         </h2>
                     </div>
@@ -181,9 +181,9 @@ const EventShowSelectionPage = () => {
                                     const dateObj = new Date(dateStr);
                                     const isSelected = dateStr === selectedDate;
 
-                                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-                                    const dayNum = dateObj.getDate();
-                                    const monthName = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+                                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
+                                    const dayNum = dateObj.getUTCDate();
+                                    const monthName = dateObj.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
 
                                     return (
                                         <button
@@ -257,7 +257,7 @@ const EventShowSelectionPage = () => {
 
                                     <div className="space-y-1 md:space-y-2">
                                         <div className="flex justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-widest">
-                                            <span className="text-gray-400 dark:text-gray-500 truncate">{new Date(show.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                            <span className="text-gray-400 dark:text-gray-500 truncate">{new Date(show.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>
                                         </div>
                                     </div>
 

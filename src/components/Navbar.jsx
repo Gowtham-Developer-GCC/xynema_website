@@ -22,10 +22,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
     const sidebarItems = [
         { icon: Ticket, title: 'My tickets', path: '/bookings' },
-        { icon: CreditCard, title: 'Payment methods', path: '/profile' },
-        { icon: Gift, title: 'Offers & Promos', path: '/' },
-        { icon: Bell, title: 'Notifications', path: '/' },
-        { icon: Shield, title: 'Account privacy', path: '/profile' },
+        { icon: CreditCard, title: 'Payment methods', path: '/payment-methods' },
+        { icon: Gift, title: 'Offers & Promos', path: '/offers' },
+        { icon: Bell, title: 'Notifications', path: '/notifications' },
+        { icon: Shield, title: 'Account & settings', path: '/account-settings' },
         { icon: HelpCircle, title: 'Help & support', path: '/help' },
     ];
 
@@ -170,13 +170,13 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                     <div
                         className="absolute right-0 top-0 h-full w-full max-w-[320px] flex flex-col animate-slide-in"
                         style={{
-                            background: isDarkMode 
+                            background: isDarkMode
                                 ? 'linear-gradient(180deg, rgba(30,32,40,0.92) 0%, rgba(20,22,28,0.88) 40%, rgba(15,17,21,0.85) 100%)'
                                 : 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(245,245,250,0.82) 40%, rgba(240,240,245,0.78) 100%)',
                             backdropFilter: 'blur(60px) saturate(2)',
                             WebkitBackdropFilter: 'blur(60px) saturate(2)',
                             borderLeft: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.5)',
-                            boxShadow: isDarkMode 
+                            boxShadow: isDarkMode
                                 ? '-10px 0 60px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.05)'
                                 : '-10px 0 60px rgba(0,0,0,0.06), inset 1px 0 0 rgba(255,255,255,0.7)',
                         }}
@@ -201,9 +201,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                             src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`}
                                             alt=""
                                             className="w-14 h-14 rounded-full object-cover"
-                                            style={{ 
-                                                border: isDarkMode ? '2.5px solid rgba(255,255,255,0.15)' : '2.5px solid rgba(255,255,255,0.8)', 
-                                                boxShadow: '0 4px 20px rgba(0,0,0,0.2)' 
+                                            style={{
+                                                border: isDarkMode ? '2.5px solid rgba(255,255,255,0.15)' : '2.5px solid rgba(255,255,255,0.8)',
+                                                boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
                                             }}
                                         />
                                     </div>
@@ -233,11 +233,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         setIsSidebarOpen(false);
                                         openCityModal();
                                     }}
-                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all active:scale-[0.98] ${
-                                        isDarkMode 
-                                            ? 'bg-white/5 border-white/10 hover:bg-white/10' 
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all active:scale-[0.98] ${isDarkMode
+                                            ? 'bg-white/5 border-white/10 hover:bg-white/10'
                                             : 'bg-black/5 border-black/5 hover:bg-black/10'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-primary/20' : 'bg-primary/10'}`}>
@@ -269,18 +268,15 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         key={nav.to}
                                         to={nav.to}
                                         onClick={() => setIsSidebarOpen(false)}
-                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${
-                                            nav.active 
-                                                ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5') 
+                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${nav.active
+                                                ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5')
                                                 : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
-                                        }`}
+                                            }`}
                                     >
-                                        <nav.icon className={`w-[18px] h-[18px] ${
-                                            nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
-                                        } transition-colors`} />
-                                        <span className={`text-[14px] font-medium ${
-                                            nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-300' : 'text-gray-700')
-                                        }`}>{nav.label}</span>
+                                        <nav.icon className={`w-[18px] h-[18px] ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
+                                            } transition-colors`} />
+                                        <span className={`text-[14px] font-medium ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-300' : 'text-gray-700')
+                                            }`}>{nav.label}</span>
                                     </Link>
                                 ))}
                                 <div className="mt-2 mx-3 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }} />
@@ -291,96 +287,92 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     key={idx}
                                     to={item.path}
                                     onClick={() => setIsSidebarOpen(false)}
-                                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${
-                                        isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'
-                                    }`}
+                                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'
+                                        }`}
                                 >
-                                    <item.icon className={`w-[18px] h-[18px] transition-colors ${
-                                        isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'
-                                    }`} />
-                                    <span className={`text-[14px] font-medium transition-colors ${
-                                        isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'
-                                    }`}>{item.title}</span>
+                                    <item.icon className={`w-[18px] h-[18px] transition-colors ${isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'
+                                        }`} />
+                                    <span className={`text-[14px] font-medium transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'
+                                        }`}>{item.title}</span>
                                 </Link>
                             ))}
                         </div>
 
                         {/* Log out */}
                         {user && (
-                            <div className="px-5 pb-6 pt-2">
-                                <button
-                                    onClick={() => {
-                                        logoutUser();
-                                        setIsSidebarOpen(false);
-                                    }}
-                                    className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
-                                        isDarkMode ? 'hover:bg-red-500/10' : 'hover:bg-red-50'
+
+                            <div className="px-5 pb-6 md:pb-8 pt-2">
+                            <button
+                                onClick={() => {
+                                    logoutUser();
+                                    setIsSidebarOpen(false);
+                                }}
+                                className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isDarkMode ? 'hover:bg-red-500/10' : 'hover:bg-red-50'
                                     }`}
-                                    style={{
-                                        color: '#ef4444',
-                                        border: isDarkMode ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(239, 68, 68, 0.25)',
-                                        background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.03)',
-                                    }}
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    Log out
-                                </button>
+                                style={{
+                                    color: '#ef4444',
+                                    border: isDarkMode ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(239, 68, 68, 0.25)',
+                                    background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.03)',
+                                }}
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Log out
+                            </button>
                             </div>
                         )}
-                    </div>
                 </div>
+                </div >
             )
             }
 
-            {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */}
-            {!/\/movie\/[^/]+($|\/theaters|\/seats|\/food|\/summary|\/payment)/.test(location.pathname) && 
-             !location.pathname.startsWith('/event/') && (
-                <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
-                    <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
-                        <Link 
-                            to="/" 
-                            className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
-                                location.pathname === '/' 
-                                ? 'text-primary scale-110' 
-                                : 'text-gray-500 dark:text-gray-400'
-                            }`}
-                        >
-                            <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
-                                <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
-                        </Link>
-    
-                        <Link 
-                            to="/movies" 
-                            className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
-                                location.pathname.startsWith('/movies') && location.pathname !== '/'
-                                ? 'text-primary scale-110' 
-                                : 'text-gray-500 dark:text-gray-400'
-                            }`}
-                        >
-                            <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
-                                <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
-                        </Link>
-    
-                        <Link 
-                            to="/events" 
-                            className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
-                                location.pathname.startsWith('/events')
-                                ? 'text-primary scale-110' 
-                                : 'text-gray-500 dark:text-gray-400'
-                            }`}
-                        >
-                            <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
-                                <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
-                        </Link>
+{/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */ }
+{
+    !/\/movie\/[^/]+($|\/theaters|\/seats|\/food|\/summary|\/payment)/.test(location.pathname) &&
+    !location.pathname.startsWith('/event/') && (
+        <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
+            <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
+                <Link
+                    to="/"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname === '/'
+                            ? 'text-primary scale-110'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                >
+                    <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
+                        <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
                     </div>
-                </div>
-            )}
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
+                </Link>
+
+                <Link
+                    to="/movies"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/movies') && location.pathname !== '/'
+                            ? 'text-primary scale-110'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                >
+                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
+                        <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
+                </Link>
+
+                <Link
+                    to="/events"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/events')
+                            ? 'text-primary scale-110'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                >
+                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
+                        <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
+                </Link>
+            </div>
+        </div>
+    )
+}
         </>
     );
 };

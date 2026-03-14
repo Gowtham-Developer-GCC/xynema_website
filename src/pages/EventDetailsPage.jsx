@@ -447,41 +447,41 @@ const EventDetailsPage = () => {
                 {/* Glass reflection highlight */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/20 dark:divide-white/5">
-                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300">
-                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
-                            <Clock className="w-6 h-6 text-primary shrink-0" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-white/20 dark:divide-white/5">
+                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300">
+                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Clock className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Duration</p>
-                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
+                            <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Duration</p>
+                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
                         </div>
                     </div>
-                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5 md:border-l-0">
-                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
-                            <Globe className="w-6 h-6 text-primary shrink-0" />
+                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t sm:border-t-0 sm:border-l border-white/20 dark:border-white/5">
+                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Globe className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Language</p>
-                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.languages?.join(', ') || 'English'}</p>
+                            <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Language</p>
+                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.languages?.join(', ') || 'English'}</p>
                         </div>
                     </div>
-                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-t border-white/20 dark:border-white/5 md:border-t-0">
-                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
-                            <Info className="w-6 h-6 text-primary shrink-0" />
+                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
+                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Info className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Age Limit</p>
-                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.ageGroup || 'All Ages'}</p>
+                            <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Age Limit</p>
+                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.ageGroup || 'All Ages'}</p>
                         </div>
                     </div>
-                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5 border-t md:border-t-0">
-                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
-                            <Ticket className="w-6 h-6 text-primary shrink-0" />
+                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t sm:border-t-0 sm:border-l lg:border-l border-white/20 dark:border-white/5">
+                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Ticket className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Entry Type</p>
-                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">E-Ticket Only</p>
+                            <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Entry Type</p>
+                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">E-Ticket Only</p>
                         </div>
                     </div>
                 </div>
@@ -584,7 +584,7 @@ const EventDetailsPage = () => {
                                 <div className="relative">
                                     <Swiper
                                         modules={[Navigation]}
-                                        slidesPerView={2}
+                                        slidesPerView={1}
                                         spaceBetween={16}
                                         navigation={{
                                             nextEl: '.similar-events-next',

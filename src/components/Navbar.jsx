@@ -21,14 +21,12 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     }, [location, user, openLogin]);
 
     const sidebarItems = [
-        { icon: Wallet, title: 'Wallet', path: '/profile' },
         { icon: Ticket, title: 'My tickets', path: '/bookings' },
         { icon: CreditCard, title: 'Payment methods', path: '/profile' },
         { icon: Gift, title: 'Offers & Promos', path: '/' },
         { icon: Bell, title: 'Notifications', path: '/' },
         { icon: Shield, title: 'Account privacy', path: '/profile' },
-        { icon: MapPin, title: 'Location', path: '/' },
-        { icon: HelpCircle, title: 'Help & support', path: '/contact' },
+        { icon: HelpCircle, title: 'Help & support', path: '/help' },
     ];
 
     return (

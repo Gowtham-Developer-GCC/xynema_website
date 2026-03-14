@@ -12,6 +12,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import StoreCard from '../components/StoreCard';
 import MovieCard from '../components/MovieCard';
+import HeroCarousel from '../components/HeroCarousel';
 
 const HomePage = ({ selectedCity }) => {
     const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
@@ -107,7 +108,7 @@ const HomePage = ({ selectedCity }) => {
             <SEO
                 title={`${selectedCity} - Book Movie Tickets Online | XYNEMA`}
                 description="Book your favorite movies with ease and elegance."
-                preloads={bannerMovies.map(m => optimizeImage(isMobile ? (m.mobileBannerImage || m.bannerImageUrl) : (m.bannerImageUrl || m.backdropUrl || m.posterUrl), { width: 1400, quality: 85 }))}
+                preloads={bannerMovies.map(m => m.mobileBannerImage || m.bannerImageUrl || m.backdropUrl || m.posterUrl).filter(Boolean).map(url => optimizeImage(url, { width: 1400, quality: 85 }))}
             />
 
             {/* Flat Carousel Banner */}
@@ -447,92 +448,7 @@ const EventCard = memo(({ event }) => {
     );
 });
 
-// ============= COMPONENT: HeroCarousel =============
-const HeroCarousel = memo(({ movies, isMobile }) => {
-    if (!movies?.length) return null;
-
-    return (
-        <section className="w-full relative px-0 sm:px-2">
-            <style>
-                {`
-                .hero-swiper {
-                    padding-bottom: 3rem !important; /* Space for pagination */
-                }
-                .hero-swiper .swiper-pagination-bullet {
-                    width: 8px;
-                    height: 8px;
-                    background: #cbd5e1;
-                    opacity: 1;
-                    border-radius: 4px;
-                    transition: all 0.3s ease;
-                }
-                .hero-swiper .swiper-pagination-bullet-active {
-                    width: 64px;
-                    background: #FD4960;
-                }
-                .dark .hero-swiper .swiper-pagination-bullet {
-                    background: #475569;
-                }
-                .dark .hero-swiper .swiper-pagination-bullet-active {
-                    background: #94a3b8;
-                }
-                `}
-            </style>
-            <Swiper
-                modules={[Pagination, Autoplay, Navigation]}
-                spaceBetween={12}
-                slidesPerView={1}
-                centeredSlides={true}
-                loop={movies.length > 1}
-                speed={800}
-                grabCursor={true}
-                autoplay={{
-                    delay: 1500,
-                    disableOnInteraction: false,
-                }}
-                pagination={{
-                    clickable: true,
-                    dynamicBullets: false,
-                }}
-                watchSlidesProgress={true}
-                preloadImages={true}
-                loopAdditionalSlides={1}
-                observer={true}
-                observeParents={true}
-                breakpoints={{
-                    320: { slidesPerView: 1, spaceBetween: 10 },
-                    640: { slidesPerView: 1, spaceBetween: 16 },
-                    1024: { slidesPerView: 1, spaceBetween: 24 },
-                }}
-                className={`hero-swiper w-full max-w-[1800px] mx-auto ${isMobile ? 'aspect-[5/2]' : 'aspect-[21/4]'}`}
-            >
-                {movies.map((movie, index) => {
-                    const linkUrl = movie.linkUrl || (movie.slug || movie.id ? `/movie/${movie.slug || movie.id}` : '#');
-                    const imageUrl = isMobile ? movie.mobileBannerImage : movie.bannerImageUrl;
-
-                    return (
-                        <SwiperSlide key={`${movie.id}-${index}`} className="!h-auto">
-                            <div className="w-full aspect-[5/2] md:aspect-[21/4] sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
-                                <a
-                                    href={linkUrl}
-                                    className="block w-full h-full cursor-pointer"
-                                >
-                                    <img
-                                        src={optimizeImage(imageUrl, { width: 1400, quality: 85 }) || 'https://via.placeholder.com/1400x400?text=No+Image'}
-                                        alt={movie.title}
-                                        className="w-full h-full object-cover object-center"
-                                        loading="eager"
-                                        fetchpriority="high"
-                                    />
-                                </a>
-                            </div>
-                        </SwiperSlide>
-                    );
-                })}
-            </Swiper>
-        </section>
-    );
-});
+// --- Standalone component extracted ---
 
 // MovieCard moved to standalone component
 

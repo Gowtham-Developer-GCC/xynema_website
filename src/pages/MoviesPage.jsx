@@ -81,7 +81,7 @@ const MoviesPage = ({ selectedCity }) => {
     } = useData();
 
     const location = useLocation();
-    
+
     // Tab state: 'now-showing' | 'upcoming' | 're-releases'
     const [activeTab, setActiveTab] = useState('now-showing');
 
@@ -152,7 +152,7 @@ const MoviesPage = ({ selectedCity }) => {
     const TABS = [
         { id: 'now-showing', label: 'Now Showing' },
         { id: 'upcoming', label: 'Upcoming' },
-        
+
     ];
 
     if (loading && !movies?.length) return <LoadingScreen message="Loading Movies..." />;

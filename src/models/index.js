@@ -80,6 +80,11 @@ export class Movie {
             this.isAvailable = true;
         }
         this.availability = data.availability || {};
+
+        // Collect all available images for carousels
+        const imgs = Array.isArray(data.images) ? data.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean) : [];
+        const baseImages = [this.backdropUrl, this.bannerImageUrl, this.mobileBannerImage, this.posterUrl].filter(Boolean);
+        this.allImages = imgs.length > 0 ? imgs : [...new Set(baseImages)];
     }
 
     _parseCastCrew(arr, type = 'cast') {

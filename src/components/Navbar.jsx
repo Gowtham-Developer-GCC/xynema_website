@@ -34,7 +34,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     return (
         <>
             <nav className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
-                <div className="w-[95%] md:w-[92%] lg:w-[90%] xl:w-[94%] 2xl:w-[90%] mx-auto px-4">
+                <div className="w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] 2xl:w-[80%] mx-auto px-4">
                     <div className="flex justify-between items-center h-16 md:h-20">
 
                         {/* Left: Logo & City */}
@@ -97,7 +97,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                             className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover shadow-sm"
                                             alt=""
                                         />
-                                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden 2xl:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
+                                        {/*<span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden 2xl:block">{user.displayName?.split(' ')[0] || 'Guest'}</span>*/}
                                     </button>
                                 ) : (
                                     <button

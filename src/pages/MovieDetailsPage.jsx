@@ -201,7 +201,7 @@ const MovieDetailsPage = () => {
             />
 
             {/* Hero Section with Sophisticated Banner */}
-            <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[60vh] md:min-h-[70vh] flex items-center pt-24 pb-16">
+            <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[50vh] md:min-h-[70vh] flex items-center pt-20 pb-12 md:pt-24 md:pb-16">
                 {/* Background Image/Video with Multi-layered Masking */}
                 <div className="absolute inset-0 overflow-hidden">
                     {isPlayingTrailer && getYouTubeId(movie.trailerUrl) ? (
@@ -226,21 +226,21 @@ const MovieDetailsPage = () => {
                     )}
                 </div>
 
-                <div className="relative z-10 max-w-[80%] mx-auto px-4 md:px-8 w-full mt-4">
+                <div className="relative z-10 w-[95%] sm:w-[92%] lg:w-[85%] 2xl:w-[80%] mx-auto px-4 md:px-8 mt-4">
                     {/* Immersive View Toggle - Eye Icon (Top Right of Glass/Hero area) */}
                     {isPlayingTrailer && !isGlassHidden && (
                         <button
                             onClick={() => setIsGlassHidden(true)}
-                            className="absolute -top-12 right-8 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all z-50 shadow-xl"
+                            className="absolute -top-10 md:-top-12 right-6 md:right-8 p-2.5 md:p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all z-50 shadow-xl"
                             title="Hide Details"
                         >
-                            <EyeOff className="w-6 h-6" />
+                            <EyeOff className="w-5 h-5 md:w-6 h-6" />
                         </button>
                     )}
 
                     {/* Immersive Controls Bar - Bottom Right */}
                     {isPlayingTrailer && isGlassHidden && (
-                        <div className="fixed bottom-10 right-10 flex items-center gap-3 z-[100] animate-in slide-in-from-right duration-500">
+                        <div className="fixed bottom-32 md:bottom-10 right-6 md:right-10 flex flex-col md:flex-row items-center gap-3 z-[100] animate-in slide-in-from-right duration-500">
                             <button
                                 onClick={() => setIsMuted(!isMuted)}
                                 className="p-4 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-white hover:bg-primary transition-all shadow-2xl group"
@@ -265,14 +265,14 @@ const MovieDetailsPage = () => {
                         </div>
                     )}
 
-                    <div className={`flex flex-col md:flex-row gap-8 md:gap-14 items-center md:items-start text-white p-6 md:p-10 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-saturate-150 relative overflow-hidden transition-all duration-700 ease-in-out ${isGlassHidden ? 'translate-y-[120%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+                    <div className={`flex flex-col md:flex-row gap-6 md:gap-14 items-center md:items-start text-white p-4 md:p-10 rounded-2xl md:rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-saturate-150 relative overflow-hidden transition-all duration-700 ease-in-out ${isGlassHidden ? 'translate-y-[120%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
                         }`}>
                         {/* Soft Highlight for Glass Edge */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                         <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 via-transparent to-transparent"></div>
 
                         {/* Premium Movie Poster */}
-                        <div className="relative w-56 md:w-[260px] flex-shrink-0 animate-fade-in shadow-2xl">
+                        <div className="relative w-44 sm:w-56 md:w-[260px] flex-shrink-0 animate-fade-in shadow-2xl">
                             <div className="aspect-[2/3] rounded-xl overflow-hidden relative border border-white/20">
                                 <img
                                     src={optimizeImage(movie.posterUrl, { width: 600, quality: 95 })}
@@ -288,9 +288,9 @@ const MovieDetailsPage = () => {
                         </div>
 
                         {/* Movie Details Content Area */}
-                        <div className="flex-1 flex flex-col gap-5 text-center md:text-left max-w-3xl pt-2 md:pt-4">
+                        <div className="flex-1 flex flex-col gap-4 md:gap-5 text-center md:text-left pt-2 md:pt-4">
                             {/* Title Area */}
-                            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-bold tracking-tight leading-tight text-white drop-shadow-2xl font-roboto">
+                            <h1 className="text-3xl md:text-5xl lg:text-[4rem] font-bold tracking-tight leading-tight text-white drop-shadow-2xl font-roboto">
                                 {movie.title}
                             </h1>
 
@@ -336,7 +336,7 @@ const MovieDetailsPage = () => {
                             )}
 
                             {/* Synopsis */}
-                            <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal mt-4 max-w-2xl">
+                            <p className="text-sm md:text-base text-white/90 leading-relaxed font-normal mt-2 md:mt-4 max-w-2xl">
                                 {movie.description}
                             </p>
 
@@ -416,7 +416,7 @@ const MovieDetailsPage = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="w-[95%] sm:w-[92%] lg:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-32 md:pb-8">
                 <div className={`grid grid-cols-1 gap-8 ${movie.offers?.length > 0 ? 'lg:grid-cols-12' : 'lg:grid-cols-1'}`}>
                     {/* Left Column */}
                     <div className={`${movie.offers?.length > 0 ? 'lg:col-span-8' : 'w-full'} space-y-10 md:space-y-14`}>
@@ -471,12 +471,12 @@ const MovieDetailsPage = () => {
             )}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors">
+            <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-colors">
                 <button
                     onClick={handleBookingClick}
                     disabled={!movie.isAvailable}
                     className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
-                        ? 'bg-primary text-white shadow-primary/30 font-roboto italic'
+                        ? 'bg-primary text-white shadow-primary/30 font-roboto'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                 >

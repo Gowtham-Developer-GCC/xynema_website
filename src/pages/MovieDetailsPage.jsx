@@ -93,12 +93,35 @@ const MovieDetailsPage = () => {
     const [merchandise, setMerchandise] = useState([]);
     const [merchLoading, setMerchLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [showStickyBar, setShowStickyBar] = useState(false);
+    const bookingTriggerRef = useRef(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        if (!isMobile) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                // When the hero booking button is NOT intersecting (scrolled past), show the sticky bar
+                setShowStickyBar(!entry.isIntersecting);
+            },
+            {
+                threshold: 0,
+                rootMargin: '-80px 0px 0px 0px' // Offset for the top navbar
+            }
+        );
+
+        if (bookingTriggerRef.current) {
+            observer.observe(bookingTriggerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [isMobile, movie]);
 
     useEffect(() => {
         const fetchMerch = async () => {
@@ -391,16 +414,18 @@ const MovieDetailsPage = () => {
                                         )}
                                     </button>
                                 )}
-                                <button
-                                    onClick={handleBookingClick}
-                                    disabled={!movie.isAvailable}
-                                    className={`flex-1 sm:max-w-md px-10 py-3.5 rounded-xl font-bold tracking-wide transition-all text-center shadow-2xl active:scale-95 font-roboto text-base md:text-lg ${movie.isAvailable
-                                        ? 'bg-primary hover:brightness-110 text-white border-transparent shadow-primary/30'
-                                        : 'bg-gray-600 text-white/50 cursor-not-allowed border-transparent'
-                                        }`}
-                                >
-                                    {movie.isAvailable ? 'Book tickets' : 'Coming Soon'}
-                                </button>
+                                <div ref={bookingTriggerRef} className="flex-1 sm:max-w-md">
+                                    <button
+                                        onClick={handleBookingClick}
+                                        disabled={!movie.isAvailable}
+                                        className={`w-full px-10 py-3.5 rounded-xl font-bold tracking-wide transition-all text-center shadow-2xl active:scale-95 font-roboto text-base md:text-lg ${movie.isAvailable
+                                            ? 'bg-primary hover:brightness-110 text-white border-transparent shadow-primary/30'
+                                            : 'bg-gray-600 text-white/50 cursor-not-allowed border-transparent'
+                                            }`}
+                                    >
+                                        {movie.isAvailable ? 'Book tickets' : 'Coming Soon'}
+                                    </button>
+                                </div>
 
                                 <div className="flex items-center gap-3 justify-center sm:justify-start">
                                     <button
@@ -483,7 +508,8 @@ const MovieDetailsPage = () => {
             )}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-colors">
+            <div className={`md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-[#1a1c23] border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 transform ${showStickyBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+                }`}>
                 <button
                     onClick={handleBookingClick}
                     disabled={!movie.isAvailable}
@@ -583,8 +609,8 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                     <div className="relative">
                         <Swiper
                             modules={[Navigation]}
-                            spaceBetween={16}
-                            slidesPerView={1.2}
+                            spaceBetween={12}
+                            slidesPerView={3}
                             roundLengths={true}
                             navigation={{
                                 nextEl: '.cast-next',
@@ -673,8 +699,8 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                     <div className="relative">
                         <Swiper
                             modules={[Navigation]}
-                            spaceBetween={16}
-                            slidesPerView={1.2}
+                            spaceBetween={12}
+                            slidesPerView={3}
                             roundLengths={true}
                             navigation={{
                                 nextEl: '.crew-next',
@@ -749,7 +775,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <Swiper
                             modules={[Navigation]}
                             spaceBetween={20}
-                            slidesPerView={1.2}
+                            slidesPerView={2}
                             roundLengths={true}
                             navigation={{
                                 nextEl: '.merch-next',

@@ -314,7 +314,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                 {activeTab === 'public_events' && (
                     <>
                         {/* Trending Row (First 3 events) */}
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                             {filteredEvents.length > 0 ? (
                                 filteredEvents.slice(0, 3).map((event, idx) => (
                                     <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
@@ -330,7 +330,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
                             <div className="mt-8">
                                 <h2 className="text-[24px] sm:text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-6 sm:mb-8">All events</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                     {filteredGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                     ))}
@@ -543,13 +543,13 @@ const EventCard = memo(({ event }) => {
                     </div>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
-                    <span className="font-bold text-primary dark:text-primary text-base sm:text-lg">
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <span className="font-bold text-primary dark:text-primary text-[13px] sm:text-lg min-w-0 truncate">
                         ₹{event.price ? event.price.toLocaleString() : 'Free'}
                     </span>
                     <Link
                         to={eventLink}
-                        className="px-4 sm:px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-wider hover:brightness-110 active:scale-95"
+                        className="flex-shrink-0 px-3 sm:px-5 py-2 bg-primary text-white text-[9px] sm:text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-widest sm:tracking-wider hover:brightness-110 active:scale-95 whitespace-nowrap uppercase"
                     >
                         Book Now
                     </Link>

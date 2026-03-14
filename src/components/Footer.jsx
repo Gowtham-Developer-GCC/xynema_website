@@ -21,7 +21,7 @@ const Footer = () => {
                                     alt="Xynema Logo Symbol"
                                     className="h-12 w-auto brightness-110"
                                 />
-                                <span className="text-2xl font-roboto font-bold text-xynemaRose uppercase">Xynema</span>
+                                <span className="text-2xl font-roboto font-bold text-white uppercase">Xynema</span>
                             </Link>
                         </div>
 
@@ -32,7 +32,7 @@ const Footer = () => {
                         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
                             <a href="tel:+04944531182" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group">
                                 <Phone className="w-6 h-6 text-primary/80 group-hover:scale-110 transition-transform" />
-                                <span className="text-sm font-medium">0494-4531182</span>
+                                <span className="text-sm font-medium">0484-4531182</span>
                             </a>
                             <a href="mailto:care@xynema.in" className="flex items-center gap-4 text-gray-400 hover:text-primary transition-all group">
                                 <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
@@ -45,9 +45,12 @@ const Footer = () => {
                             </a>
                         </div>
                         
-                        <div className="flex items-center gap-3  mt-6 pl-1 animate-in fade-in slide-in-from-left duration-700">
-                            <MapPin className="w-4 h-4 text-primary/100 shrink-0" />
-                            <span className="text-sm font-medium">Cochin, Kerala, India</span>
+                        <div className="flex flex-col gap-3 mt-6 pl-1 animate-in fade-in slide-in-from-left duration-700">
+                            <div className="flex items-center gap-3">
+                                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                                <span className="text-sm font-medium">Cochin, Kerala, India</span>
+                            </div>
+                          
                         </div>
                     </div>
 
@@ -121,7 +124,7 @@ const Footer = () => {
             <div className="bg-[#151924]/80 backdrop-blur-sm py-4 px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-800/30">
                 <div className="flex items-center gap-3">
                     <span className="text-[11px] text-gray-600 font-bold uppercase tracking-wider mr-2">We accept:</span>
-                    {['Visa', 'Mastercard', 'UPI', 'Paytm'].map(method => (
+                    {['Visa', 'Mastercard', 'UPI', 'Rupay'].map(method => (
                         <div key={method} className="bg-[#1c2230] border border-white/5 text-gray-500 text-[9px] font-black px-3 py-1.5 rounded uppercase tracking-widest shadow-sm">
                             {method}
                         </div>

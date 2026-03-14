@@ -16,6 +16,14 @@ import MovieCard from '../components/MovieCard';
 const HomePage = ({ selectedCity }) => {
     const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Favorites State
     const [favorites, setFavorites] = useState(() => {
         try {
@@ -39,22 +47,34 @@ const HomePage = ({ selectedCity }) => {
 
     // Data Filtering
     const bannerMovies = useMemo(() => {
-        // 1. Try dedicated highlights from new API
-        if (highlightsMovies?.length) return highlightsMovies.slice(0, 6);
+        if (!highlightsMovies?.length) return [];
 
-        // 2. Fallback to promoted movies if API is still loading or empty
-        if (!movies?.length) return [];
-        const promoted = movies.filter(m => m.isPromoted);
-        return promoted.length > 0 ? promoted.slice(0, 5) : movies.slice(0, 5);
-    }, [highlightsMovies, movies]);
+        return highlightsMovies.filter(m => {
+            if (isMobile) {
+                // Per user: in mobile view use isMobileSectionImageUrlActive is true then show
+                return m.isActive && m.isMobileSectionImageUrlActive && m.mobileBannerImage;
+            } else {
+                // Per user: in desktop view use isBannerImageUrlActive is true then show
+                return m.isActive && m.isBannerImageUrlActive && m.bannerImageUrl;
+            }
+        });
+    }, [highlightsMovies, isMobile]);
 
     const randomSectionBanner = useMemo(() => {
         if (!highlightsMovies?.length) return null;
-        const activeBanners = highlightsMovies.filter(m => m.isActive && m.isSectionImageUrlActive && m.sectionImageUrl);
+
+        const activeBanners = highlightsMovies.filter(m => {
+            if (isMobile) {
+                return m.isActive && m.isMobileSectionImageUrlActive && m.mobileSectionImage;
+            } else {
+                return m.isActive && m.isSectionImageUrlActive && m.sectionImageUrl;
+            }
+        });
+
         if (activeBanners.length === 0) return null;
         const randomIndex = Math.floor(Math.random() * activeBanners.length);
         return activeBanners[randomIndex];
-    }, [highlightsMovies]);
+    }, [highlightsMovies, isMobile]);
 
     const recommendedMovies = useMemo(() => {
         if (!movies?.length) return [];
@@ -91,8 +111,8 @@ const HomePage = ({ selectedCity }) => {
             />
 
             {/* Flat Carousel Banner */}
-            <div className="w-full bg-white dark:bg-[#1a1c23] pt-0.2 transition-colors duration-300">
-                <HeroCarousel movies={bannerMovies} />
+            <div className="w-full bg-white dark:bg-[#1a1c23] pt-0.5 transition-colors duration-300">
+                <HeroCarousel movies={bannerMovies} isMobile={isMobile} />
             </div>
 
             <main className="max-w-[1440px] w-full mx-auto pb-20 lg:pb-8 space-y-12 overflow-hidden px-4 sm:px-6 lg:px-8">
@@ -254,7 +274,7 @@ const HomePage = ({ selectedCity }) => {
                                 className="block w-full aspect-video md:aspect-[4/3] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
                             >
                                 <img
-                                    src={optimizeImage(randomSectionBanner.sectionImageUrl, { width: 1920, quality: 100 })}
+                                    src={optimizeImage(isMobile ? randomSectionBanner.mobileSectionImage : randomSectionBanner.sectionImageUrl, { width: 1920, quality: 100 })}
                                     alt={randomSectionBanner.title}
                                     loading="lazy"
                                     className="w-full h-full object-cover transition-transform duration-700 ease-out"
@@ -428,11 +448,11 @@ const EventCard = memo(({ event }) => {
 });
 
 // ============= COMPONENT: HeroCarousel =============
-const HeroCarousel = memo(({ movies }) => {
+const HeroCarousel = memo(({ movies, isMobile }) => {
     if (!movies?.length) return null;
 
     return (
-        <section className="w-full relative px-2">
+        <section className="w-full relative px-0 sm:px-2">
             <style>
                 {`
                 .hero-swiper {
@@ -463,7 +483,7 @@ const HeroCarousel = memo(({ movies }) => {
                 spaceBetween={16}
                 slidesPerView={1} // Adjusted to peek sides exactly like Figma
                 centeredSlides={true}
-                loop={true}
+                loop={movies.length > 1}
                 speed={500}
                 autoplay={{
                     delay: 1500,
@@ -479,24 +499,25 @@ const HeroCarousel = memo(({ movies }) => {
                 observer={true}
                 observeParents={true}
                 breakpoints={{
-                    320: { slidesPerView: 1, spaceBetween: 8 },
+                    320: { slidesPerView: 1, spaceBetween: 0 },
                     640: { slidesPerView: 1, spaceBetween: 12 },
                     1024: { slidesPerView: 1, spaceBetween: 16 }, // Maintain peek consistently
                 }}
-                className="hero-swiper w-full max-w-[1800px] mx-auto"
+                className={`hero-swiper w-full max-w-[1800px] mx-auto ${isMobile ? 'aspect-[5/2]' : 'aspect-[21/4]'}`}
             >
                 {movies.map((movie, index) => {
                     const linkUrl = movie.linkUrl || (movie.slug || movie.id ? `/movie/${movie.slug || movie.id}` : '#');
+                    const imageUrl = isMobile ? movie.mobileBannerImage : movie.bannerImageUrl;
 
                     return (
-                        <SwiperSlide key={`${movie.id}-${index}`}>
-                            <div className="w-full aspect-[3/1] md:aspect-[21/4] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <SwiperSlide key={`${movie.id}-${index}`} className="!h-auto">
+                            <div className="w-full aspect-[5/2] md:aspect-[21/4] sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
                                 <a
                                     href={linkUrl}
                                     className="block w-full h-full cursor-pointer"
                                 >
                                     <img
-                                        src={optimizeImage(movie.bannerImageUrl || movie.backdropUrl || movie.posterUrl, { width: 1400, quality: 85 }) || 'https://via.placeholder.com/1400x400?text=No+Image'}
+                                        src={optimizeImage(imageUrl, { width: 1400, quality: 85 }) || 'https://via.placeholder.com/1400x400?text=No+Image'}
                                         alt={movie.title}
                                         className="w-full h-full object-cover object-center"
                                         loading="eager"

@@ -21,17 +21,17 @@ const StoreCard = memo(({ item }) => {
                         {item.name}
                     </h3>
                 </Link>
-                <div className="mt-auto flex items-end justify-between pt-2">
-                    <div className="flex flex-col">
-                        <span className="font-bold text-primary dark:text-primary text-lg">
+                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                    <div className="flex flex-col min-w-0 flex-shrink">
+                        <span className="font-bold text-primary dark:text-primary text-[15px] sm:text-lg truncate">
                             ₹{item.price.toLocaleString()}
                         </span>
-                        <span className="text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 tracking-widest font-roboto">
+                        <span className="text-[9px] sm:text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 tracking-widest font-roboto uppercase truncate">
                             onwards
                         </span>
                     </div>
-                    <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
-                        <span className="text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300">Buy Now</span>
+                    <div className="flex-shrink-0 flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
+                        <span className="text-[10px] sm:text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
                     </div>
                 </div>
             </div>

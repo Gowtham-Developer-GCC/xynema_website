@@ -64,6 +64,10 @@ export class Movie {
         this.isActive = data.isActive ?? false;
         this.isBannerImageUrlActive = data.isBannerImageUrlActive ?? false;
         this.isSectionImageUrlActive = data.isSectionImageUrlActive ?? false;
+        this.isMobileBannerImageUrlActive = data.isMobileBannerImageUrlActive ?? false;
+        this.isMobileSectionImageUrlActive = data.isMobileSectionImageUrlActive ?? false;
+        this.mobileBannerImage = data.mobileBannerImage || '';
+        this.mobileSectionImage = data.mobileSectionImage || '';
 
         // Availability flag for Upcoming logic - Handle boolean and string 'true'
         // Default to false (Upcoming) if missing or explicitly false

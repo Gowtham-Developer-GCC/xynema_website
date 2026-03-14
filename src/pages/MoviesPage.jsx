@@ -8,7 +8,7 @@ import ErrorState from '../components/ErrorState';
 import MovieCard from '../components/MovieCard';
 
 // ─── Dropdown Filter Component ──────────────────────────────────────────────
-const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
+const DropdownFilter = ({ label, items, selected, onToggle, onClear, align = 'left' }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
 
@@ -26,17 +26,17 @@ const DropdownFilter = ({ label, items, selected, onToggle, onClear }) => {
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen(o => !o)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all select-none font-roboto ${activeCount > 0
+                className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 rounded-lg border text-xs sm:text-sm font-bold transition-all select-none font-roboto w-full ${activeCount > 0
                     ? 'border-primary text-primary bg-primary/5 dark:bg-primary/20'
                     : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1a1d24] hover:border-gray-300 dark:hover:border-gray-700'
                     }`}
             >
-                {activeCount > 0 ? `${label} (${activeCount})` : label}
-                <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+                <span className="truncate">{activeCount > 0 ? `${label} (${activeCount})` : label}</span>
+                <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
 
             {open && (
-                <div className="absolute top-full mt-2 left-0 z-30 bg-white dark:bg-[#1a1d24] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl p-3 w-56 max-h-64 overflow-y-auto transition-colors duration-300">
+                <div className={`absolute top-full mt-2 z-30 bg-white dark:bg-[#1a1d24] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl p-3 w-56 max-h-64 overflow-y-auto transition-colors duration-300 ${align === 'right' ? 'right-0' : 'left-0'}`}>
                     {activeCount > 0 && (
                         <button
                             onClick={() => { onClear(); }}
@@ -175,71 +175,76 @@ const MoviesPage = ({ selectedCity }) => {
 
             {/* ── Tabs + Filters Bar ────────────────────────── */}
             <div className="bg-white dark:bg-[#0f1115]/90 dark:backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800 sticky top-16 md:top-20 z-40 shadow-sm transition-all duration-300">
-                <div className="w-[90%] sm:w-[80%] mx-auto px-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap py-3 text-slate-950 dark:text-white">
+                <div className="w-[95%] sm:w-[80%] mx-auto px-1 sm:px-4">
+                    <div className="flex flex-col py-1">
+                        {/* Top Row: Tabs + Cinemas */}
+                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/50">
+                            <div className="flex items-center gap-0 overflow-x-auto no-scrollbar">
+                                {TABS.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
+                                        className={`px-4 sm:px-6 py-4 text-[13px] sm:text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-roboto ${activeTab === tab.id
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
 
-                        {/* Left: Tabs */}
-                        <div className="flex items-center gap-0">
-                            {TABS.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
-                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-roboto ${activeTab === tab.id
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-                                        }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
+                            <Link
+                                to="/cinemas"
+                                className="flex-shrink-0 inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-[11px] sm:text-sm font-bold font-roboto transition-colors shadow-lg shadow-primary/20"
+                            >
+                                <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span className="hidden xs:inline">Browse Cinemas</span>
+                                <span className="xs:hidden">Cinemas</span>
+                            </Link>
                         </div>
 
-                        {/* Right: Dropdowns + CTA */}
-                        <div className="flex items-center gap-2 py-2 flex-wrap">
-                            {languages.length > 0 && (
-                                <DropdownFilter
-                                    label="All Languages"
-                                    items={languages}
-                                    selected={selectedLanguages}
-                                    onToggle={item => toggleFilter(setSelectedLanguages, item)}
-                                    onClear={() => setSelectedLanguages([])}
-                                />
-                            )}
-                            {genres.length > 0 && (
-                                <DropdownFilter
-                                    label="All Genres"
-                                    items={genres}
-                                    selected={selectedGenres}
-                                    onToggle={item => toggleFilter(setSelectedGenres, item)}
-                                    onClear={() => setSelectedGenres([])}
-                                />
-                            )}
-                            {formats.length > 0 && (
-                                <DropdownFilter
-                                    label="All Formats"
-                                    items={formats}
-                                    selected={selectedFormats}
-                                    onToggle={item => toggleFilter(setSelectedFormats, item)}
-                                    onClear={() => setSelectedFormats([])}
-                                />
-                            )}
+                        {/* Bottom Row: Filters (Full Width Grid) */}
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 py-3">
+                            <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
+                                {languages.length > 0 && (
+                                    <DropdownFilter
+                                        label="Languages"
+                                        items={languages}
+                                        selected={selectedLanguages}
+                                        onToggle={item => toggleFilter(setSelectedLanguages, item)}
+                                        onClear={() => setSelectedLanguages([])}
+                                    />
+                                )}
+                                {genres.length > 0 && (
+                                    <DropdownFilter
+                                        label="Genres"
+                                        items={genres}
+                                        selected={selectedGenres}
+                                        onToggle={item => toggleFilter(setSelectedGenres, item)}
+                                        onClear={() => setSelectedGenres([])}
+                                    />
+                                )}
+                                {formats.length > 0 && (
+                                    <DropdownFilter
+                                        label="Formats"
+                                        items={formats}
+                                        selected={selectedFormats}
+                                        onToggle={item => toggleFilter(setSelectedFormats, item)}
+                                        onClear={() => setSelectedFormats([])}
+                                        align="right"
+                                    />
+                                )}
+                            </div>
 
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearAllFilters}
-                                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-gray-500 hover:text-red-500 transition-colors"
+                                    className="inline-flex items-center justify-center lg:justify-start gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest"
                                 >
-                                    <X className="w-3.5 h-3.5" /> Clear all
+                                    <X className="w-3.5 h-3.5" /> Clear All Filters
                                 </button>
                             )}
-
-                            <Link
-                                to="/cinemas"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-roboto transition-colors shadow-lg shadow-primary/20"
-                            >
-                                <Ticket className="w-4 h-4" />
-                                Browse by Cinemas
-                            </Link>
                         </div>
                     </div>
                 </div>

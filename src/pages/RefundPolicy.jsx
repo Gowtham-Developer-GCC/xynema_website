@@ -50,11 +50,11 @@ const RefundPolicy = () => {
                     </p>
                     
                     <p>
-                        If a refund is approved, the eligible refund amount will typically be credited back to the original payment method used during the booking transaction, subject to the policies and processing timelines of the respective payment gateway, bank, or financial institution. Refund processing timelines generally range between five (5) to ten (10) business days, although actual timelines may vary depending on the payment provider and banking network involved.
+                        If a refund is approved, the eligible refund amount will typically be credited back to the original payment method used during the booking transaction, subject to the policies and processing timelines of the respective payment gateway, bank, or financial institution. Refund processing timelines generally range between five (5) to ten (10) working days, although actual timelines may vary depending on the payment provider and banking network involved.
                     </p>
                     
                     <p>
-                        In certain situations, events or services may be postponed, rescheduled, relocated, or modified by the respective event organizer or venue operator due to operational requirements or circumstances beyond their control. Such circumstances may include, but are not limited to, weather conditions, government restrictions, safety concerns, technical issues, or other force majeure events. In such cases, the event organizer or service provider may decide whether the booking will be rescheduled, replaced, or refunded in accordance with their own policies. XYNEMA does not control such decisions and shall not be responsible for changes made by the organizer or venue operator.
+                        In certain situations, events or services may be postponed, rescheduled, relocated, or modified by the respective event organizer or venue operator due to circumstances beyond their control. Such circumstances may include technical issues, weather conditions, safety concerns, regulatory restrictions, or force majeure events. In such cases, the event organizer or service provider will determine the applicable refund or rescheduling policy. XYNEMA will make reasonable efforts to notify users and assist in processing refunds or alternate arrangements where applicable.
                     </p>
                     
                     <p className="font-medium text-gray-900 dark:text-white">

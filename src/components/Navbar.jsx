@@ -34,8 +34,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     return (
         <>
             <nav className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
-                <div className="w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] 2xl:w-[80%] mx-auto px-4">
-                    <div className="flex justify-between items-center h-16 md:h-20">
+                <div className="w-full max-w-[95%] md:max-w-[95%] lg:max-w-[95%] xl:max-w-[95%] 2xl:max-w-[80%] mx-auto px-4">
+                    <div className="flex justify-between items-center h-16 md:h-20 lg:h-20 xl:h-20">
 
                         {/* Left: Logo & City */}
                         <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
@@ -48,22 +48,22 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">Dev Mode</span>
                             </div>
 
-                            <Link to="/" className="flex items-center gap-2 group">
+                            <Link to="/" className="flex items-center gap-1.5 md:gap-2 group">
                                 <img
                                     src="/assets/primary_Logo.png"
                                     alt="Xynema Logo"
-                                    className="h-8 md:h-8 w-auto group-hover:scale-105 transition-transform duration-300 transform-gpu"
+                                    className="h-7 md:h-8 w-auto group-hover:scale-105 transition-transform duration-300 transform-gpu"
                                 />
-                                <span className="text-xl md:text-2xl font-display font-bold text-gray-900 dark:text-white uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
+                                <span className="text-lg md:text-2xl font-display font-bold text-gray-900 dark:text-white uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
                             </Link>
 
                             <button
                                 onClick={openCityModal}
-                                className="flex items-center gap-1 md:gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-colors group text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm ml-2 md:ml-6 border border-white/60 dark:border-gray-700"
+                                className="hidden md:flex items-center gap-1 md:gap-1.5 px-2 py-1.5 md:px-4 md:py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-colors group text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm ml-1 md:ml-6 border border-white/60 dark:border-gray-700"
                             >
-                                <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[80px] md:max-w-none">{selectedCity || 'Select City'}</span>
-                                <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400 group-hover:text-primary mb-[1px] md:mb-0.5" />
+                                <MapPin className="h-3 w-3 md:h-4 md:w-4" />
+                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[60px] md:max-w-none">{selectedCity || 'City'}</span>
+                                <ChevronDown className="h-3 w-3 md:h-4 md:w-4 text-gray-400 group-hover:text-primary mb-[1px] md:mb-0.5" />
                             </button>
                         </div>
 
@@ -75,14 +75,14 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         </div>
 
                         {/* Right: Search & Actions */}
-                        <div className="flex items-center justify-end gap-3 md:gap-4 flex-1">
+                        <div className="flex items-center justify-end gap-1 md:gap-4 flex-1">
                             {/* Search Icon - Always visible, expands on click */}
                             <button
                                 onClick={() => setIsMobileSearchOpen(true)}
-                                className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                                className="p-1.5 md:p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all"
                                 aria-label="Search"
                             >
-                                <Search className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                                <Search className="h-4.5 w-4.5 md:h-5 md:w-5 text-gray-600 dark:text-gray-400" />
                             </button>
 
                             {/* Actions Group */}
@@ -122,15 +122,15 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             <div className="flex items-center gap-1 xl:hidden">
                                 <button
                                     onClick={toggleTheme}
-                                    className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
+                                    className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
                                 >
-                                    {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                                    {isDarkMode ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
                                 </button>
                                 <button
                                     onClick={() => setIsSidebarOpen(true)}
-                                    className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
+                                    className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
                                 >
-                                    <Menu className="h-5 w-5" />
+                                    <Menu className="h-4.5 w-4.5" />
                                 </button>
                             </div>
                         </div>
@@ -226,6 +226,32 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         {user.email}
                                     </p>
                                 )}
+                            </div>
+
+                            {/* Mobile Location Selector inside Sidebar */}
+                            <div className="md:hidden mt-6">
+                                <button
+                                    onClick={() => {
+                                        setIsSidebarOpen(false);
+                                        openCityModal();
+                                    }}
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all active:scale-[0.98] ${
+                                        isDarkMode 
+                                            ? 'bg-white/5 border-white/10 hover:bg-white/10' 
+                                            : 'bg-black/5 border-black/5 hover:bg-black/10'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-primary/20' : 'bg-primary/10'}`}>
+                                            <MapPin className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className={`text-[11px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Location</p>
+                                            <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{selectedCity || 'Select City'}</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className={`w-4 h-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                                </button>
                             </div>
                         </div>
 

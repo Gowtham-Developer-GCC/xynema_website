@@ -138,9 +138,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                 </div>
 
 
-                {/* Mobile Search Overlay */}
+                {/* Mobile/Desktop Search Overlay */}
                 {isMobileSearchOpen && (
-                    <div className="absolute inset-x-0 top-0 h-16 bg-white dark:bg-gray-900 z-[65] border-b border-gray-100 dark:border-gray-800 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute inset-x-0 lg:left-auto lg:right-8 lg:top-3 lg:h-14 lg:w-[450px] bg-white dark:bg-gray-900 z-[65] border-b lg:border lg:border-white/20 lg:dark:border-gray-700 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2 lg:rounded-2xl lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all">
                         <div className="flex-1 flex items-center gap-3">
                             <UniversalSearch
                                 variant="navbar"
@@ -149,7 +149,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             />
                             <button
                                 onClick={() => setIsMobileSearchOpen(false)}
-                                className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0"
+                                className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             </button>

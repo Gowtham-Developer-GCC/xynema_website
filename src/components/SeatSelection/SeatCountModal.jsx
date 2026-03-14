@@ -54,10 +54,10 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="p-6 md:p-8 flex flex-col items-center">
+                <div className="p-4 md:p-8 flex flex-col items-center">
                     {/* Ticket Stack Illustration */}
-                    <div className="relative w-full max-w-[280px] aspect-[16/9] mb-6 flex items-center justify-center">
-                        <div className="relative w-[180px] h-[110px]">
+                    <div className="relative w-full max-w-[280px] aspect-[16/9] mb-4 md:mb-6 flex items-center justify-center">
+                        <div className="relative w-[140px] h-[85px] md:w-[180px] md:h-[110px]">
                             {animateTickets && [...Array(selectedCount)].map((_, i) => {
                                 const reverseIndex = selectedCount - 1 - i;
                                 const rotation = - (reverseIndex * 3);
@@ -68,7 +68,7 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                 return (
                                     <div
                                         key={`${selectedCount}-${i}`}
-                                        className="absolute inset-0 bg-white dark:bg-gray-800 border border-slate-100/70 dark:border-gray-700 rounded-[22px] shadow-[0_8px_25px_rgba(0,0,0,0.06)] ticket-fall overflow-hidden"
+                                        className="absolute inset-0 bg-white dark:bg-gray-800 border border-slate-100/70 dark:border-gray-700 rounded-[18px] md:rounded-[22px] shadow-[0_8px_25px_rgba(0,0,0,0.06)] ticket-fall overflow-hidden"
                                         style={{
                                             '--rotation': `${rotation}deg`,
                                             '--x': `${xOffset}px`,
@@ -77,23 +77,23 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                                             animationDelay: `${delay}ms`,
                                         }}
                                     >
-                                        <div className={`absolute top-0 right-0 w-8 h-8 bg-primary dark:bg-primary/20 rounded-bl-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
-                                        <div className={`absolute bottom-0 left-0 w-8 h-8 bg-primary dark:bg-primary/20 rounded-tr-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
+                                        <div className={`absolute top-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-primary dark:bg-primary/20 rounded-bl-[24px] md:rounded-bl-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
+                                        <div className={`absolute bottom-0 left-0 w-6 h-6 md:w-8 md:h-8 bg-primary dark:bg-primary/20 rounded-tr-[24px] md:rounded-tr-[32px] transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-30'}`} />
 
-                                        <div className="w-full h-full p-4 flex flex-col justify-between relative">
+                                        <div className="w-full h-full p-3 md:p-4 flex flex-col justify-between relative">
                                             <div className={`flex justify-between items-start transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-20'}`}>
                                                 <div className="space-y-0.5">
-                                                    <p className="text-[8px] font-bold text-slate-300 dark:text-gray-500 uppercase tracking-[0.18em]">Ticket</p>
-                                                    <h2 className="text-4xl font-bold text-primary dark:text-primary leading-none font-display">#{i + 1}</h2>
+                                                    <p className="text-[7px] md:text-[8px] font-bold text-slate-300 dark:text-gray-500 uppercase tracking-[0.18em]">Ticket</p>
+                                                    <h2 className="text-3xl md:text-4xl font-bold text-primary dark:text-primary leading-none font-display">#{i + 1}</h2>
                                                 </div>
 
-                                                <div className="w-12 h-12 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white shadow-xl mt-0.5">
-                                                    <Users className="w-6 h-6" />
+                                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white shadow-xl mt-0.5">
+                                                    <Users className="w-5 h-5 md:w-6 md:h-6" />
                                                 </div>
                                             </div>
 
-                                            <div className={`w-full flex justify-center items-center py-3 border-t border-slate-50/50 dark:border-gray-800 mt-3 transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-10'}`}>
-                                                <span className="text-[8px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-[0.45em] whitespace-nowrap">
+                                            <div className={`w-full flex justify-center items-center py-2 md:py-3 border-t border-slate-50/50 dark:border-gray-800 mt-2 md:mt-3 transition-opacity duration-1000 ${reverseIndex === 0 ? 'opacity-100' : 'opacity-10'}`}>
+                                                <span className="text-[7px] md:text-[8px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-[0.45em] whitespace-nowrap">
                                                     Admit One
                                                 </span>
                                             </div>
@@ -105,14 +105,14 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                     </div>
 
                     {/* Number Selector */}
-                    <div className="w-full relative mb-8 px-2 group/track">
-                        <div className="flex justify-center items-center gap-1.5 py-2 relative z-10 px-2">
+                    <div className="w-full relative mb-8 px-1 md:px-2 group/track">
+                        <div className="flex justify-center items-center gap-1 md:gap-1.5 py-2 relative z-10 px-1">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                                 <button
                                     key={num}
                                     onClick={() => setSelectedCount(num)}
                                     className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 shrink-0
+                                        w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold transition-all duration-500 shrink-0
                                         ${selectedCount === num
                                             ? 'bg-primary text-white shadow-[0_12px_25px_rgba(253,73,96,0.3)] dark:shadow-primary/20 scale-110 ring-4 ring-primary/10 dark:ring-primary/20'
                                             : 'bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-300 dark:text-gray-600 hover:border-primary dark:hover:border-primary hover:text-primary dark:hover:text-primary'}
@@ -131,16 +131,16 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
                     </div>
 
                     {/* Category Pricing Summary - Single line, no borders/hover */}
-                    <div className="w-full flex items-center justify-center gap-6 mb-10 overflow-x-auto no-scrollbar pb-2">
+                    <div className="w-full flex items-center justify-center gap-3 md:gap-6 mb-8 md:mb-10 overflow-x-auto no-scrollbar pb-2">
                         {categories.map((cat, i) => (
-                            <div key={i} className="flex flex-col items-center min-w-fit px-2 transition-colors">
-                                <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 text-center leading-tight whitespace-nowrap">
+                            <div key={i} className="flex flex-col items-center min-w-fit px-1 md:px-2 transition-colors">
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1 md:mb-1.5 text-center leading-tight whitespace-nowrap">
                                     {cat.label}
                                 </span>
-                                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">₹{cat.price}</span>
-                                <div className="mt-2.5 flex items-center gap-1.5">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${cat.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                                    <span className="text-[9px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-widest leading-none">
+                                <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white leading-none">₹{cat.price}</span>
+                                <div className="mt-2 md:mt-2.5 flex items-center gap-1 md:gap-1.5">
+                                    <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full ${cat.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                    <span className="text-[8px] md:text-[9px] font-bold text-slate-350 dark:text-gray-600 uppercase tracking-widest leading-none">
                                         {cat.status}
                                     </span>
                                 </div>

@@ -197,7 +197,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                 <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 relative z-[20]">
                     <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex items-center gap-2 sm:gap-3">
                         {/* Scrollable Pills Area */}
-                        <div className="flex-1 flex items-center gap-3 overflow-x-auto no-scrollbar">
+                        <div className="flex-1 flex items-center gap-3 overflow-x-auto scrollbar-hide">
                             {/* Static "All" Pill */}
                             <button
                                 onClick={() => {
@@ -246,7 +246,6 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     }`}
                             >
                                 <span className="hidden sm:inline">More </span><span>Filters</span>
-                                <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isMoreFiltersOpen && (
@@ -254,7 +253,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left">
                                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase">Categories</span>
                                     </div>
-                                    <div className="max-h-64 overflow-y-auto no-scrollbar px-2">
+                                    <div className="max-h-64 overflow-y-auto scrollbar-hide px-2">
                                         {/* Show all available tags in dropdown for simplicity, especially those that might be hidden by breakpoints */}
                                         {availableEventTags.map(tag => (
                                             <label
@@ -313,11 +312,11 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
                 {activeTab === 'public_events' && (
                     <>
-                        {/* Trending Row (First 3 events) */}
+                        {/* Trending Row (All local filtered events) */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                             {filteredEvents.length > 0 ? (
-                                filteredEvents.slice(0, 3).map((event, idx) => (
-                                    <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                filteredEvents.map((event, idx) => (
+                                    <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                 ))
                             ) : <EmptyState onReset={resetFilters} />}
                         </div>
@@ -332,7 +331,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                 <h2 className="text-[24px] sm:text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-6 sm:mb-8">All events</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                     {filteredGlobalEvents.map((event, idx) => (
-                                        <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                        <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                     ))}
                                 </div>
                             </div>

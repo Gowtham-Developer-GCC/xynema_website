@@ -74,6 +74,8 @@ const MovieDetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedFormat, setSelectedFormat] = useState('2D');
+    const [showAllFormats, setShowAllFormats] = useState(false);
+    const [showAllLanguages, setShowAllLanguages] = useState(false);
     const [showFullCast, setShowFullCast] = useState(false);
     const [showFullCrew, setShowFullCrew] = useState(false);
     const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
@@ -373,23 +375,51 @@ const MovieDetailsPage = () => {
                             {/* Format & Language */}
                             <div className="space-y-3 mt-4">
                                 {movie.format?.length > 0 && (
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
                                         <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Format:</span>
                                         <div className="flex flex-wrap gap-2">
-                                            {movie.format.map((f, i) => (
+                                            {(showAllFormats ? movie.format : movie.format.slice(0, 3)).map((f, i) => (
                                                 <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
                                                     {f.trim()}
                                                 </span>
                                             ))}
+                                            {!showAllFormats && movie.format.length > 3 && (
+                                                <button
+                                                    onClick={() => setShowAllFormats(true)}
+                                                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
+                                                >
+                                                    +{movie.format.length - 3}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 )}
                                 {movie.language && (
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
                                         <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Language:</span>
-                                        <span className="font-semibold text-white/90 text-sm md:text-base">
-                                            {movie.language}
-                                        </span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(() => {
+                                                const langs = movie.language.split(',').map(l => l.trim());
+                                                const displayed = showAllLanguages ? langs : langs.slice(0, 3);
+                                                return (
+                                                    <>
+                                                        {displayed.map((l, i) => (
+                                                            <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
+                                                                {l}
+                                                            </span>
+                                                        ))}
+                                                        {!showAllLanguages && langs.length > 3 && (
+                                                            <button
+                                                                onClick={() => setShowAllLanguages(true)}
+                                                                className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
+                                                            >
+                                                                +{langs.length - 3}
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
                                 )}
                             </div>

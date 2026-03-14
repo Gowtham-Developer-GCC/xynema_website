@@ -39,6 +39,15 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                         {/* Left: Logo & City */}
                         <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
+                            {/* Dev Mode Bicker */}
+                            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
+                                <div className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                </div>
+                                <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">Dev Mode</span>
+                            </div>
+
                             <Link to="/" className="flex items-center gap-2 group">
                                 <img
                                     src="/assets/primary_Logo.png"

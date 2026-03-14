@@ -15,23 +15,23 @@ const StoreCard = memo(({ item }) => {
                     />
                 </div>
             </Link>
-            <div className="p-5 flex flex-col flex-grow bg-white dark:bg-[#1a1c23] border-t border-gray-50 dark:border-gray-800">
+            <div className="p-3 sm:p-5 flex flex-col flex-grow bg-white dark:bg-[#1a1c23] border-t border-gray-50 dark:border-gray-800">
                 <Link to={`/store/${item.id}`} className="mb-2 block">
-                    <h3 className="font-black text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-roboto group-hover:text-primary">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-xs sm:text-[1.05rem] leading-snug truncate transition-colors font-roboto group-hover:text-primary">
                         {item.name}
                     </h3>
                 </Link>
-                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                     <div className="flex flex-col min-w-0 flex-shrink">
-                        <span className="font-bold text-primary dark:text-primary text-[15px] sm:text-lg truncate">
+                        <span className="font-black text-primary dark:text-primary text-[14px] sm:text-lg truncate">
                             ₹{item.price.toLocaleString()}
                         </span>
-                        <span className="text-[9px] sm:text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 tracking-widest font-roboto uppercase truncate">
+                        <span className="text-[8px] sm:text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 tracking-widest font-roboto uppercase truncate">
                             onwards
                         </span>
                     </div>
-                    <div className="flex-shrink-0 flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
-                        <span className="text-[10px] sm:text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
+                    <div className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
+                        <span className="text-[9px] sm:text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
                     </div>
                 </div>
             </div>

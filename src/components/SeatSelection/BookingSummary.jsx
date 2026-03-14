@@ -19,13 +19,6 @@ const BookingSummary = ({
     seatCategories = [],
     onRemoveSeat
 }) => {
-    // Helper to get color for seat category
-    const getCategoryColor = (label) => {
-        const lowerLabel = label.toLowerCase();
-        if (lowerLabel.includes('diamond')) return '#fbbf24';
-        if (lowerLabel.includes('gold') || lowerLabel.includes('premium')) return '#3b7298';
-        return '#737d8c'; // Default for Regular/Silver/Normal
-    };
 
     // Calculate Total 
     const basePrice = show ? (show.price || show.basePrice || 150) : 0;
@@ -103,7 +96,7 @@ const BookingSummary = ({
 
                 <div className="h-[1px] bg-gray-100 dark:bg-gray-800 w-full mb-8"></div>
 
-                <div className="flex justify-between items-center text-lg font-bold text-[#111827] dark:text-white mb-8 font-display">
+                <div className="flex justify-between items-center text-lg font-black text-[#111827] dark:text-white mb-8 font-roboto">
                     <span>Total Amount</span>
                     <span className="text-primary">₹{finalTotal.toFixed(2)}</span>
                 </div>
@@ -125,26 +118,35 @@ const BookingSummary = ({
 
                 <div className="h-[1px] bg-gray-100 dark:bg-gray-800 w-full mb-8"></div>
 
-                {/* Seat Categories Legend */}
-                {seatCategories.length > 0 && (
-                    <div>
-                        <span className="text-[13.5px] text-gray-500 dark:text-gray-400 block mb-5">Seat Categories</span>
-                        <div className="space-y-3.5">
-                            {seatCategories.map((cat, idx) => (
-                                <div key={idx} className="flex justify-between items-center text-[13.5px]">
-                                    <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-                                        <div
-                                            className="w-[14px] h-[14px] rounded-[3px]"
-                                            style={{ backgroundColor: getCategoryColor(cat.label) }}
-                                        ></div>
-                                        <span>{cat.label}</span>
-                                    </div>
-                                    <span className="text-[#111827] dark:text-white font-medium">₹{cat.price}</span>
-                                </div>
-                            ))}
+                {/* Seat Legend Indicator */}
+                <div className="mt-2">
+                    <span className="text-[12px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-5">Seat Legend</span>
+                    <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                        {/* Available */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-[18px] h-[18px] rounded-[5px] border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm shrink-0"></div>
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">Available</span>
+                        </div>
+                        {/* Selected */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-[18px] h-[18px] rounded-[5px] bg-primary shadow-sm shadow-primary/20 shrink-0 animate-pulse"></div>
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">Selected</span>
+                        </div>
+                        {/* Booked */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-[18px] h-[18px] rounded-[5px] bg-[#94a3b8] dark:bg-gray-700 shrink-0"></div>
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">Booked</span>
+                        </div>
+                        {/* Sold Out / Disabled */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-[18px] h-[18px] rounded-[5px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center justify-center relative shrink-0">
+                                <div className="absolute w-[10px] h-[1.5px] bg-gray-400 dark:bg-gray-600 rotate-45"></div>
+                                <div className="absolute w-[10px] h-[1.5px] bg-gray-400 dark:bg-gray-600 -rotate-45"></div>
+                            </div>
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">disabled</span>
                         </div>
                     </div>
-                )}
+                </div>
 
             </div>
         </div>

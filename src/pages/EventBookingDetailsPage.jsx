@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Shield, Info, MapPin, Ticket, Calendar, Clock, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Download, Shield, Info, MapPin, Ticket, Calendar, Clock, ShoppingBag, Armchair } from 'lucide-react';
 import { getEventBookingDetails } from '../services/eventService';
 import SEO from '../components/SEO';
 import ErrorState from '../components/ErrorState';
 import LoadingScreen from '../components/LoadingScreen';
+import BookingQr from '../components/BookingQr';
 
 const EventBookingDetailsPage = () => {
     const { id } = useParams();
@@ -102,7 +103,7 @@ const EventBookingDetailsPage = () => {
             <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 print:hidden transition-colors duration-300">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
-                        onClick={() => navigate('/bookings')}
+                        onClick={() => navigate('/bookings', { state: { activeTab: 'events' } })}
                         className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />

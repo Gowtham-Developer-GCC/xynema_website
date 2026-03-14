@@ -35,12 +35,30 @@ const EventDetailsPage = () => {
     // Multi-day selection state
     const [selectedShowTimeIndex, setSelectedShowTimeIndex] = useState(0);
 
+    const heroButtonRef = useRef(null);
+    const [heroButtonVisible, setHeroButtonVisible] = useState(true);
+
     useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setHeroButtonVisible(entry.isIntersecting);
+            },
+            { threshold: 0 }
+        );
+
+        if (heroButtonRef.current) {
+            observer.observe(heroButtonRef.current);
+        }
+
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 300);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        return () => {
+            if (heroButtonRef.current) observer.unobserve(heroButtonRef.current);
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
     const fetchEventDetails = async () => {
@@ -325,22 +343,21 @@ const EventDetailsPage = () => {
                     </button>
                 </div>
 
-                {/* Blurred Background Image */}
+                {/* Blurred Background Image - Blur only on mobile */}
                 <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[0px] md:blur-[0px] opacity-0 md:opacity-100 scale-[1.0]"
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[4px] md:blur-none scale-[1]"
                     style={{ backgroundImage: `url(${images[activeImageIndex] || event.imageUrl})` }}
                 />
 
-                {/* Gradient Overlays for contrast and smooth blending to content below */}
-                <div className="absolute inset-x-0 bottom-0 h-48  via-gray-900/40 to-transparent z-[1]" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 md:from-black/40 to-black/10 z-[1]" />
+                {/* Gradient Overlays - Lightened for better visibility */}
+
 
                 {/* Content Container */}
-                <div className="relative z-10 w-full max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 md:py-20 flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 pt-28 pb-16 md:py-24 flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
                     {/* Left: Event Poster */}
-                    <div className="w-[80%] sm:w-[60%] md:w-[320px] lg:w-[600px] shrink-0 mx-auto md:mx-0">
-                        <div className="aspect-[16/9] md:aspect-[16/9] rounded-[24px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] ">
+                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[500px] shrink-0 mx-auto md:mx-0">
+                        <div className="aspect-[16/9] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group">
                             <img
                                 src={images[activeImageIndex] || event.imageUrl}
                                 alt={event.name}
@@ -352,8 +369,8 @@ const EventDetailsPage = () => {
                     </div>
 
                     {/* Right: Glass Card Details */}
-                    <div className="w-full md:w-[60%] lg:w-[65%] max-w-2xl mx-auto md:mx-0">
-                        <div className="bg-white/10 backdrop-blur-[20px] border border-white/20 hover:border-white/30 rounded-[32px] p-6 sm:p-8 md:p-10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] relative overflow-hidden transition-all duration-300">
+                    <div className="w-full md:flex-1 max-w-2xl mx-auto md:mx-0">
+                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300">
                             {/* Glass reflection gradient */}
                             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-[32px] pointer-events-none" />
                             {/* Colorful ambient glow inside card based on image (simulated with standard modern colors) */}
@@ -373,7 +390,7 @@ const EventDetailsPage = () => {
                                 </div>
 
                                 {/* Title */}
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.15] tracking-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
                                     {event.name}
                                 </h1>
 
@@ -410,6 +427,7 @@ const EventDetailsPage = () => {
                                     </div>
 
                                     <button
+                                        ref={heroButtonRef}
                                         onClick={() => {
                                             document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                         }}
@@ -424,55 +442,66 @@ const EventDetailsPage = () => {
                 </div>
             </div>
 
-            {/* Quick Info Bar */}
-            <div className="relative z-20 bg-white/30 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-xl -mt-8 mx-4 sm:mx-8 max-w-5xl lg:mx-auto rounded-2xl overflow-hidden transition-all duration-300">
-                <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-gray-100 dark:divide-gray-800">
-                    <div className="flex-1 px-6 py-4 text-center sm:text-left flex items-center gap-4 sm:justify-center">
-                        <Clock className="w-6 h-6 text-gray-400 dark:text-gray-500 hidden sm:block" />
+            {/* Quick Info Bar - Liquid Glass Effect (Blur only on mobile) */}
+            <div className="relative z-20 bg-white/2 dark:bg-[#1a1c23]/30 backdrop-blur-md md:backdrop-blur-md border border-white/30 dark:border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] -mt-12 mx-4 sm:mx-8 md:mx-auto max-w-6xl rounded-[32px] overflow-hidden transition-all duration-500 hover:bg-white/20 dark:hover:bg-[#1a1c23]/40 hover:border-white/40 group">
+                {/* Glass reflection highlight */}
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
+
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/20 dark:divide-white/5">
+                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300">
+                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
+                            <Clock className="w-6 h-6 text-primary shrink-0" />
+                        </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Duration</p>
-                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
+                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Duration</p>
+                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
                         </div>
                     </div>
-                    <div className="flex-1 px-6 py-4 text-center sm:text-left flex items-center gap-4 sm:justify-center">
-                        <Globe className="w-6 h-6 text-gray-400 dark:text-gray-500 hidden sm:block" />
+                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5 md:border-l-0">
+                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
+                            <Globe className="w-6 h-6 text-primary shrink-0" />
+                        </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Language</p>
-                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">{event.languages?.join(', ') || 'English'}</p>
+                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Language</p>
+                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.languages?.join(', ') || 'English'}</p>
                         </div>
                     </div>
-                    <div className="flex-1 px-6 py-4 text-center sm:text-left flex items-center gap-4 sm:justify-center">
-                        <Info className="w-6 h-6 text-gray-400 dark:text-gray-500 hidden sm:block" />
+                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-t border-white/20 dark:border-white/5 md:border-t-0">
+                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
+                            <Info className="w-6 h-6 text-primary shrink-0" />
+                        </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Age Restriction</p>
-                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">{event.ageGroup || 'All Ages'}</p>
+                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Age Limit</p>
+                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">{event.ageGroup || 'All Ages'}</p>
                         </div>
                     </div>
-                    <div className="flex-1 px-6 py-4 text-center sm:text-left flex items-center gap-4 sm:justify-center">
-                        <Ticket className="w-6 h-6 text-gray-400 dark:text-gray-500 hidden sm:block" />
+                    <div className="px-6 py-6 md:py-8 flex items-center justify-center md:justify-start gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5 border-t md:border-t-0">
+                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md">
+                            <Ticket className="w-6 h-6 text-primary shrink-0" />
+                        </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Entry Type</p>
-                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">E-Ticket</p>
+                            <p className="text-[10px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-[0.2em] mb-0.5">Entry Type</p>
+                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white leading-none tracking-tight">E-Ticket Only</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <main className="max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <main className="max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 py-16 md:py-24">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                     {/* Left Column Area: Details */}
                     <div className="lg:col-span-8 space-y-12">
 
                         {/* Description Section */}
-                        <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">About This Event</h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-[15px] sm:text-base leading-relaxed whitespace-pre-line">
+                        <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-6 sm:p-10 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+                            <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">About This Event</h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-[15px] sm:text-[17px] leading-relaxed whitespace-pre-line font-medium">
                                 {event.description}
                             </p>
 
-                            <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-2">
+                            <div className="pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-2.5">
                                 {event.tags?.map(tag => (
-                                    <span key={tag} className="px-3 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 rounded-lg text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-default">
+                                    <span key={tag} className="px-4 py-1.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary dark:hover:text-primary hover:border-primary/30 transition-all cursor-default">
                                         #{tag.replace(/\s+/g, '')}
                                     </span>
                                 ))}
@@ -480,24 +509,24 @@ const EventDetailsPage = () => {
                         </section>
 
                         {/* Location Details */}
-                        <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Location</h3>
-                            <div className="flex gap-6 items-start">
-                                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl shrink-0">
-                                    <MapPin className="w-6 h-6 text-primary dark:text-primary" />
+                        <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-6 sm:p-10 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+                            <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Location</h3>
+                            <div className="flex flex-col sm:flex-row gap-6 items-start">
+                                <div className="w-14 h-14 bg-primary/10 dark:bg-primary/20 rounded-2xl shrink-0 flex items-center justify-center">
+                                    <MapPin className="w-8 h-8 text-primary" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-gray-900 dark:text-gray-100 font-bold text-lg mb-1">
+                                    <p className="text-gray-900 dark:text-gray-100 font-black text-xl mb-1.5 tracking-tight">
                                         {event.venue}
                                     </p>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                                    <p className="text-gray-600 dark:text-gray-400 text-[15px] font-medium leading-relaxed mb-5 max-w-lg">
                                         {event.address}, {event.city}, {event.state}
                                     </p>
                                     <button
                                         onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.address}, ${event.city}`)}`, '_blank')}
-                                        className="text-primary dark:text-primary font-semibold text-sm hover:underline"
+                                        className="h-12 px-6 bg-primary/5 dark:bg-primary/10 border border-primary/20 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white text-primary font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95"
                                     >
-                                        Open in Google Maps
+                                        Get Directions
                                     </button>
                                 </div>
                             </div>
@@ -505,8 +534,8 @@ const EventDetailsPage = () => {
 
                         {/* Event Gallery */}
                         {images && images.length > 0 && (
-                            <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Event Gallery</h3>
+                            <section className="space-y-6 bg-white dark:bg-[#1a1c23] p-6 sm:p-10 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+                                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Event Gallery</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[250px]">
                                     {images.slice(0, 3).map((img, idx) => {
                                         const isLast = idx === 2;
@@ -555,8 +584,8 @@ const EventDetailsPage = () => {
                                 <div className="relative">
                                     <Swiper
                                         modules={[Navigation]}
-                                        spaceBetween={24}
-                                        slidesPerView={1}
+                                        slidesPerView={2}
+                                        spaceBetween={16}
                                         navigation={{
                                             nextEl: '.similar-events-next',
                                             prevEl: '.similar-events-prev',
@@ -599,8 +628,8 @@ const EventDetailsPage = () => {
                             <div className="relative">
                                 <Swiper
                                     modules={[Navigation]}
-                                    spaceBetween={24}
-                                    slidesPerView={1}
+                                    slidesPerView={2}
+                                    spaceBetween={16}
                                     navigation={{
                                         nextEl: '.event-store-next',
                                         prevEl: '.event-store-prev',
@@ -636,9 +665,9 @@ const EventDetailsPage = () => {
                             <div className="bg-white dark:bg-[#1a1c23] rounded-[32px] p-8 border border-gray-100 dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] relative overflow-hidden group/tickets transition-colors duration-300">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
 
-                                <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-primary/5 dark:bg-primary/40 flex items-center justify-center border border-primary/10 dark:border-primary/20">
-                                        <Ticket className="w-5 h-5 text-primary dark:text-primary" />
+                                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 mb-6 md:mb-8 flex items-center gap-3">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 dark:bg-primary/40 flex items-center justify-center border border-primary/20">
+                                        <Ticket className="w-5 h-5 md:w-6 md:h-6 text-primary dark:text-primary" />
                                     </div>
                                     Select Tickets
                                 </h3>
@@ -658,35 +687,35 @@ const EventDetailsPage = () => {
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-center">
-                                                    <div className="space-y-1">
-                                                        <p className="font-bold text-gray-900 dark:text-gray-100 tracking-tight">{ticket.className}</p>
-                                                        <p className="text-2xl font-black text-primary dark:text-primary tracking-tighter">
+                                                    <div className="space-y-0.5">
+                                                        <p className="font-bold text-gray-900 dark:text-gray-100 tracking-tight text-sm md:text-base">{ticket.className}</p>
+                                                        <p className="text-xl md:text-2xl font-black text-primary dark:text-primary tracking-tighter">
                                                             ₹{ticket.price.toLocaleString()}
                                                         </p>
                                                     </div>
 
                                                     {isSoldOut ? (
-                                                        <span className="px-3.5 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-100 dark:border-red-900/30 shadow-sm">
+                                                        <span className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-100 dark:border-red-900/30">
                                                             Sold Out
                                                         </span>
                                                     ) : (
-                                                        <div className="flex items-center gap-3.5 bg-white dark:bg-gray-900 p-1.5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                                                        <div className="flex items-center gap-3 md:gap-4 bg-white dark:bg-gray-900/80 p-1 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                                                             <button
                                                                 onClick={() => updateTicketQuantity(ticket.id, -1)}
                                                                 disabled={quantity === 0}
-                                                                className="w-10 h-10 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-20 transition-all active:scale-90"
+                                                                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-90 border border-transparent hover:border-primary/10"
                                                             >
-                                                                <span className="text-2xl font-light leading-none">−</span>
+                                                                <span className="text-xl font-bold">−</span>
                                                             </button>
-                                                            <span className="text-base font-black text-gray-900 dark:text-gray-100 w-6 text-center tabular-nums">
+                                                            <span className="text-sm md:text-base font-black text-gray-900 dark:text-gray-100 min-w-[20px] text-center tabular-nums">
                                                                 {quantity}
                                                             </span>
                                                             <button
                                                                 onClick={() => updateTicketQuantity(ticket.id, 1)}
                                                                 disabled={quantity >= 10}
-                                                                className="w-10 h-10 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-20 transition-all active:scale-90"
+                                                                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-90 border border-transparent hover:border-primary/10"
                                                             >
-                                                                <span className="text-2xl font-light leading-none">+</span>
+                                                                <span className="text-xl font-bold">+</span>
                                                             </button>
                                                         </div>
                                                     )}
@@ -703,23 +732,22 @@ const EventDetailsPage = () => {
                                 )}
                             </div>
 
-                            {/* Premium Organizer Section */}
-                            <div className="bg-white dark:bg-[#1a1c23] rounded-[24px] p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group/organizer hover:shadow-md transition-all duration-300">
+                            {/* Organizer Section */}
+                            <div className="bg-white dark:bg-[#1a1c23] rounded-[24px] p-5 md:p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group/organizer hover:shadow-md transition-all duration-300">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary flex items-center justify-center text-lg font-black text-white shadow-lg group-hover/organizer:rotate-12 transition-transform duration-500">
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-lg font-black text-primary shadow-sm group-hover/organizer:scale-110 transition-transform duration-500">
                                             {event.organizerName ? event.organizerName.charAt(0) : 'O'}
                                         </div>
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full shadow-sm" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Organized By</p>
-                                        <p className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                                        <p className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight line-clamp-1">
                                             {event.organizerName}
                                         </p>
                                     </div>
                                 </div>
-                                <button className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-primary/5 dark:hover:bg-primary/40 hover:text-primary dark:hover:text-primary transition-all">
+                                <button className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-primary transition-all">
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                             </div>
@@ -728,32 +756,47 @@ const EventDetailsPage = () => {
                 </div >
             </main >
 
-            {/* Unified Sticky Bottom Bar - Professional & Minimal */}
-            {event && totalTickets > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-full duration-500">
-                    <div className="bg-white/80 dark:bg-[#1a1c23]/80 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.4)] transition-all duration-300">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-0.5">{totalTickets} Ticket{totalTickets > 1 ? 's' : ''} Selected</span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">₹{totalAmount.toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => handleReserveTickets()}
-                                disabled={isReserving}
-                                className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-primary text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
-                            >
-                                {isReserving ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                        <span>PROCESSING</span>
+            {/* Unified Sticky Bottom Bar - Responsive Visibility */}
+            {event && (isScrolled || !heroButtonVisible || totalTickets > 0) && (
+                <div className={`fixed bottom-0 left-0 right-0 z-[70] animate-in slide-in-from-bottom-full duration-500 pb-safe ${totalTickets > 0 ? 'block' : 'lg:hidden'}`}>
+                    <div className="bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-2xl border-t border-gray-100 dark:border-gray-800 shadow-[0_-15px_50px_rgba(0,0,0,0.12)] transition-all duration-300">
+                        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
+                            {totalTickets > 0 ? (
+                                <>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{totalTickets} {totalTickets > 1 ? 'Tickets' : 'Ticket'}</span>
+                                        <span className="text-2xl sm:text-3xl font-black text-primary tracking-tighter">₹{totalAmount.toLocaleString()}</span>
                                     </div>
-                                ) : (
-                                    'CHECKOUT'
-                                )}
-                            </button>
+
+                                    <button
+                                        onClick={() => handleReserveTickets()}
+                                        disabled={isReserving}
+                                        className="flex-1 sm:flex-none sm:min-w-[200px] h-14 sm:h-16 rounded-2xl bg-primary text-white font-black text-sm sm:text-base uppercase tracking-widest transition-all hover:bg-[#E33D52] hover:shadow-[0_12px_24px_rgba(224,36,65,0.3)] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                                    >
+                                        {isReserving ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                <span>PROCESSING</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>CHECKOUT</span>
+                                                <ChevronRight className="w-5 h-5" />
+                                            </>
+                                        )}
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }}
+                                    className="w-full h-14 sm:h-16 rounded-2xl bg-primary text-white font-black text-sm sm:text-base uppercase tracking-widest transition-all hover:bg-[#E33D52] hover:shadow-[0_12px_24px_rgba(224,36,65,0.3)] active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    <span>BOOK TICKETS</span>
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -591,40 +591,40 @@ const SuccessScreen = ({ booking }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors duration-300 font-sans">
-            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[40px] p-10 text-center shadow-2xl dark:shadow-none space-y-10 animate-in zoom-in duration-500 border border-transparent dark:border-gray-800">
-                <div className="w-24 h-24 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20 dark:border-primary/30 shadow-xl shadow-primary/10 dark:shadow-none">
-                    <CheckCircle className="w-12 h-12 text-primary" />
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 sm:p-6 transition-colors duration-300 font-sans">
+            <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[32px] md:rounded-[40px] p-6 md:p-10 text-center shadow-2xl dark:shadow-none space-y-6 md:space-y-10 animate-in zoom-in duration-500 border border-gray-50 dark:border-gray-800">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20 dark:border-primary/30 shadow-xl shadow-primary/10 dark:shadow-none">
+                    <CheckCircle className="w-10 h-10 md:w-12 md:h-12 text-primary" />
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                     <div className="space-y-1">
-                        <h1 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] font-roboto">BOOKING CONFIRMED</h1>
-                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-roboto">YOU'RE ALL SET!</h2>
+                        <h1 className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] font-roboto">Booking Confirmed</h1>
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-roboto">Successfully</h2>
                     </div>
-                    <p className="text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-4 uppercase tracking-wider">
+                    <p className="text-[11px] md:text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-2 uppercase tracking-wider">
                         Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-primary/20 pb-0.5">{booking?.movieTitle}</span> are ready.
                     </p>
                 </div>
 
-                <div className="space-y-4 pt-6">
+                <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
                     <button
                         onClick={() => navigate(`/bookings/${booking?.id}`)}
-                        className="w-full bg-primary text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] font-roboto"
+                        className="w-full bg-primary text-white font-black text-[11px] md:text-xs uppercase tracking-[0.15em] py-4 rounded-xl md:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98] font-roboto"
                     >
-                        VIEW DIGITAL TICKET
+                        View Digital Ticket
                     </button>
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] py-2 hover:text-primary transition-colors font-roboto"
+                        className="w-full text-slate-400 dark:text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest py-2 hover:text-primary transition-colors font-roboto"
                     >
-                        BACK TO HOME
+                        Back to Home
                     </button>
                 </div>
 
-                <div className="pt-4 flex items-center justify-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-roboto">Sent to your registered email</span>
+                <div className="pt-2 flex items-center justify-center gap-2">
+                    <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-[8px] md:text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-roboto">Sent to your registered email</span>
                 </div>
             </div>
         </div>

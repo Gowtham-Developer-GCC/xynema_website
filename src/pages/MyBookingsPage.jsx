@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, QrCode, Loader } from 'lucide-react';
 import { getUserBookings } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
@@ -8,12 +8,13 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const MyBookingsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [bookings, setBookings] = useState([]);
     const [eventBookings, setEventBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [eventLoading, setEventLoading] = useState(true);
     const [pageLoading, setPageLoading] = useState(false);
-    const [bookingType, setBookingType] = useState('movies');
+    const [bookingType, setBookingType] = useState(location.state?.activeTab || 'movies');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterOpen, setFilterOpen] = useState(false);
     const [moviePage, setMoviePage] = useState(1);
@@ -68,6 +69,12 @@ const MyBookingsPage = () => {
             setPageLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setBookingType(location.state.activeTab);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         fetchMovieBookings(1);
@@ -284,10 +291,10 @@ const MyBookingsPage = () => {
 
                                 {/* Cards Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {items.map(item =>
+                                    {items.map((item, idx) =>
                                         bookingType === 'movies'
-                                            ? <MovieTicketCard key={item.id} booking={item} />
-                                            : <EventTicketCard key={item.bookingId || item.id} booking={item} />
+                                            ? <MovieTicketCard key={`movie-${item.id}-${idx}`} booking={item} />
+                                            : <EventTicketCard key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
                                     )}
                                 </div>
                             </div>

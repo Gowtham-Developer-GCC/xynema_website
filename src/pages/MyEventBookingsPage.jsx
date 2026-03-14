@@ -19,7 +19,8 @@ const MyEventBookingsPage = () => {
             try {
                 setLoading(true);
                 const response = await getEventBookings();
-                setBookings(response || []);
+                // getEventBookings returns { bookings, totalPages, ... } object
+                setBookings(response?.bookings || []);
             } catch (err) {
                 console.error('Failed to fetch event bookings:', err);
             } finally {
@@ -60,7 +61,7 @@ const MyEventBookingsPage = () => {
         }
     };
 
-    const filteredBookings = bookings.filter(b => {
+    const filteredBookings = (Array.isArray(bookings) ? bookings : []).filter(b => {
         // Search Filter
         const query = searchTerm.toLowerCase();
         const eventName = (b.eventName || '').toLowerCase();
@@ -183,7 +184,7 @@ const EventBookingCard = ({ booking }) => {
         cancelled: 'bg-red-50 text-red-600 border-red-100',
     };
 
-    const uniqueTicketClasses = Array.from(new Set(booking.tickets.map(t => t.ticketClass))).join(', ');
+    const uniqueTicketClasses = Array.from(new Set(booking.tickets?.map(t => t.ticketClass) || [])).join(', ');
     const ticketCount = booking.tickets?.reduce((acc, t) => acc + (t.quantity || 0), 0) || 0;
     const primaryAttendee = booking.attendees?.[0]?.name || 'Guest';
 

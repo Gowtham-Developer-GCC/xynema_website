@@ -334,8 +334,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             )
             }
 
-            {/* Mobile Bottom Navigation - Visible only below LG breakpoint where top links hide */}
-            {!/\/movie\/[^/]+\/[^/]+\/(seats|food|summary|payment)/.test(location.pathname) && (
+            {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */}
+            {!/\/movie\/[^/]+($|\/theaters|\/seats|\/food|\/summary|\/payment)/.test(location.pathname) && 
+             !location.pathname.startsWith('/event/') && (
                 <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
                     <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
                         <Link 

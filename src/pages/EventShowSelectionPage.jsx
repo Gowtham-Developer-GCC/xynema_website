@@ -122,44 +122,41 @@ const EventShowSelectionPage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
                 {/* Event Info Banner Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-[32px] border border-gray-100 dark:border-gray-700 p-6 md:p-8 mb-8 shadow-sm">
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-[32px] border border-gray-100 dark:border-gray-700 p-4 md:p-8 mb-6 md:mb-8 shadow-sm">
+                    <div className="flex flex-row md:flex-row gap-4 md:gap-8 items-center md:items-start">
                         {/* Poster */}
-                        <div className="w-40 md:w-48 shrink-0 relative group">
+                        <div className="w-24 md:w-48 shrink-0 relative group">
                             <img
                                 src={event?.imageUrl || event?.allImages?.[0] || 'https://placehold.co/400x600'}
                                 alt={event?.name}
-                                className="w-full aspect-[4/3] md:aspect-[16/9] object-cover rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-500"
+                                className="w-full aspect-[4/3] md:aspect-[16/9] object-cover rounded-xl md:rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
 
                         {/* Details */}
-                        <div className="flex-1 pt-2">
-                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-4 line-clamp-2">
+                        <div className="flex-1 pt-0 md:pt-2">
+                            <h2 className="text-base md:text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2 md:mb-4 line-clamp-2">
                                 {event?.name}
                             </h2>
 
-                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                            <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-6">
                                 {event?.eventCategory && (
-                                    <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-[10px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
+                                    <span className="px-2 py-0.5 bg-gray-50 dark:bg-gray-700 rounded-lg text-[8px] md:text-xs font-black text-gray-400 dark:text-gray-300 uppercase border border-gray-100 dark:border-gray-600">
                                         {event.eventCategory}
                                     </span>
                                 )}
-                                <span className="px-2.5 py-1 bg-primary/10 dark:bg-primary/40 rounded-lg text-[10px] md:text-xs font-black text-primary dark:text-primary uppercase border border-primary/20 dark:border-primary">
-                                    Multi-Day Event
+                                <span className="px-2 py-0.5 bg-primary/10 dark:bg-primary/40 rounded-lg text-[8px] md:text-xs font-black text-primary dark:text-primary uppercase border border-primary/20 dark:border-primary">
+                                    Multi-Day
                                 </span>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-1 md:space-y-3 mt-1 md:mt-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Venue:</span>
-                                    <span className="text-sm md:text-base font-black text-gray-900 dark:text-white tracking-tight uppercase truncate max-w-sm">
+                                    <span className="text-[10px] md:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Venue:</span>
+                                    <span className="text-[11px] md:text-base font-black text-gray-900 dark:text-white tracking-tight uppercase truncate max-w-[200px] md:max-w-sm">
                                         {event?.venue}
                                     </span>
                                 </div>
-                                <p className="text-xs md:text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-relaxed max-w-lg">
-                                    Select a date and showtime below to proceed.
-                                </p>
                             </div>
                         </div>
                     </div>
@@ -168,10 +165,10 @@ const EventShowSelectionPage = () => {
                 <div className="h-px w-full bg-gray-100 dark:bg-gray-800 mb-12" />
 
                 {/* Date Strip Component inline */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
-                    <div className="space-y-2">
-                        <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                            Showtimes for <span className="text-primary dark:text-primary">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-6 md:mb-10">
+                    <div className="space-y-1">
+                        <h2 className="text-base md:text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                            Shows for <span className="text-primary dark:text-primary">
                                 {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }) : ''}
                             </span>
                         </h2>
@@ -179,7 +176,7 @@ const EventShowSelectionPage = () => {
 
                     <div className="flex-shrink-0">
                         {uniqueDates.length > 0 && (
-                            <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x">
+                            <div className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x">
                                 {uniqueDates.map((dateStr) => {
                                     const dateObj = new Date(dateStr);
                                     const isSelected = dateStr === selectedDate;
@@ -196,20 +193,20 @@ const EventShowSelectionPage = () => {
                                                 setSelectedShowTime(null); // Reset showtime when date changes
                                             }}
                                             className={`
-                                                flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
+                                                flex-shrink-0 w-14 h-16 md:w-16 md:h-20 rounded-xl md:rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
                                                 ${isSelected
                                                     ? 'bg-primary text-white shadow-lg shadow-primary/20 dark:shadow-primary/40 border-primary'
                                                     : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700 hover:border-gray-300'
                                                 } border-2
                                             `}
                                         >
-                                            <span className={`text-[9px] font-black tracking-widest mb-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
+                                            <span className={`text-[8px] md:text-[9px] font-black tracking-widest mb-0.5 md:mb-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
                                                 {dayName}
                                             </span>
-                                            <span className="text-xl font-black tracking-tighter leading-none mb-1">
+                                            <span className="text-lg md:text-xl font-black tracking-tighter leading-none mb-0.5 md:mb-1">
                                                 {dayNum}
                                             </span>
-                                            <span className={`text-[9px] font-black tracking-widest ${isSelected ? 'text-white/80' : 'text-gray-300'}`}>
+                                            <span className={`text-[8px] md:text-[9px] font-black tracking-widest ${isSelected ? 'text-white/80' : 'text-gray-300'}`}>
                                                 {monthName}
                                             </span>
                                         </button>
@@ -240,27 +237,27 @@ const EventShowSelectionPage = () => {
                                         }
                                     `}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <span className={`text-xl font-black tracking-tight ${isSelected ? 'text-primary dark:text-primary' : 'text-gray-900 dark:text-white'}`}>
+                                    <div className="flex justify-between items-center mb-3 md:mb-4">
+                                        <span className={`text-lg md:text-xl font-black tracking-tight ${isSelected ? 'text-primary dark:text-primary' : 'text-gray-900 dark:text-white'}`}>
                                             {show.startTime}
                                         </span>
-                                        <div className={`px-2 py-1 rounded-lg border transition-colors ${isSelected ? 'bg-primary border-primary' : 'bg-primary/10 border-primary/20'}`}>
-                                            <span className={`text-xs font-black flex items-center gap-1.5 ${isSelected ? 'text-white' : 'text-primary dark:text-primary'}`}>
+                                        <div className={`px-2 py-0.5 md:py-1 rounded-lg border transition-colors ${isSelected ? 'bg-primary border-primary' : 'bg-primary/10 border-primary/20'}`}>
+                                            <span className={`text-[10px] md:text-xs font-black flex items-center gap-1.5 ${isSelected ? 'text-white' : 'text-primary dark:text-primary'}`}>
                                                 {isSelected ? 'Selected' : 'Select'} <Check className="w-3 h-3" />
                                             </span>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-6">
+                                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-4 md:mb-6">
                                         <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                        <span className="text-xs font-bold uppercase tracking-widest truncate">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest truncate">
                                             {event?.venue}
                                         </span>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                            <span className="text-gray-400 dark:text-gray-500">{new Date(show.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    <div className="space-y-1 md:space-y-2">
+                                        <div className="flex justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                                            <span className="text-gray-400 dark:text-gray-500 truncate">{new Date(show.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                                         </div>
                                     </div>
 
@@ -297,7 +294,7 @@ const EventShowSelectionPage = () => {
                                 <button
                                     onClick={handleProceedToSummary}
                                     disabled={isReserving}
-                                    className="px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-primary text-white font-bold text-sm sm:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
+                                    className="px-6 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl bg-primary text-white font-bold text-xs md:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
                                 >
                                     {isReserving ? (
                                         <div className="flex items-center gap-2">
@@ -305,7 +302,7 @@ const EventShowSelectionPage = () => {
                                             <span>PROCESSING</span>
                                         </div>
                                     ) : (
-                                        'PROCEED TO CHECKOUT'
+                                        'PROCEED'
                                     )}
                                 </button>
                             ) : (

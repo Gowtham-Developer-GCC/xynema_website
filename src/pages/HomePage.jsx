@@ -51,8 +51,8 @@ const HomePage = ({ selectedCity }) => {
 
         return highlightsMovies.filter(m => {
             if (isMobile) {
-                // Per user: in mobile view use isMobileSectionImageUrlActive is true then show
-                return m.isActive && m.isMobileSectionImageUrlActive && m.mobileBannerImage;
+                // Use mobile specific banner activation flag
+                return m.isActive && m.isMobileBannerImageUrlActive && m.mobileBannerImage;
             } else {
                 // Per user: in desktop view use isBannerImageUrlActive is true then show
                 return m.isActive && m.isBannerImageUrlActive && m.bannerImageUrl;
@@ -107,7 +107,7 @@ const HomePage = ({ selectedCity }) => {
             <SEO
                 title={`${selectedCity} - Book Movie Tickets Online | XYNEMA`}
                 description="Book your favorite movies with ease and elegance."
-                preloads={bannerMovies.map(m => optimizeImage(m.bannerImageUrl || m.backdropUrl || m.posterUrl, { width: 1400, quality: 85 }))}
+                preloads={bannerMovies.map(m => optimizeImage(isMobile ? (m.mobileBannerImage || m.bannerImageUrl) : (m.bannerImageUrl || m.backdropUrl || m.posterUrl), { width: 1400, quality: 85 }))}
             />
 
             {/* Flat Carousel Banner */}
@@ -479,12 +479,13 @@ const HeroCarousel = memo(({ movies, isMobile }) => {
                 `}
             </style>
             <Swiper
-                modules={[Pagination, Autoplay]}
-                spaceBetween={16}
-                slidesPerView={1} // Adjusted to peek sides exactly like Figma
+                modules={[Pagination, Autoplay, Navigation]}
+                spaceBetween={12}
+                slidesPerView={1}
                 centeredSlides={true}
                 loop={movies.length > 1}
-                speed={500}
+                speed={800}
+                grabCursor={true}
                 autoplay={{
                     delay: 1500,
                     disableOnInteraction: false,
@@ -495,13 +496,13 @@ const HeroCarousel = memo(({ movies, isMobile }) => {
                 }}
                 watchSlidesProgress={true}
                 preloadImages={true}
-                loopedSlides={5}
+                loopAdditionalSlides={1}
                 observer={true}
                 observeParents={true}
                 breakpoints={{
-                    320: { slidesPerView: 1, spaceBetween: 0 },
-                    640: { slidesPerView: 1, spaceBetween: 12 },
-                    1024: { slidesPerView: 1, spaceBetween: 16 }, // Maintain peek consistently
+                    320: { slidesPerView: 1, spaceBetween: 10 },
+                    640: { slidesPerView: 1, spaceBetween: 16 },
+                    1024: { slidesPerView: 1, spaceBetween: 24 },
                 }}
                 className={`hero-swiper w-full max-w-[1800px] mx-auto ${isMobile ? 'aspect-[5/2]' : 'aspect-[21/4]'}`}
             >

@@ -180,7 +180,7 @@ const PrivacyPolicy = () => {
                         <p>
                             For any questions, requests, or concerns regarding this Privacy Policy or the handling of personal data, contact us at:
                         </p>
-                        <p className="text-primary">Email: privacy@xynema.com or care@xynema.in</p>
+                        <p className="text-primary">Email:care@xynema.in</p>
                         <p className="text-gray-900 dark:text-white">Company: GCCDYNAMICS PVT LTD</p>
                         <p className="text-sm font-normal text-gray-500">Registered Office: 24/286,48 A, University Road, Kochi University, Ernakulam, Ernakulam- 682022, Kerala, India</p>
                     </div>

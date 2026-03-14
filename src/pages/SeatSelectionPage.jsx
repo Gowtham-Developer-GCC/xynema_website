@@ -327,6 +327,17 @@ const SeatSelectionPage = () => {
         setSelectedSeats(prev => prev.filter(s => s.id !== seatToRemove.id));
     };
 
+    const summaryRef = useRef(null);
+
+    const scrollToSummary = () => {
+        summaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const ticketsTotalValue = React.useMemo(() => {
+        const basePrice = show?.pricing?.[0]?.basePrice || 150;
+        return selectedSeats.reduce((acc, seat) => acc + (seat.basePrice || basePrice), 0);
+    }, [selectedSeats, show]);
+
     if (loading) return <LoadingScreen message="Scanning Layout" />;
     if (error) return <ErrorState error={error} title="Issue Detected" buttonText="TRY AGAIN" />;
     if (!show || !showId) return <NotFoundState title="Show Not Found" message="We couldn't find the showtime you're looking for." />;
@@ -339,28 +350,31 @@ const SeatSelectionPage = () => {
 
             {/* Sub-Header: Information & Controls — New Figma Design */}
             <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm py-4 w-full transition-colors duration-300">
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between">
+                <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center justify-between gap-2">
                     {/* Left: Back Button & Movie Info */}
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 md:gap-6 flex-1 min-w-0">
                         <button
                             onClick={() => navigate(-1)}
-                            className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
+                            className="p-1.5 md:p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
 
-                        <div className="flex flex-col">
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
+                        <div className="flex flex-col min-w-0">
+                            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-tight truncate">
                                 {displayShow.movie?.title}
                             </h1>
-                            <div className="flex items-center text-[13px] text-gray-500 dark:text-gray-400 mt-1 gap-1.5 flex-wrap">
-                                <span>{displayShow.theatre?.name}</span>
-                                <span className="text-gray-300 dark:text-gray-700">|</span>
+                            <div className="flex items-center text-[11px] md:text-[13px] text-gray-500 dark:text-gray-400 mt-1 gap-1 md:gap-1.5 flex-wrap">
+                                <span className="truncate">{displayShow.theatre?.name}</span>
+                                <span className="text-gray-300 dark:text-gray-700 hidden sm:inline">|</span>
+                                <span className="text-gray-300 dark:text-gray-700 sm:hidden">•</span>
                                 <span>{displayShow.startTime}</span>
-                                <span className="text-gray-300 dark:text-gray-700">|</span>
-                                <span>{showDate ? new Date(showDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}</span>
-                                <span className="text-gray-300 dark:text-gray-700">|</span>
-                                <span>IMAX</span> {/* Add dynamic format here if available in displayShow */}
+                                <span className="text-gray-300 dark:text-gray-700 hidden sm:inline">|</span>
+                                <span className="text-gray-300 dark:text-gray-700 sm:hidden">•</span>
+                                <span className="whitespace-nowrap">{showDate ? new Date(showDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
+                                <span className="text-gray-300 dark:text-gray-700 hidden sm:inline">|</span>
+                                <span className="text-gray-300 dark:text-gray-700 sm:hidden">•</span>
+                                <span className="font-bold text-primary/80">IMAX</span>
                             </div>
                         </div>
                     </div>
@@ -368,26 +382,26 @@ const SeatSelectionPage = () => {
                     {/* Right: Selected Tickets Count */}
                     <div
                         onClick={() => setIsCountModalOpen(true)}
-                        className="flex flex-col items-end pr-4 cursor-pointer hover:opacity-80 transition-all group"
+                        className="flex flex-col items-end pl-2 cursor-pointer hover:opacity-80 transition-all group shrink-0"
                     >
-                        <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-0.5 group-hover:text-gray-600 dark:group-hover:text-gray-300">
-                            Tickets Selected
+                        <span className="text-[9px] md:text-[11px] font-bold text-gray-400 dark:text-gray-500 mb-0.5 group-hover:text-gray-600 dark:group-hover:text-gray-300 uppercase tracking-wider">
+                            Tickets
                         </span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-3xl font-bold text-primary dark:text-[#5c98ce] leading-none">
+                        <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className="text-2xl md:text-3xl font-black text-primary dark:text-[#5c98ce] leading-none">
                                 {selectedSeatCount}
                             </span>
-                            <Settings className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors" />
+                            <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors" />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content Area - Split View — New Figma Layout */}
-            <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 p-6 lg:p-8 overflow-hidden bg-[#f9fafb] dark:bg-gray-950 min-h-[calc(100vh-80px)] transition-colors duration-300">
+            <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-8 bg-[#f9fafb] dark:bg-gray-950 min-h-[calc(100vh-80px)] transition-colors duration-300 pb-24 md:pb-8">
 
                 {/* Left Side: Seat Layout Card */}
-                <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative flex flex-col h-[60vh] lg:h-full transition-colors duration-300">
+                <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative flex flex-col h-[70vh] lg:h-full transition-colors duration-300">
                     <SeatLayout
                         showId={showId}
                         selectedSeats={selectedSeats}
@@ -398,7 +412,7 @@ const SeatSelectionPage = () => {
                 </div>
 
                 {/* Right Side: Summary Section Card */}
-                <div className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-auto lg:h-full shrink-0 transition-colors duration-300">
+                <div ref={summaryRef} className="w-full lg:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 flex flex-col h-auto lg:h-full shrink-0 transition-colors duration-300">
                     <BookingSummary
                         movie={displayShow}
                         show={showForSummary}
@@ -415,6 +429,32 @@ const SeatSelectionPage = () => {
                     />
                 </div>
             </main>
+
+            {/* Mobile Fixed Bottom Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-[60] lg:hidden bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 p-4 transition-all animate-in slide-in-from-bottom duration-500">
+                <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">₹{(ticketsTotalValue * 1.18 + (selectedSeats.length * 30)).toFixed(2)}</span>
+                            <button 
+                                onClick={scrollToSummary}
+                                className="text-[10px] font-bold text-primary dark:text-primary/80 uppercase tracking-wide hover:underline underline-offset-2"
+                            >
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        disabled={selectedSeats.length === 0 || (selectedSeatCount > 0 && selectedSeats.length !== selectedSeatCount)}
+                        onClick={handleProceedToPayment}
+                        className="flex-1 max-w-[160px] py-3 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wider shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:shadow-none"
+                    >
+                        Continue
+                    </button>
+                </div>
+            </div>
 
             {/* Seat Count Modal */}
             <SeatCountModal

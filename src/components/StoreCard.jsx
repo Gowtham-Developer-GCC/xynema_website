@@ -17,7 +17,7 @@ const StoreCard = memo(({ item }) => {
             </Link>
             <div className="p-5 flex flex-col flex-grow bg-white dark:bg-[#1a1c23] border-t border-gray-50 dark:border-gray-800">
                 <Link to={`/store/${item.id}`} className="mb-2 block">
-                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-display uppercase group-hover:text-primary">
+                    <h3 className="font-black text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-roboto group-hover:text-primary">
                         {item.name}
                     </h3>
                 </Link>
@@ -26,17 +26,12 @@ const StoreCard = memo(({ item }) => {
                         <span className="font-bold text-primary dark:text-primary text-lg">
                             ₹{item.price.toLocaleString()}
                         </span>
-                        <span className="text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 uppercase tracking-widest font-display">
+                        <span className="text-[10px] font-black text-[#6B7280] dark:text-gray-500 mt-0.5 tracking-widest font-roboto">
                             onwards
                         </span>
                     </div>
-                    <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:border-primary/20 transition-colors">
-                        <div className="space-y-1">
-                            <div className="w-3.5 h-[2px] bg-primary/60 rounded-full"></div>
-                            <div className="w-2.5 h-[2px] bg-primary/60 rounded-full"></div>
-                            <div className="w-3.5 h-[2px] bg-primary/60 rounded-full"></div>
-                        </div>
-                        <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-tight font-display">{item.sellers} sellers</span>
+                    <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
+                        <span className="text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300">Buy Now</span>
                     </div>
                 </div>
             </div>

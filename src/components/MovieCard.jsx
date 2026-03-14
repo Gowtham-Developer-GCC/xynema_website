@@ -46,7 +46,7 @@ const MovieCard = memo(({ movie }) => (
 
         {/* Text is aligned with the image above */}
         <div className="pt-1 flex flex-col w-full">
-            <h3 className="text-[17px] font-bold text-black dark:text-gray-100 group-hover:text-primary dark:group-hover:text-primary transition-colors leading-tight line-clamp-2 font-display uppercase tracking-tight">
+            <h3 className="text-[17px] font-bold text-black dark:text-gray-100 group-hover:text-primary dark:group-hover:text-primary transition-colors leading-tight line-clamp-2 font-roboto">
                 {movie.title}
             </h3>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 font-medium mt-0.5 truncate">

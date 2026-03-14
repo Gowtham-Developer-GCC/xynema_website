@@ -76,7 +76,7 @@ export const colors = {
 // ============= Typography =============
 export const typography = {
   fontFamily: {
-    primary: "'Poppins', sans-serif",
+    primary: "'Roboto', sans-serif",
     secondary: "'Inter', sans-serif",
     mono: "'Menlo', 'Monaco', 'Courier New', monospace",
   },
@@ -126,7 +126,7 @@ export const typography = {
     wider: '0.05em',
   },
 
-  premiumHeading: "font-display font-black tracking-tighter uppercase text-gray-900",
+  premiumHeading: "font-display font-black tracking-tighter text-gray-900",
 };
 
 // ============= Spacing =============

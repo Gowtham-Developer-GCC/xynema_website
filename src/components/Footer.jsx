@@ -21,7 +21,7 @@ const Footer = () => {
                                     alt="Xynema Logo Symbol" 
                                     className="h-10 md:h-14 w-auto brightness-1" 
                                 />
-                                <span className="text-2xl font-display font-bold text-white uppercase">Xynema</span>
+                                <span className="text-2xl font-roboto font-bold text-white uppercase">Xynema</span>
                             </Link>
                         </div>
 
@@ -37,21 +37,21 @@ const Footer = () => {
                             
                             <div className="pt-2 space-y-3">
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For customers service</span>
+                                    <span className="text-[10px] font-bold text-gray-500 tracking-widest px-7 font-roboto">FOR CUSTOMERS SERVICE</span>
                                     <a href="mailto:care@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">care@xynema.in</span>
                                     </a>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For partner support</span>
+                                    <span className="text-[10px] font-bold text-gray-500 tracking-widest px-7 font-roboto">FOR PARTNER SUPPORT</span>
                                     <a href="mailto:support@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">support@xynema.in</span>
                                     </a>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-7">For corporate information</span>
+                                    <span className="text-[10px] font-bold text-gray-500 tracking-widest px-7 font-roboto">FOR CORPORATE INFORMATION</span>
                                     <a href="mailto:info@xynema.in" className="flex items-center gap-3 text-gray-400 hover:text-primary transition-all group font-sans">
                                         <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                                         <span className="text-sm font-medium">info@xynema.in</span>
@@ -69,7 +69,7 @@ const Footer = () => {
                     {/* Links Columns */}
                     <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div>
-                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Movies</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider font-roboto">Movies</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/movies" className="text-gray-400 hover:text-primary transition-colors">Now Showing</Link></li>
                                 <li><Link to="/movies?tab=upcoming" className="text-gray-400 hover:text-primary transition-colors">Coming Soon</Link></li>
@@ -78,7 +78,7 @@ const Footer = () => {
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Events</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider font-roboto">Events</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/events" className="text-gray-400 hover:text-primary transition-colors">Public Events</Link></li>
                                 <li><Link to="/private-events" className="text-gray-400 hover:text-primary transition-colors">Private Hosting</Link></li>
@@ -86,7 +86,7 @@ const Footer = () => {
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Company</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider font-roboto">Company</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/about" className="text-gray-400 hover:text-primary transition-colors">About Us</Link></li>
                                 <li><Link to="/careers" className="text-gray-400 hover:text-primary transition-colors">Careers</Link></li>
@@ -96,7 +96,7 @@ const Footer = () => {
                         </div>
 
                         <div>
-                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider uppercase font-display">Support</h4>
+                            <h4 className="text-gray-200 font-bold mb-6 text-xs tracking-wider font-roboto">Support</h4>
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/help" className="text-gray-400 hover:text-primary transition-colors">Help Center</Link></li>
                                 <li><Link to="/terms" className="text-gray-400 hover:text-primary transition-colors">Terms of Service</Link></li>
@@ -109,7 +109,7 @@ const Footer = () => {
 
                 {/* Newsletter Sub-Section */}
                 <div className="border-t border-gray-800/60 pt-12 pb-8 flex flex-col items-center justify-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-200 mb-2 font-display uppercase">Subscribe to Our Newsletter</h3>
+                    <h3 className="text-xl font-bold text-gray-200 mb-2 font-roboto">Subscribe to Our Newsletter</h3>
                     <p className="text-sm text-gray-400 text-center mb-8 max-w-xl font-sans font-medium">
                         Get the latest movie releases, event updates, and exclusive offers delivered to your inbox.
                     </p>
@@ -119,7 +119,7 @@ const Footer = () => {
                             placeholder="Enter your email address"
                             className="flex-1 bg-[#252a37] border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all font-sans"
                         />
-                        <button className="bg-primary hover:brightness-110 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-bold font-display uppercase tracking-wider text-xs transition-all shadow-lg shadow-primary/20 active:scale-95">
+                        <button className="bg-primary hover:brightness-110 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-bold font-roboto tracking-wider text-xs transition-all shadow-lg shadow-primary/20 active:scale-95">
                             <Send className="w-4 h-4" />
                             <span>Subscribe</span>
                         </button>

@@ -290,14 +290,14 @@ const MovieDetailsPage = () => {
                         {/* Movie Details Content Area */}
                         <div className="flex-1 flex flex-col gap-5 text-center md:text-left max-w-3xl pt-2 md:pt-4">
                             {/* Title Area */}
-                            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-bold tracking-tight leading-tight text-white drop-shadow-2xl font-display uppercase">
+                            <h1 className="text-4xl md:text-5xl lg:text-[4rem] font-bold tracking-tight leading-tight text-white drop-shadow-2xl font-roboto">
                                 {movie.title}
                             </h1>
 
                             {/* Metadata Line */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm md:text-base font-medium text-white/90">
                                 {movie.isAvailable && (
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-display shadow-lg border border-white/10">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10">
                                         <Star className="w-5 h-5 fill-primary text-primary" />
                                         <span>{movie.rating ? `${movie.rating}/10` : 'New'}</span>
                                         {movie.voteCount > 0 && (
@@ -382,7 +382,7 @@ const MovieDetailsPage = () => {
                                 <button
                                     onClick={handleBookingClick}
                                     disabled={!movie.isAvailable}
-                                    className={`w-full sm:w-[350px] px-8 py-3.5 rounded-lg font-bold tracking-wide transition-all text-center shadow-2xl active:scale-95 font-display uppercase ${movie.isAvailable
+                                    className={`w-full sm:w-[350px] px-8 py-3.5 rounded-lg font-bold tracking-wide transition-all text-center shadow-2xl active:scale-95 font-roboto ${movie.isAvailable
                                         ? 'bg-primary hover:brightness-110 text-white border-transparent shadow-primary/20'
                                         : 'bg-gray-600 text-white/50 cursor-not-allowed border-transparent'
                                         }`}
@@ -434,7 +434,7 @@ const MovieDetailsPage = () => {
                     {movie.offers?.length > 0 && (
                         <div className="lg:col-span-4 space-y-10">
                             <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-6 transition-colors">
-                                <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Available Offers</h3>
+                                <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 tracking-widest">Available Offers</h3>
                                 <div className="space-y-4">
                                     {movie.offers.map((offer, idx) => (
                                         <div key={idx} className="p-4 rounded-xl bg-premiumGold/5 dark:bg-premiumGold/10 border border-premiumGold/10 dark:border-premiumGold/20 flex gap-4">
@@ -475,8 +475,8 @@ const MovieDetailsPage = () => {
                 <button
                     onClick={handleBookingClick}
                     disabled={!movie.isAvailable}
-                    className={`w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
-                        ? 'bg-primary text-white shadow-primary/30 font-display italic'
+                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
+                        ? 'bg-primary text-white shadow-primary/30 font-roboto italic'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                 >
@@ -528,7 +528,7 @@ const CastCrewModal = ({ title, items, onClose }) => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-gray-800 dark:text-gray-200 text-xs">{name}</h4>
-                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">{role}</p>
+                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-widest">{role}</p>
                                     </div>
                                 </div>
                             );
@@ -551,7 +551,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         {movie.cast?.length > 5 && (
                             <button
                                 onClick={onShowAllCast}
-                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-roboto"
+                                className="text-[10px] font-black tracking-widest text-primary transition-opacity hidden md:block font-roboto"
                             >
                                 See All
                             </button>
@@ -591,7 +591,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCast}
-                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400 transition-all font-roboto"
                             >
                                 See All Cast
                             </button>
@@ -608,7 +608,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         {movie.crew?.length > 5 && (
                             <button
                                 onClick={onShowAllCrew}
-                                className="text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hidden md:block font-roboto"
+                                className="text-[10px] font-black tracking-widest text-primary transition-opacity hidden md:block font-roboto"
                             >
                                 See All
                             </button>
@@ -648,7 +648,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         <div className="md:hidden flex justify-center pt-2">
                             <button
                                 onClick={onShowAllCrew}
-                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-all"
+                                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-[10px] font-black tracking-widest text-gray-500 dark:text-gray-400 transition-all font-roboto"
                             >
                                 See All Crew
                             </button>
@@ -661,7 +661,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
             {!merchLoading && merchandise.length > 0 && (
                 <section id="merchandise" className="space-y-6 pt-12 border-t border-gray-100 dark:border-gray-800 transition-colors group/store animate-slide-up opacity-0 delay-400">                    <div className="flex items-center justify-between pb-2">
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Official merchandise</h3>
-                        <Link to="/store" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 transition-colors group/link">
+                        <Link to="/store" className="flex items-center gap-2 text-xs font-black tracking-widest text-gray-500 dark:text-gray-400 transition-colors group/link font-roboto">
                             <ShoppingBag className="w-4 h-4 text-gray-400 dark:text-gray-500 transition-colors" />
                             Visit Store
                         </Link>
@@ -712,14 +712,14 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                 <section id="reviews" className="space-y-6 animate-slide-up opacity-0 delay-400">
                     <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 transition-colors pb-2">
                         <div className="space-y-1">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight font-display uppercase">Top reviews</h3>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight font-roboto">Top reviews</h3>
                             <p className="text-xs text-gray-400 dark:text-gray-500 font-sans">Summary of {movie.reviews?.length} reviews.</p>
                         </div>
                         {movie.reviews?.length > 0 && (
                             <Link
                                 to={`/movie/${movie.slug}/reviews`}
                                 state={{ movieId: movie.id, movieName: movie.title }}
-                                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity font-display"
+                                className="flex items-center gap-1.5 text-xs font-black tracking-widest text-primary hover:opacity-80 transition-opacity font-roboto"
                             >
                                 {movie.reviews.length} reviews
                                 <ChevronRight className="w-4 h-4" />
@@ -757,7 +757,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                 </div>
 
                                 <div className="flex items-center justify-end pt-3 border-t border-gray-50 dark:border-gray-800 mt-1">
-                                    <span className="text-[10px] text-black-100 dark:text-gray-500 font-bold uppercase tracking-widest">
+                                    <span className="text-[10px] text-black-100 dark:text-gray-500 font-bold tracking-widest font-roboto">
                                         {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </span>
                                 </div>

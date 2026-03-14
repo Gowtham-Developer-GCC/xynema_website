@@ -215,7 +215,7 @@ const BookingSummaryPage = () => {
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors">
                         <ArrowLeft size={24} className="text-gray-900 dark:text-gray-100" />
                     </button>
-                    <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight font-display uppercase ">Booking Summary</h1>
+                    <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight font-roboto">Booking Summary</h1>
                 </div>
             </header>
 
@@ -233,22 +233,22 @@ const BookingSummaryPage = () => {
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-x-0 bottom-0 pb-3 pt-12 bg-gradient-to-t from-black/80 to-transparent px-3 text-white">
-                            <p className="text-[10px] font-black uppercase tracking-widest shadow-sm">{displayFormat}</p>
+                            <p className="text-[10px] font-black tracking-widest shadow-sm">{displayFormat}</p>
                         </div>
                     </div>
                     <div className="flex flex-col justify-center flex-1 py-1">
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black uppercase tracking-widest w-fit mb-3">
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black tracking-widest w-fit mb-3">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                             {displayLanguage}
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-5 tracking-tight font-roboto uppercase">{displayTitle}</h2>
+                        <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-5 tracking-tight font-roboto">{displayTitle}</h2>
                         <div className="grid grid-cols-2 gap-y-4 gap-x-6 sm:gap-x-8">
                             <div className="flex items-start gap-2.5">
                                 <div className="mt-0.5 p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400">
                                     <MapPin className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5 truncate font-roboto">Cinema</p>
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Cinema</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTheater.includes(' - ') ? displayTheater.split(' - ')[0] : displayTheater}
                                     </p>
@@ -259,7 +259,7 @@ const BookingSummaryPage = () => {
                                     <MonitorPlay className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5 truncate font-roboto">Screen</p>
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Screen</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTheater.includes(' - ') ? (displayTheater.split(' - ')[1] || displayScreen) : displayScreen}
                                     </p>
@@ -270,7 +270,7 @@ const BookingSummaryPage = () => {
                                     <Calendar className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5 truncate font-roboto">Date</p>
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Date</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </p>
@@ -281,7 +281,7 @@ const BookingSummaryPage = () => {
                                     <Clock className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5 truncate font-roboto">Time</p>
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5 truncate font-roboto">Time</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
                                         {displayTime}
                                     </p>
@@ -293,14 +293,14 @@ const BookingSummaryPage = () => {
 
                 {/* Section Title */}
                 <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-display font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">ORDER SUMMARY</h3>
+                    <h3 className="text-xs font-roboto font-black text-gray-400 dark:text-gray-500 tracking-[0.2em]">ORDER SUMMARY</h3>
                 </div>
 
                 {/* Order Summary */}
                 <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                     <div className="p-6 space-y-4">
                         <div className="flex justify-between items-start">
-                            <p className="text-sm font-bold text-gray-900 dark:text-white flex-shrink-0 font-roboto uppercase">Seats ({seats.length})</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white flex-shrink-0 font-roboto">Seats ({seats.length})</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-300 text-right max-w-[60%] font-roboto">
                                 {Object.values(priceGroups).flat().join(', ')}
                             </p>
@@ -310,12 +310,12 @@ const BookingSummaryPage = () => {
                         <div className="space-y-2 pt-1">
                             {Object.entries(priceGroups).sort((a, b) => b[0] - a[0]).map(([price, items]) => (
                                 <div key={price} className="flex justify-between text-[13px] font-medium text-gray-600 dark:text-gray-400 pl-3 font-roboto">
-                                    <p className="uppercase">₹{parseFloat(price).toLocaleString()} × {items.length} {items.length === 1 ? 'seat' : 'seats'}</p>
+                                    <p>₹{parseFloat(price).toLocaleString()} × {items.length} {items.length === 1 ? 'seat' : 'seats'}</p>
                                     <p className="text-gray-900 dark:text-gray-200 font-bold">₹{(parseFloat(price) * items.length).toLocaleString()}</p>
                                 </div>
                             ))}
                             <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800 font-roboto">
-                                <p className="text-gray-900 dark:text-white uppercase tracking-tight">Tickets Subtotal</p>
+                                <p className="text-gray-900 dark:text-white tracking-tight">Tickets Subtotal</p>
                                 <p className="text-gray-900 dark:text-white">₹{ticketsTotal.toLocaleString()}</p>
                             </div>
                         </div>
@@ -324,7 +324,7 @@ const BookingSummaryPage = () => {
                         {snackTotal > 0 && (
                             <div className="space-y-2 pt-2">
                                 <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800 font-roboto">
-                                    <p className="text-gray-900 dark:text-white uppercase">Food & Beverages</p>
+                                    <p className="text-gray-900 dark:text-white">Food & Beverages</p>
                                 </div>
                                 <div className="space-y-1.5 pl-3">
                                     {Object.entries(cart).map(([id, qty]) => {
@@ -332,14 +332,14 @@ const BookingSummaryPage = () => {
                                         if (!item) return null;
                                         return (
                                             <div key={id} className="flex justify-between text-[11px] font-medium font-roboto">
-                                                <p className="text-gray-500 dark:text-gray-400 uppercase">{item.name} x {qty}</p>
+                                                <p className="text-gray-500 dark:text-gray-400">{item.name} x {qty}</p>
                                                 <p className="text-gray-900 dark:text-gray-300 font-bold">₹{(item.price * qty).toLocaleString()}</p>
                                             </div>
                                         );
                                     })}
                                 </div>
                                 <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-gray-50 dark:border-gray-800 font-roboto">
-                                    <p className="text-gray-900 dark:text-white uppercase tracking-tight">Food & Beverages Subtotal</p>
+                                    <p className="text-gray-900 dark:text-white tracking-tight">Food & Beverages Subtotal</p>
                                     <p className="text-gray-900 dark:text-white">₹{snackTotal.toLocaleString()}</p>
                                 </div>
                             </div>
@@ -351,13 +351,13 @@ const BookingSummaryPage = () => {
                         <div className="space-y-2">
                             {convenienceFee > 0 && (
                                 <div className="flex justify-between text-xs font-medium font-roboto">
-                                    <p className="text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Convenience Fee (10%)</p>
+                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">Convenience Fee (10%)</p>
                                     <p className="text-gray-900 dark:text-white font-bold">₹{convenienceFee.toLocaleString()}</p>
                                 </div>
                             )}
                             {gst > 0 && (
                                 <div className="flex justify-between text-xs font-medium font-roboto">
-                                    <p className="text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Taxes (GST 18%)</p>
+                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">Taxes (GST 18%)</p>
                                     <p className="text-gray-900 dark:text-white">₹{gst.toLocaleString()}</p>
                                 </div>
                             )}
@@ -365,7 +365,7 @@ const BookingSummaryPage = () => {
 
                         {/* Total Highlight */}
                         <div className="mt-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-xl flex justify-between items-center border border-primary/20">
-                            <p className="text-sm font-black text-primary uppercase tracking-widest font-roboto">Total Payable</p>
+                            <p className="text-sm font-black text-primary tracking-widest font-roboto">Total Payable</p>
                             <p className="text-xl font-black text-primary font-roboto">₹{grandTotal.toLocaleString()}</p>
                         </div>
                     </div>
@@ -376,13 +376,13 @@ const BookingSummaryPage = () => {
             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-none z-50">
                 <div className="max-w-6xl mx-auto flex items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
                     <div className="font-roboto">
-                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Grand Total</p>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest mb-0.5">Grand Total</p>
                         <p className="text-2xl font-black text-gray-900 dark:text-white">₹{grandTotal.toLocaleString()}</p>
                     </div>
                     <button
                         onClick={handleProceedToPayment}
                         disabled={isLocking}
-                        className={`flex-1 text-white h-14 rounded-2xl font-roboto font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em] ${isLocking ? 'bg-primary/50 cursor-not-allowed shadow-none' : 'bg-primary shadow-primary/20'}`}
+                        className={`flex-1 text-white h-14 rounded-2xl font-roboto font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:brightness-110 active:scale-95 transition-all tracking-[0.2em] ${isLocking ? 'bg-primary/50 cursor-not-allowed shadow-none' : 'bg-primary shadow-primary/20'}`}
                     >
                         {isLocking ? 'Securing Tickets...' : 'Make Payment'} <ChevronRight size={20} />
                     </button>

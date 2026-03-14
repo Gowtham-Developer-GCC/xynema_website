@@ -325,7 +325,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         {/* All Global Events */}
                         {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
                             <div className="mt-8">
-                                <h2 className="text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-8 uppercase">All events</h2>
+                                <h2 className="text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-8">All events</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {filteredGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
@@ -357,7 +357,7 @@ const PrivateEventBanner = ({ onNavigate }) => {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
 
             <div className="relative z-10 max-w-3xl">
-                <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 tracking-tight uppercase">Host Your Private Event</h2>
+                <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 tracking-tight">Host Your Private Event</h2>
                 <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-10 max-w-2xl font-sans">
                     From corporate gatherings to private screenings, we help you create memorable
                     experiences. Submit your request and our team will reach out to you.
@@ -397,7 +397,7 @@ const PrivateEventBanner = ({ onNavigate }) => {
 
                 <button
                     onClick={onNavigate}
-                    className="bg-primary text-white px-8 py-3.5 rounded-lg text-sm font-black font-display uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 active:scale-95"
+                    className="bg-primary text-white px-8 py-3.5 rounded-lg text-sm font-black font-roboto tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 active:scale-95"
                 >
                     Submit Request
                 </button>
@@ -523,7 +523,7 @@ const EventCard = memo(({ event }) => {
             </Link>
             <div className="p-5 flex flex-col flex-grow">
                 <Link to={eventLink} className="mb-2 block">
-                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-display uppercase group-hover:text-primary">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-roboto group-hover:text-primary">
                         {event.name}
                     </h3>
                 </Link>
@@ -545,7 +545,7 @@ const EventCard = memo(({ event }) => {
                     </span>
                     <Link
                         to={eventLink}
-                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-display uppercase tracking-wider hover:brightness-110 active:scale-95"
+                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-wider hover:brightness-110 active:scale-95"
                     >
                         Book Now
                     </Link>
@@ -598,12 +598,12 @@ const PrivateEventsSection = ({ onCancel }) => {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
                 <div className="text-center max-w-2xl mx-auto pt-24 pb-32 px-4 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/20 rounded-full text-[10px] font-black tracking-widest mb-8 border border-primary/30 font-display uppercase">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/20 rounded-full text-[10px] font-black tracking-widest mb-8 border border-primary/30 font-roboto">
                         <Sparkles className="w-3.5 h-3.5 text-primary" />
                         <span className="text-white">PRIVATE EVENT HOSTING</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6 uppercase">
+                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6">
                         Host Your Private Event
                     </h2>
 
@@ -618,7 +618,7 @@ const PrivateEventsSection = ({ onCancel }) => {
             <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
                 <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 dark:border-gray-700 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
                     <div className="mb-10 text-left border-b border-gray-100 dark:border-gray-700 pb-6">
-                        <h3 className="text-[28px] font-display font-black text-gray-900 dark:text-gray-100 tracking-tighter uppercase">
+                        <h3 className="text-[28px] font-roboto font-black text-gray-900 dark:text-gray-100 ">
                             Event Request Form
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-sans">
@@ -723,7 +723,7 @@ const PrivateEventsSection = ({ onCancel }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-lg font-black font-display uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                                className="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-lg font-black font-roboto tracking-widest hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                             >
                                 {loading ? (
                                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -773,11 +773,11 @@ const EmptyState = ({ onReset }) => (
         <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300 dark:text-gray-600">
             <Search className="w-10 h-10" />
         </div>
-        <h3 className="text-2xl font-black uppercase tracking-tight dark:text-gray-100">Nothing Found</h3>
+        <h3 className="text-2xl font-black tracking-tight dark:text-gray-100">Nothing Found</h3>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
         <button
             onClick={onReset}
-            className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-display"
+            className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-roboto"
         >
             Reset Explore
         </button>

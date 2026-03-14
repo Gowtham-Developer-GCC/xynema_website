@@ -168,7 +168,7 @@ const MoviesPage = ({ selectedCity }) => {
             {/* ── Hero Header ───────────────────────────────── */}
             <div className="bg-white dark:bg-[#0f1115] border-b border-gray-100 dark:border-gray-800">
                 <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 font-display uppercase">Movies</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 font-roboto">Movies</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">Discover and book tickets for the latest blockbusters</p>
                 </div>
             </div>
@@ -184,7 +184,7 @@ const MoviesPage = ({ selectedCity }) => {
                                 <button
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
-                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-display ${activeTab === tab.id
+                                    className={`px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-roboto ${activeTab === tab.id
                                         ? 'border-primary text-primary'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                                         }`}
@@ -235,7 +235,7 @@ const MoviesPage = ({ selectedCity }) => {
 
                             <Link
                                 to="/cinemas"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-display transition-colors shadow-lg shadow-primary/20"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-sm font-bold font-roboto transition-colors shadow-lg shadow-primary/20"
                             >
                                 <Ticket className="w-4 h-4" />
                                 Browse by Cinemas
@@ -292,7 +292,7 @@ const MoviesPage = ({ selectedCity }) => {
                                 <button
                                     key={p}
                                     onClick={() => goToPage(p)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-display transition-all ${pagination.page === p
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-roboto transition-all ${pagination.page === p
                                         ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110'
                                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}

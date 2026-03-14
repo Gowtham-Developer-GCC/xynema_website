@@ -13,7 +13,7 @@ import BookingSummary from '../components/SeatSelection/BookingSummary';
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
         {type === 'error' ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
-        <span className="text-xs font-black uppercase tracking-wider">{message}</span>
+        <span className="text-xs font-black tracking-wider">{message}</span>
         <button onClick={onClose} className="ml-4 opacity-50 hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
     </div>
 );
@@ -216,7 +216,7 @@ const FoodSelectionPage = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex flex-col">
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-display uppercase">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-roboto">
                                 Pre-Order Snacks
                             </h1>
                             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
@@ -226,7 +226,7 @@ const FoodSelectionPage = () => {
                     </div>
                     <button
                         onClick={handleProceedToPayment}
-                        className="text-[14px] font-bold text-primary dark:text-primary hover:underline font-display uppercase tracking-wider"
+                        className="text-[14px] font-bold text-primary dark:text-primary hover:underline font-roboto tracking-wider"
                     >
                         Skip & Continue
                     </button>
@@ -241,7 +241,7 @@ const FoodSelectionPage = () => {
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border font-display uppercase tracking-wide ${selectedCategory === category
+                                className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border font-roboto tracking-wide ${selectedCategory === category
                                     ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                                     : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary hover:text-primary'
                                     }`}
@@ -304,7 +304,7 @@ const FoodSelectionPage = () => {
                                 setCart({});
                                 setTimeout(handleProceedToPayment, 50);
                             }}
-                            className="text-[13px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4"
+                            className="text-[13px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-4 font-roboto"
                         >
                             Skip snacks
                         </button>
@@ -341,7 +341,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight font-display">{item.name}</h3>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-[16px] leading-tight font-roboto">{item.name}</h3>
                             {item.isPopular && (
                                 <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider">
                                     Combo
@@ -353,17 +353,17 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                    <span className="text-[18px] font-bold text-gray-900 dark:text-white font-display">₹{item.price}</span>
+                    <span className="text-[18px] font-bold text-gray-900 dark:text-white font-roboto">₹{item.price}</span>
 
                     {quantity === 0 ? (
                         <button
                             onClick={onAdd}
-                            className="px-8 py-2 rounded-lg border border-primary text-primary font-bold text-[13px] hover:bg-primary/5 transition-all active:scale-95 font-display uppercase tracking-wider"
+                            className="px-8 py-2 rounded-lg border border-primary text-primary font-bold text-[13px] hover:bg-primary/5 transition-all active:scale-95 font-roboto tracking-wider"
                         >
                             Add
                         </button>
                     ) : (
-                        <div className="flex items-center gap-4 bg-primary text-white rounded-lg px-3 py-2 shadow-sm font-display">
+                        <div className="flex items-center gap-4 bg-primary text-white rounded-lg px-3 py-2 shadow-sm font-roboto">
                             <button onClick={onRemove} className="hover:bg-white/20 rounded p-0.5 transition-colors">
                                 <Minus className="w-4 h-4" />
                             </button>

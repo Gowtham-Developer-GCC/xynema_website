@@ -95,7 +95,7 @@ const HomePage = ({ selectedCity }) => {
                 <HeroCarousel movies={bannerMovies} />
             </div>
 
-            <main className="max-w-7xl w-full mx-auto pb-8 space-y-12 overflow-hidden px-4 sm:px-6 lg:px-8">
+            <main className="max-w-[1440px] w-full mx-auto pb-20 lg:pb-8 space-y-12 overflow-hidden px-4 sm:px-6 lg:px-8">
                 {/* Now Showing Section */}
                 {/* <section className="relative group/nowshowing">
                     <div className="flex items-center justify-between mb-4">
@@ -146,7 +146,7 @@ const HomePage = ({ selectedCity }) => {
                 {upcomingMovies.length > 0 && (
                     <section id="recommended-section" className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
                                 Recommended for you
                             </h2>
                             <Link to="/movies?tab=now-showing" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -164,11 +164,13 @@ const HomePage = ({ selectedCity }) => {
                                     prevEl: '.recommended-prev',
                                 }}
                                 breakpoints={{
-                                    640: { slidesPerView: 3, spaceBetween: 16 },
-                                    768: { slidesPerView: 3, spaceBetween: 16 },
-                                    1024: { slidesPerView: 4, spaceBetween: 16 },
-                                    1280: { slidesPerView: 5, spaceBetween: 32 },
-                                    1536: { slidesPerView: 5, spaceBetween: 32 },
+                                    320: { slidesPerView: 2, spaceBetween: 16 },
+                                    480: { slidesPerView: 2, spaceBetween: 16 },
+                                    640: { slidesPerView: 3, spaceBetween: 24 },
+                                    768: { slidesPerView: 3, spaceBetween: 24 },
+                                    1024: { slidesPerView: 4, spaceBetween: 32 },
+                                    1280: { slidesPerView: 5, spaceBetween: 34 },
+                                    1536: { slidesPerView: 5, spaceBetween: 34 },
                                 }}
                                 className="!pb-4 !overflow-visible"
                             >
@@ -182,10 +184,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="recommended-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 -ml-4">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
-                            <button className="recommended-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white hover:shadow-xl transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0">
+                            <button className="recommended-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 -mr-4">
                                 <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -268,7 +270,7 @@ const HomePage = ({ selectedCity }) => {
                 {events?.length > 0 && (
                     <section className="relative mt-16 group/events">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
                                 Trending events
                             </h2>
                             <Link to="/events" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
@@ -286,11 +288,12 @@ const HomePage = ({ selectedCity }) => {
                                     prevEl: '.events-prev',
                                 }}
                                 breakpoints={{
-                                    640: { slidesPerView: 2, spaceBetween: 24 },
-                                    768: { slidesPerView: 3, spaceBetween: 24 },
+                                    320: { slidesPerView: 1, spaceBetween: 16 },
+                                    480: { slidesPerView: 1, spaceBetween: 16 },
+                                    640: { slidesPerView: 2, spaceBetween: 20 },
+                                    768: { slidesPerView: 2, spaceBetween: 24 },
                                     1024: { slidesPerView: 3, spaceBetween: 24 },
                                     1280: { slidesPerView: 3, spaceBetween: 24 },
-                                    1536: { slidesPerView: 3, spaceBetween: 24 },
                                 }}
                                 className="!pb-6"
                             >
@@ -302,11 +305,11 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="events-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6 rotate-180" />
+                            <button className="events-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0 -ml-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="events-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6" />
+                            <button className="events-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0 -mr-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>
                     </section>
@@ -316,7 +319,7 @@ const HomePage = ({ selectedCity }) => {
                 {MOCK_STORE_ITEMS.length > 0 && (
                     <section className="relative mt-16 mb-8 group/store">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-display uppercase">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
                                 Official merchandise
                             </h2>
                             <Link to="/store" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
@@ -335,11 +338,12 @@ const HomePage = ({ selectedCity }) => {
                                     prevEl: '.store-prev',
                                 }}
                                 breakpoints={{
-                                    640: { slidesPerView: 3, spaceBetween: 24 },
+                                    320: { slidesPerView: 2, spaceBetween: 16 },
+                                    480: { slidesPerView: 2, spaceBetween: 16 },
+                                    640: { slidesPerView: 2, spaceBetween: 24 },
                                     768: { slidesPerView: 3, spaceBetween: 24 },
-                                    1024: { slidesPerView: 4, spaceBetween: 24 },
+                                    1024: { slidesPerView: 3, spaceBetween: 24 },
                                     1280: { slidesPerView: 4, spaceBetween: 24 },
-                                    1536: { slidesPerView: 4, spaceBetween: 24 },
                                 }}
                                 className="!pb-6"
                             >
@@ -351,11 +355,11 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="store-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6 rotate-180" />
+                            <button className="store-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 md:h-14 md:w-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 -ml-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="store-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-14 h-14 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0">
-                                <ChevronRight className="w-6 h-6" />
+                            <button className="store-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 md:h-14 md:w-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 -mr-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>
                     </section>
@@ -391,7 +395,7 @@ const EventCard = memo(({ event }) => {
             </Link>
             <div className="p-5 flex flex-col flex-grow">
                 <Link to={eventLink} className="mb-2 block">
-                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-display uppercase">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-[1.05rem] leading-snug truncate transition-colors font-roboto">
                         {event.name}
                     </h3>
                 </Link>
@@ -413,7 +417,7 @@ const EventCard = memo(({ event }) => {
                     </span>
                     <Link
                         to={eventLink}
-                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-display uppercase tracking-wider hover:brightness-110 active:scale-95"
+                        className="px-5 py-2 bg-primary text-white text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-wider hover:brightness-110 active:scale-95"
                     >
                         Book Now
                     </Link>
@@ -475,9 +479,9 @@ const HeroCarousel = memo(({ movies }) => {
                 observer={true}
                 observeParents={true}
                 breakpoints={{
-                    320: { slidesPerView: 1.0, spaceBetween: 12 },
-                    640: { slidesPerView: 1.0, spaceBetween: 16 },
-                    1024: { slidesPerView: 1.0, spaceBetween: 24 }, // Slightly wider peek on desktop
+                    320: { slidesPerView: 1, spaceBetween: 8 },
+                    640: { slidesPerView: 1, spaceBetween: 12 },
+                    1024: { slidesPerView: 1, spaceBetween: 16 }, // Maintain peek consistently
                 }}
                 className="hero-swiper w-full max-w-[1800px] mx-auto"
             >

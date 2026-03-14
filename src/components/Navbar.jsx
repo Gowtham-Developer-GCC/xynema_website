@@ -34,7 +34,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     return (
         <>
             <nav className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
-                <div className="w-[95%] md:w-[90%] lg:w-[80%] xl:w-[75%] mx-auto px-4">
+                <div className="w-[95%] md:w-[92%] lg:w-[90%] xl:w-[94%] 2xl:w-[90%] mx-auto px-4">
                     <div className="flex justify-between items-center h-16 md:h-20">
 
                         {/* Left: Logo & City */}
@@ -43,7 +43,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <img
                                     src="/assets/primary_Logo.png"
                                     alt="Xynema Logo"
-                                    className="h-8 md:h-14 w-auto group-hover:scale-105 transition-transform duration-300 transform-gpu"
+                                    className="h-8 md:h-8 w-auto group-hover:scale-105 transition-transform duration-300 transform-gpu"
                                 />
                                 <span className="text-xl md:text-2xl font-display font-bold text-gray-900 dark:text-white uppercase leading-none group-hover:opacity-90 transition-opacity">Xynema</span>
                             </Link>
@@ -58,8 +58,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             </button>
                         </div>
 
-                        {/* Center: Nav Links */}
-                        <div className="hidden lg:flex items-center justify-center gap-8 text-[15px] font-bold text-gray-800 dark:text-gray-100 absolute left-1/2 -translate-x-1/2">
+                        {/* Center: Nav Links - Visible from lg breakpoint now that search is an icon */}
+                        <div className="hidden lg:flex items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 absolute left-1/2 -translate-x-1/2">
                             <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>For You</Link>
                             <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Movies</Link>
                             <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Events</Link>
@@ -67,51 +67,50 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                         {/* Right: Search & Actions */}
                         <div className="flex items-center justify-end gap-3 md:gap-4 flex-1">
-                            {/* Mobile Search Toggle */}
+                            {/* Search Icon - Always visible, expands on click */}
                             <button
                                 onClick={() => setIsMobileSearchOpen(true)}
-                                className="md:hidden p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                                className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                                aria-label="Search"
                             >
                                 <Search className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                             </button>
 
-                            {/* Desktop Search */}
-                            <div className="hidden md:block w-56 lg:w-72">
-                                <UniversalSearch variant="navbar" className="w-full" />
+                            {/* Actions Group */}
+                            <div className="flex items-center gap-1 md:gap-2">
+                                {/* Desktop Theme Toggle */}
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden xl:flex items-center justify-center text-gray-600 dark:text-gray-300"
+                                    aria-label="Toggle dark mode"
+                                >
+                                    {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                                </button>
+
+                                {user ? (
+                                    <button
+                                        onClick={() => setIsSidebarOpen(true)}
+                                        className="hidden xl:flex items-center gap-2 pl-1.5 pr-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                                    >
+                                        <img
+                                            src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
+                                            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover shadow-sm"
+                                            alt=""
+                                        />
+                                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden 2xl:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={openLogin}
+                                        className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm hidden xl:block"
+                                    >
+                                        Sign Up
+                                    </button>
+                                )}
                             </div>
 
-                            {/* Theme Toggle */}
-                            <button
-                                onClick={toggleTheme}
-                                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden md:flex items-center justify-center text-gray-600 dark:text-gray-300"
-                                aria-label="Toggle dark mode"
-                            >
-                                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                            </button>
-
-                            {user ? (
-                                <button
-                                    onClick={() => setIsSidebarOpen(true)}
-                                    className="flex items-center gap-2 pl-1.5 pr-4 py-1.5 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200"
-                                >
-                                    <img
-                                        src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
-                                        className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover shadow-sm"
-                                        alt=""
-                                    />
-                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden lg:block">Hi, {user.displayName?.split(' ')[0] || 'Guest'}</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={openLogin}
-                                    className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm hidden md:block"
-                                >
-                                    Sign Up
-                                </button>
-                            )}
-
-                            {/* Mobile Menu & Theme Toggle */}
-                            <div className="flex items-center gap-1 lg:hidden">
+                            {/* Mobile/Tablet Controls - Visible only below xl */}
+                            <div className="flex items-center gap-1 xl:hidden">
                                 <button
                                     onClick={toggleTheme}
                                     className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
@@ -210,7 +209,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                             {/* Name & Email */}
                             <div className="space-y-0.5">
-                                <h2 className={`text-[15px] font-bold leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                <h2 className={`text-[15px] font-medium leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                     {user ? user.displayName : 'Welcome!'}
                                 </h2>
                                 {user?.email && (
@@ -227,7 +226,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {/* Menu Items */}
                         <div className="flex-1 overflow-y-auto py-3 px-3">
                             {/* Mobile Only Browsing Links */}
-                            <div className="lg:hidden pb-2 mb-2">
+                            <div className="2xl:hidden pb-2 mb-2">
                                 {[
                                     { to: '/#recommended-section', label: 'For You', icon: Heart, active: location.pathname === '/' },
                                     { to: '/movies', label: 'Movies', icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
@@ -300,6 +299,52 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             )
             }
 
+            {/* Mobile Bottom Navigation - Visible only below LG breakpoint where top links hide */}
+            <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
+                <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
+                    <Link 
+                        to="/" 
+                        className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
+                            location.pathname === '/' 
+                            ? 'text-primary scale-110' 
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                    >
+                        <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
+                            <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
+                    </Link>
+
+                    <Link 
+                        to="/movies" 
+                        className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
+                            location.pathname.startsWith('/movies') && location.pathname !== '/'
+                            ? 'text-primary scale-110' 
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                    >
+                        <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
+                            <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
+                    </Link>
+
+                    <Link 
+                        to="/events" 
+                        className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${
+                            location.pathname.startsWith('/events')
+                            ? 'text-primary scale-110' 
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                    >
+                        <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
+                            <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
+                    </Link>
+                </div>
+            </div>
         </>
     );
 };

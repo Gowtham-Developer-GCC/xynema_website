@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, Clock, Loader, ChevronRight, ChevronDown, Filter, Info, Calendar, Ticket, Sun, SunMedium, Moon, CloudSun, CreditCard, Layers, Check, ChevronLeft } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -41,6 +41,9 @@ const TheaterSelectionPage = () => {
         priceRange: 'All',
         timeSlot: 'All'
     });
+    const [skipMessage, setSkipMessage] = useState(null);
+    const [emptyDates, setEmptyDates] = useState([]);
+    const isAutoSkippingRef = useRef(false);
 
     const { dynamicFilterOptions, maxEndDate } = useMemo(() => {
         const formats = new Set(['All']);
@@ -164,9 +167,7 @@ const TheaterSelectionPage = () => {
     const fetchData = useCallback(async (isStopped = { current: false }) => {
         const targetMovieId = movie?.id || (identifier?.match(/^[0-9a-fA-F]{24}$/) ? identifier : null);
 
-        // If we don't have a target ID yet
         if (!targetMovieId) {
-            // If we rely on context resolving the slug, and context is done but failed to match -> Stop loading
             if (!isContextLoading && !movie) {
                 if (!isStopped.current) setLoading(false);
             }
@@ -179,7 +180,32 @@ const TheaterSelectionPage = () => {
             setLoading(true);
             setError(null);
             const theatersRes = await apiCacheManager.getOrFetchTheatersForMovie(targetMovieId, selectedCity, selectedDate, () => getTheatersForMovie(targetMovieId, selectedCity, selectedDate));
+            
             if (!isStopped.current) {
+                if ((!theatersRes || theatersRes.length === 0) && !isAutoSkippingRef.current) {
+                    setEmptyDates(prev => prev.includes(selectedDate) ? prev : [...prev, selectedDate]);
+                    const currentDate = new Date(selectedDate);
+                    const nextDate = new Date(currentDate);
+                    nextDate.setDate(currentDate.getDate() + 1);
+
+                    const maxSelectableDate = new Date();
+                    maxSelectableDate.setDate(maxSelectableDate.getDate() + 7);
+
+                    if (nextDate <= maxSelectableDate && (!maxEndDate || nextDate <= new Date(maxEndDate))) {
+                        const nextDateStr = nextDate.toISOString().split('T')[0];
+                        
+                        setSkipMessage(`No shows on ${currentDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}. Skipping to ${nextDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}...`);
+                        isAutoSkippingRef.current = true;
+                        setTimeout(() => {
+                            if (!isStopped.current) {
+                                setSelectedDate(nextDateStr);
+                                setSkipMessage(null);
+                                isAutoSkippingRef.current = false;
+                            }
+                        }, 1000);
+                        return;
+                    }
+                }
                 setTheaters(theatersRes || []);
             }
         } catch (err) {
@@ -188,7 +214,7 @@ const TheaterSelectionPage = () => {
         } finally {
             if (!isStopped.current) setLoading(false);
         }
-    }, [movie, identifier, selectedCity, selectedDate, isContextLoading]);
+    }, [movie, identifier, selectedCity, selectedDate, isContextLoading, maxEndDate]);
 
     // Robust fetching with cleanup to prevent race conditions
     useEffect(() => {
@@ -313,6 +339,22 @@ const TheaterSelectionPage = () => {
                 description="Choose your preferred cinema theater and select your seats"
             />
 
+            {/* Auto-skip Notification */}
+            {skipMessage && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md animate-in slide-in-from-top duration-500">
+                    <div className="bg-slate-900 dark:bg-primary text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-md">
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                            <Clock className="w-4 h-4 text-white animate-pulse" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-[11px] font-black uppercase tracking-widest opacity-70 mb-0.5">Automated Search</p>
+                            <p className="text-[13px] font-bold leading-tight">{skipMessage}</p>
+                        </div>
+                        <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-white animate-spin shrink-0"></div>
+                    </div>
+                </div>
+            )}
+
             {/* Redesigned Minimalist Header & Movie Info - Matches Figma */}
             <div className="bg-white dark:bg-gray-900 pt-5 pb-6 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 relative z-10 w-full">
                 <div className="w-[95%] sm:w-[90%] lg:max-w-[80%] mx-auto flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 text-center md:text-left relative">
@@ -383,6 +425,7 @@ const TheaterSelectionPage = () => {
                         onDateSelect={setSelectedDate}
                         releaseDate={movie?.releaseDate}
                         maxEndDate={maxEndDate}
+                        emptyDates={emptyDates}
                     />
 
                     {/* <div className="mt-8">
@@ -509,7 +552,7 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
     );
 };
 
-const DateSelector = ({ selectedDate, onDateSelect, releaseDate, maxEndDate }) => {
+const DateSelector = ({ selectedDate, onDateSelect, releaseDate, maxEndDate, emptyDates = [] }) => {
     let minDate = releaseDate ? new Date(releaseDate) : new Date();
     if (minDate < new Date().setHours(0, 0, 0, 0)) minDate = new Date();
 
@@ -536,7 +579,7 @@ const DateSelector = ({ selectedDate, onDateSelect, releaseDate, maxEndDate }) =
                     const maxDateObj = maxEndDate ? new Date(maxEndDate) : null;
                     if (maxDateObj) maxDateObj.setHours(0, 0, 0, 0);
 
-                    const isAvailable = !maxDateObj || dateObj <= maxDateObj;
+                    const isAvailable = (!maxDateObj || dateObj <= maxDateObj) && !emptyDates.includes(dateStr);
 
                     let dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
                     if (index === 0 && date.toDateString() === new Date().toDateString()) dayLabel = 'Today';

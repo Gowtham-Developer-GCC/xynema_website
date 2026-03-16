@@ -63,6 +63,12 @@ const EventBookingSummaryPage = () => {
         navigate('/events', { replace: true });
     };
 
+    useEffect(() => {
+        if (booked) {
+            window.scrollTo(0, 0);
+        }
+    }, [booked]);
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;

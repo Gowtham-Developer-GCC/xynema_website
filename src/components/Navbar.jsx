@@ -5,6 +5,16 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UniversalSearch from './UniversalSearch';
+
+const DevModeBadge = ({ className = "" }) => (
+    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md ${className}`}>
+        <div className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+        </div>
+        <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">Dev Mode</span>
+    </div>
+);
 const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -38,13 +48,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {/* Left: Logo & City */}
                         <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
                             {/* Dev Mode Bicker */}
-                            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
-                                <div className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                                </div>
-                                <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">Dev Mode</span>
-                            </div>
+                            <DevModeBadge className="hidden sm:flex" />
 
                             <Link to="/" className="flex items-center gap-1.5 md:gap-2 group">
                                 <img
@@ -250,6 +254,11 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     <ChevronRight className={`w-4 h-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                                 </button>
                             </div>
+                            
+                            {/* Mobile Dev Mode Indicator */}
+                            <div className="sm:hidden mt-4 flex justify-center">
+                                <DevModeBadge className="w-full justify-center py-2.5" />
+                            </div>
                         </div>
 
                         {/* Separator */}
@@ -327,7 +336,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
 {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */ }
 {
-    !/\/movie\/[^/]+($|\/theaters|\/seats|\/food|\/summary|\/payment)/.test(location.pathname) &&
+    !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
     !location.pathname.startsWith('/event/') && (
         <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
             <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">

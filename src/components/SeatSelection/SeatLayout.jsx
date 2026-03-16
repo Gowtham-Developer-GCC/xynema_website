@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getShowSeats } from '../../services/bookingService';
+import apiCacheManager from '../../services/apiCacheManager';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Accessibility, Armchair } from 'lucide-react';
 
@@ -50,7 +51,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
             setError(null);
             try {
                 // getShowSeats returns a ShowLayoutResponse with .show and .seats
-                const layoutData = await getShowSeats(showId);
+                const layoutData = await apiCacheManager.getOrFetchSeats(showId, () => getShowSeats(showId));
 
                 if (layoutData?.seats && layoutData.seats.length > 0) {
                     const seatList = layoutData.seats;

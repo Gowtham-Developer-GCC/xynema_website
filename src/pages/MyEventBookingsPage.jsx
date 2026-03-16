@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import apiCacheManager from '../services/apiCacheManager';
 import { useNavigate } from 'react-router-dom';
 import { Download, QrCode, Share2, MapPin, Calendar, Users, Loader, AlertCircle, ArrowLeft, Ticket, ExternalLink, ChevronRight, Sparkles, Search, Clock, User } from 'lucide-react';
 import { getEventBookings } from '../services/eventService';
@@ -9,17 +10,23 @@ import { animationStyles } from '../styles/components';
 
 const MyEventBookingsPage = () => {
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [bookings, setBookings] = useState(() => {
+        const cached = apiCacheManager.get('bookings_events_1');
+        return cached?.bookings ? cached.bookings : [];
+    });
+    const [loading, setLoading] = useState(!bookings?.length);
     const [filterStatus, setFilterStatus] = useState('upcoming');
     const [searchTerm, setSearchTerm] = useState('');
+    const hasFetched = useRef();
 
     useEffect(() => {
+        if (hasFetched.current) return;
+        hasFetched.current = true;
+
         const fetchBookings = async () => {
             try {
-                setLoading(true);
-                const response = await getEventBookings();
-                // getEventBookings returns { bookings, totalPages, ... } object
+                // SWR: fetching in background only if stale (force=false)
+                const response = await apiCacheManager.getOrFetchEventBookings(1, () => getEventBookings(), false);
                 setBookings(response?.bookings || []);
             } catch (err) {
                 console.error('Failed to fetch event bookings:', err);

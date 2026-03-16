@@ -3,8 +3,7 @@ import { useSearchParams, useNavigate, useLocation, useParams } from 'react-rout
 import { ArrowLeft, Clock, Ticket, Info, ChevronRight, Users, AlertCircle, X, ChevronLeft, Settings, Accessibility, Armchair } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import SEO from '../components/SEO';
-import { getSeats, releaseSeats } from '../services/bookingService';
-import { getNotNowMovies } from '../services/movieService';
+import { getSeats, releaseSeats, getShowSeats } from '../services/bookingService';
 import LoadingScreen from '../components/LoadingScreen';
 import SeatLayout from '../components/SeatSelection/SeatLayout';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
@@ -12,6 +11,8 @@ import SeatCountModal from '../components/SeatSelection/SeatCountModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
+import { useData } from '../context/DataContext';
+import apiCacheManager from '../services/apiCacheManager';
 
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
@@ -26,6 +27,7 @@ const SeatSelectionPage = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { state } = useLocation();
+    const { getMovieById } = useData();
 
     const showId = sessionStorage.getItem('booking_show_id');
     const theaterId = state?.theaterId || searchParams.get('theaterId');
@@ -65,44 +67,36 @@ const SeatSelectionPage = () => {
     const hasProceededRef = useRef(false);
     const selectedSeatsRef = useRef([]);
     const releaseTimeoutRef = useRef(null);
+    const hasFetchedSeats = useRef(false);
 
     useEffect(() => {
         selectedSeatsRef.current = selectedSeats;
     }, [selectedSeats]);
 
-    // Fetch movie details from latest-movies API and match by slug
+    // Use getMovieById from context instead of fetching all movies again
     useEffect(() => {
-        const fetchMovieDetails = async () => {
-            try {
-                const movies = await getNotNowMovies();
-                if (Array.isArray(movies)) {
-                    // Movie model maps: MovieName → title, portraitPosterUrl → posterUrl
-                    const matched = movies.find(m => m.slug === slug || m.id === movieId);
-                    if (matched) {
-                        const movieInfo = {
-                            title: matched.title || matched.MovieName || '',
-                            portraitPosterUrl: matched.posterUrl || matched.portraitPosterUrl || ''
-                        };
-                        setMovieData(movieInfo);
+        const movie = getMovieById(slug || movieId);
+        if (movie) {
+            const movieInfo = {
+                title: movie.title || movie.MovieName || '',
+                portraitPosterUrl: movie.posterUrl || movie.portraitPosterUrl || ''
+            };
+            setMovieData(movieInfo);
 
-                        // Also update session storage for consistency if missing
-                        if (!sessionStorage.getItem('booking_movie_title')) {
-                            sessionStorage.setItem('booking_movie_title', movieInfo.title);
-                        }
-                        if (!sessionStorage.getItem('booking_movie_poster')) {
-                            sessionStorage.setItem('booking_movie_poster', movieInfo.portraitPosterUrl);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch movie details from API:', e);
+            // Sync session storage
+            if (!sessionStorage.getItem('booking_movie_title')) {
+                sessionStorage.setItem('booking_movie_title', movieInfo.title);
             }
-        };
-        if (slug || movieId) fetchMovieDetails();
-    }, [slug, movieId]);
+            if (!sessionStorage.getItem('booking_movie_poster')) {
+                sessionStorage.setItem('booking_movie_poster', movieInfo.portraitPosterUrl);
+            }
+        }
+    }, [slug, movieId, getMovieById]);
 
     useEffect(() => {
         const fetchSeats = async () => {
+            if (hasFetchedSeats.current) return;
+            hasFetchedSeats.current = true;
             try {
                 setLoading(true);
 
@@ -125,9 +119,9 @@ const SeatSelectionPage = () => {
                     console.error('Session storage release error:', err);
                 }
 
-                const response = await getSeats(showId);
-                const showData = response.data?.show || response.data;
-                const seatsData = response.data?.seats || [];
+                const response = await apiCacheManager.getOrFetchSeats(showId, () => getShowSeats(showId));
+                const showData = response.show;
+                const seatsData = response.seats || [];
 
                 setShow(showData);
                 setSeats(seatsData);
@@ -212,8 +206,9 @@ const SeatSelectionPage = () => {
                     theaterId: theaterId,
                     sessionId: tempSessionId,
                     date: showDate,
-                    seats: seatIds,
-                    cart: {} // Empty cart initially
+                    seats: seatIds, // Keeping IDs for API payload consistency
+                    selectedSeats: selectedSeats, // Full objects for display in summary
+                    cart: {} 
                 };
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(bookingDraft));
 

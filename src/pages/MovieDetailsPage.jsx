@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp, Eye, EyeOff, Volume2, VolumeX, Maximize } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toggleInterest, addMovieReview, getNotNowMovies, getUpcomingMovies, getHighlightsMovies, getSimilarMovies } from '../services/movieService';
+import { toggleInterest, addMovieReview, getSimilarMovies } from '../services/movieService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import NotFoundState from '../components/NotFoundState';
@@ -290,10 +290,11 @@ const MovieDetailsPage = () => {
                             </button>
                             <button
                                 onClick={() => setIsGlassHidden(false)}
-                                className="p-4 rounded-full bg-primary text-white hover:scale-110 transition-all shadow-2xl group"
+                                className="px-6 py-4 rounded-2xl bg-primary text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3 ring-1 ring-white/20 group"
                                 title="Show Details"
                             >
-                                <Eye className="w-6 h-6" />
+                                {/*<Eye className="w-5 h-5 group-hover:animate-pulse" />*/}
+                                <span className="text-[12px] font-black uppercase tracking-[0.2em]">Exit</span>
                             </button>
                         </div>
                     )}

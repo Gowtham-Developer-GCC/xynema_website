@@ -9,6 +9,7 @@ import ErrorState from '../components/ErrorState';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
+import apiCacheManager from '../services/apiCacheManager';
 
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
@@ -88,28 +89,24 @@ const FoodSelectionPage = () => {
 
             try {
                 setLoading(true);
-                const [foodResponse, showResponse] = await Promise.all([
-                    getFoodAndBeverages(theaterId),
-                    getShowSeats(showId)
-                ]);
+                const foodResponse = await apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId));
 
                 // Transform API response to match component expectations
                 let foodItemsData = [];
                 if (foodResponse?.data?.items) {
                     try {
-                        // Flatten the items object (categories as keys) into a single array
                         const itemsObject = foodResponse.data.items;
                         foodItemsData = Object.values(itemsObject).flat().map(item => ({
                             id: item._id || item.id,
                             name: item.item_name || item.name,
                             category: item.category,
                             price: item.selling_price || item.price,
-                            image: item.foodImageUrl || item.image || '🍿', // fallback emoji if no image
+                            image: item.foodImageUrl || item.image || '🍿',
                             description: item.description || '',
-                            available: item.is_available !== false, // default to true if not specified
+                            available: item.is_available !== false,
                             inventory: item.inventory_stock || 0,
                             isPopular: item.isMarkAsPopular || false
-                        })).filter(item => item.available); // Only show available items
+                        })).filter(item => item.available);
                     } catch (error) {
                         console.error('Error processing food items:', error);
                         foodItemsData = [];
@@ -117,9 +114,10 @@ const FoodSelectionPage = () => {
                 }
 
                 setFoodItems(foodItemsData);
-                setShow(showResponse.show);
-                setShowSeats(showResponse.seats || []);
+                setShow(null);
+                setShowSeats([]);
             } catch (err) {
+                console.error('Data fetch error in food selection:', err);
                 setError({ message: 'Failed to load menu items', type: 'DATA_FETCH_FAILED' });
             } finally {
                 setLoading(false);
@@ -173,19 +171,10 @@ const FoodSelectionPage = () => {
     };
 
     const ticketsTotal = useMemo(() => {
-        if (!seats.length) return 0;
-        // Try to sum prices of actual selected seats
-        const sum = seats.reduce((total, seatId) => {
-            const seat = showSeats.find(s => (s.id || s._id) === seatId);
-            return total + (seat?.price || 0);
-        }, 0);
-
-        // If sum is 0, fall back to seat count * basePrice
-        if (sum === 0) {
-            return seats.length * (show?.basePrice || 0);
-        }
-        return sum;
-    }, [showSeats, seats, show]);
+        const draftSeats = bookingState?.selectedSeats || [];
+        if (!draftSeats.length) return 0;
+        return draftSeats.reduce((total, seat) => total + (seat.price || seat.basePrice || 0), 0);
+    }, [bookingState]);
 
     const summaryRef = useRef(null);
     const scrollToSummary = () => {
@@ -285,7 +274,7 @@ const FoodSelectionPage = () => {
                             date: selectedDate,
                             basePrice: show?.basePrice || 150
                         }}
-                        selectedSeats={showSeats.filter(s => seats.includes(s.id || s._id))}
+                        selectedSeats={bookingState?.selectedSeats || []}
                         buttonText="Continue to Checkout"
                         onConfirm={handleProceedToPayment}
                         snacksTotal={snackTotal}

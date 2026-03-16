@@ -7,6 +7,7 @@ import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import { calculateBookingTotal } from '../utils/pricing';
+import apiCacheManager from '../services/apiCacheManager';
 
 const BookingSummaryPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -52,13 +53,14 @@ const BookingSummaryPage = () => {
     const cart = useMemo(() => bookingState?.cart || {}, [bookingState]);
 
     const [loading, setLoading] = useState(true);
-    const [show, setShow] = useState(null);
+    const [show, setShow] = useState(location.state?.show || null);
     const [showSeats, setShowSeats] = useState([]);
     const [foodItems, setFoodItems] = useState([]);
     const [error, setError] = useState(null);
     const [isLocking, setIsLocking] = useState(false);
     const hasProceededRef = useRef(false);
     const seatsRef = useRef(seats);
+    const hasFetchedData = useRef(false);
 
     // Keep seatsRef in sync
     useEffect(() => {
@@ -68,15 +70,16 @@ const BookingSummaryPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!showId || !theaterId) return;
-
+            if (hasFetchedData.current) return;
+            hasFetchedData.current = true;
+    
             try {
                 setLoading(true);
-                const [showResponse, foodResponse] = await Promise.all([
-                    getShowSeats(showId),
-                    getFoodAndBeverages(theaterId)
-                ]);
-
-                // Transform API response to match component expectations (same logic as FoodSelectionPage)
+                // Use cache manager to avoid redundant hits if coming from SeatSelection/FoodSelection
+                // Only fetch food items since seats and show details are in draft/cache
+                const foodResponse = await apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId));
+    
+                // Transform API response to match component expectations
                 let foodItemsData = [];
                 if (foodResponse?.data?.items) {
                     try {
@@ -95,34 +98,37 @@ const BookingSummaryPage = () => {
                         foodItemsData = [];
                     }
                 }
-
-                setShow(showResponse.show);
-                setShowSeats(showResponse.seats || []);
+    
+                // No longer needed to clear show if we have it from state or previous steps
+                setShowSeats([]); // No longer needed as we use selectedSeats from draft
                 setFoodItems(foodItemsData);
             } catch (err) {
+                console.error('Data fetch error in summary:', err);
                 setError('Failed to load booking summary');
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchData();
     }, [showId, theaterId]);
 
     const priceGroups = useMemo(() => {
-        if (!seats.length || !showSeats.length) return {};
+        const draftSeats = bookingState?.selectedSeats || [];
+        if (!draftSeats.length) return {};
+        
         const groups = {};
-        seats.forEach(seatId => {
-            const seat = showSeats.find(s => (s.id || s._id) === seatId);
-            const price = seat?.price || show?.basePrice;
+        draftSeats.forEach(seat => {
+            const price = seat.price || seat.basePrice || 0;
             if (!groups[price]) groups[price] = [];
-            const seatRow = seat?.row ? `${seat.row}` : '';
-            const seatNum = seat?.number || seat?.seatNumber || seat?.seatLabel || seat?.label || seat?.seat_number || seatId;
+            
+            const seatRow = seat.row ? `${seat.row}` : '';
+            const seatNum = seat.number || seat.seatNumber || seat.seatLabel || seat.label || seat.seat_number || seat.id;
             const label = seatRow ? `${seatRow}${seatNum}` : seatNum;
             groups[price].push(label);
         });
         return groups;
-    }, [seats, showSeats, show]);
+    }, [bookingState]);
 
     const ticketsTotal = useMemo(() => {
         return Object.entries(priceGroups).reduce((total, [price, items]) => {
@@ -159,7 +165,12 @@ const BookingSummaryPage = () => {
             if (newSessionId) {
                 // Save true sessionId returned from server
                 bookingSessionManager.startSession(showId, displayTheater, null); // Replaces temp session start logic
-                const updatedDraft = { ...bookingState, sessionId: newSessionId };
+                const updatedDraft = { 
+                    ...bookingState, 
+                    sessionId: newSessionId,
+                    pricing: pricingStatus, // Store the calculated totals
+                    show: show // Store show metadata for downstream use
+                };
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(updatedDraft));
 
                 hasProceededRef.current = true;

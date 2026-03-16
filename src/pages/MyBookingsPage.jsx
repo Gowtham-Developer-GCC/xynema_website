@@ -5,23 +5,31 @@ import { getUserBookings } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
+import apiCacheManager from '../services/apiCacheManager';
 
 const MyBookingsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [bookings, setBookings] = useState([]);
-    const [eventBookings, setEventBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [eventLoading, setEventLoading] = useState(true);
+    const [moviePage, setMoviePage] = useState(1);
+    const [eventPage, setEventPage] = useState(1);
+    const [bookings, setBookings] = useState(() => {
+        const cached = apiCacheManager.get(`bookings_movies_1`);
+        return cached?.bookings ? cached.bookings : [];
+    });
+    const [eventBookings, setEventBookings] = useState(() => {
+        const cached = apiCacheManager.get(`bookings_events_1`);
+        return cached?.bookings ? cached.bookings : [];
+    });
+    const [loading, setLoading] = useState(!bookings?.length);
+    const [eventLoading, setEventLoading] = useState(!eventBookings?.length);
     const [pageLoading, setPageLoading] = useState(false);
     const [bookingType, setBookingType] = useState(location.state?.activeTab || 'movies');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterOpen, setFilterOpen] = useState(false);
-    const [moviePage, setMoviePage] = useState(1);
     const [movieTotalPages, setMovieTotalPages] = useState(1);
-    const [eventPage, setEventPage] = useState(1);
     const [eventTotalPages, setEventTotalPages] = useState(1);
     const filterRef = useRef(null);
+    const hasFetched = useRef(false);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -34,12 +42,22 @@ const MyBookingsPage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const fetchMovieBookings = async (targetPage = 1) => {
+    const fetchMovieBookings = async (targetPage = 1, force = false) => {
         try {
-            if (bookings.length > 0) setPageLoading(true);
-            else setLoading(true);
+            // Only show loader if we don't have data for this page yet
+            const isFreshPage = targetPage !== moviePage || bookings.length === 0;
+            
+            if (isFreshPage || force) {
+                if (bookings.length > 0) setPageLoading(true);
+                else setLoading(true);
+            }
 
-            const response = await getUserBookings(targetPage);
+            const response = await apiCacheManager.getOrFetchMovieBookings(
+                targetPage,
+                () => getUserBookings(targetPage),
+                force
+            );
+
             const { bookings: newBookings, totalPages: total, currentPage } = response;
             setBookings(newBookings || []);
             setMovieTotalPages(total);
@@ -52,12 +70,21 @@ const MyBookingsPage = () => {
         }
     };
 
-    const fetchEventBookings = async (targetPage = 1) => {
+    const fetchEventBookings = async (targetPage = 1, force = false) => {
         try {
-            if (eventBookings.length > 0) setPageLoading(true);
-            else setEventLoading(true);
+            const isFreshPage = targetPage !== eventPage || eventBookings.length === 0;
 
-            const response = await getEventBookings(targetPage);
+            if (isFreshPage || force) {
+                if (eventBookings.length > 0) setPageLoading(true);
+                else setEventLoading(true);
+            }
+
+            const response = await apiCacheManager.getOrFetchEventBookings(
+                targetPage,
+                () => getEventBookings(targetPage),
+                force
+            );
+
             const { bookings: newBookings, totalPages: total, currentPage } = response;
             setEventBookings(newBookings || []);
             setEventTotalPages(total);
@@ -77,8 +104,14 @@ const MyBookingsPage = () => {
     }, [location.state]);
 
     useEffect(() => {
-        fetchMovieBookings(1);
-        fetchEventBookings();
+        // Initial check: if cache is expired, refresh in background
+        if (hasFetched.current) return;
+        hasFetched.current = true;
+
+        // Respect TTL (force=false) by default on navigation
+        // This avoids hitting API every time if accessed within 3 minutes
+        fetchMovieBookings(1, false);
+        fetchEventBookings(1, false);
     }, []);
 
     const handlePageChange = (newPage) => {

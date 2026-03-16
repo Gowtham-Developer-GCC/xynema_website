@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import apiCacheManager from '../services/apiCacheManager';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Shield, Info, MapPin, Ticket, Calendar, Clock, ShoppingBag, Armchair } from 'lucide-react';
 import { getEventBookingDetails } from '../services/eventService';
@@ -13,12 +14,16 @@ const EventBookingDetailsPage = () => {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const hasFetched = useRef();
 
     useEffect(() => {
+        if (hasFetched.current) return;
+        hasFetched.current = true;
+
         const fetchBookingDetails = async () => {
             try {
                 setLoading(true);
-                const response = await getEventBookingDetails(id);
+                const response = await apiCacheManager.getOrFetchEventBookingDetails(id, () => getEventBookingDetails(id));
                 if (response) {
                     setBooking(response);
                 } else {

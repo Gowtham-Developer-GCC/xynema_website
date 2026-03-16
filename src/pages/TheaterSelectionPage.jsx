@@ -11,6 +11,7 @@ import { designSystem } from '../config/design-system';
 import { cardStyles, animationStyles } from '../styles/components';
 import { getTheatersForMovie } from '../services/movieService';
 import bookingSessionManager from '../utils/bookingSessionManager';
+import apiCacheManager from '../services/apiCacheManager';
 
 const timeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
@@ -177,7 +178,7 @@ const TheaterSelectionPage = () => {
         try {
             setLoading(true);
             setError(null);
-            const theatersRes = await getTheatersForMovie(targetMovieId, selectedCity, selectedDate);
+            const theatersRes = await apiCacheManager.getOrFetchTheatersForMovie(targetMovieId, selectedCity, selectedDate, () => getTheatersForMovie(targetMovieId, selectedCity, selectedDate));
             if (!isStopped.current) {
                 setTheaters(theatersRes || []);
             }

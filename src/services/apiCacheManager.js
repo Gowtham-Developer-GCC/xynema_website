@@ -25,6 +25,62 @@ class ApiCacheManager {
     // LRU tracking for memory management
     accessOrder = [];
 
+    // Persistence key
+    static PERSISTENCE_KEY = 'xynema_api_cache_v1';
+
+    constructor() {
+        this.loadFromStorage();
+    }
+
+    /**
+     * Load persistent cache from localStorage
+     */
+    loadFromStorage() {
+        try {
+            const stored = localStorage.getItem(ApiCacheManager.PERSISTENCE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Load ALL persisted entries (SWR will handle revalidation)
+                Object.entries(parsed).forEach(([key, entry]) => {
+                    this.cache[key] = entry;
+                    this.accessOrder.push(key);
+                });
+
+                if (this.isDevelopment) console.log(`[Cache] Loaded ${Object.keys(this.cache).length} entries from storage (including stale)`);
+            }
+        } catch (error) {
+            console.error('[Cache] Failed to load from storage:', error);
+            localStorage.removeItem(ApiCacheManager.PERSISTENCE_KEY);
+        }
+    }
+
+    /**
+     * Save current cache to localStorage
+     */
+    saveToStorage() {
+        try {
+            // Only persist static-ish data to avoid storage bloat
+            // Filter out things like user profile or bookings which should be fresh
+            const persistentData = {};
+            const keysToPersist = Object.keys(this.cache).filter(key =>
+                key.startsWith('movies_') ||
+                key.startsWith('similar_') ||
+                key.startsWith('cities') ||
+                key.startsWith('merchandise_') ||
+                key.startsWith('theater_details_') ||
+                key.startsWith('booking_details_')
+            );
+
+            keysToPersist.forEach(key => {
+                persistentData[key] = this.cache[key];
+            });
+
+            localStorage.setItem(ApiCacheManager.PERSISTENCE_KEY, JSON.stringify(persistentData));
+        } catch (error) {
+            console.error('[Cache] Failed to save to storage:', error);
+        }
+    }
+
     // Max cache entries before LRU eviction
     static MAX_ENTRIES = 500;
 
@@ -47,10 +103,10 @@ class ApiCacheManager {
      * 
      * Exceptions in executeFn are propagated (not swallowed)
      */
-    async getOrExecute(key, executeFn, ttlSeconds) {
+    async getOrExecute(key, executeFn, ttlSeconds, force = false) {
         try {
             // 1. Scenario: Valid cached value exists (Cache Hit)
-            if (this.isValid(key)) {
+            if (this.isValid(key) && !force) {
                 this.updateAccessOrder(key);
                 console.log(`[Cache] Hit (TTL valid): ${key}`);
                 return this.cache[key].value;
@@ -73,18 +129,24 @@ class ApiCacheManager {
             if (this.isDevelopment) console.log(`[Cache] Miss: ${key} - Executing API call`);
 
             try {
+                // Important: We must create the promise tracker BEFORE awaiting any part of executeFn
+                // to catch immediate simultaneous calls
                 const promise = executeFn();
-                this.inFlightRequests[key] = promise;
+                if (promise instanceof Promise) {
+                    this.inFlightRequests[key] = promise;
+                    const result = await promise;
 
-                const result = await promise;
-
-                // Cache successful result
-                this.set(key, result, ttlSeconds);
-
-                // Cleanup in-flight after success
-                delete this.inFlightRequests[key];
-
-                return result;
+                    // Cache successful result
+                    this.set(key, result, ttlSeconds);
+                    
+                    // Cleanup in-flight after success
+                    delete this.inFlightRequests[key];
+                    return result;
+                } else {
+                    // Non-promise result (unlikely with this usage)
+                    this.set(key, promise, ttlSeconds);
+                    return promise;
+                }
             } catch (error) {
                 // Clear in-flight on error to allow retry next time
                 delete this.inFlightRequests[key];
@@ -112,6 +174,9 @@ class ApiCacheManager {
             this.updateAccessOrder(key);
             this.evictIfNeeded();
 
+            // Persist if needed
+            this.saveToStorage();
+
             if (this.isDevelopment) console.log(`[Cache] Set: ${key} (TTL: ${ttlSeconds}s)`);
         } catch (error) {
             console.error(`[Cache] Error setting cache for ${key}:`, error);
@@ -129,12 +194,6 @@ class ApiCacheManager {
 
             const { expiry } = this.cache[key];
             const isValid = Date.now() < expiry;
-
-            if (!isValid) {
-                delete this.cache[key];
-                const idx = this.accessOrder.indexOf(key);
-                if (idx > -1) this.accessOrder.splice(idx, 1);
-            }
 
             return isValid;
         } catch (error) {
@@ -187,6 +246,7 @@ class ApiCacheManager {
             const idx = this.accessOrder.indexOf(key);
             if (idx > -1) this.accessOrder.splice(idx, 1);
 
+            this.saveToStorage();
             console.log(`[Cache] Invalidated: ${key}`);
         } catch (error) {
             console.error(`[Cache] Error invalidating ${key}:`, error);
@@ -208,6 +268,7 @@ class ApiCacheManager {
                 if (idx > -1) this.accessOrder.splice(idx, 1);
             });
 
+            this.saveToStorage();
             console.log(`[Cache] Invalidated pattern: ${pattern} (${keysToRemove.length} entries)`);
         } catch (error) {
             console.error(`[Cache] Error invalidating pattern ${pattern}:`, error);
@@ -222,10 +283,27 @@ class ApiCacheManager {
             this.cache = {};
             this.inFlightRequests = {};
             this.accessOrder = [];
+            this.saveToStorage();
             console.log('[Cache] Cleared all cache');
         } catch (error) {
             console.error('[Cache] Error clearing cache:', error);
         }
+    }
+
+    /**
+     * Get value from cache regardless of expiry (SWR pattern)
+     * Returns null if key doesn't exist
+     */
+    get(key) {
+        return this.cache[key]?.value || null;
+    }
+
+    /**
+     * Get value from cache regardless of expiry (SWR pattern)
+     * Returns null if key doesn't exist
+     */
+    get(key) {
+        return this.cache[key]?.value || null;
     }
 
     /**
@@ -263,60 +341,83 @@ class ApiCacheManager {
         return this.getOrExecute('user_profile', fetchFn, ApiCacheManager.PROFILE_TTL);
     }
 
-    /**
-     * Helper: Get or fetch movie bookings
-     */
-    async getOrFetchMovieBookings(fetchFn) {
-        return this.getOrExecute('bookings_movies', fetchFn, ApiCacheManager.BOOKINGS_TTL);
+    async getOrFetchMovieBookings(pageOrFn, maybeFn, force = false) {
+        let page = 1;
+        let fetchFn = maybeFn;
+        let finalForce = force;
+
+        // Handle backward compatibility for (fetchFn) vs (page, fetchFn)
+        if (typeof pageOrFn === 'function') {
+            fetchFn = pageOrFn;
+            finalForce = maybeFn || false;
+            page = 1;
+        } else {
+            page = pageOrFn;
+        }
+
+        return this.getOrExecute(`bookings_movies_${page}`, fetchFn, ApiCacheManager.BOOKINGS_TTL, finalForce);
     }
 
     /**
      * Helper: Get or fetch event bookings
      */
-    async getOrFetchEventBookings(fetchFn) {
-        return this.getOrExecute('bookings_events', fetchFn, ApiCacheManager.BOOKINGS_TTL);
+    async getOrFetchEventBookings(pageOrFn, maybeFn, force = false) {
+        let page = 1;
+        let fetchFn = maybeFn;
+        let finalForce = force;
+
+        // Handle backward compatibility
+        if (typeof pageOrFn === 'function') {
+            fetchFn = pageOrFn;
+            finalForce = maybeFn || false;
+            page = 1;
+        } else {
+            page = pageOrFn;
+        }
+
+        return this.getOrExecute(`bookings_events_${page}`, fetchFn, ApiCacheManager.BOOKINGS_TTL, finalForce);
     }
 
     /**
      * Helper: Get or fetch movies
      */
-    async getOrFetchMovies(city, fetchFn) {
-        return this.getOrExecute(`movies_${city}`, fetchFn, ApiCacheManager.MOVIES_TTL);
+    async getOrFetchMovies(city, fetchFn, force = false) {
+        return this.getOrExecute(`movies_${city}`, fetchFn, ApiCacheManager.MOVIES_TTL, force);
     }
 
     /**
      * Helper: Get or fetch theaters
      */
-    async getOrFetchTheaters(city, fetchFn) {
-        return this.getOrExecute(`theaters_${city}`, fetchFn, ApiCacheManager.THEATERS_TTL);
+    async getOrFetchTheaters(city, fetchFn, force = false) {
+        return this.getOrExecute(`theaters_${city}`, fetchFn, ApiCacheManager.THEATERS_TTL, force);
     }
 
     /**
      * Helper: Get or fetch cities
      */
-    async getOrFetchCities(fetchFn) {
-        return this.getOrExecute('cities', fetchFn, ApiCacheManager.CITIES_TTL);
+    async getOrFetchCities(fetchFn, force = false) {
+        return this.getOrExecute('cities', fetchFn, ApiCacheManager.CITIES_TTL, force);
     }
 
     /**
      * Helper: Get or fetch events
      */
-    async getOrFetchEvents(city, fetchFn) {
-        return this.getOrExecute(`events_${city || 'all'}`, fetchFn, ApiCacheManager.EVENTS_TTL);
+    async getOrFetchEvents(city, fetchFn, force = false) {
+        return this.getOrExecute(`events_${city || 'all'}`, fetchFn, ApiCacheManager.EVENTS_TTL, force);
     }
 
     /**
      * Helper: Get or fetch food items
      */
-    async getOrFetchFood(fetchFn) {
-        return this.getOrExecute('food_items', fetchFn, ApiCacheManager.FOOD_TTL);
+    async getOrFetchFood(fetchFn, force = false) {
+        return this.getOrExecute('food_items', fetchFn, ApiCacheManager.FOOD_TTL, force);
     }
 
     /**
      * Helper: Get or fetch upcoming movies
      */
-    async getOrFetchUpcomingMovies(city, fetchFn) {
-        return this.getOrExecute(`upcoming_movies_${city || 'global'}`, fetchFn, ApiCacheManager.MOVIES_TTL);
+    async getOrFetchUpcomingMovies(city, fetchFn, force = false) {
+        return this.getOrExecute(`upcoming_movies_${city || 'global'}`, fetchFn, ApiCacheManager.MOVIES_TTL, force);
     }
 
     /**
@@ -352,6 +453,32 @@ class ApiCacheManager {
      */
     async getOrFetchSimilarEvents(eventId, fetchFn) {
         return this.getOrExecute(`similar_events_${eventId}`, fetchFn, ApiCacheManager.EVENTS_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch seat layout/availability
+     */
+    async getOrFetchSeats(showId, fetchFn) {
+        // Shorter TTL for seats since availability changes frequently
+        return this.getOrExecute(`seats_${showId}`, fetchFn, 60);
+    }
+
+    /**
+     * Helper: Get or fetch theaters for a movie
+     */
+    async getOrFetchTheatersForMovie(movieId, city, date, fetchFn) {
+        return this.getOrExecute(`movie_theaters_${movieId}_${city}_${date}`, fetchFn, 3600);
+    }
+
+    async getOrFetchBookingDetails(bookingId, fetchFn) {
+        return this.getOrExecute(`booking_details_${bookingId}`, fetchFn, 300); // 5 minute cache
+    }
+
+    /**
+     * Helper: Get or fetch event booking details
+     */
+    async getOrFetchEventBookingDetails(bookingId, fetchFn) {
+        return this.getOrExecute(`event_booking_details_${bookingId}`, fetchFn, 300);
     }
 }
 

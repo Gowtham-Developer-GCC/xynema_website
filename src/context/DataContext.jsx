@@ -29,65 +29,101 @@ export const useData = () => {
  */
 export const DataProvider = ({ children, selectedCity }) => {
     const { isAuthenticated } = useAuth();
-    const [movies, setMovies] = useState([]);
-    const [latestMovies, setLatestMovies] = useState([]);
-    const [upcomingMovies, setUpcomingMovies] = useState([]);
-    const [highlightsMovies, setHighlightsMovies] = useState([]);
-    const [theaters, setTheaters] = useState([]);
-    const [foodItems, setFoodItems] = useState([]);
+    const [movies, setMovies] = useState(() => {
+        const cached = apiCacheManager.get(`movies_${selectedCity}`);
+        return cached?.movies ? cached.movies.map(m => new Movie(m)) : [];
+    });
+    const [latestMovies, setLatestMovies] = useState(() => {
+        const cached = apiCacheManager.get('latest_movies');
+        return Array.isArray(cached) ? cached.map(m => new Movie(m)) : [];
+    });
+    const [upcomingMovies, setUpcomingMovies] = useState(() => {
+        const cached = apiCacheManager.get('upcoming_movies_global');
+        return Array.isArray(cached) ? cached.map(m => new Movie(m)) : [];
+    });
+    const [highlightsMovies, setHighlightsMovies] = useState(() => {
+        const cached = apiCacheManager.get('highlights_movies');
+        return Array.isArray(cached) ? cached.map(m => new Movie(m)) : [];
+    });
+    const [theaters, setTheaters] = useState(() => {
+        const cached = apiCacheManager.get(`movies_${selectedCity}`);
+        return cached?.theaters ? cached.theaters.map(t => new Theater(t)) : [];
+    });
+    const [foodItems, setFoodItems] = useState(() => {
+        const cached = apiCacheManager.get('food_items');
+        return Array.isArray(cached) ? cached : [];
+    });
+    const [events, setEvents] = useState(() => {
+        const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
+
     const [userMovieBookings, setUserMovieBookings] = useState([]);
     const [userEventBookings, setUserEventBookings] = useState([]);
     const [userBookings, setUserBookings] = useState([]);
-    const [events, setEvents] = useState([]);
     const [userProfile, setUserProfile] = useState(null);
     const [interestedMovieIds, setInterestedMovieIds] = useState(new Set());
     const [initialInterestedMovieIds, setInitialInterestedMovieIds] = useState(new Set());
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!movies.length); // Only show initial loading if no cache
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
-    const [pagination, setPagination] = useState({
-        total: 0,
-        page: 1,
-        pages: 1
+    const [pagination, setPagination] = useState(() => {
+        const cached = apiCacheManager.get(`movies_${selectedCity}`);
+        return cached?.pagination || { total: 0, page: 1, pages: 1 };
     });
+    
+    // Track previous city to avoid redundant clears
+    const prevCityRef = React.useRef(selectedCity);
 
     /**
      * Refresh all data from API with caching
      */
     const refreshData = useCallback(async (page = 1) => {
-        setLoading(true);
+        // SWR: Only show loader if we have NO data at all
+        const hasData = movies.length > 0;
+        if (!hasData) setLoading(true);
+        
         setError(null);
         try {
+            // SWR: Force a background revalidation for page 1
+            const shouldRevalidate = page === 1;
+
             const [movieData, foodData, upcomingData, latestData, eventData, highlightsData] = await Promise.all([
                 // Now Showing (based on city)
                 page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
-                    () => getNowShowingMovies(selectedCity, page)
+                    () => getNowShowingMovies(selectedCity, page),
+                    shouldRevalidate
                 ) : getNowShowingMovies(selectedCity, page),
 
-                // Food items cache
+                // Food items
                 apiCacheManager.getOrExecute('food_items',
                     () => getFoodItems(),
-                    1800 // 30 minutes
+                    1800,
+                    shouldRevalidate
                 ),
 
-                // Upcoming movies cache (Hits /latest-movies -> Global Upcoming)
+                // Upcoming movies
                 apiCacheManager.getOrFetchUpcomingMovies(null,
-                    () => getUpcomingMovies()
+                    () => getUpcomingMovies(),
+                    shouldRevalidate
                 ),
 
-                // Latest movies cache (Hits /upcomingmovies -> Streaming for City)
+                // Latest movies
                 apiCacheManager.getOrExecute('latest_movies',
                     () => getNotNowMovies(selectedCity),
-                    1800 // 30 minutes
+                    1800,
+                    shouldRevalidate
                 ),
-                // Events cache
+                // Events
                 apiCacheManager.getOrFetchEvents(selectedCity,
-                    () => getEvents(selectedCity)
+                    () => getEvents(selectedCity),
+                    shouldRevalidate
                 ),
-                // Highlights cache
+                // Highlights
                 apiCacheManager.getOrExecute('highlights_movies',
                     () => getHighlightsMovies(),
-                    1800 // 30 minutes
+                    1800,
+                    shouldRevalidate
                 ),
             ]);
 
@@ -124,8 +160,8 @@ export const DataProvider = ({ children, selectedCity }) => {
         if (!isAuthenticated) return;
         try {
             const [movieBookings, eventBookings] = await Promise.all([
-                apiCacheManager.getOrFetchMovieBookings(() => getUserBookings()),
-                apiCacheManager.getOrFetchEventBookings(() => getEventBookings())
+                apiCacheManager.getOrFetchMovieBookings(1, () => getUserBookings()),
+                apiCacheManager.getOrFetchEventBookings(1, () => getEventBookings())
             ]);
 
             const movieBookingsArray = movieBookings?.bookings || (Array.isArray(movieBookings) ? movieBookings : []);
@@ -265,9 +301,16 @@ export const DataProvider = ({ children, selectedCity }) => {
      */
     useEffect(() => {
         if (selectedCity) {
-            setMovies([]);
-            setTheaters([]);
+            // Only clear state and show loading if the city actually CHANGED
+            if (prevCityRef.current !== selectedCity) {
+                setMovies([]);
+                setTheaters([]);
+                setEvents([]);
+                setLoading(true);
+            }
+            
             refreshData(1);
+            prevCityRef.current = selectedCity;
         }
     }, [selectedCity, refreshData]);
 

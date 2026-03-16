@@ -8,6 +8,7 @@ import BookingQr from '../components/BookingQr';
 import ErrorState from '../components/ErrorState';
 import LoadingScreen from '../components/LoadingScreen';
 import ReviewModal from '../components/ReviewModal';
+import apiCacheManager from '../services/apiCacheManager';
 
 const BookingDetailsPage = () => {
     const { id } = useParams();
@@ -18,18 +19,22 @@ const BookingDetailsPage = () => {
     const [error, setError] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [justReviewed, setJustReviewed] = useState(false);
+    const hasFetched = React.useRef(false);
 
     useEffect(() => {
+        // Avoid re-fetching if we already have this booking in state
+        if (booking && (booking.bookingId === id || booking.id === id)) {
+            return;
+        }
+
+        if (hasFetched.current && booking) return;
+        hasFetched.current = true;
+
         const fetchBookingDetails = async () => {
             try {
                 setLoading(true);
-                const response = await getBookingDetails(id);
+                const response = await apiCacheManager.getOrFetchBookingDetails(id, () => getBookingDetails(id));
                 if (response) {
-                    const globalBooking = userBookings?.find(b => (b.id || b.bookingId) === id);
-                    if (globalBooking?.isReviewed && !response.isReviewed) {
-                        console.log("Setting isReviewed from global state for booking:", id);
-                        response.isReviewed = true;
-                    }
                     setBooking(response);
                 } else {
                     throw new Error('Booking details not found');
@@ -42,7 +47,7 @@ const BookingDetailsPage = () => {
         };
 
         fetchBookingDetails();
-    }, [id, userBookings]);
+    }, [id]);
 
     if (loading) return <LoadingScreen message="Ticket Readying" />;
     if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings')} title="Ticket Missing" buttonText="My Bookings" />;

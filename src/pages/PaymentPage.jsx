@@ -2,12 +2,13 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, MapPin, ShieldCheck, CheckCircle, ChevronRight, Info, Ticket, Coffee, User, CreditCard, Building, Wallet, Smartphone } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getShowSeats, getFoodAndBeverages, confirmBooking } from '../services/bookingService';
+import { getFoodAndBeverages, confirmBooking } from '../services/bookingService';
 import { initiatePayment } from '../services/paymentService';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import TicketCard from '../components/TicketCard';
 import { calculateBookingTotal } from '../utils/pricing';
+import apiCacheManager from '../services/apiCacheManager';
 
 const PaymentPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -35,6 +36,7 @@ const PaymentPage = () => {
 
     const isBookingConfirmedRef = useRef(false);
     const seatsRef = useRef([]);
+    const hasFetchedData = useRef(false);
 
     // Validation
     const isFormValid = mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber);
@@ -67,6 +69,9 @@ const PaymentPage = () => {
         }
 
         setBookingState(draftValidation.draft);
+        if (draftValidation.draft.show) {
+            setShow(draftValidation.draft.show);
+        }
         bookingSessionManager.refreshSession();
 
         // Calculate initial time left based on session start
@@ -129,31 +134,18 @@ const PaymentPage = () => {
     };
 
 
-    useEffect(() => {
-        const loadRazorpay = () => {
-            return new Promise((resolve) => {
-                if (window.Razorpay) {
-                    resolve(true);
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-                script.onload = () => resolve(true);
-                script.onerror = () => resolve(false);
-                document.body.appendChild(script);
-            });
-        };
 
+    useEffect(() => {
         const fetchData = async () => {
             const theaterId = bookingState?.theaterId;
             if (!showId || !theaterId) return;
+            if (hasFetchedData.current) return;
+            hasFetchedData.current = true;
 
             try {
                 setLoading(true);
-                const [showResponse, foodResponse] = await Promise.all([
-                    getShowSeats(showId),
-                    getFoodAndBeverages(theaterId),
-                    loadRazorpay()
+                const [foodResponse] = await Promise.all([
+                    apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId))
                 ]);
 
                 // Transform API response to match component expectations
@@ -176,9 +168,12 @@ const PaymentPage = () => {
                     }
                 }
 
-                setShow(showResponse.show);
-                setShowSeats(showResponse.seats || []);
                 setFoodItems(foodItemsData);
+                // We no longer need to setShowSeats(showResponse.seats) as we use bookingState.selectedSeats
+                // The 'show' object is mostly for fallback metadata which we already have in draft
+                if (bookingState.show) {
+                    setShow(bookingState.show);
+                }
             } catch (err) {
                 console.error('Failed to fetch payment data:', err);
                 setError('Failed to load booking details. Please try again.');
@@ -191,21 +186,27 @@ const PaymentPage = () => {
     }, [showId, bookingState]);
 
     const ticketsTotal = useMemo(() => {
-        if (!seats.length || !showSeats.length) return seats.length * (show?.basePrice || 250);
-        return seats.reduce((total, seatId) => {
-            const seat = showSeats.find(s => (s.id || s._id) === seatId);
+        if (bookingState?.pricing?.ticketsTotal !== undefined) return bookingState.pricing.ticketsTotal;
+        const selectedSeats = bookingState?.selectedSeats || [];
+        if (!selectedSeats.length) return seats.length * (show?.basePrice || 250);
+        return selectedSeats.reduce((total, seat) => {
             return total + (seat?.price || show?.basePrice || 0);
         }, 0);
-    }, [showSeats, seats, show]);
+    }, [bookingState?.pricing, bookingState?.selectedSeats, seats, show]);
 
     const snackTotal = useMemo(() => {
+        if (bookingState?.pricing?.snackTotal !== undefined) return bookingState.pricing.snackTotal;
         return Object.entries(cartData).reduce((total, [id, qty]) => {
             const item = foodItems.find(f => String(f.id) === String(id));
             return total + (item?.price || 0) * qty;
         }, 0);
-    }, [cartData, foodItems]);
+    }, [bookingState?.pricing, cartData, foodItems]);
 
-    const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal);
+    const pricingStatus = useMemo(() => {
+        if (bookingState?.pricing) return bookingState.pricing;
+        return calculateBookingTotal(ticketsTotal, snackTotal);
+    }, [bookingState?.pricing, ticketsTotal, snackTotal]);
+
     const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
 
     const handlePayment = async () => {
@@ -495,7 +496,16 @@ const PaymentPage = () => {
                                 <div>
                                     <p className="text-[10px] md:text-[11px] font-black text-gray-500 dark:text-gray-500 mb-3 uppercase tracking-[0.2em]">Selected Seats</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {showSeats.filter(s => seats.includes(s.id || s._id)).map(s => {
+                                        {(bookingState?.selectedSeats || []).map(s => {
+                                            const r = s.row || '';
+                                            const n = s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || '';
+                                            return (
+                                                <span key={s.id || s._id} className="bg-primary text-white px-3 py-1.5 rounded-lg text-[11px] md:text-[12px] font-black tracking-widest shadow-lg shadow-primary/20">
+                                                    {r}{n}
+                                                </span>
+                                            );
+                                        })}
+                                        {!bookingState?.selectedSeats && showSeats.filter(s => seats.includes(s.id || s._id)).map(s => {
                                             const r = s.row || '';
                                             const n = s.seatNumber || s.number || s.seatLabel || s.label || s.seat_number || '';
                                             return (

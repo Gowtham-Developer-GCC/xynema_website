@@ -98,6 +98,7 @@ const MovieDetailsPage = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [showStickyBar, setShowStickyBar] = useState(false);
     const bookingTriggerRef = useRef(null);
+    const iframeRef = useRef(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -217,6 +218,21 @@ const MovieDetailsPage = () => {
         toggleInterestOptimistic(movie.id);
     };
 
+    // Control video mute via postMessage to prevent iframe reload/reset
+    useEffect(() => {
+        if (isPlayingTrailer && iframeRef.current) {
+            try {
+                const command = isMuted ? 'mute' : 'unMute';
+                iframeRef.current.contentWindow.postMessage(
+                    JSON.stringify({ event: 'command', func: command, args: '' }),
+                    '*'
+                );
+            } catch (err) {
+                console.error('Video control error:', err);
+            }
+        }
+    }, [isMuted, isPlayingTrailer]);
+
     if (!idOrSlug || (loading && !movie)) return <LoadingScreen message="Fetching Movie" />;
     if (loading) return <LoadingScreen message="Fetching Movie" />;
     if (error) return <NotFoundState title="Movie Not Found" message="We couldn't find the movie you're looking for." />;
@@ -240,8 +256,9 @@ const MovieDetailsPage = () => {
                     {isPlayingTrailer && getYouTubeId(movie.trailerUrl) ? (
                         <div className="absolute inset-0 w-full h-full">
                             <iframe
+                                ref={iframeRef}
                                 className="w-full h-[150%] -translate-y-[15%] pointer-events-none"
-                                src={`https://www.youtube.com/embed/${getYouTubeId(movie.trailerUrl)}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${getYouTubeId(movie.trailerUrl)}&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&enablejsapi=1&origin=${window.location.origin}`}
+                                src={`https://www.youtube.com/embed/${getYouTubeId(movie.trailerUrl)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(movie.trailerUrl)}&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&enablejsapi=1&origin=${window.location.origin}`}
                                 allow="autoplay; encrypted-media"
                                 frameBorder="0"
                             />
@@ -330,7 +347,7 @@ const MovieDetailsPage = () => {
 
                             {/* Metadata Line */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-[12px] md:text-base font-medium text-white/90">
-                                {movie.isAvailable && (
+                                {movie.isAvailable ? (
                                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0">
                                         <Star className="w-4 h-4 fill-primary text-primary" />
                                         <span>{movie.rating ? `${movie.rating}/10` : 'New'}</span>
@@ -339,6 +356,12 @@ const MovieDetailsPage = () => {
                                                 {movie.voteCount > 1000 ? `${(movie.voteCount / 1000).toFixed(1)}K` : `${movie.voteCount}`} Votes
                                             </span>
                                         )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0 animate-in fade-in slide-in-from-left duration-500">
+                                        <ThumbsUp className="w-3.5 h-3.5 fill-primary text-primary" />
+                                        <span className="text-xs md:text-sm font-black tracking-tight">{movie.interestCount + (hasInterested ? 1 : 0)}</span>
+                                        <span className="text-[10px] md:text-xs font-medium text-white/70">Interested</span>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-3">
@@ -462,16 +485,21 @@ const MovieDetailsPage = () => {
                                 </div>
 
                                 <div className="flex items-center gap-3 justify-center sm:justify-start">
-                                    <button
-                                        onClick={toggleFavorite}
-                                        className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all active:scale-95 shadow-md ${isFavorite
-                                            ? 'bg-white border-white text-primary shadow-[0_0_20px_rgba(253,73,96,0.3)]'
-                                            : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                                    {!movie.isAvailable && (
+                                        <button
+                                            onClick={handleInterest}
+                                            className={`flex items-center gap-3 px-6 h-12 rounded-xl border transition-all active:scale-95 shadow-lg group ${hasInterested
+                                                ? 'bg-white border-white text-primary shadow-white/10'
+                                                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                                             }`}
-                                        title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                                    >
-                                        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                                    </button>
+                                        >
+                                            <ThumbsUp className={`w-5 h-5 ${hasInterested ? 'fill-current' : 'animate-bounce-subtle'}`} />
+                                            <div className="flex flex-col items-start leading-none">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${hasInterested ? 'text-primary/70' : 'text-white/50'}`}>Are you</span>
+                                                <span className="text-sm font-black uppercase tracking-tight">Interested?</span>
+                                            </div>
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleShare}
                                         className="flex items-center justify-center w-12 h-12 rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 shadow-md"

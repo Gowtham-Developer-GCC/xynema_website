@@ -10,6 +10,7 @@ import { getEvents, getAllEventsList, submitPrivateEventEnquiry } from '../servi
 import { useData } from '../context/DataContext';
 import { errorHandler, optimizeImage } from '../utils/helpers';
 import { memo } from 'react';
+import apiCacheManager from '../services/apiCacheManager';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
@@ -64,11 +65,11 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
 
             const [eventData, globalEventData] = await Promise.all([
-                getEvents(selectedCity).catch(err => {
+                apiCacheManager.getOrFetchEvents(selectedCity, () => getEvents(selectedCity)).catch(err => {
                     console.error('Events fetch error:', err);
                     return [];
                 }),
-                getAllEventsList().catch(err => {
+                apiCacheManager.getOrFetchEvents(null, () => getAllEventsList()).catch(err => {
                     console.error('Global Events fetch error:', err);
                     return [];
                 })

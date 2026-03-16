@@ -31,7 +31,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
     return (
         <>
-            <nav className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+            <nav className="bg-white/60 dark:bg-gray-900/30 backdrop-blur-2xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
                 <div className="w-full max-w-[95%] md:max-w-[95%] lg:max-w-[95%] xl:max-w-[95%] 2xl:max-w-[80%] mx-auto px-4">
                     <div className="flex justify-between items-center h-16 md:h-20 lg:h-20 xl:h-20">
 

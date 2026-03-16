@@ -314,11 +314,11 @@ const TheaterSelectionPage = () => {
 
             {/* Redesigned Minimalist Header & Movie Info - Matches Figma */}
             <div className="bg-white dark:bg-gray-900 pt-5 pb-6 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 relative z-10 w-full">
-                <div className="w-full max-w-[1200px] mx-auto flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 text-center md:text-left">
-                    {/* Fixed Back Button for Mobile */}
+                <div className="w-[95%] sm:w-[90%] lg:max-w-[80%] mx-auto flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 text-center md:text-left relative">
+                    {/* Fixed Back Button - Positioned outside the alignment line */}
                     <button
                         onClick={() => navigate(-1)}
-                        className="absolute top-4 left-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 md:relative md:top-2 md:left-0 md:-ml-2"
+                        className="absolute top-4 left-4 md:top-2 md:-left-12 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
                     >
                         <ChevronLeft className="w-6 h-6 stroke-[2]" />
                     </button>

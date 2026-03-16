@@ -10,7 +10,7 @@ import * as api from '../services/api';
 const ProfilePage = () => {
     const navigate = useNavigate();
     const { user: authUser, logoutUser, updateUser } = useAuth();
-    const { userMovieBookings, userEventBookings, userProfile, updateUserProfileData } = useData();
+    const { userMovieBookings, userEventBookings, userProfile, updateUserProfileData, fetchUserBookings } = useData();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
@@ -95,6 +95,9 @@ const ProfilePage = () => {
                 navigate('/login');
                 return;
             }
+
+            // Fetch bookings specifically when visiting profile
+            fetchUserBookings();
 
             // Prefer verified profile from DataContext, fallback to AuthUser
             const currentUser = userProfile || authUser;

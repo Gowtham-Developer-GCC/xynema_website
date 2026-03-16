@@ -6,6 +6,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import { getTheatersByCity } from '../services/movieService';
 import { useData } from '../context/DataContext';
+import apiCacheManager from '../services/apiCacheManager';
 
 const CinemasListPage = () => {
     const { selectedCity } = useData();
@@ -19,7 +20,7 @@ const CinemasListPage = () => {
         const fetchTheaters = async () => {
             try {
                 setLoading(true);
-                const data = await getTheatersByCity(selectedCity);
+                const data = await apiCacheManager.getOrFetchTheaters(selectedCity, () => getTheatersByCity(selectedCity));
                 setTheaters(data || []);
 
                 // Debug: Log max show end date per theater
@@ -40,8 +41,8 @@ const CinemasListPage = () => {
     }, [selectedCity]);
 
     const filteredTheaters = useMemo(() => {
-        return theaters.filter(t => 
-            t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        return theaters.filter(t =>
+            t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (t.address && t.address.toLowerCase().includes(searchQuery.toLowerCase()))
         );
     }, [theaters, searchQuery]);
@@ -51,7 +52,7 @@ const CinemasListPage = () => {
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
-            <SEO 
+            <SEO
                 title={`Cinemas in ${selectedCity} - XYNEMA`}
                 description={`Find movie theaters and cinemas in ${selectedCity}. View showtimes and book tickets online.`}
             />
@@ -88,7 +89,7 @@ const CinemasListPage = () => {
 
             {/* Content Section */}
             <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-                
+
                 {filteredTheaters.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTheaters.map((theater) => (
@@ -102,7 +103,7 @@ const CinemasListPage = () => {
                         <p className="text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs">
                             We couldn't find any cinemas matching "{searchQuery}" in {selectedCity}.
                         </p>
-                        <button 
+                        <button
                             onClick={() => setSearchQuery('')}
                             className="mt-6 text-primary font-bold hover:underline"
                         >
@@ -122,9 +123,9 @@ const TheaterCard = ({ theater }) => {
     const handleCardClick = () => {
         const slug = theater.slug || theater.id;
         navigate(`/theater/${slug}`, {
-            state: { 
+            state: {
                 theater,
-                maxShowEndDate: theater.maxShowEndDate 
+                maxShowEndDate: theater.maxShowEndDate
             }
         });
     };
@@ -135,13 +136,13 @@ const TheaterCard = ({ theater }) => {
     };
 
     return (
-        <div 
+        <div
             onClick={handleCardClick}
             className="group bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md transition-all duration-300 cursor-pointer relative"
         >
             <div className="flex gap-4">
                 {/* Heart Icon on Left */}
-                <button 
+                <button
                     onClick={toggleFavorite}
                     className="shrink-0 mt-1 hover:scale-110 transition-transform"
                 >
@@ -154,7 +155,7 @@ const TheaterCard = ({ theater }) => {
                             {theater.name}
                         </h3>
                     </div>
-                    
+
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed font-medium">
                         {theater.address || `Premier Cinema in ${theater.city}`}
                     </p>

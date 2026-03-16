@@ -318,6 +318,41 @@ class ApiCacheManager {
     async getOrFetchUpcomingMovies(city, fetchFn) {
         return this.getOrExecute(`upcoming_movies_${city || 'global'}`, fetchFn, ApiCacheManager.MOVIES_TTL);
     }
+
+    /**
+     * Helper: Get or fetch theater details
+     */
+    async getOrFetchTheaterDetails(theaterId, date, fetchFn) {
+        return this.getOrExecute(`theater_details_${theaterId}_${date}`, fetchFn, ApiCacheManager.THEATERS_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch similar movies
+     */
+    async getOrFetchSimilarMovies(movieId, fetchFn) {
+        return this.getOrExecute(`similar_movies_${movieId}`, fetchFn, ApiCacheManager.MOVIES_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch movie merchandise
+     */
+    async getOrFetchMovieMerchandise(movieId, fetchFn) {
+        return this.getOrExecute(`merchandise_${movieId}`, fetchFn, ApiCacheManager.FOOD_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch event details
+     */
+    async getOrFetchEventDetails(slug, fetchFn) {
+        return this.getOrExecute(`event_details_${slug}`, fetchFn, ApiCacheManager.EVENTS_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch similar events
+     */
+    async getOrFetchSimilarEvents(eventId, fetchFn) {
+        return this.getOrExecute(`similar_events_${eventId}`, fetchFn, ApiCacheManager.EVENTS_TTL);
+    }
 }
 
 // Export singleton instance and class

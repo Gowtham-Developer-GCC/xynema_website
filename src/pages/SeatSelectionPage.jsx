@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Clock, Ticket, Info, ChevronRight, Users, AlertCircle, X, ChevronLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Clock, Ticket, Info, ChevronRight, Users, AlertCircle, X, ChevronLeft, Settings, Accessibility, Armchair } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import SEO from '../components/SEO';
 import { getSeats, releaseSeats } from '../services/bookingService';
@@ -132,6 +132,12 @@ const SeatSelectionPage = () => {
                 setShow(showData);
                 setSeats(seatsData);
 
+                // Extract and store screen name for consistency
+                const screenName = showData?.screen?.screenName || showData?.screen?.name || '';
+                if (screenName) {
+                    sessionStorage.setItem('booking_screen_name', screenName);
+                }
+
                 // Find layout in various possible nested locations (matching mobile logic)
                 const screenLayout = response.data?.layout ||
                     showData?.layout ||
@@ -172,7 +178,7 @@ const SeatSelectionPage = () => {
                 id: showId,
                 time: show.startTime || show.showTime || sessionStorage.getItem('booking_show_time') || '',
                 price: show.pricing?.[0]?.basePrice || 150,
-                screenName: show.theatre?.name || theaterName || 'Screen'
+                screenName: show.screen?.screenName || show.screen?.name || sessionStorage.getItem('booking_screen_name') || 'Screen'
             });
         }
     }, [show, showId, theaterName]);
@@ -259,6 +265,7 @@ const SeatSelectionPage = () => {
         const resolvedTheaterName = sessionStorage.getItem('booking_theater_name') || theaterName || 'Theatre';
         const resolvedShowTime = show?.showTime || show?.startTime || sessionStorage.getItem('booking_show_time') || '';
         const resolvedDate = show?.showDate || show?.date || showDate;
+        const resolvedScreenName = show?.screen?.screenName || show?.screen?.name || sessionStorage.getItem('booking_screen_name') || 'Screen';
 
         return {
             ...show,
@@ -273,6 +280,7 @@ const SeatSelectionPage = () => {
             },
             startTime: resolvedShowTime,
             date: resolvedDate,
+            screenName: resolvedScreenName,
         };
     }, [show, movieId, movieTitle, moviePoster, theaterId, theaterName, showDate, movieData]);
 
@@ -284,7 +292,7 @@ const SeatSelectionPage = () => {
             id: showId,
             time: show?.showTime || show?.startTime || sessionStorage.getItem('booking_show_time') || '',
             date: show?.showDate || show?.date || showDate,
-            screenName: sessionStorage.getItem('booking_theater_name') || theaterName || 'Screen',
+            screenName: show?.screen?.screenName || show?.screen?.name || sessionStorage.getItem('booking_screen_name') || 'Screen',
             price: show?.pricing?.[0]?.basePrice || 150,
         };
     }, [show, showId, theaterName, showDate]);
@@ -366,6 +374,8 @@ const SeatSelectionPage = () => {
                             </h1>
                             <div className="flex items-center text-[11px] md:text-[13px] text-gray-500 dark:text-gray-400 mt-1 gap-1 md:gap-1.5 flex-wrap">
                                 <span className="truncate">{displayShow.theatre?.name}</span>
+                                <span className="text-gray-300 dark:text-gray-700">|</span>
+                                <span className="font-medium text-gray-600 dark:text-gray-300">{displayShow.screenName}</span>
                                 <span className="text-gray-300 dark:text-gray-700 hidden sm:inline">|</span>
                                 <span className="text-gray-300 dark:text-gray-700 sm:hidden">•</span>
                                 <span>{displayShow.startTime}</span>
@@ -401,7 +411,39 @@ const SeatSelectionPage = () => {
             <main className="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-8 bg-[#f9fafb] dark:bg-gray-950 min-h-[calc(100vh-80px)] transition-colors duration-300 pb-24 md:pb-8">
 
                 {/* Left Side: Seat Layout Card */}
-                <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative flex flex-col h-[70vh] lg:h-full transition-colors duration-300">
+                <div className="flex-1 flex flex-col gap-4">
+                    {/* Mobile Only: Top Legend Indicator */}
+                    <div className="flex lg:hidden items-center justify-center flex-wrap gap-x-4 gap-y-2 py-3 px-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-[3px] border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"></div>
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Available</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-[3px] bg-primary"></div>
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Selected</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-[3px] bg-[#94a3b8] dark:bg-gray-700"></div>
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Booked</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="w-[11px] h-[11px] rounded-[3px] bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center relative">
+                                <div className="absolute w-[6px] h-[1px] bg-gray-400 rotate-45"></div>
+                                <div className="absolute w-[6px] h-[1px] bg-gray-400 -rotate-45"></div>
+                            </div>
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Sold Out</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <Accessibility className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Wheelchair</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <Armchair className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Recliner</span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative flex flex-col h-[65vh] lg:h-full transition-colors duration-300">
                     <SeatLayout
                         showId={showId}
                         selectedSeats={selectedSeats}
@@ -409,6 +451,7 @@ const SeatSelectionPage = () => {
                         maxSeatCount={selectedSeatCount}
                         showToast={showToast}
                     />
+                    </div>
                 </div>
 
                 {/* Right Side: Summary Section Card */}
@@ -437,7 +480,7 @@ const SeatSelectionPage = () => {
                         <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
                         <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">₹{(ticketsTotalValue * 1.18 + (selectedSeats.length * 30)).toFixed(2)}</span>
-                            <button 
+                            <button
                                 onClick={scrollToSummary}
                                 className="text-[10px] font-bold text-primary dark:text-primary/80 uppercase tracking-wide hover:underline underline-offset-2"
                             >

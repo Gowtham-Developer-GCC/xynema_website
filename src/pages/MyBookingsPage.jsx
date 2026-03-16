@@ -114,7 +114,7 @@ const MyBookingsPage = () => {
             }
             if (isNaN(date.getTime())) return null;
 
-            if (timeStr && typeof timeStr === 'string' && date.getHours() === 0 && date.getMinutes() === 0) {
+            if (timeStr && typeof timeStr === 'string') {
                 const cleanTime = timeStr.trim().toUpperCase();
                 const timeMatch = cleanTime.match(/(\d+):(\d+)\s*(AM|PM)?/);
                 if (timeMatch) {
@@ -139,10 +139,21 @@ const MyBookingsPage = () => {
         const timeStr = type === 'movies' ? booking.time : booking.showTime;
         const showDate = parseDateTime(dateStr, timeStr);
         if (!showDate) return false;
+        
         const now = new Date();
-        const gracePeriodMs = type === 'movies' ? 2 * 60 * 60 * 1000 : 4 * 60 * 60 * 1000;
-        const isPast = now.getTime() > (showDate.getTime() + gracePeriodMs);
-        return filterStatus === 'upcoming' ? !isPast : filterStatus === 'past' ? isPast : true;
+        const isPast = now.getTime() > showDate.getTime();
+        
+        if (filterStatus === 'upcoming') {
+            return !isPast;
+        }
+        
+        if (filterStatus === 'past') {
+            // Include a grace period for past bookings if desired (e.g. 2 hours after show start)
+            const gracePeriodMs = type === 'movies' ? 2 * 60 * 60 * 1000 : 4 * 60 * 60 * 1000;
+            return now.getTime() > (showDate.getTime() + gracePeriodMs);
+        }
+        
+        return true;
     };
 
     const sortBookings = (a, b, type) => {

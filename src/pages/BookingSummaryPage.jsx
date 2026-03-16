@@ -6,6 +6,7 @@ import { getShowSeats, getFoodAndBeverages, lockSeats } from '../services/bookin
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
+import { calculateBookingTotal } from '../utils/pricing';
 
 const BookingSummaryPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -136,10 +137,8 @@ const BookingSummaryPage = () => {
         }, 0);
     }, [cart, foodItems]);
 
-    const subTotal = ticketsTotal + snackTotal;
-    const convenienceFee = subTotal * 0.1; // 10% convenience fee to match sidebar
-    const gst = 0; // GST is omitted for now as per user screenshot/sidebar logic
-    const grandTotal = subTotal + convenienceFee + gst;
+    const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal);
+    const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
     const handleProceedToPayment = async () => {
         if (isLocking) return;
         setIsLocking(true);
@@ -202,8 +201,8 @@ const BookingSummaryPage = () => {
     const displayTime = show?.startTime || show?.showTime || sessionStorage.getItem('booking_show_time') || '';
     const displayLanguage = sessionStorage.getItem('booking_movie_language') || show?.movieLanguage || 'English';
     const displayFormat = sessionStorage.getItem('booking_movie_format') || show?.format || '2D';
-    const rawScreen = sessionStorage.getItem('booking_screen_name') || show?.screen?.name || (typeof show?.screen === 'string' ? show.screen : '1');
-    const displayScreen = rawScreen.toLowerCase().includes('screen') ? rawScreen : `Screen ${rawScreen}`;
+    const rawScreen = sessionStorage.getItem('booking_screen_name') || show?.screen?.screenName || show?.screen?.name || (typeof show?.screen === 'string' ? show.screen : '1');
+    const displayScreen = rawScreen.toString().toLowerCase().includes('screen') ? rawScreen : `Screen ${rawScreen}`;
 
     return (
         <div className="min-h-screen bg-whiteSmoke dark:bg-gray-950 transition-colors duration-300 font-sans text-text dark:text-darkText">
@@ -259,7 +258,7 @@ const BookingSummaryPage = () => {
                                 <div className="min-w-0">
                                     <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-0.5 font-roboto">Screen</p>
                                     <p className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate font-roboto">
-                                        {displayTheater.includes(' - ') ? (displayTheater.split(' - ')[1] || displayScreen) : displayScreen}
+                                        {displayScreen}
                                     </p>
                                 </div>
                             </div>
@@ -345,14 +344,14 @@ const BookingSummaryPage = () => {
                         <div className="space-y-2">
                             {convenienceFee > 0 && (
                                 <div className="flex justify-between text-xs font-medium font-roboto">
-                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">Convenience Fee (10%)</p>
+                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">Convenience Fee</p>
                                     <p className="text-gray-900 dark:text-white font-bold">₹{convenienceFee.toLocaleString()}</p>
                                 </div>
                             )}
-                            {gst > 0 && (
+                            {gstAmount > 0 && (
                                 <div className="flex justify-between text-xs font-medium font-roboto">
-                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">Taxes (GST 18%)</p>
-                                    <p className="text-gray-900 dark:text-white">₹{gst.toLocaleString()}</p>
+                                    <p className="text-gray-500 dark:text-gray-400 tracking-widest text-[10px]">GST</p>
+                                    <p className="text-gray-900 dark:text-white font-bold">₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             )}
                         </div>

@@ -13,6 +13,7 @@ import 'swiper/css/pagination';
 import StoreCard from '../components/StoreCard';
 import MovieCard from '../components/MovieCard';
 import HeroCarousel from '../components/HeroCarousel';
+import LoadingScreen from '../components/LoadingScreen';
 
 const HomePage = ({ selectedCity }) => {
     const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
@@ -97,8 +98,8 @@ const HomePage = ({ selectedCity }) => {
         return upcomingMovies.slice(0, 5);
     }, [upcomingMovies]);
 
-    // Loading State -> Skeleton
-    if (loading && !movies?.length) return <HomeSkeleton />;
+    // Loading State -> Common Loading Animation
+    if (loading && !movies?.length) return <LoadingScreen message="Finding the best movies for you..." />;
 
     // Error State
     if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Connection Failed" />;
@@ -452,60 +453,6 @@ const EventCard = memo(({ event }) => {
 
 // MovieCard moved to standalone component
 
-// ============= COMPONENT: Skeleton Loader =============
-
-const HomeSkeleton = () => (
-    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0f1115] transition-colors duration-300">
-        {/* MATCH HERO CAROUSEL */}
-        <div className="w-full bg-[#f5f5f5] dark:bg-[#0f1115] pt-[10px] pb-[25px]">
-            <div className="max-w-[1088px] mx-auto px-4 lg:px-0">
-                <div
-                    className="w-full bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse aspect-[16/9] md:aspect-[21/6]"
-                />
-            </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6">
-            {/* RECOMMENDED SECTION SKELETON */}
-            <div>
-                <div className="flex justify-between items-center mb-3">
-                    <div className="h-7 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="flex flex-col space-y-3">
-                            <div className="aspect-[2/3] bg-gray-200 rounded-lg animate-pulse" />
-                            <div className="space-y-2">
-                                <div className="h-4 w-11/12 bg-gray-200 rounded animate-pulse" />
-                                <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* UPCOMING SECTION SKELETON */}
-            <div className="pt-2">
-                <div className="flex justify-between items-center mb-3">
-                    <div className="h-7 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                    <div className="h-5 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="flex flex-col space-y-3">
-                            <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
-                            <div className="space-y-2">
-                                <div className="h-4 w-11/12 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                                <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    </div>
-);
 
 // --- StoreCard Component removed - moved to standalone component ---
 

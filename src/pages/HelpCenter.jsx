@@ -291,11 +291,16 @@ const HelpCenter = () => {
                                                 className="w-full bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer text-gray-700 dark:text-gray-300"
                                             >
                                                 <option value="" disabled>Select issue type</option>
-                                                <option value="booking">Booking Issue</option>
-                                                <option value="payment">Payment Error</option>
-                                                <option value="technical">Technical Bug</option>
-                                                <option value="content">Inappropriate Content</option>
-                                                <option value="other">Other</option>
+                                                <option value="booking">Problem with my booking</option>
+                                                <option value="payment">Payment issue</option>
+                                                <option value="falseinfo_event_or_show">Incorrect event or show information</option>
+                                                <option value="falseinfo_venue">Venue issue - sports turf / theatre / restaurant</option>
+                                                <option value="ticket_not_received">Ticket not received</option>
+                                                <option value="unable_to_access_event_or_venue">Unable to access event or venue</option>
+                                                <option value="refund_cancellation">Refund or cancellation issue</option>
+                                                <option value="app_technical_problem">App technical problem</option>
+                                                <option value="suspicious_activity">Suspicious or fraudulent activity</option>
+                                                <option value="other">Other issue</option>
                                             </select>
                                             <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
                                         </div>

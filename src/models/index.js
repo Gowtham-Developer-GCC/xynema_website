@@ -180,12 +180,16 @@ export class TheaterMovie {
         this.name = data.movieName || '';
         this.posterUrl = data.posterUrl || '';
         this.releaseDate = data.releaseDate || '';
+        this.certification = data.certification || '';
         this.slug = data.slug || (data.movieName ? data.movieName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '');
         
         // Handle new response structure: data has `shows` and `scheduleInfo`
         if (Array.isArray(data.shows)) {
-            // Group shows into a single virtual schedule for the UI to iterate over easily
-            // or keep them separate if they are already grouped on backend
+            // Group shows into a single virtual schedule for the UI
+            // Derive accurate formatting from the individual shows' screen types
+            const formats = [...new Set(data.shows.map(s => s.screen?.screenType || s.format).filter(f => f && f !== "true"))];
+            const displayFormat = formats.length > 0 ? formats.join(', ') : (data.scheduleInfo?.format === "true" ? "2D" : (data.scheduleInfo?.format || "2D"));
+
             this.schedules = [new TheaterSchedule({
                 ...data.scheduleInfo,
                 shows: data.shows,
@@ -193,7 +197,7 @@ export class TheaterMovie {
                 showTimes: data.shows.map(s => s.showTime),
                 // Incorporate screen info from the first show if available
                 screen: data.shows[0]?.screen || {},
-                format: data.scheduleInfo?.format === "true" ? "2D" : (data.scheduleInfo?.format || "2D") 
+                format: displayFormat
             })];
             this.shows = data.shows.map(s => new Show(s));
         } else {
@@ -259,7 +263,8 @@ export class Show {
         this.screenId = data.screenId || '';
         this.startTime = data.showTime || data.startTime || data.time || '';
         this.endTime = data.endTime || '';
-        this.format = data.format || '2D';
+        this.format = data.format || data.screen?.screenType || data.screenDetails?.screenType || '2D';
+        if (this.format === "true") this.format = "2D";
         this.language = data.language || '';
         this.movieLanguage = Array.isArray(data.movieLanguage)
             ? data.movieLanguage.join(', ')
@@ -273,11 +278,24 @@ export class Show {
         this.basePrice = (data.basePrice || data.price || pricingPrice || 0);
 
         this.date = data.showDate || data.date || new Date().toISOString().split('T')[0];
-        this.availableSeats = data.availableSeats || 0;
-        this.bookedSeats = data.bookedSeats || 0;
-        this.totalSeats = data.totalSeats || (this.availableSeats + this.bookedSeats) || 0;
+        
+        // Robust seat count handling
+        this.availableSeats = data.availableSeats ?? 0;
+        this.totalSeats = data.totalSeats || data.screen?.totalSeats || data.screen?.capacity || 0;
+        this.bookedSeats = data.bookedSeats ?? (this.totalSeats - this.availableSeats);
 
-        // Preserve nested objects for display, properly instantiated to handle key variations
+        // Derive pricing from seatClasses if direct pricing is missing
+        const seatClasses = data.screen?.seatClasses || data.screenDetails?.seatClasses || [];
+        if ((!this.pricing || this.pricing.length === 0) && seatClasses.length > 0) {
+            this.pricing = seatClasses.map(sc => ({
+                label: sc.name || sc.label,
+                basePrice: sc.price || sc.basePrice,
+                price: sc.price || sc.basePrice,
+                id: sc.id || sc._id
+            }));
+        }
+
+        // Preserve nested objects
         this.movie = (data.movie && typeof data.movie === 'object') ? new Movie(data.movie) : new Movie({});
         this.theatre = (data.theatre || data.theater) && typeof (data.theatre || data.theater) === 'object'
             ? new Theater(data.theatre || data.theater)

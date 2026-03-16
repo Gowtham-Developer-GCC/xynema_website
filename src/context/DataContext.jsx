@@ -229,7 +229,7 @@ export const DataProvider = ({ children, selectedCity }) => {
      */
     useEffect(() => {
         if (isAuthenticated) {
-            fetchUserBookings();
+            // Only fetch small profile data upfront
             fetchUserProfile();
         } else {
             setUserMovieBookings([]);
@@ -237,7 +237,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setUserBookings([]);
             setUserProfile(null);
         }
-    }, [isAuthenticated, fetchUserBookings, fetchUserProfile]);
+    }, [isAuthenticated, fetchUserProfile]);
 
     /**
      * Pagination Methods

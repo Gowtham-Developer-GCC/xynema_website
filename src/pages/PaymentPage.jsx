@@ -7,6 +7,7 @@ import { initiatePayment } from '../services/paymentService';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import TicketCard from '../components/TicketCard';
+import { calculateBookingTotal } from '../utils/pricing';
 
 const PaymentPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -204,9 +205,8 @@ const PaymentPage = () => {
         }, 0);
     }, [cartData, foodItems]);
 
-    const subTotal = ticketsTotal + snackTotal;
-    const convenienceFee = subTotal * 0.1; // 10% Convenience Fee
-    const grandTotal = subTotal + convenienceFee;
+    const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal);
+    const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
 
     const handlePayment = async () => {
         setIsProcessing(true);
@@ -504,6 +504,30 @@ const PaymentPage = () => {
                                                 </span>
                                             );
                                         })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] md:text-[11px] font-black text-gray-500 dark:text-gray-500 mb-3 uppercase tracking-[0.2em]">Order Summary</p>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[13px] text-gray-600 dark:text-gray-400">
+                                            <span>Tickets Subtotal</span>
+                                            <span className="font-bold text-gray-900 dark:text-white">₹{ticketsTotal.toLocaleString()}</span>
+                                        </div>
+                                        {snackTotal > 0 && (
+                                            <div className="flex justify-between text-[13px] text-gray-600 dark:text-gray-400">
+                                                <span>Food & Beverages</span>
+                                                <span className="font-bold text-gray-900 dark:text-white">₹{snackTotal.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between text-[13px] text-gray-600 dark:text-gray-400">
+                                            <span>Convenience Fee</span>
+                                            <span className="font-bold text-gray-900 dark:text-white">₹{convenienceFee.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[13px] text-gray-600 dark:text-gray-400">
+                                            <span>GST</span>
+                                            <span className="font-bold text-gray-900 dark:text-white">₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
                                     </div>
                                 </div>
 

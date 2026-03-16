@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getShowSeats } from '../../services/bookingService';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { Accessibility, Armchair } from 'lucide-react';
 
 const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 10, showToast }) => {
     const [seats, setSeats] = useState([]);
@@ -73,9 +74,9 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                         const c = s.position?.column ?? 0;
 
                         // s.type is mapped from seatType by the Seat model
-                        let uiType = s.type || 'normal';
+                        let uiType = (s.seatType || s.type || 'normal').toLowerCase();
                         const seatName = (s.seatClass?.name || '').toLowerCase();
-                        if (seatName === 'platinum' || seatName === 'gold' || seatName === 'sofa') {
+                        if (uiType !== 'wheelchair' && uiType !== 'recliner' && (seatName === 'platinum' || seatName === 'gold' || seatName === 'sofa')) {
                             uiType = 'premium';
                         }
 
@@ -114,6 +115,8 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
     }, [showId]);
 
     const [isAnimating, setIsAnimating] = React.useState(false);
+    const gridRef = useRef(null);
+    const wrapperRef = useRef(null);
 
     const handleSeatClick = (rowIndex, colIndex) => {
         if (isAnimating) return;
@@ -239,7 +242,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
     }
 
     return (
-        <div className="relative w-full h-[calc(100vh-220px)] md:h-[calc(100vh-190px)] min-h-[500px] overflow-hidden bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-slate-200/60 dark:border-gray-800 shadow-sm group font-sans">
+        <div ref={wrapperRef} className="relative w-full h-[calc(100vh-220px)] md:h-[calc(100vh-190px)] min-h-[500px] overflow-hidden bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-slate-200/60 dark:border-gray-800 shadow-sm group font-sans">
 
             {/* Zoom Controls Overlay */}
             <div className="absolute top-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg rounded-xl flex items-center p-1.5 gap-1 border border-slate-200/50 dark:border-gray-700/50">
@@ -249,101 +252,140 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
             <div className="absolute inset-0 z-0">
                 <TransformWrapper
                     initialScale={1}
-                    minScale={0.2}
-                    maxScale={4}
+                    minScale={0.5}
+                    maxScale={3}
                     centerOnInit={true}
                     wheel={{ step: 0.1 }}
                     limitToBounds={false}
-                    centerZoomedOut={false}
+                    centerZoomedOut={true}
                     panning={{ velocityDisabled: true }}
+                    onPanningStop={(ref) => {
+                        if (!gridRef.current || !wrapperRef.current) return;
+                        const gridRect = gridRef.current.getBoundingClientRect();
+                        const wrapperRect = wrapperRef.current.getBoundingClientRect();
+
+                        // Bounce if entirely out of sight
+                        const isOutside =
+                            gridRect.right < wrapperRect.left ||
+                            gridRect.left > wrapperRect.right ||
+                            gridRect.bottom < wrapperRect.top ||
+                            gridRect.top > wrapperRect.bottom;
+
+                        if (isOutside) {
+                            ref.centerView(1.2, 1110);
+                        }
+                    }}
+                    onZoomStop={(ref) => {
+                        if (!gridRef.current || !wrapperRef.current) return;
+                        const gridRect = gridRef.current.getBoundingClientRect();
+                        const wrapperRect = wrapperRef.current.getBoundingClientRect();
+
+                        const isOutside =
+                            gridRect.right < wrapperRect.left ||
+                            gridRect.left > wrapperRect.right ||
+                            gridRect.bottom < wrapperRect.top ||
+                            gridRect.top > wrapperRect.bottom;
+
+                        if (isOutside) {
+                            ref.centerView(1.2, 1110);
+                        }
+                    }}
                 >
-                    <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ width: "100%", height: "100%" }}>
-                        <div className="flex flex-col gap-1.5 items-center justify-center p-16 md:p-32 pb-48 w-fit mx-auto">
-                            {(() => {
-                                let lastCategoryName = null;
-                                // Identify unique categories in order
-                                const categoriesOrdered = [];
-                                [...seats].reverse().forEach(row => {
-                                    const firstCell = row.find(c => c !== null && c.originalType !== 'path' && c.originalType !== 'empty' && c.originalType !== 'aisle');
-                                    if (firstCell?.categoryName && !categoriesOrdered.includes(firstCell.categoryName)) {
-                                        categoriesOrdered.push(firstCell.categoryName);
-                                    }
-                                });
-                                return seats.map((row, rowIndex) => {
-                                    const firstCell = row.find(c => c !== null && c.originalType !== 'path' && c.originalType !== 'empty' && c.originalType !== 'aisle');
-                                    const rowLabel = firstCell?.row || '';
+                    <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                        <div className="flex flex-col gap-1.5 items-center justify-center p-[100vh] w-fit mx-auto">
+                            <div ref={gridRef} className="flex flex-col items-center">
+                                {(() => {
+                                    let lastCategoryName = null;
+                                    // Identify unique categories in order
+                                    const categoriesOrdered = [];
+                                    [...seats].reverse().forEach(row => {
+                                        const firstCell = row.find(c => c !== null && c.originalType !== 'path' && c.originalType !== 'empty' && c.originalType !== 'aisle');
+                                        if (firstCell?.categoryName && !categoriesOrdered.includes(firstCell.categoryName)) {
+                                            categoriesOrdered.push(firstCell.categoryName);
+                                        }
+                                    });
+                                    return seats.map((row, rowIndex) => {
+                                        const firstCell = row.find(c => c !== null && c.originalType !== 'path' && c.originalType !== 'empty' && c.originalType !== 'aisle');
+                                        const rowLabel = firstCell?.row || '';
 
-                                    // Determine if we need a category header
-                                    const currentCategory = firstCell?.categoryName;
-                                    const showHeader = currentCategory && currentCategory !== lastCategoryName;
+                                        // Determine if we need a category header
+                                        const currentCategory = firstCell?.categoryName;
+                                        const showHeader = currentCategory && currentCategory !== lastCategoryName;
 
-                                    if (showHeader) {
-                                        lastCategoryName = currentCategory;
-                                    }
+                                        if (showHeader) {
+                                            lastCategoryName = currentCategory;
+                                        }
 
-                                    // Premium styling for Platinum/Gold/Sofa
-                                    const categoryIndex = categoriesOrdered.indexOf(currentCategory);
-                                    const isPremiumCategory = categoryIndex >= 2 || currentCategory?.toLowerCase() === 'platinum' || currentCategory?.toLowerCase() === 'gold' || currentCategory?.toLowerCase() === 'sofa';
+                                        // Premium styling for Platinum/Gold/Sofa
+                                        const categoryIndex = categoriesOrdered.indexOf(currentCategory);
+                                        const isPremiumCategory = categoryIndex >= 2 || currentCategory?.toLowerCase() === 'platinum' || currentCategory?.toLowerCase() === 'gold' || currentCategory?.toLowerCase() === 'sofa';
 
-                                    return (
-                                        <React.Fragment key={rowIndex}>
-                                            {showHeader && (
-                                                <div className="w-full flex flex-col items-center my-4">
-                                                    <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 tracking-wide font-display">
-                                                        <span>{currentCategory}</span>
-                                                        <span className="font-medium text-gray-800 dark:text-gray-200 tracking-normal">₹{firstCell.basePrice}</span>
+                                        return (
+                                            <React.Fragment key={rowIndex}>
+                                                {showHeader && (
+                                                    <div className="w-full flex flex-col items-center my-4">
+                                                        <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 tracking-wide font-roboto">
+                                                            <span>{currentCategory}</span>
+                                                            <span className="font-medium text-gray-800 dark:text-gray-200 tracking-normal">₹{firstCell.basePrice}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="flex gap-2 min-w-max items-center justify-center p-1">
+                                                    {/* Left Row Label */}
+                                                    <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 mr-2 shrink-0">
+                                                        {rowLabel}
+                                                    </div>
+
+                                                    {/* Seats */}
+                                                    {row.map((seat, colIndex) => {
+                                                        if (!seat || seat.type === 'path' || seat.originalType === 'path' || seat.originalType === 'empty' || seat.originalType === 'aisle') {
+                                                            return <div key={`path-${seat?.id || colIndex}`} className="w-8 h-8 md:w-[34px] md:h-[34px] shrink-0 opacity-0" />;
+                                                        }
+
+                                                        // Styles based on Figma
+                                                        let seatStyle = "border-[#cbd5e1] dark:border-gray-700 bg-white dark:bg-gray-800 text-[#475569] dark:text-gray-400 hover:border-[#64748b] dark:hover:border-gray-500 transition-colors";
+
+                                                        if (seat.status === 'booked' || seat.status === 'reserved') {
+                                                            seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none"; // Solid gray booked state with visible text
+                                                        } else if (seat.status === 'selected') {
+                                                            seatStyle = "bg-primary border-primary text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid primary color selected state with pop effect
+                                                        }
+
+                                                        return (
+                                                            <button
+                                                                key={seat.id}
+                                                                onClick={() => handleSeatClick(rowIndex, colIndex)}
+                                                                disabled={seat.status === 'booked' || seat.status === 'reserved'}
+                                                                title={`${seat.row}${seat.number} - ₹${seat.basePrice}`}
+                                                                className={`relative w-8 h-8 md:w-[34px] md:h-[34px] rounded-[6px] shrink-0 flex items-center justify-center border text-[10px] font-medium leading-none transition-all duration-300 transform active:scale-90 ${seatStyle}`}
+                                                            >
+                                                                {seat.type === 'wheelchair' ? (
+                                                                    <Accessibility className="w-4 h-4 shrink-0" />
+                                                                ) : seat.type === 'recliner' ? (
+                                                                    <Armchair className="w-4 h-4 shrink-0" />
+                                                                ) : (
+                                                                    seat.number
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+
+                                                    {/* Right Row Label */}
+                                                    <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 ml-2 shrink-0">
+                                                        {rowLabel}
                                                     </div>
                                                 </div>
-                                            )}
-                                            <div className="flex gap-2 min-w-max items-center justify-center p-1">
-                                                {/* Left Row Label */}
-                                                <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 mr-2 shrink-0">
-                                                    {rowLabel}
-                                                </div>
+                                            </React.Fragment>
+                                        );
+                                    });
+                                })()}
 
-                                                {/* Seats */}
-                                                {row.map((seat, colIndex) => {
-                                                    if (!seat || seat.type === 'path' || seat.originalType === 'path' || seat.originalType === 'empty' || seat.originalType === 'aisle') {
-                                                        return <div key={`path-${seat?.id || colIndex}`} className="w-8 h-8 md:w-[34px] md:h-[34px] shrink-0 opacity-0" />;
-                                                    }
-
-                                                    // Styles based on Figma
-                                                    let seatStyle = "border-[#cbd5e1] dark:border-gray-700 bg-white dark:bg-gray-800 text-[#475569] dark:text-gray-400 hover:border-[#64748b] dark:hover:border-gray-500 transition-colors";
-
-                                                    if (seat.status === 'booked' || seat.status === 'reserved') {
-                                                        seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none"; // Solid gray booked state with visible text
-                                                    } else if (seat.status === 'selected') {
-                                                        seatStyle = "bg-primary border-primary text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid primary color selected state with pop effect
-                                                    }
-
-                                                    return (
-                                                        <button
-                                                            key={seat.id}
-                                                            onClick={() => handleSeatClick(rowIndex, colIndex)}
-                                                            disabled={seat.status === 'booked' || seat.status === 'reserved'}
-                                                            title={`${seat.row}${seat.number} - ₹${seat.basePrice}`}
-                                                            className={`relative w-8 h-8 md:w-[34px] md:h-[34px] rounded-[6px] shrink-0 flex items-center justify-center border text-[10px] font-medium leading-none transition-all duration-300 transform active:scale-90 ${seatStyle}`}
-                                                        >
-                                                            {seat.number}
-                                                        </button>
-                                                    );
-                                                })}
-
-                                                {/* Right Row Label */}
-                                                <div className="w-6 flex items-center justify-center text-[10px] font-medium text-gray-900 dark:text-gray-300 ml-2 shrink-0">
-                                                    {rowLabel}
-                                                </div>
-                                            </div>
-                                        </React.Fragment>
-                                    );
-                                });
-                            })()}
-
-                            {/* Repositioned Screen Element (Figma Style) */}
-                            <div className="w-full max-w-[800px] mt-24 mb-16 opacity-90 relative flex flex-col items-center">
-                                <span className="text-gray-400 dark:text-gray-500 text-[10px] font-semibold tracking-widest uppercase mb-4">Screen This Way</span>
-                                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
-                                <div className="h-2 w-full bg-gradient-to-b from-gray-100 dark:from-gray-800 to-transparent opacity-50"></div>
+                                {/* Repositioned Screen Element (Figma Style) */}
+                                <div className="w-full max-w-[800px] mt-24 mb-16 opacity-90 relative flex flex-col items-center">
+                                    <span className="text-gray-400 dark:text-gray-500 text-[10px] font-semibold tracking-widest uppercase mb-4">Screen This Way</span>
+                                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
+                                    <div className="h-2 w-full bg-gradient-to-b from-gray-100 dark:from-gray-800 to-transparent opacity-50"></div>
+                                </div>
                             </div>
                         </div>
                     </TransformComponent>

@@ -15,6 +15,7 @@ import { getMovieMerchandise } from '../services/storeService';
 import StoreCard from '../components/StoreCard';
 import MovieCard from '../components/MovieCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import apiCacheManager from '../services/apiCacheManager';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -129,7 +130,7 @@ const MovieDetailsPage = () => {
         const fetchMerch = async () => {
             if (movie) {
                 try {
-                    const data = await getMovieMerchandise(movie.id || movie.slug);
+                    const data = await apiCacheManager.getOrFetchMovieMerchandise(movie.id || movie.slug, () => getMovieMerchandise(movie.id || movie.slug));
                     setMerchandise(data);
                 } catch (err) {
                     console.error('Error fetching merchandise:', err);
@@ -539,19 +540,24 @@ const MovieDetailsPage = () => {
                 />
             )}
 
-            {/* Mobile Sticky Booking Bar */}
-            <div className={`md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-[#1a1c23] border-t border-gray-100 dark:border-gray-800 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 transform ${showStickyBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+            {/* Mobile Sticky Booking Bar — Premium Liquid Glass Effect */}
+            <div className={`md:hidden fixed bottom-0 left-0 right-0 bg-white/20 dark:bg-[#1a1c23]/80 backdrop-blur-md backdrop-saturate-150 border-t border-white/20 dark:border-white/5 p-4 pb-safe z-50 shadow-[0_-12px_45px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out transform ${showStickyBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
                 }`}>
-                <button
-                    onClick={handleBookingClick}
-                    disabled={!movie.isAvailable}
-                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wider shadow-lg transition-transform active:scale-95 ${movie.isAvailable
-                        ? 'bg-primary text-white shadow-primary/30 font-roboto'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                        }`}
-                >
-                    {movie.isAvailable ? 'Book Tickets' : 'Coming Soon'}
-                </button>
+                {/* Subtle top inner glow highlight */}
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30"></div>
+                
+                <div className="max-w-md mx-auto">
+                    <button
+                        onClick={handleBookingClick}
+                        disabled={!movie.isAvailable}
+                        className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-[0.97] ring-1 ring-white/10 ${movie.isAvailable
+                            ? 'bg-primary text-white shadow-primary/30 font-roboto'
+                            : 'bg-gray-200/50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                            }`}
+                    >
+                        {movie.isAvailable ? 'Book Tickets' : 'Coming Soon'}
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -920,7 +926,7 @@ const SimilarMovies = ({ currentMovie }) => {
 
             setIsLoading(true);
             try {
-                const data = await getSimilarMovies(movieId);
+                const data = await apiCacheManager.getOrFetchSimilarMovies(movieId, () => getSimilarMovies(movieId));
                 setSimilarMovies(data?.slice(0, 8) || []);
             } catch (error) {
                 console.error('Error fetching similar movies:', error);

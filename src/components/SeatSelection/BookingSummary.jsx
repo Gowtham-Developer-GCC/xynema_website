@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShoppingBag, X } from 'lucide-react';
+import { ShoppingBag, X, Accessibility, Armchair } from 'lucide-react';
+import { calculateBookingTotal } from '../../utils/pricing';
 
 const BookingSummary = ({
     movie,
@@ -23,10 +24,8 @@ const BookingSummary = ({
     // Calculate Total 
     const basePrice = show ? (show.price || show.basePrice || 150) : 0;
     const ticketsTotal = selectedSeats.reduce((acc, seat) => acc + (seat.basePrice || basePrice), 0);
-    const convenienceFee = selectedSeats.length > 0 ? selectedSeats.length * 30 : 0;
-    const gstRate = 0.18;
-    const gstAmount = (ticketsTotal + convenienceFee + snacksTotal) * gstRate;
-    const finalTotal = ticketsTotal + convenienceFee + snacksTotal + gstAmount;
+    const pricing = calculateBookingTotal(ticketsTotal, snacksTotal);
+    const { convenienceFee, gstAmount, finalTotal } = pricing;
 
     return (
         <div className="h-full flex flex-col bg-white dark:bg-gray-900 z-20 transition-colors duration-300 rounded-2xl">
@@ -89,7 +88,7 @@ const BookingSummary = ({
                         <span className="font-medium text-[#111827] dark:text-white">₹{convenienceFee.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-[13.5px]">
-                        <span className="text-gray-500 dark:text-gray-400">GST (18%)</span>
+                        <span className="text-gray-500 dark:text-gray-400">GST</span>
                         <span className="font-medium text-[#111827] dark:text-white">₹{gstAmount.toFixed(2)}</span>
                     </div>
                 </div>
@@ -144,6 +143,16 @@ const BookingSummary = ({
                                 <div className="absolute w-[10px] h-[1.5px] bg-gray-400 dark:bg-gray-600 -rotate-45"></div>
                             </div>
                             <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">disabled</span>
+                        </div>
+                        {/* Wheelchair */}
+                        <div className="flex items-center gap-3">
+                            <Accessibility className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500" />
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">Wheelchair</span>
+                        </div>
+                        {/* Recliner */}
+                        <div className="flex items-center gap-3">
+                            <Armchair className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500" />
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400 font-bold uppercase tracking-tight">Recliner</span>
                         </div>
                     </div>
                 </div>

@@ -410,7 +410,10 @@ export class Booking {
         this.foodOrders = data.foodOrders || {};
         this.duration = data.duration || 0;
         this.language = data.language || '';
+        this.movieLanguage = data.movieLanguage || '';
+        this.format = data.format || '';
         this.certification = data.certification || '';
+        this.movie = data.movie || null;
         this.createdAt = data.createdAt || new Date().toISOString();
         this.isReviewed = data.isReviewed ?? false;
         this.qrCode = data.qrCode || '';
@@ -498,7 +501,12 @@ export class Booking {
             foodOrders: json.foodAndBeverages || {},
             duration: movieData.duration || movieData.Duration || json.duration || 0,
             language: (movieData.language || movieData.movieLanguage || json.language || (Array.isArray(movieData.languages) ? movieData.languages[0] : '') || '').toString(),
+            movieLanguage: Array.isArray(movieData.movieLanguage || json.movieLanguage) 
+                ? (movieData.movieLanguage || json.movieLanguage).join(', ') 
+                : (movieData.movieLanguage || json.movieLanguage || movieData.language || json.language || '').toString(),
+            format: (json.format || movieData.format || screenData.screenType || '').toString(),
             certification: (movieData.certification || json.certification || '').toString(),
+            movie: movieData,
             createdAt: (json.createdAt || '').toString(),
             isReviewed: json.isReviewed ?? false,
             qrCode: (json.qrCode || '').toString(),

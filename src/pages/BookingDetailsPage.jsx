@@ -276,7 +276,7 @@ const BookingDetailsPage = () => {
                                             {booking.format || '2D'}
                                         </span>
                                         <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">
-                                            {booking.language}
+                                            {Array.isArray(booking.movieLanguage) ? booking.movieLanguage.join(', ') : booking.movieLanguage}
                                         </span>
                                         {(booking.movie?.certification || booking.certification) && (
                                             <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">

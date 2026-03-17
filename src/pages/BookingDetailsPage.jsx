@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock } from 'lucide-react';
 import { getBookingDetails } from '../services/bookingService';
@@ -19,7 +19,9 @@ const BookingDetailsPage = () => {
     const [error, setError] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [justReviewed, setJustReviewed] = useState(false);
-    const hasFetched = React.useRef(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const hasFetched = useRef(false);
+    const ticketRef = useRef(null);
 
     useEffect(() => {
         // Avoid re-fetching if we already have this booking in state
@@ -87,8 +89,94 @@ const BookingDetailsPage = () => {
         return loc;
     };
 
-    const handleDownload = () => {
-        window.print();
+    // Helper: Convert an image URL to base64 via our server proxy
+    const fetchImageAsBase64 = async (url) => {
+        if (!url || url.startsWith('data:')) return url; // Already inline
+        try {
+            const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) return null;
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+            });
+        } catch {
+            return null;
+        }
+    };
+
+    const handleDownload = async () => {
+        if (!ticketRef.current) return;
+        
+        try {
+            setIsDownloading(true);
+            
+            const [htmlToImageModule, jsPDFModule] = await Promise.all([
+                import('html-to-image'),
+                import('jspdf')
+            ]);
+            
+            const toPng = htmlToImageModule.toPng || htmlToImageModule.default?.toPng;
+            const jsPDF = jsPDFModule.jsPDF || jsPDFModule.default;
+
+            if (!toPng || !jsPDF) throw new Error('Download libraries failed to load');
+            
+            const element = ticketRef.current;
+
+            // Step 1: Pre-convert ALL images to inline base64 via proxy (bypasses CORS)
+            const images = [...element.getElementsByTagName('img')];
+            const originalSrcs = []; // Store originals to restore later
+
+            for (const img of images) {
+                const originalSrc = img.src;
+                originalSrcs.push({ img, src: originalSrc });
+                
+                if (originalSrc && !originalSrc.startsWith('data:')) {
+                    const base64 = await fetchImageAsBase64(originalSrc);
+                    if (base64) {
+                        img.src = base64;
+                    }
+                }
+            }
+
+            // Step 2: Wait for all swapped images to settle
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Step 3: Capture the ticket (now all images are inline, no CORS issues)
+            const dataUrl = await toPng(element, {
+                pixelRatio: 2.5, // Increased from 2 for better detail
+                backgroundColor: '#ffffff',
+                cacheBust: false,
+                skipFonts: true,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
+            });
+
+            // Step 4: Restore original image sources
+            for (const { img, src } of originalSrcs) {
+                img.src = src;
+            }
+            
+            // Step 5: Generate PDF
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [element.offsetWidth, element.offsetHeight]
+            });
+            
+            pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.offsetHeight);
+            pdf.save(`XYNEMA-Ticket-${booking.bookingId || booking.id}.pdf`);
+        } catch (err) {
+            console.error('PDF generation failed:', err);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     const handleReviewSuccess = () => {
@@ -99,7 +187,44 @@ const BookingDetailsPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 pb-20 transition-colors duration-300">
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 pb-20 transition-colors duration-300 print:bg-white print:p-0">
+            <style>{`
+                @media print {
+                    @page { margin: 0; size: auto; }
+                    body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    
+                    header, footer, nav, .print\\:hidden, button { 
+                        display: none !important; 
+                    }
+
+                    main, #root, #root > div {
+                        display: block !important;
+                        width: 100% !important;
+                        max-width: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    
+                    .max-w-3xl {
+                        max-width: none !important;
+                        margin: 0 !important;
+                        padding: 20px !important;
+                    }
+
+                    .rounded-\\[40px\\] { 
+                        border-radius: 24px !important; 
+                        border: 1px solid #e5e7eb !important; 
+                        box-shadow: none !important; 
+                        margin: 0 auto !important;
+                        max-width: 650px !important;
+                        overflow: hidden !important;
+                        background: white !important;
+                    }
+
+                    .opacity-60 { opacity: 1 !important; }
+                    img { display: block !important; max-width: 100%; border-radius: 0 !important; }
+                }
+            `}</style>
             <SEO title={`Ticket - ${booking.movieTitle} | XYNEMA`} description="View your movie ticket" />
 
             {/* Header */}
@@ -121,14 +246,15 @@ const BookingDetailsPage = () => {
 
             <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* Main High-Fidelity Ticket Card */}
-                <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-primary/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
+                <div ref={ticketRef} className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-primary/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
 
                     {/* Top Section: Hero Image & Movie Info */}
                     <div className="relative w-full h-56 bg-gray-900 overflow-hidden">
-                        {/* Immersive Background */}
-                        <div
-                            className="absolute inset-0 bg-cover bg-center scale-105 opacity-60 contrast-125 saturate-150"
-                            style={{ backgroundImage: `url(${booking.landscapePosterUrl || booking.posterUrl})` }}
+                        {/* Immersive Background - Using img tag for better capture reliability */}
+                        <img
+                            src={booking.landscapePosterUrl || booking.posterUrl}
+                            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-60 contrast-125 saturate-150"
+                            alt=""
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent flex flex-col justify-end p-8">
                             <div className="relative z-10 flex gap-6 items-end">
@@ -142,18 +268,18 @@ const BookingDetailsPage = () => {
                                 </div>
                                 {/* Title and Tags */}
                                 <div className="flex-1 pb-2">
-                                    <h2 className="text-3xl font-black tracking-tighter uppercase text-white leading-none mb-3 drop-shadow-md">
+                                    <h2 className="text-3xl font-black tracking-tighter uppercase text-white leading-none mb-3">
                                         {booking.movieTitle}
                                     </h2>
-                                    <div className="flex flex-wrap gap-2 drop-shadow-sm">
-                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">
                                             {booking.format || '2D'}
                                         </span>
-                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                        <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">
                                             {booking.language}
                                         </span>
                                         {(booking.movie?.certification || booking.certification) && (
-                                            <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-[9px] font-black text-white rounded uppercase tracking-widest">
+                                            <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">
                                                 {booking.movie?.certification || booking.certification}
                                             </span>
                                         )}
@@ -333,9 +459,19 @@ const BookingDetailsPage = () => {
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex justify-center">
                     <button
                         onClick={handleDownload}
-                        className="w-full max-w-[200px] h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        disabled={isDownloading}
+                        className="w-full max-w-[200px] h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
                     >
-                        <Download size={14} /> Download Pass
+                        {isDownloading ? (
+                            <>
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <Download size={14} /> Download Pass
+                            </>
+                        )}
                     </button>
                 </div>
 

@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import SimilarEventCard from '../components/SimilarEventCard';
+import { optimizeImage } from '../utils/helpers';
 
 const EventDetailsPage = () => {
     const { slug } = useParams();
@@ -31,7 +32,9 @@ const EventDetailsPage = () => {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
     const [similarEvents, setSimilarEvents] = useState([]);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const storeScrollRef = useRef(null);
+    const galleryScrollRef = useRef(null);
 
     // Multi-day selection state
     const [selectedShowTimeIndex, setSelectedShowTimeIndex] = useState(0);
@@ -51,13 +54,18 @@ const EventDetailsPage = () => {
             observer.observe(heroButtonRef.current);
         }
 
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 300);
         };
+        window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
             if (heroButtonRef.current) observer.unobserve(heroButtonRef.current);
+            window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
@@ -304,11 +312,22 @@ const EventDetailsPage = () => {
     const totalTickets = getTotalTickets();
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0f1115] pb-32 transition-colors duration-300">
+        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0f1115] pb-32 transition-colors duration-300 bg-fixed">
             <SEO
                 title={`${event.name} - XYNEMA Events`}
                 description={event.description}
             />
+
+            {/* Sharpness Filter Definition */}
+            <svg style={{ visibility: 'hidden', position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
+                <filter id="sharpen-filter">
+                    <feConvolveMatrix
+                        order="3"
+                        kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"
+                        preserveAlpha="true"
+                    />
+                </filter>
+            </svg>
 
             {/* Sticky Minimal Nav (Visible only when scrolling past hero) */}
             <div data-scrolled={isScrolled} className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 -translate-y-full data-[scrolled=true]:translate-y-0 bg-white/90 dark:bg-[#1a1c23]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm" id="mini-nav">
@@ -347,7 +366,11 @@ const EventDetailsPage = () => {
                 {/* Blurred Background Image - Blur only on mobile */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[4px] md:blur-none scale-[1]"
-                    style={{ backgroundImage: `url(${images[activeImageIndex] || event.imageUrl})` }}
+                    style={{
+                        backgroundImage: `url(${optimizeImage(images[activeImageIndex] || event.imageUrl, { width: isMobile ? 800 : 1920, quality: 95 })})`,
+                        filter: isMobile ? 'blur(4px)' : 'url(#sharpen-filter)',
+                        imageRendering: '-webkit-optimize-contrast'
+                    }}
                 />
 
                 {/* Gradient Overlays - Lightened for better visibility */}
@@ -371,7 +394,7 @@ const EventDetailsPage = () => {
 
                     {/* Right: Glass Card Details */}
                     <div className="w-full md:flex-1 max-w-2xl mx-auto md:mx-0">
-                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300">
+                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300">
                             {/* Glass reflection gradient */}
                             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-[32px] pointer-events-none" />
                             {/* Colorful ambient glow inside card based on image (simulated with standard modern colors) */}

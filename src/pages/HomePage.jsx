@@ -344,7 +344,7 @@ const HomePage = ({ selectedCity }) => {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
                                 Official merchandise
                             </h2>
-                            <Link to="/store" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
+                            <Link to="" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
                                 <ShoppingBag className="w-4 h-4" />
                                 Visit Store
                             </Link>

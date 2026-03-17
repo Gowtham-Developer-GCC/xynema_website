@@ -1,9 +1,16 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { Star, ThumbsUp } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import { optimizeImage } from '../utils/helpers';
 
-const MovieCard = memo(({ movie }) => (
+const MovieCard = memo(({ movie }) => {
+    const { getInterestOffset, interestedMovieIds } = useData();
+    const interestOffset = getInterestOffset(movie.id);
+    const hasInterested = interestedMovieIds.has(movie.id);
+    const displayInterestCount = (movie.interestCount || 0) + interestOffset;
+
+    return (
     <Link
         to={`/movie/${movie.slug || movie.id}`}
         className={`group relative flex flex-col space-y-2 animate-slide-up opacity-0 ${movie.delayClass || ''}`}
@@ -26,8 +33,9 @@ const MovieCard = memo(({ movie }) => (
                                 {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'TBD'}
                             </span>
                         </div>
-                        <div className="text-[12px] font-bold text-white flex items-center gap-1">
-                            <span className="text-rose-400">❤</span> {movie.interestCount || 0} Interested
+                        <div className={`text-[12px] font-bold text-white flex items-center gap-1.5 ${hasInterested ? 'text-primary' : ''}`}>
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasInterested ? 'fill-primary text-primary animate-pulse' : 'text-rose-400'}`} />
+                            <span>{displayInterestCount} Interested</span>
                         </div>
                     </div>
                 ) : (
@@ -62,7 +70,8 @@ const MovieCard = memo(({ movie }) => (
             </p>
         </div>
     </Link>
-));
+    );
+});
 
 MovieCard.displayName = 'MovieCard';
 

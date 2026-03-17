@@ -30,8 +30,8 @@ const StoreCard = memo(({ item }) => {
                             onwards
                         </span>
                     </div>
-                    <div className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 group-hover:-translate-y-0.5 group-active:scale-95 transition-all duration-300">
-                        <span className="text-[9px] sm:text-[12px] font-black text-gray-600 dark:text-gray-400 group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
+                    <div className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-active:scale-95 transition-all duration-300">
+                        <span className="text-[9px] sm:text-[12px] font-bold text-white group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
                     </div>
                 </div>
             </div>

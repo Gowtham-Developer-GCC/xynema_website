@@ -41,7 +41,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
     return (
         <>
-            <nav className="bg-white/60 dark:bg-gray-900/30 backdrop-blur-2xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+            <nav className="bg-white/60 dark:bg-gray-900/30 backdrop-blur-2xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300 print:hidden">
                 <div className="w-full max-w-[95%] md:max-w-[95%] lg:max-w-[95%] xl:max-w-[95%] 2xl:max-w-[80%] mx-auto px-4">
                     <div className="flex justify-between items-center h-16 md:h-20 lg:h-20 xl:h-20">
 
@@ -338,7 +338,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 {
     !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
     !location.pathname.startsWith('/event/') && (
-        <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe print:hidden">
             <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
                 <Link
                     to="/"

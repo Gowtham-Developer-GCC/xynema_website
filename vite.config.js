@@ -2,9 +2,54 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// Image proxy plugin - proxies external images to bypass CORS for PDF generation
+function imageProxyPlugin() {
+    return {
+        name: 'image-proxy',
+        configureServer(server) {
+            server.middlewares.use('/__image_proxy', async (req, res) => {
+                try {
+                    const url = new URL(req.url, 'http://localhost');
+                    const imageUrl = url.searchParams.get('url');
+                    if (!imageUrl) {
+                        res.statusCode = 400;
+                        res.end('Missing url parameter');
+                        return;
+                    }
+
+                    const response = await fetch(imageUrl, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+                            'Accept': 'image/*,*/*',
+                        }
+                    });
+
+                    if (!response.ok) {
+                        res.statusCode = response.status;
+                        res.end(`Failed to fetch image: ${response.statusText}`);
+                        return;
+                    }
+
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+                    res.setHeader('Content-Type', contentType);
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                    res.end(buffer);
+                } catch (err) {
+                    console.error('Image proxy error:', err.message);
+                    res.statusCode = 500;
+                    res.end('Failed to proxy image');
+                }
+            });
+        }
+    };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), imageProxyPlugin()],
 
     // Server configuration
     server: {

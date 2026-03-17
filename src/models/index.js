@@ -412,6 +412,8 @@ export class Booking {
         this.language = data.language || '';
         this.certification = data.certification || '';
         this.createdAt = data.createdAt || new Date().toISOString();
+        this.isReviewed = data.isReviewed ?? false;
+        this.qrCode = data.qrCode || '';
     }
 
     static fromJson(json) {
@@ -499,6 +501,7 @@ export class Booking {
             certification: (movieData.certification || json.certification || '').toString(),
             createdAt: (json.createdAt || '').toString(),
             isReviewed: json.isReviewed ?? false,
+            qrCode: (json.qrCode || '').toString(),
         });
     }
 

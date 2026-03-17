@@ -241,6 +241,7 @@ const MovieDetailsPage = () => {
     const isFavorite = favorites.includes(movie.id);
     const hasInterested = interestedMovieIds.has(movie.id);
     const interestOffset = getInterestOffset(movie.id);
+    const displayInterestCount = (movie.interestCount || 0) + interestOffset;
 
     return (
         <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0f1115] transition-colors duration-300">
@@ -248,6 +249,17 @@ const MovieDetailsPage = () => {
                 title={`${movie.title} - Book Tickets | XYNEMA`}
                 description={movie.description || `Watch ${movie.title} in cinemas near you`}
             />
+
+            {/* Sharpness Filter Definition */}
+            <svg style={{ visibility: 'hidden', position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
+                <filter id="sharpen-filter">
+                    <feConvolveMatrix
+                        order="3"
+                        kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"
+                        preserveAlpha="true"
+                    />
+                </filter>
+            </svg>
 
             {/* Hero Section with Sophisticated Banner */}
             <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[50vh] md:min-h-[70vh] flex items-center pt-20 pb-12 md:pt-24 md:pb-16">
@@ -268,8 +280,9 @@ const MovieDetailsPage = () => {
                         <div
                             className="absolute inset-0 bg-cover bg-center md:bg-fixed transition-all duration-700"
                             style={{
-                                backgroundImage: `url(${isMobile ? movie.posterUrl : (movie.backdropUrl || movie.posterUrl)})`,
-                                filter: 'blur( 0px)',
+                                backgroundImage: `url(${optimizeImage(isMobile ? movie.posterUrl : (movie.backdropUrl || movie.posterUrl), { width: isMobile ? 800 : 1920, quality: 95 })})`,
+                                filter: 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
+                                imageRendering: '-webkit-optimize-contrast',
                                 opacity: 1
                             }}
                         />
@@ -316,7 +329,7 @@ const MovieDetailsPage = () => {
                         </div>
                     )}
 
-                    <div className={`flex flex-col md:flex-row gap-8 lg:gap-14 items-center md:items-start text-white p-6 sm:p-8 lg:p-12 rounded-2xl md:rounded-[2rem] bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)] backdrop-saturate-[1.8] relative overflow-hidden transition-all duration-700 ease-in-out ${isGlassHidden ? 'translate-y-[120%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+                    <div className={`flex flex-col md:flex-row gap-8 lg:gap-14 items-center md:items-start text-white p-6 sm:p-8 lg:p-12 rounded-2xl md:rounded-[2rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)] backdrop-saturate-[1.8] relative overflow-hidden transition-all duration-700 ease-in-out ${isGlassHidden ? 'translate-y-[120%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
                         }`}>
                         {/* Soft Highlight for Glass Edge */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-50"></div>
@@ -360,7 +373,7 @@ const MovieDetailsPage = () => {
                                 ) : (
                                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0 animate-in fade-in slide-in-from-left duration-500">
                                         <ThumbsUp className="w-3.5 h-3.5 fill-primary text-primary" />
-                                        <span className="text-xs md:text-sm font-black tracking-tight">{movie.interestCount + (hasInterested ? 1 : 0)}</span>
+                                        <span className="text-xs md:text-sm font-black tracking-tight">{displayInterestCount}</span>
                                         <span className="text-[10px] md:text-xs font-medium text-white/70">Interested</span>
                                     </div>
                                 )}
@@ -491,7 +504,7 @@ const MovieDetailsPage = () => {
                                             className={`flex items-center gap-3 px-6 h-12 rounded-xl border transition-all active:scale-95 shadow-lg group ${hasInterested
                                                 ? 'bg-white border-white text-primary shadow-white/10'
                                                 : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                                            }`}
+                                                }`}
                                         >
                                             <ThumbsUp className={`w-5 h-5 ${hasInterested ? 'fill-current' : 'animate-bounce-subtle'}`} />
                                             <div className="flex flex-col items-start leading-none">
@@ -574,7 +587,7 @@ const MovieDetailsPage = () => {
                 }`}>
                 {/* Subtle top inner glow highlight */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-30"></div>
-                
+
                 <div className="max-w-md mx-auto">
                     <button
                         onClick={handleBookingClick}
@@ -955,7 +968,23 @@ const SimilarMovies = ({ currentMovie }) => {
 
             setIsLoading(true);
             try {
-                const data = await apiCacheManager.getOrFetchSimilarMovies(movieId, () => getSimilarMovies(movieId));
+                let data = await apiCacheManager.getOrFetchSimilarMovies(movieId, () => getSimilarMovies(movieId));
+
+                // Correct availability for hover effect: 
+                // If the movie exists in 'movies' (Now Showing) or is NOT in 'upcomingMovies', 
+                // ensure it shows the streaming/rating hover style.
+                if (data && data.length > 0) {
+                    data = data.map(m => {
+                        const isNowShowing = movies.some(nm => nm.id === m.id || nm.slug === m.slug);
+                        const isUpcoming = upcomingMovies.some(um => um.id === m.id || um.slug === m.slug);
+
+                        return {
+                            ...m,
+                            isAvailable: isNowShowing || !isUpcoming
+                        };
+                    });
+                }
+
                 setSimilarMovies(data?.slice(0, 8) || []);
             } catch (error) {
                 console.error('Error fetching similar movies:', error);

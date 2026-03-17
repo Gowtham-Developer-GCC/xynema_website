@@ -223,9 +223,9 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                             setIsMoreFiltersOpen(false);
                                         }}
                                         className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all border font-display max-w-[120px] sm:max-w-[180px] truncate ${idx === 0 ? 'inline-block' : // Tag 1 always visible if possible
-                                                idx === 1 ? 'hidden xs:inline-block' :
-                                                    idx === 2 ? 'hidden sm:inline-block' :
-                                                        'hidden md:inline-block' // Tag 4+
+                                            idx === 1 ? 'hidden xs:inline-block' :
+                                                idx === 2 ? 'hidden sm:inline-block' :
+                                                    'hidden md:inline-block' // Tag 4+
                                             } ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
                                                 ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                                                 : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
@@ -525,9 +525,9 @@ const EventCard = memo(({ event }) => {
                     />
                 </div>
             </Link>
-            <div className="p-4 sm:p-5 flex flex-col flex-grow">
+            <div className="p-4 sm:p-5 flex flex-col flex-grow ">
                 <Link to={eventLink} className="mb-2 block">
-                    <h3 className="font-bold line-clamp-2 text-gray-900 dark:text-white text-[0.95rem] sm:text-[1.05rem] leading-snug transition-colors font-roboto group-hover:text-primary">
+                    <h3 className="font-bold line-clamp-2 text-gray-900 dark:text-white text-[0.95rem] sm:text-[1.05rem] leading-snug transition-colors font-roboto group-hover:text-primary ">
                         {event.name}
                     </h3>
                 </Link>

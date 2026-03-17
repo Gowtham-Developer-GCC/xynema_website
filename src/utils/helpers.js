@@ -217,12 +217,30 @@ export const utils = {
     optimizeImage(url, options = {}) {
         if (!url) return 'https://placehold.co/400x600/333/FFF?text=XY';
 
-        // Skip optimization for external CDNs that might break with extra params
-        if (url.includes('bmscdn.com') || url.includes('unsplash.com') || url.includes('cloudinary.com') || url.startsWith('http')) {
-            return url;
+        let processedUrl = url;
+
+        // Special handling for BookMyShow (BMS) images to get higher quality
+        if (processedUrl.includes('bmscdn.com')) {
+            // Replace medium/small/thumbnail with larger versions if present in the path
+            processedUrl = processedUrl
+                .replace('/listing/medium/', '/listing/xlarge/')
+                .replace('/mobile/listing/medium/', '/mobile/listing/xlarge/')
+                .replace('/mobile/thumbnail/medium/', '/mobile/thumbnail/xlarge/')
+                .replace('/mobile/thumbnail/small/', '/mobile/thumbnail/xlarge/');
         }
 
-        const { width = 1200, height = 630, quality = 80, format = 'webp' } = options;
+        // Skip further optimization for external CDNs that handle their own resizing or might break
+        if (processedUrl.includes('unsplash.com') || processedUrl.includes('cloudinary.com')) {
+            return processedUrl;
+        }
+
+        const { width = 1280, height = 720, quality = 90, format = 'webp' } = options;
+        
+        // If it's a clear external high-res URL and not one of our local images, just return it
+        if (processedUrl.startsWith('http')) {
+            return processedUrl;
+        }
+
         const params = new URLSearchParams({
             w: width,
             h: height,
@@ -231,7 +249,7 @@ export const utils = {
             auto: 'format',
         });
 
-        return url.includes('?') ? `${url}&${params}` : `${url}?${params}`;
+        return processedUrl.includes('?') ? `${processedUrl}&${params}` : `${processedUrl}?${params}`;
     },
 
     /**

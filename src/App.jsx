@@ -40,6 +40,7 @@ const MyEventBookingsPage = lazy(() => import('./pages/MyEventBookingsPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
+const SportsPage = lazy(() => import('./pages/SportsPage'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
 const OffersPage = lazy(() => import('./pages/OffersPage'));
@@ -160,6 +161,7 @@ export default function App() {
                                         <Route path="/refund" element={<RefundPolicy />} />
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                         <Route path="/cinemas" element={<CinemasListPage />} />
+                                        <Route path="/sports" element={<SportsPage />} />
                                         <Route path="/favorites" element={<FavoritesPage />} />
                                         <Route path="/offers" element={<OffersPage />} />
                                         <Route path="/notifications" element={<NotificationsPage />} />

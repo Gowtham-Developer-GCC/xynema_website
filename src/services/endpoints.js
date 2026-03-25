@@ -59,5 +59,11 @@ export const ENDPOINTS = {
     // Offers
     OFFERS: {
         LIST: '/offers',
+    },
+
+    // Turfs
+    TURFS: {
+        AVAILABLE: '/customer-turf/available-turfs',
+        DETAILS: (turfId) => `/customer-turf/available-turfs/${turfId}`,
     }
 };

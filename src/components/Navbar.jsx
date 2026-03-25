@@ -74,6 +74,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>For You</Link>
                             <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Movies</Link>
                             <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Events</Link>
+                            <Link to="/sports" className={`relative py-1 transition-colors ${location.pathname.startsWith('/sports') ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Sports</Link>
                         </div>
 
                         {/* Right: Search & Actions */}
@@ -272,6 +273,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     { to: '/#recommended-section', label: 'For You', icon: Heart, active: location.pathname === '/' },
                                     { to: '/movies', label: 'Movies', icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
                                     { to: '/events', label: 'Events', icon: Calendar, active: location.pathname.startsWith('/events') },
+                                    { to: '/sports', label: 'Sports', icon: MapPin, active: location.pathname.startsWith('/sports') }, // Used MapPin for lack of a better icon in the imports, or I could use something else.
                                 ].map((nav) => (
                                     <Link
                                         key={nav.to}
@@ -377,6 +379,19 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
+                </Link>
+
+                <Link
+                    to="/sports"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/sports')
+                            ? 'text-primary scale-110'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                >
+                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/sports') ? 'bg-primary/10' : ''}`}>
+                        <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/sports') ? 'fill-current' : ''}`} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Sports</span>
                 </Link>
             </div>
         </div>

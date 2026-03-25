@@ -9,8 +9,18 @@ export default {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: themeFonts.sans,
+                display: themeFonts.display,
+                roboto: themeFonts.roboto,
+                manrope: ['Manrope', 'sans-serif'],
+                headline: ['Manrope', 'sans-serif'],
+                body: ['Inter', 'sans-serif'],
+                label: ['Inter', 'sans-serif'],
+            },
             colors: {
                 primary: themeColors.primary,
+                'primary-hover': themeColors.hover,
                 xynemaRose: themeColors.primary,
                 background: themeColors.background,
                 darkBackground: themeColors.darkBackground,
@@ -19,11 +29,6 @@ export default {
                 charcoalSlate: '#3e7cb1',
                 premiumGold: '#81a4cd',
                 whiteSmoke: '#F5F5F5',
-            },
-            fontFamily: {
-                sans: themeFonts.sans,
-                display: themeFonts.display,
-                roboto: themeFonts.roboto,
             },
             keyframes: {
                 'slide-up': {

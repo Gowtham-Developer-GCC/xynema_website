@@ -193,69 +193,68 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                 </div>
             </div>
 
-            {/* Filter Pills */}
+            {/* Filter Section - Matching Sports Page UI */}
             {activeTab !== 'private_events' && (
-                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 relative z-[20]">
-                    <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex items-center gap-2 sm:gap-3">
-                        {/* Scrollable Pills Area */}
-                        <div className="flex-1 flex items-center gap-3 overflow-x-auto scrollbar-hide">
-                            {/* Static "All" Pill */}
+                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] transition-all duration-300 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
+                    <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                        <div className="flex items-center gap-8 overflow-x-auto no-scrollbar">
+                            {/* Static "All" Tab */}
                             <button
                                 onClick={() => {
                                     setEventFilters(prev => ({ ...prev, tags: [] }));
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all border font-display ${eventFilters.tags.length === 0
-                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
-                                    : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                                className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${eventFilters.tags.length === 0
+                                    ? 'text-primary'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 All
+                                {eventFilters.tags.length === 0 && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
                             </button>
 
-                            {/* Progressive Dynamic Tags */}
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                {availableEventTags.slice(0, 4).map((tag, idx) => (
-                                    <button
-                                        key={tag}
-                                        onClick={() => {
-                                            setEventFilters(prev => ({ ...prev, tags: [tag] }));
-                                            setIsMoreFiltersOpen(false);
-                                        }}
-                                        className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all border font-display max-w-[120px] sm:max-w-[180px] truncate ${idx === 0 ? 'inline-block' : // Tag 1 always visible if possible
-                                            idx === 1 ? 'hidden xs:inline-block' :
-                                                idx === 2 ? 'hidden sm:inline-block' :
-                                                    'hidden md:inline-block' // Tag 4+
-                                            } ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
-                                                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
-                                                : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
-                                            }`}
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
+                            {/* Progressive Dynamic Tags as Tabs */}
+                            {availableEventTags.slice(0, 4).map((tag, idx) => (
+                                <button
+                                    key={tag}
+                                    onClick={() => {
+                                        setEventFilters(prev => ({ ...prev, tags: [tag] }));
+                                        setIsMoreFiltersOpen(false);
+                                    }}
+                                    className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${idx === 0 ? 'inline-block' :
+                                        idx === 1 ? 'hidden xs:inline-block' :
+                                            idx === 2 ? 'hidden sm:inline-block' :
+                                                'hidden md:inline-block'
+                                        } ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                            ? 'text-primary'
+                                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                        }`}
+                                >
+                                    {tag}
+                                    {eventFilters.tags.length === 1 && eventFilters.tags.includes(tag) && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
+                                </button>
+                            ))}
                         </div>
 
-                        {/* Dropdown - Dynamically hides what's already on the screen */}
-                        <div className="relative shrink-0" ref={moreFiltersRef}>
+                        {/* More Filters Integrated on the Right */}
+                        <div className="relative shrink-0 ml-8" ref={moreFiltersRef}>
                             <button
                                 onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 sm:gap-2 font-display ${eventFilters.tags.length > 0
-                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
-                                    : 'bg-white dark:bg-gray-800 text-[#4B5563] dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
+                                className={`py-4 text-xs font-bold transition-all flex items-center gap-1 group whitespace-nowrap ${eventFilters.tags.length > 1 || (eventFilters.tags.length === 1 && !availableEventTags.slice(0, 4).includes(eventFilters.tags[0]))
+                                    ? 'text-primary'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 <span className="hidden sm:inline">More </span><span>Filters</span>
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isMoreFiltersOpen && (
-                                <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                <div className="absolute top-full right-0 mt-0 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-b-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
                                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left">
                                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase">Categories</span>
                                     </div>
                                     <div className="max-h-64 overflow-y-auto scrollbar-hide px-2">
-                                        {/* Show all available tags in dropdown for simplicity, especially those that might be hidden by breakpoints */}
                                         {availableEventTags.map(tag => (
                                             <label
                                                 key={tag}
@@ -276,7 +275,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                                     />
                                                     <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                                                 </div>
-                                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-display tracking-tight truncate">
+                                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-poppins">
                                                     {tag}
                                                 </span>
                                             </label>

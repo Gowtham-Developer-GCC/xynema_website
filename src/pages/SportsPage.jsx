@@ -214,14 +214,23 @@ const SportsPage = () => {
 // ============= COMPONENTS =============
 
 const EventCard = memo(({ event }) => {
+    const navigate = useNavigate();
     const formattedDate = new Intl.DateTimeFormat('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
     }).format(new Date(event.startDate || Date.now()));
 
+    const handleNavigate = () => {
+        const identifier = event.slug || event.id;
+        navigate(`/sports/${identifier}`, { state: { sport: event } });
+    };
+
     return (
-        <div className="bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 cursor-pointer group">
+        <div 
+            onClick={handleNavigate}
+            className="group bg-white dark:bg-[#1a1c23] rounded-[32px] overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-primary/30 dark:hover:border-primary/30 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex flex-col h-full cursor-pointer"
+        >
             <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                 <img
                     src={event.imageUrl}

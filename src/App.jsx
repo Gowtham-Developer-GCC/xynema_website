@@ -11,11 +11,8 @@ import OfflineScreen from './components/OfflineScreen';
 import ScrollToTop from './components/ScrollToTop';
 import bookingSessionManager from './utils/bookingSessionManager';
 
-
-
 // Lazy load enhanced pages
 const HomePage = lazy(() => import('./pages/HomePage'));
-// ... (rest of imports are same, we just inject our import near the top)
 const MoviesPage = lazy(() => import('./pages/MoviesPage'));
 const MovieDetailsPage = lazy(() => import('./pages/MovieDetailsPage'));
 const TheaterSelectionPage = lazy(() => import('./pages/TheaterSelectionPage'));
@@ -41,6 +38,7 @@ const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const SportsPage = lazy(() => import('./pages/SportsPage'));
+const SportDetailsPage = lazy(() => import('./pages/SportDetailsPage'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
 const OffersPage = lazy(() => import('./pages/OffersPage'));
@@ -162,6 +160,7 @@ export default function App() {
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                         <Route path="/cinemas" element={<CinemasListPage />} />
                                         <Route path="/sports" element={<SportsPage />} />
+                                        <Route path="/sports/:slug" element={<SportDetailsPage />} />
                                         <Route path="/favorites" element={<FavoritesPage />} />
                                         <Route path="/offers" element={<OffersPage />} />
                                         <Route path="/notifications" element={<NotificationsPage />} />

@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, QrCode, Loader } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, QrCode, Loader, MapPin, Clock } from 'lucide-react';
 import { getUserBookings } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
+import { getMyTurfBookings } from '../services/turfService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import apiCacheManager from '../services/apiCacheManager';
@@ -20,8 +21,14 @@ const MyBookingsPage = () => {
         const cached = apiCacheManager.get(`bookings_events_1`);
         return cached?.bookings ? cached.bookings : [];
     });
+    const [turfBookings, setTurfBookings] = useState(() => {
+        const cached = apiCacheManager.get(`bookings_turfs`);
+        if (!cached) return [];
+        return Array.isArray(cached) ? cached : (cached.bookings || []);
+    });
     const [loading, setLoading] = useState(!bookings?.length);
     const [eventLoading, setEventLoading] = useState(!eventBookings?.length);
+    const [turfLoading, setTurfLoading] = useState(!turfBookings?.length);
     const [pageLoading, setPageLoading] = useState(false);
     const [bookingType, setBookingType] = useState(location.state?.activeTab || 'movies');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -58,7 +65,7 @@ const MyBookingsPage = () => {
                 force
             );
 
-            const { bookings: newBookings, totalPages: total, currentPage } = response;
+            const { bookings: newBookings, totalPages: total, currentPage } = response.bookings ? response : { bookings: response.data || [], ...response };
             setBookings(newBookings || []);
             setMovieTotalPages(total);
             setMoviePage(currentPage);
@@ -85,7 +92,7 @@ const MyBookingsPage = () => {
                 force
             );
 
-            const { bookings: newBookings, totalPages: total, currentPage } = response;
+            const { bookings: newBookings, totalPages: total, currentPage } = response.bookings ? response : { bookings: response.data || [], ...response };
             setEventBookings(newBookings || []);
             setEventTotalPages(total);
             setEventPage(currentPage);
@@ -93,6 +100,25 @@ const MyBookingsPage = () => {
             console.error('Failed to fetch event bookings:', err);
         } finally {
             setEventLoading(false);
+            setPageLoading(false);
+        }
+    };
+
+    const fetchTurfBookings = async (force = false) => {
+        try {
+            if (turfBookings.length > 0) setPageLoading(true);
+            else setTurfLoading(true);
+
+            const response = await apiCacheManager.getOrFetchTurfBookings(
+                () => getMyTurfBookings(),
+                force
+            );
+            const bookingsArray = Array.isArray(response) ? response : (response?.data?.bookings || response?.data || response?.bookings || []);
+            setTurfBookings(bookingsArray);
+        } catch (err) {
+            console.error('Failed to fetch turf bookings:', err);
+        } finally {
+            setTurfLoading(false);
             setPageLoading(false);
         }
     };
@@ -112,6 +138,7 @@ const MyBookingsPage = () => {
         // This avoids hitting API every time if accessed within 3 minutes
         fetchMovieBookings(1, false);
         fetchEventBookings(1, false);
+        fetchTurfBookings(false);
     }, []);
 
     const handlePageChange = (newPage) => {
@@ -120,7 +147,7 @@ const MyBookingsPage = () => {
                 fetchMovieBookings(newPage);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        } else {
+        } else if (bookingType === 'events') {
             if (newPage >= 1 && newPage <= eventTotalPages && newPage !== eventPage) {
                 fetchEventBookings(newPage);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -168,8 +195,8 @@ const MyBookingsPage = () => {
     // ─── Filtering ───
     const filterByStatus = (booking, type) => {
         if (filterStatus === 'all') return true;
-        const dateStr = type === 'movies' ? booking.date : booking.showDate;
-        const timeStr = type === 'movies' ? booking.time : booking.showTime;
+        const dateStr = type === 'movies' ? booking.date : (type === 'events' ? booking.showDate : (booking.snapshot?.date || booking.slots?.[0]?.date || booking.date));
+        const timeStr = type === 'movies' ? booking.time : (type === 'events' ? booking.showTime : (booking.snapshot?.startTime || booking.slots?.[0]?.startTime));
         const showDate = parseDateTime(dateStr, timeStr);
         if (!showDate) return false;
         
@@ -190,8 +217,14 @@ const MyBookingsPage = () => {
     };
 
     const sortBookings = (a, b, type) => {
-        const dateA = parseDateTime(type === 'movies' ? a.date : a.showDate, type === 'movies' ? a.time : a.showTime);
-        const dateB = parseDateTime(type === 'movies' ? b.date : b.showDate, type === 'movies' ? b.time : b.showTime);
+        const dateA = parseDateTime(
+            type === 'movies' ? a.date : (type === 'events' ? a.showDate : (a.snapshot?.date || a.slots?.[0]?.date || a.date)), 
+            type === 'movies' ? a.time : (type === 'events' ? a.showTime : (a.snapshot?.startTime || a.slots?.[0]?.startTime))
+        );
+        const dateB = parseDateTime(
+            type === 'movies' ? b.date : (type === 'events' ? b.showDate : (b.snapshot?.date || b.slots?.[0]?.date || b.date)), 
+            type === 'movies' ? b.time : (type === 'events' ? b.showTime : (b.snapshot?.startTime || b.slots?.[0]?.startTime))
+        );
         if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
     };
@@ -205,11 +238,16 @@ const MyBookingsPage = () => {
         return eventBookings.filter(b => filterByStatus(b, 'events')).sort((a, b) => sortBookings(a, b, 'events'));
     }, [eventBookings, filterStatus]);
 
+    const filteredTurfs = useMemo(() => {
+        if (!Array.isArray(turfBookings)) return [];
+        return turfBookings.filter(b => filterByStatus(b, 'sports')).sort((a, b) => sortBookings(a, b, 'sports'));
+    }, [turfBookings, filterStatus]);
+
     // ─── Group By Month ───
     const groupByMonth = (items, type) => {
         const groups = {};
         items.forEach(item => {
-            const dateStr = type === 'movies' ? item.date : item.showDate;
+            const dateStr = type === 'movies' ? item.date : (type === 'events' ? item.showDate : (item.snapshot?.date || item.slots?.[0]?.date || item.date));
             if (!dateStr) return;
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return;
@@ -222,6 +260,7 @@ const MyBookingsPage = () => {
 
     const movieGroups = useMemo(() => groupByMonth(filteredMovies, 'movies'), [filteredMovies]);
     const eventGroups = useMemo(() => groupByMonth(filteredEvents, 'events'), [filteredEvents]);
+    const turfGroups = useMemo(() => groupByMonth(filteredTurfs, 'sports'), [filteredTurfs]);
 
     // ─── Initial Load ───
     if (loading && bookings.length === 0) return <LoadingScreen message="Loading Tickets" />;
@@ -229,6 +268,7 @@ const MyBookingsPage = () => {
     const tabs = [
         { key: 'movies', label: 'Movies' },
         { key: 'events', label: 'Events' },
+        { key: 'sports', label: 'Sports' }
     ];
 
     const filterOptions = [
@@ -237,8 +277,8 @@ const MyBookingsPage = () => {
         { value: 'past', label: 'Past' },
     ];
 
-    const activeGroups = bookingType === 'movies' ? movieGroups : eventGroups;
-    const isContentLoading = bookingType === 'movies' ? pageLoading : eventLoading;
+    const activeGroups = bookingType === 'movies' ? movieGroups : (bookingType === 'events' ? eventGroups : turfGroups);
+    const isContentLoading = bookingType === 'movies' ? pageLoading : (bookingType === 'events' ? eventLoading : turfLoading);
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300">
@@ -338,7 +378,9 @@ const MyBookingsPage = () => {
                                     {items.map((item, idx) =>
                                         bookingType === 'movies'
                                             ? <MovieTicketCard key={`movie-${item.id}-${idx}`} booking={item} />
-                                            : <EventTicketCard key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
+                                            : bookingType === 'events'
+                                                ? <EventTicketCard key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
+                                                : <TurfTicketCard key={`turf-${item._id || item.id}-${idx}`} booking={item} />
                                     )}
                                 </div>
                             </div>
@@ -358,7 +400,7 @@ const MyBookingsPage = () => {
                         onClick={() => navigate(bookingType === 'movies' ? '/movies' : '/events')}
                         className="flex items-center justify-center gap-3 w-full max-w-xl px-8 py-4 bg-primary/90 dark:bg-primary/80 text-white text-[15px] font-semibold rounded-xl hover:bg-primary transition-colors shadow-sm"
                     >
-                        {bookingType === 'movies' ? 'Explore movies' : 'Explore events'}
+                        {bookingType === 'movies' ? 'Explore movies' : bookingType === 'events' ? 'Explore events' : 'Discover sports'}
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
@@ -449,8 +491,8 @@ const EventTicketCard = ({ booking }) => {
         } catch { return dateStr; }
     };
 
-    const ticketCount = booking.tickets?.reduce((acc, t) => acc + (t.quantity || 0), 0) || 0;
-    const ticketClass = booking.tickets?.[0]?.ticketClass || 'Standard';
+    const ticketCount = booking.tickets?.reduce((acc, t) => acc + (t.quantity || 0), 0) || booking.quantity || 0;
+    const ticketClass = booking.ticketClass || (booking.tickets?.[0]?.ticketClass) || 'Standard';
 
     return (
         <div
@@ -490,6 +532,84 @@ const EventTicketCard = ({ booking }) => {
                         {booking.totalAmount?.toLocaleString() || '0'}
                     </p>
                 )}
+            </div>
+        </div>
+    );
+};
+
+
+// ─────────────────────────────────────
+// Turf Ticket Card (Sports)
+// ─────────────────────────────────────
+const TurfTicketCard = ({ booking }) => {
+    const navigate = useNavigate();
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        } catch { return dateStr; }
+    };
+
+    const firstSlot = booking.slots?.[0];
+    const bookingDate = booking.snapshot?.date || firstSlot?.date || booking.showDate || booking.date;
+    const startTime = booking.snapshot?.startTime || firstSlot?.startTime || booking.showTime;
+    const turfName = booking.turf?.turfName || booking.turfName || booking.eventName || 'Sports Arena';
+    const courtName = booking.court?.courtName || booking.courtName || booking.venue?.venueName || booking.venue?.name || 'Main Arena';
+    const city = booking.turf?.city || booking.venue?.city || '';
+    const amount = booking.payment?.amount || booking.totalPrice || booking.paidAmount || booking.pricing?.totalAmount || booking.totalAmount || 0;
+    const status = booking.payment?.status || booking.paymentStatus || booking.bookingStatus || booking.status || 'Confirmed';
+    const primaryImage = booking.turf?.primaryImage?.url || booking.turfImage || booking.courtImage || booking.eventPoster || booking.eventDetails?.eventImages?.[0]?.url || booking.posterUrl;
+
+    return (
+        <div
+            onClick={() => navigate(booking.turf ? `/sports/bookings/${booking.bookingId || booking._id || booking.id}` : `/event-bookings/${booking.bookingId || booking._id || booking.id}`)}
+            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
+        >
+            {/* Poster / Venue Image */}
+            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
+                <img
+                    src={primaryImage || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
+                    alt={turfName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
+                    {booking.sportType || booking.eventDetails?.eventCategory || 'Sports'}
+                </div>
+            </div>
+
+            {/* Info */}
+            <div className="p-4 space-y-1">
+                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
+                    {turfName}
+                </h3>
+                <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    <span>{formatDate(bookingDate)}</span>
+                    {startTime && (
+                        <>
+                            <span> • </span>
+                            <Clock className="w-3.5 h-3.5 ml-1" />
+                            <span>{startTime}</span>
+                        </>
+                    )}
+                </div>
+                <div className="flex items-center gap-1.5 text-[12px] text-gray-400 dark:text-gray-500">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="line-clamp-1">{courtName}{city ? `, ${city}` : ''}</span>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-primary font-bold text-[15px]">
+                        ₹{amount.toLocaleString()}
+                    </p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                        (status === 'paid' || status === 'confirmed') ? 'bg-green-100/10 text-green-600' : 'bg-orange-100/10 text-orange-600'
+                    }`}>
+                        {status}
+                    </span>
+                </div>
             </div>
         </div>
     );

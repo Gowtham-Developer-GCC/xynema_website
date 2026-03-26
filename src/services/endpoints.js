@@ -64,6 +64,12 @@ export const ENDPOINTS = {
     // Turfs
     TURFS: {
         AVAILABLE: '/customer-turf/available-turfs',
-        DETAILS: (turfId) => `/customer-turf/available-turfs/${turfId}`,
+        DETAILS: (turfId) => `/customer-turf/available-turf/${turfId}`,
+        SLOTS: (courtId) => `/customer-turf/available-slots/${courtId}`,
+        RESERVE: '/customer-turf/reserve-slot',
+        CONFIRM: '/customer-turf/confirm-booking',
+        CANCEL: '/customer-turf/cancel-reservation',
+        MY_BOOKINGS: '/customer-turf/my-bookings',
+        BOOKING_DETAILS: (bookingId) => `/customer-turf/booking/${bookingId}`
     }
 };

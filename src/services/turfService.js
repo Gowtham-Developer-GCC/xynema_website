@@ -43,8 +43,120 @@ export const getAvailableTurfs = async (params = {}) => {
 export const getTurfDetails = async (turfId) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.TURFS.DETAILS(turfId));
-        if (response.data.success && response.data.data) {
-            return new Turf(response.data.data);
+        let body = response.data;
+        
+        // Handle array response if backend wraps it
+        if (Array.isArray(body)) {
+            body = body[0] || {};
+        }
+
+        if (body.success && body.data) {
+            return new Turf(body.data);
+        }
+        return null;
+    });
+};
+
+/**
+ * Fetch available slots for a specific court on a given date
+ * @param {string} courtId
+ * @param {string} date - Format YYYY-MM-DD
+ * @returns {Promise<Object[]>}
+ */
+export const getAvailableSlots = async (courtId, date) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.TURFS.SLOTS(courtId), { 
+            params: { date } 
+        });
+        const body = response.data;
+        
+        if (body.success && body.data) {
+            return body.data.slots || [];
+        }
+        return [];
+    });
+};
+/**
+ * Reserve specific slots for a turf booking
+ * @param {string[]} slotIds - Array of slot IDs to reserve
+ * @param {string} sport - Type of sport (e.g., "football", "cricket")
+ * @returns {Promise<Object|null>}
+ */
+export const reserveSlots = async (slotIds, sport) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.TURFS.RESERVE, { 
+            slotIds, 
+            sport: sport.toLowerCase() 
+        });
+        const body = response.data;
+        
+        if (body.success) {
+            return body.data;
+        }
+        return null;
+    });
+};
+/**
+ * Confirm a turf booking after payment
+ * @param {Object} bookingData - Payload containing slotIds, paymentMethod, transactionId, and notes
+ * @returns {Promise<Object|null>}
+ */
+export const confirmTurfBooking = async (bookingData) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.TURFS.CONFIRM, bookingData);
+        if (response.data?.success) {
+            return response.data.data;
+        }
+        return null;
+    });
+};
+
+/**
+ * Cancel a turf reservation and release the slots
+ * @param {string[]} slotIds - Array of slot IDs to release
+ * @returns {Promise<Object|null>}
+ */
+export const cancelTurfReservation = async (slotIds) => {
+    return safeApiCall(async () => {
+        const response = await api.delete(ENDPOINTS.TURFS.CANCEL, { 
+            data: { slotIds } 
+        });
+        if (response.data?.success) {
+            return response.data;
+        }
+        return null;
+    });
+};
+
+/**
+ * Get the current user's turf bookings
+ * @returns {Promise<Object[]>}
+ */
+export const getMyTurfBookings = async () => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.TURFS.MY_BOOKINGS);
+        if (response.data?.success) {
+            return response.data.data || [];
+        }
+        return [];
+    });
+};
+
+/**
+ * Get details for a specific turf booking
+ * @param {string} bookingId 
+ * @returns {Promise<Object>}
+ */
+export const getTurfBookingDetails = async (bookingId) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.TURFS.BOOKING_DETAILS(bookingId));
+        const body = response.data;
+        if (body.success) {
+            return body.data;
+        }
+        // Fallback for cases where the object is returned directly
+        if (body._id || body.id) {
+            return body;
         }
         return null;
     });

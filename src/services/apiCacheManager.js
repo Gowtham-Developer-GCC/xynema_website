@@ -91,6 +91,7 @@ class ApiCacheManager {
     static THEATERS_TTL = 3600;      // 1 hour - theater data rarely changes
     static CITIES_TTL = 7200;        // 2 hours - cities don't change
     static EVENTS_TTL = 1800;        // 30 minutes - event data
+    static TURFS_TTL = 1800;         // 30 minutes - turf data
     static FOOD_TTL = 1800;          // 30 minutes - food items
 
     /**
@@ -479,6 +480,20 @@ class ApiCacheManager {
      */
     async getOrFetchEventBookingDetails(bookingId, fetchFn) {
         return this.getOrExecute(`event_booking_details_${bookingId}`, fetchFn, 300);
+    }
+
+    /**
+     * Helper: Get or fetch turf details
+     */
+    async getOrFetchTurfDetails(turfId, fetchFn) {
+        return this.getOrExecute(`turf_details_${turfId}`, fetchFn, ApiCacheManager.TURFS_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch turf bookings
+     */
+    async getOrFetchTurfBookings(fetchFn, force = false) {
+        return this.getOrExecute('bookings_turfs', fetchFn, ApiCacheManager.BOOKINGS_TTL, force);
     }
 }
 

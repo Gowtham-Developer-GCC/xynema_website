@@ -39,6 +39,9 @@ const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const SportsPage = lazy(() => import('./pages/SportsPage'));
 const SportDetailsPage = lazy(() => import('./pages/SportDetailsPage'));
+const BookingSlotPage = lazy(() => import('./pages/BookingSlotPage'));
+const TurfPaymentPage = lazy(() => import('./pages/TurfPaymentPage'));
+const TurfBookingDetailsPage = lazy(() => import('./pages/TurfBookingDetailsPage'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
 const OffersPage = lazy(() => import('./pages/OffersPage'));
@@ -157,6 +160,9 @@ export default function App() {
                                         <Route path="/help" element={<HelpCenter />} />
                                         <Route path="/about" element={<AboutUs />} />
                                         <Route path="/refund" element={<RefundPolicy />} />
+                                        <Route path="/sports/book/:turfId" element={<BookingSlotPage />} />
+                                        <Route path="/sports/payment" element={<ProtectedRoute><TurfPaymentPage /></ProtectedRoute>} />
+                        <Route path="/sports/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                         <Route path="/cinemas" element={<CinemasListPage />} />
                                         <Route path="/sports" element={<SportsPage />} />

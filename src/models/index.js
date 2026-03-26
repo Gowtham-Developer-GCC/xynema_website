@@ -719,29 +719,35 @@ export class Turf {
         this.name = data.turfName || data.name || 'Unnamed Turf';
         
         const loc = data.location || {};
-        this.city = loc.city || data.city || 'City TBD';
-        this.venue = loc.venue || data.venue || 'Venue TBD';
+        this.city = data.city || loc.city || 'City TBD';
+        this.venue = data.venue || loc.venue || loc.landmark || (loc.address ? loc.address.split(',')[0] : 'Venue TBD');
+        this.address = data.fullAddress || loc.address || data.address || '';
         
-        // Extract price - prioritizing direct pricePerHour from your backend structure
+        // Extract price - prioritizing direct pricePerHour from courts if not at top level
         this.price = data.pricePerHour || data.basePrice || data.price || data.hourlyRate || 0;
         
-        // If price is still 0, check nested courts for individual pricing
         if (!this.price && Array.isArray(data.courts) && data.courts.length > 0) {
-            const prices = data.courts.map(c => c.pricePerHour || c.basePrice || c.price || 0).filter(p => (p && !isNaN(p)));
+            const prices = data.courts.map(c => c.pricePerHour || 0).filter(p => p > 0);
             if (prices.length > 0) {
-                this.price = Math.min(...prices.filter(p => p > 0));
+                this.price = Math.min(...prices);
             }
         }
 
-        // Image Handling
-        const imgs = Array.isArray(data.images) ? data.images : [];
-        const primaryImg = imgs.find(img => img.isPrimary) || imgs[0];
-        this.imageUrl = primaryImg?.url || data.imageUrl || (typeof data.images === 'string' ? data.images : 'https://placehold.co/800x400');
+        // Ratings from ratingSummary
+        this.rating = data.ratingSummary?.average || data.rating || 0;
+        this.reviewCount = data.ratingSummary?.count || data.reviewCount || 0;
 
-        // Tags - Sport types: Extract from top level OR aggregate from courts array
-        let rawTypes = Array.isArray(data.sportTypes) ? data.sportTypes : [];
+        // Image Handling from objects {url, ...}
+        const imgs = Array.isArray(data.images) 
+            ? data.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean)
+            : [];
         
-        // If courts exist, collect all unique sport types from them
+        this.primaryImage = data.primaryImage?.url || (data.images?.find(img => img.isPrimary)?.url) || data.imageUrl || imgs[0] || 'https://placehold.co/800x400';
+        this.imageUrl = this.primaryImage;
+        this.allImages = imgs.length > 0 ? imgs : [this.primaryImage];
+
+        // Tags - Sport types aggregation
+        let rawTypes = Array.isArray(data.sportTypes) ? data.sportTypes : [];
         if (Array.isArray(data.courts)) {
             data.courts.forEach(court => {
                 if (Array.isArray(court.sportTypes)) {
@@ -750,20 +756,19 @@ export class Turf {
             });
         }
         
-        // If still empty, check legacy tags field
-        if (rawTypes.length === 0 && Array.isArray(data.tags)) {
-            rawTypes = data.tags;
-        }
-
-        // Clean up duplicates and format for display
         this.tags = Array.from(new Set(rawTypes)).map(type => 
             type.toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
         );
         
         this.description = data.description || '';
         this.slug = data.slug || '';
-        this.rating = data.rating || 0;
-        this.reviewCount = data.reviewCount || 0;
+        
+        // Additional metadata
+        this.amenities = data.amenities || {};
+        this.operatingHours = data.operatingHours || {};
+        this.coordinates = loc.coordinates || [];
+        this.defaultSlotDuration = data.courts?.[0]?.defaultSlotDuration || 60;
+        this.courts = data.courts || [];
     }
 
     static fromJson(json) {

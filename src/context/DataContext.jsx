@@ -4,6 +4,7 @@ import { getFoodItems } from '../services/storeService';
 import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
 import { getUserProfile, updateUserProfile } from '../services/userService';
+import { getAvailableTurfs } from '../services/turfService';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
 import { errorHandler } from '../utils/helpers';
@@ -57,6 +58,10 @@ export const DataProvider = ({ children, selectedCity }) => {
         const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
         return Array.isArray(cached) ? cached : [];
     });
+    const [turfs, setTurfs] = useState(() => {
+        const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
 
     const [userMovieBookings, setUserMovieBookings] = useState([]);
     const [userEventBookings, setUserEventBookings] = useState([]);
@@ -88,7 +93,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             // SWR: Force a background revalidation for page 1
             const shouldRevalidate = page === 1;
 
-            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData] = await Promise.all([
+            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData, turfData] = await Promise.all([
                 // Now Showing (based on city)
                 page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getNowShowingMovies(selectedCity, page),
@@ -125,6 +130,11 @@ export const DataProvider = ({ children, selectedCity }) => {
                     1800,
                     shouldRevalidate
                 ),
+                // Turfs
+                apiCacheManager.getOrFetchTurfs(selectedCity,
+                    () => getAvailableTurfs({ city: selectedCity }),
+                    shouldRevalidate
+                ),
             ]);
 
             // Parse movie and theater data
@@ -142,6 +152,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setTheaters(theatersList);
             setEvents(eventData || []);
             setFoodItems(foodList);
+            setTurfs(turfData || []);
             setPagination(movieData.pagination || { total: 0, page: 1, pages: 1 });
             setLastUpdated(new Date());
         } catch (err) {
@@ -306,6 +317,7 @@ export const DataProvider = ({ children, selectedCity }) => {
                 setMovies([]);
                 setTheaters([]);
                 setEvents([]);
+                setTurfs([]);
                 setLoading(true);
             }
             
@@ -425,6 +437,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         highlightsMovies,
         theaters,
         events,
+        turfs,
         foodItems,
         loading,
         error,

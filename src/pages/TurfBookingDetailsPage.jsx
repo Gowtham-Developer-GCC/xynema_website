@@ -14,6 +14,7 @@ import {
     Activity
 } from 'lucide-react';
 import { getTurfBookingDetails } from '../services/turfService';
+import apiCacheManager from '../services/apiCacheManager';
 import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 import { toast } from 'react-hot-toast';
@@ -22,31 +23,37 @@ const TurfBookingDetailsPage = () => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const [booking, setBooking] = useState(null);
-    const [loading, setLoading] = useState(true);
+    
+    // SWR Cache Layer
+    const [booking, setBooking] = useState(() => apiCacheManager.get(`turf_booking_details_${bookingId}`));
+    const [loading, setLoading] = useState(!booking);
 
     useEffect(() => {
         const fetchDetails = async () => {
+            const hasInitialData = !!booking;
             try {
-                const data = await getTurfBookingDetails(bookingId);
+                if (!hasInitialData) setLoading(true);
+                
+                const data = await apiCacheManager.getOrFetchTurfBookingDetails(bookingId, () => getTurfBookingDetails(bookingId));
+                
                 if (data) {
                     setBooking(data);
-                } else {
+                } else if (!hasInitialData) {
                     toast.error("Booking not found");
                     navigate('/bookings');
                 }
             } catch (error) {
                 console.error("Error fetching booking details:", error);
-                toast.error("Failed to load booking details");
+                if (!hasInitialData) toast.error("Failed to load booking details");
             } finally {
                 setLoading(false);
             }
         };
 
         fetchDetails();
-    }, [bookingId, navigate]);
+    }, [bookingId]);
 
-    if (loading) return <LoadingScreen message="Fetching your ticket..." />;
+    if (loading && !booking) return <LoadingScreen message="Fetching your ticket..." />;
     if (!booking) return null;
 
     const formatDate = (dateStr) => {

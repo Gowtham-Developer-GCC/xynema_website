@@ -102,7 +102,10 @@ const TurfPaymentPage = () => {
                 slotIds: reservation.slotIds,
                 paymentMethod: "online",
                 transactionId: txnId,
-                notes: notes
+                notes: notes,
+                phone: mobileNumber,
+                email: email,
+                couponCode: couponCode
             };
 
             const result = await confirmTurfBooking(bookingData);
@@ -110,6 +113,7 @@ const TurfPaymentPage = () => {
             if (result) {
                 setBookingResult(result);
                 setBooked(true);
+                window.scrollTo({ top: 0, behavior: 'instant' });
             } else {
                 toast.error('Could not confirm booking. Please contact support.');
             }
@@ -147,7 +151,10 @@ const TurfPaymentPage = () => {
 
                     <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
                         <button
-                            onClick={() => navigate(`/sports/bookings/${bookingResult?.bookingId || bookingResult?._id || bookingResult?.id}`, { state: { isNewBooking: true } })}
+                            onClick={() => {
+                                const bId = bookingResult?.bookings?.[0]?.bookingId || bookingResult?.bookingId || bookingResult?._id || bookingResult?.id;
+                                navigate(`/sports/bookings/${bId}`, { state: { isNewBooking: true } });
+                            }}
                             className="w-full bg-primary text-white font-black text-[11px] md:text-xs uppercase tracking-[0.15em] py-4 rounded-xl md:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98] font-roboto"
                         >
                             View Ticket

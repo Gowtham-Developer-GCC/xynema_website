@@ -20,8 +20,15 @@ const SportDetailsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, openLogin } = useAuth();
+    const { turfs, loading: dataLoading, refreshData } = useData();
 
-    const [sport, setSport] = useState(location.state?.sport || null);
+    // SWR Optimization: Use passed state, then check global cache, then fetch fresh
+    const [sport, setSport] = useState(() => {
+        if (location.state?.sport) return location.state.sport;
+        const cached = turfs.find(t => String(t._id || t.id) === String(slug));
+        return cached || null;
+    });
+
     const [loading, setLoading] = useState(!sport);
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -118,34 +125,26 @@ const SportDetailsPage = () => {
     };
 
     const fetchTurfDetails = async () => {
+        const turfId = sport?._id || sport?.id || slug;
+        const hasInitialData = !!sport;
+
         try {
-            setLoading(true);
+            if (!hasInitialData) setLoading(true);
             setError(null);
             
-            // Prioritize the real database ID over the URL slug/name
-            const turfId = sport?._id || sport?.id || slug;
-            
-            // Try fetching real data with cache support using the ID
+            // Fetch real data with cache support
             const data = await apiCacheManager.getOrFetchTurfDetails(turfId, () => getTurfDetails(turfId));
             
             if (data) {
                 setSport(data);
-            } else {
-                // Fallback for development if API returns nothing but current state is empty
-                if (!sport) {
-                    console.warn(`Turf not found for ID: ${turfId}, using mock fallback`);
-                    setSport(mockSportDetails);
-                }
+            } else if (!hasInitialData) {
+                setSport(mockSportDetails);
             }
         } catch (err) {
             console.error('Failed to fetch turf details:', err);
-            // On error, show error state only if we have no fallback data
-            if (!sport) {
-                setError('Failed to load venue details');
-            }
+            if (!hasInitialData) setError('Failed to load venue details');
         } finally {
-            setLoading(true); // Small delay to show smooth transition
-            setTimeout(() => setLoading(false), 300);
+            setLoading(false);
         }
     };
 
@@ -186,13 +185,13 @@ const SportDetailsPage = () => {
         navigate(`/sports/book/${turfId}`, { state: { sport } });
     };
 
-    if (loading) return <LoadingScreen message="Loading Sport Details" />;
+    if (loading && !sport) return <LoadingScreen message="Loading Sport Details" />;
     if (!sport) return <ErrorState title="Venue not found" />;
 
     const images = sport.allImages || [sport.imageUrl];
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0f1115] pb-32 transition-colors duration-300 bg-fixed">
+        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0f1115] pb-1 md:pb-1 transition-colors duration-300 bg-fixed overflow-x-hidden">
             <SEO title={`${sport.name} - XYNEMA Sports`} description={sport.description} />
 
             {/* Sharpness Filter Definition */}
@@ -294,28 +293,28 @@ const SportDetailsPage = () => {
             </div>
 
             {/* Quick Info Bar - Restored and refined with reduced-height dividers */}
-            <div className="relative z-30 mt-1 mx-2 md:mx-auto max-w-[70%] rounded-xl shadow-sm overflow-hidden">
+            <div className="relative z-30 mt-1 mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
                 <div className="flex flex-wrap md:flex-nowrap items-center min-h-[100px]">
                         <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</p>
                             <p className="text-sm font-bold dark:text-white">Min. {sport.defaultSlotDuration || 60} mins</p>
                         </div>
                         {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
+                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
                         
                         <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Payment</p>
                             <p className="text-sm font-bold dark:text-white">{sport.paymentType || 'Pay at venue or Online'}</p>
                         </div>
                         {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
+                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
                         
                         <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sport Type</p>
                             <p className="text-sm font-bold dark:text-white">{sport.tags?.slice(0, 5).join(' / ') || 'Multi-sport'}</p>
                         </div>
                         {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
+                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
                         
                         <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Entry</p>
@@ -325,7 +324,7 @@ const SportDetailsPage = () => {
             </div>
 
             {/* --- REDESIGNED SECTIONS BELOW --- */}
-            <main className="max-w-[70%] mx-auto px-4 sm:px-8 py-12 space-y-16">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-4 md:pb-12 space-y-10 md:space-y-10">
 
                 {/* About This Turf */}
                 <section className="space-y-6">
@@ -344,8 +343,8 @@ const SportDetailsPage = () => {
                     return (
                         <section className="space-y-6">
                             <h2 className="text-xl font-bold dark:text-white">Facilities available</h2>
-                            <div className="bg-white dark:bg-[#1a1c23] border border-gray-100 dark:border-gray-800 rounded-2xl p-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-y-6 gap-x-12">
+                            <div className="bg-white dark:bg-[#1a1c23] border border-gray-100 dark:border-gray-800 rounded-2xl p-0">
+                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-8">
                                     {[
                                         { key: 'isChangingRoomAvailable', label: 'Changing Rooms' },
                                         { key: 'isParkingAvailable', label: 'Parking' },
@@ -436,7 +435,7 @@ const SportDetailsPage = () => {
                 </section>
 
                 {/* Explore the store */}
-                <section className="space-y-8 py-8 bg-[#f5f5f5] dark:bg-[#0a0c10] -mx-4 sm:-mx-8 md:-mx-12 px-4 sm:px-8 md:px-12 rounded-3xl">
+                <section className="space-y-8 py-6 md:py-8 bg-[#f5f5f5] dark:bg-[#0a0c10] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-black dark:text-white">Explore the store</h2>
                         <Link to="/store" className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-all">
@@ -460,17 +459,17 @@ const SportDetailsPage = () => {
                                 </SwiperSlide>
                             ))}
                         </Swiper>
-                        <button className="store-prev absolute -left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
+                        <button className="store-prev absolute -left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
                             <ChevronLeft className="w-6 h-6" />
                         </button>
-                        <button className="store-next absolute -right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
+                        <button className="store-next absolute -right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
                             <ChevronRight className="w-6 h-6" />
                         </button>
                     </div>
                 </section>
 
                 {/* Explore More Section */}
-                <section className="space-y-8 pt-8">
+                <section className="space-y-8">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-black dark:text-white">Explore More</h2>
                         <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all">
@@ -481,7 +480,7 @@ const SportDetailsPage = () => {
                         <Swiper
                             modules={[Navigation]}
                             spaceBetween={24}
-                            slidesPerView={1}
+                            slidesPerView={2}
                             navigation={{ nextEl: '.more-next', prevEl: '.more-prev' }}
                             breakpoints={{
                                 768: { slidesPerView: 2 },
@@ -494,7 +493,10 @@ const SportDetailsPage = () => {
                                 </SwiperSlide>
                             ))}
                         </Swiper>
-                        <button className="more-next absolute top-1/2 -right-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
+                        <button className="more-prev absolute top-1/2 -left-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button className="more-next absolute top-1/2 -right-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
                             <ChevronRight className="w-6 h-6" />
                         </button>
                     </div>
@@ -504,7 +506,7 @@ const SportDetailsPage = () => {
             {/* Sticky Minimal Booking Bar (Appears after hero button scrolls out) */}
             {isScrolled && (
                 <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 p-4 safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
-                    <div className="max-w-[70%] mx-auto flex items-center justify-between">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                         <div className="flex flex-col">
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Starting from</p>
                             <div className="flex items-baseline gap-1">

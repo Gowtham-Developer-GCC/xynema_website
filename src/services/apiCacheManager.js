@@ -482,6 +482,10 @@ class ApiCacheManager {
         return this.getOrExecute(`event_booking_details_${bookingId}`, fetchFn, 300);
     }
 
+    async getOrFetchTurfBookingDetails(bookingId, fetchFn) {
+        return this.getOrExecute(`turf_booking_details_${bookingId}`, fetchFn, 300);
+    }
+
     /**
      * Helper: Get or fetch turf details
      */
@@ -494,6 +498,12 @@ class ApiCacheManager {
      */
     async getOrFetchTurfBookings(fetchFn, force = false) {
         return this.getOrExecute('bookings_turfs', fetchFn, ApiCacheManager.BOOKINGS_TTL, force);
+    }
+    /**
+     * Helper: Get or fetch available turfs
+     */
+    async getOrFetchTurfs(city, fetchFn, force = false) {
+        return this.getOrExecute(`turfs_${city || 'all'}`, fetchFn, ApiCacheManager.TURFS_TTL, force);
     }
 }
 

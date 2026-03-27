@@ -13,13 +13,10 @@ import SportCard from '../components/SportCard';
 
 const SportsPage = () => {
     const navigate = useNavigate();
-    const { selectedCity } = useData();
+    const { selectedCity, turfs, loading: dataLoading, refreshData } = useData();
     const [searchParams] = useSearchParams();
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [events, setEvents] = useState([]);
-    const [filteredEvents, setFilteredEvents] = useState([]);
     const [eventSearchQuery, setEventSearchQuery] = useState('');
     const [eventFilters, setEventFilters] = useState({
         city: 'All',
@@ -27,44 +24,42 @@ const SportsPage = () => {
         date: 'All',
         tags: []
     });
-    const [availableEventTags, setAvailableEventTags] = useState(["Football", "Cricket", "Badminton", "Basketball", "Tennis"]);
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            // Fetch turfs based on selected city or all if 'All'
-            const params = selectedCity && selectedCity !== 'All' ? { city: selectedCity } : {};
-            const turfs = await getAvailableTurfs(params);
-            
-            setEvents(turfs);
-            setFilteredEvents(turfs);
-            
-            // Dynamically extract unique sport types (tags)
-            const tags = Array.from(new Set(turfs.flatMap(t => t.tags || []))).filter(t => t).sort();
-            if (tags.length > 0) {
-                setAvailableEventTags(tags);
-            }
-        } catch (err) {
-            console.error('Sports page fetch failed:', err);
-            setError(err.message || 'Failed to load sports venues');
-        } finally {
-            setLoading(false);
+    // Dynamic Tags Extraction
+    const availableEventTags = useMemo(() => {
+        const tags = Array.from(new Set(turfs.flatMap(t => t.tags || []))).filter(t => t).sort();
+        return tags.length > 0 ? tags : ["Football", "Cricket", "Badminton", "Basketball", "Tennis"];
+    }, [turfs]);
+
+    // Filter Logic - Memoized for optimization
+    const filteredEvents = useMemo(() => {
+        let filtered = turfs;
+        if (eventSearchQuery.trim()) {
+            filtered = filtered.filter(e =>
+                (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
+                (e.venue || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
+            );
         }
-    };
+        if (eventFilters.city !== 'All') {
+            filtered = filtered.filter(e => e.city === eventFilters.city);
+        }
+        if (eventFilters.tags.length > 0) {
+            filtered = filtered.filter(e =>
+                (e.tags || []).some(tag => eventFilters.tags.includes(tag))
+            );
+        }
+        return filtered;
+    }, [turfs, eventSearchQuery, eventFilters]);
 
     useEffect(() => {
-        fetchData();
-        
         // Handle category from URL if present
         const category = searchParams.get('category');
         if (category) {
             setEventFilters(prev => ({ ...prev, tags: [category] }));
         }
-    }, [selectedCity, searchParams]);
+    }, [searchParams]);
 
     // Handle clicks outside "More Filters" dropdown
     useEffect(() => {
@@ -77,37 +72,13 @@ const SportsPage = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Filter Logic
-    useEffect(() => {
-        const filterData = (data) => {
-            let filtered = data;
-            if (eventSearchQuery.trim()) {
-                filtered = filtered.filter(e =>
-                    (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
-                    (e.venue || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
-                );
-            }
-            if (eventFilters.city !== 'All') {
-                filtered = filtered.filter(e => e.city === eventFilters.city);
-            }
-            if (eventFilters.tags.length > 0) {
-                filtered = filtered.filter(e =>
-                    (e.tags || []).some(tag => eventFilters.tags.includes(tag))
-                );
-            }
-            return filtered;
-        };
-
-        setFilteredEvents(filterData(events));
-    }, [events, eventSearchQuery, eventFilters]);
-
     const resetFilters = () => {
         setEventFilters({ city: 'All', status: 'Active', date: 'All', tags: [] });
         setEventSearchQuery('');
     };
 
-    if (loading) return <LoadingScreen message="Finding Available Venues" />;
-    if (error) return <ErrorState error={error} onRetry={fetchData} title="Connection Interrupted" />;
+    if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding Available Venues" />;
+    if (error) return <ErrorState error={error} onRetry={() => refreshData(1)} title="Connection Interrupted" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
@@ -200,7 +171,7 @@ const SportsPage = () => {
                     <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">Popular right now</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 min-h-[50vh]">
                     {filteredEvents.length > 0 ? (
                         filteredEvents.map((event, idx) => (
                             <SportCard key={event.id} event={event} />

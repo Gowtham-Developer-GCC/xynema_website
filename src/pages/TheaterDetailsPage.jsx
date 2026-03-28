@@ -281,8 +281,14 @@ const TheaterDetailsPage = () => {
             const theaterSlug = theater.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
             // Persist details for the booking flow
+            const posterUrlStr = movie.posterUrl?.url || movie.posterUrl || '';
+            const landscapeUrlStr = movie.landscapePosterUrl?.url || movie.landscapePosterUrl || movie.landscape_poster?.url || movie.landscape_poster || '';
+            sessionStorage.setItem('booking_show_id', showId);
+            sessionStorage.setItem('booking_theater_id', theater.id);
+            sessionStorage.setItem('booking_movie_id', movie.movieId || movie.id || movie._id || '');
             sessionStorage.setItem('booking_movie_title', movie.name);
-            sessionStorage.setItem('booking_movie_poster', movie.posterUrl);
+            sessionStorage.setItem('booking_movie_poster', posterUrlStr);
+            sessionStorage.setItem('booking_movie_landscape_poster', landscapeUrlStr);
             sessionStorage.setItem('booking_show_date', selectedDate);
             sessionStorage.setItem('booking_show_time', time);
             sessionStorage.setItem('booking_screen_name', show?.screen?.name || sched.screen?.name || '1');
@@ -292,7 +298,7 @@ const TheaterDetailsPage = () => {
             const lang = Array.isArray(sched.movieLanguage) ? sched.movieLanguage[0] : (sched.movieLanguage || show?.movieLanguage || 'Malayalam');
             sessionStorage.setItem('booking_movie_language', lang);
             sessionStorage.setItem('booking_movie_format', show?.format || sched.format || '2D');
-            sessionStorage.setItem('booking_is_food_available', 'true');
+            sessionStorage.setItem('booking_is_food_available', String(theater.isFoodAndBeveragesAvailable ?? true));
 
             bookingSessionManager.startSession(showId, theater.name, user?.id || user?._id);
 
@@ -300,7 +306,7 @@ const TheaterDetailsPage = () => {
                 state: {
                     movieId: movie.movieId,
                     movieTitle: movie.name,
-                    moviePoster: movie.posterUrl,
+                    moviePoster: movie.posterUrl?.url || movie.posterUrl,
                     theaterId: theater.id,
                     theaterName: theater.name,
                     date: selectedDate,
@@ -507,7 +513,7 @@ const TheaterDetailsPage = () => {
                                                             <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{lang}</span>
                                                             <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800/50"></div>
                                                         </div>
-                                                        
+
                                                         <div className="flex flex-wrap gap-3 md:gap-4">
                                                             {shows.map((show, idx) => {
                                                                 const isSoldOut = show.availableSeats === 0;

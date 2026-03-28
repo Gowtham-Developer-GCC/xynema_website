@@ -243,17 +243,17 @@ const EventBookingDetailsPage = () => {
                 <div ref={ticketRef} className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-primary/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
 
                     {/* Top Section: Hero Image & Event Info */}
-                    <div className="relative w-full h-64 bg-gray-900 overflow-hidden">
+                    <div className="relative w-full h-64 bg-gray-200 overflow-hidden">
                         {/* Immersive Background */}
                         <img
                             src={heroImageUrl}
-                            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-60 contrast-125 saturate-150"
+                            className="absolute inset-0 w-full h-full object-cover scale-1 opacity-80 contrast-125 saturate-150 "
                             alt=""
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent flex flex-col justify-end p-8">
                             <div className="relative z-10 flex gap-6 items-end">
                                 {/* Portrait Poster inset */}
-                                <div className="w-24 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
+                                <div className="w-36 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
                                     <img
                                         src={posterImageUrl}
                                         className="w-full h-full object-cover shadow-inner"

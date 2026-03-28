@@ -10,6 +10,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import BookingSummary from '../components/SeatSelection/BookingSummary';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
@@ -55,8 +56,8 @@ const FoodSelectionPage = () => {
         bookingSessionManager.refreshSession();
     }, [showId, theaterSlug, slug, navigate]);
 
-    const movieId = bookingState?.movieId;
-    const theaterId = bookingState?.theaterId;
+    const movieId = bookingState?.movieId || sessionStorage.getItem('booking_movie_id');
+    const theaterId = bookingState?.theaterId || sessionStorage.getItem('booking_theater_id');
     const seats = useMemo(() => bookingState?.seats || [], [bookingState]);
     const sessionId = bookingState?.sessionId;
     const selectedDate = bookingState?.date;
@@ -89,21 +90,24 @@ const FoodSelectionPage = () => {
 
             try {
                 setLoading(true);
-                const foodResponse = await apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId));
+                const foodResponse = await apiCacheManager.getOrFetchFood(theaterId, () => getFoodAndBeverages(theaterId));
 
                 // Transform API response to match component expectations
                 let foodItemsData = [];
-                if (foodResponse?.data?.items) {
+                const rawItems = foodResponse?.data?.items || foodResponse?.items || foodResponse?.data || [];
+
+                if (rawItems) {
                     try {
-                        const itemsObject = foodResponse.data.items;
-                        foodItemsData = Object.values(itemsObject).flat().map(item => ({
+                        const itemsToProcess = Array.isArray(rawItems) ? rawItems : (typeof rawItems === 'object' ? Object.values(rawItems).flat() : []);
+
+                        foodItemsData = itemsToProcess.map(item => ({
                             id: item._id || item.id,
                             name: item.item_name || item.name,
-                            category: item.category,
-                            price: item.selling_price || item.price,
+                            category: item.category || 'Snacks',
+                            price: item.selling_price || item.price || 0,
                             image: item.foodImageUrl || item.image || '🍿',
                             description: item.description || '',
-                            available: item.is_available !== false,
+                            available: item.is_available !== false && item.status !== 'UNAVAILABLE',
                             inventory: item.inventory_stock || 0,
                             isPopular: item.isMarkAsPopular || false
                         })).filter(item => item.available);
@@ -316,7 +320,7 @@ const FoodSelectionPage = () => {
                         <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
                         <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-gray-900 dark:text-white leading-none">₹{(totalAmount * 1.18 + (seats.length * 30)).toFixed(2)}</span>
-                            <button 
+                            <button
                                 onClick={scrollToSummary}
                                 className="text-[10px] font-bold text-primary dark:text-primary/80 uppercase tracking-wide hover:underline underline-offset-2"
                             >
@@ -338,7 +342,8 @@ const FoodSelectionPage = () => {
 };
 
 const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
-    const isImageUrl = item.image && (item.image.startsWith('http') || item.image.startsWith('https') || item.image.startsWith('/'));
+    const imageUrl = (typeof item.image === 'object' && item.image !== null) ? item.image.url : item.image;
+    const isImageUrl = imageUrl && (typeof imageUrl === 'string') && (imageUrl.startsWith('http') || imageUrl.startsWith('https') || imageUrl.startsWith('/'));
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full">
@@ -346,7 +351,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
             <div className="aspect-square md:aspect-[4/3] bg-[#fdfdfd] dark:bg-gray-800/50 flex items-center justify-center relative p-4 md:p-8 group transition-colors duration-300">
                 {isImageUrl ? (
                     <img
-                        src={item.image}
+                        src={optimizeImage(imageUrl, { width: 400, quality: 80 })}
                         alt={item.name}
                         className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 group-hover:scale-110"
                     />
@@ -363,7 +368,7 @@ const FoodCard = ({ item, quantity, onAdd, onRemove }) => {
                             <h3 className="font-bold text-gray-900 dark:text-white text-[13px] md:text-[16px] leading-tight font-roboto truncate flex-2">{item.name}</h3>
                             {item.isPopular && (
                                 <span className="bg-[#fff7ed] dark:bg-orange-900/20 text-[#ea580c] dark:text-orange-400 text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded border border-[#ffedd5] dark:border-orange-800/30 uppercase tracking-wider shrink-0">
-                                    
+
                                 </span>
                             )}
                         </div>

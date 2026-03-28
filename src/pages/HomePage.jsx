@@ -52,12 +52,14 @@ const HomePage = ({ selectedCity }) => {
         if (!highlightsMovies?.length) return [];
 
         return highlightsMovies.filter(m => {
+            const mobileImg = m.mobileBannerImage?.url || m.mobileBannerImage;
+            const desktopImg = m.bannerImageUrl?.url || m.bannerImageUrl;
             if (isMobile) {
                 // Use mobile specific banner activation flag
-                return m.isActive && m.isMobileBannerImageUrlActive && m.mobileBannerImage;
+                return m.isActive && m.isMobileBannerImageUrlActive && mobileImg;
             } else {
                 // Per user: in desktop view use isBannerImageUrlActive is true then show
-                return m.isActive && m.isBannerImageUrlActive && m.bannerImageUrl;
+                return m.isActive && m.isBannerImageUrlActive && desktopImg;
             }
         });
     }, [highlightsMovies, isMobile]);
@@ -66,10 +68,12 @@ const HomePage = ({ selectedCity }) => {
         if (!highlightsMovies?.length) return null;
 
         const activeBanners = highlightsMovies.filter(m => {
+            const mobileSection = m.mobileSectionImage?.url || m.mobileSectionImage;
+            const desktopSection = m.sectionImageUrl?.url || m.sectionImageUrl;
             if (isMobile) {
-                return m.isActive && m.isMobileSectionImageUrlActive && m.mobileSectionImage;
+                return m.isActive && m.isMobileSectionImageUrlActive && mobileSection;
             } else {
-                return m.isActive && m.isSectionImageUrlActive && m.sectionImageUrl;
+                return m.isActive && m.isSectionImageUrlActive && desktopSection;
             }
         });
 
@@ -109,7 +113,7 @@ const HomePage = ({ selectedCity }) => {
             <SEO
                 title={`${selectedCity} - Book Movie Tickets Online | XYNEMA`}
                 description="Book your favorite movies with ease and elegance."
-                preloads={bannerMovies.map(m => m.mobileBannerImage || m.bannerImageUrl || m.backdropUrl || m.posterUrl).filter(Boolean).map(url => optimizeImage(url, { width: 1400, quality: 85 }))}
+                preloads={bannerMovies.map(m => (m.mobileBannerImage?.url || m.mobileBannerImage) || (m.bannerImageUrl?.url || m.bannerImageUrl) || (m.backdropUrl?.url || m.backdropUrl) || (m.posterUrl?.url || m.posterUrl)).filter(Boolean).map(url => optimizeImage(url, { width: 1400, quality: 85 }))}
             />
 
             {/* Flat Carousel Banner */}
@@ -276,7 +280,7 @@ const HomePage = ({ selectedCity }) => {
                                 className="block w-full aspect-video md:aspect-[21/2] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
                             >
                                 <img
-                                    src={optimizeImage(isMobile ? randomSectionBanner.mobileSectionImage : randomSectionBanner.sectionImageUrl, { width: 1920, quality: 100 })}
+                                    src={optimizeImage(isMobile ? (randomSectionBanner.mobileSectionImage?.url || randomSectionBanner.mobileSectionImage) : (randomSectionBanner.sectionImageUrl?.url || randomSectionBanner.sectionImageUrl), { width: 1920, quality: 100 })}
                                     alt={randomSectionBanner.title}
                                     loading="lazy"
                                     className="w-full h-full object-cover transition-transform duration-700 ease-out"

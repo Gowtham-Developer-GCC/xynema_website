@@ -9,6 +9,7 @@ import bookingSessionManager from '../utils/bookingSessionManager';
 import TicketCard from '../components/TicketCard';
 import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const PaymentPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -237,7 +238,14 @@ const PaymentPage = () => {
     };
 
     const localDisplayTitle = show?.movie?.title || show?.movie?.MovieName || show?.movieName || sessionStorage.getItem('booking_movie_title') || 'Movie';
-    const localDisplayPoster = show?.movie?.portraitPosterUrl || show?.movie?.posterUrl || show?.posterUrl || sessionStorage.getItem('booking_movie_poster') || '';
+    const localDisplayPoster = show?.movie?.backdropUrl ||
+        show?.movie?.landscapePosterUrl?.url ||
+        show?.movie?.landscapePosterUrl ||
+        show?.movie?.landscape_poster?.url ||
+        sessionStorage.getItem('booking_movie_landscape_poster') ||
+        show?.movie?.posterUrl ||
+        show?.posterUrl ||
+        sessionStorage.getItem('booking_movie_poster') || '';
     const localDisplayTheater = sessionStorage.getItem('booking_theater_name') || show?.theatre?.name || show?.theaterName || 'Theater';
     const localDisplayTime = show?.startTime || show?.showTime || sessionStorage.getItem('booking_show_time') || '';
     const localDisplayLanguage = sessionStorage.getItem('booking_movie_language') || show?.movieLanguage || 'English';
@@ -459,7 +467,7 @@ const PaymentPage = () => {
                             {/* Full Width Top Poster */}
                             <div className="w-full h-36 md:h-40 relative group overflow-hidden bg-gray-950 border-b border-gray-100 dark:border-gray-800">
                                 <img
-                                    src={localDisplayPoster || "/logo.png"}
+                                    src={optimizeImage(localDisplayPoster, { width: 600, quality: 80 }) || "/logo.png"}
                                     alt={localDisplayTitle}
                                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                                 />

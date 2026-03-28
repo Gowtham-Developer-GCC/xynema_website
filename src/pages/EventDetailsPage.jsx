@@ -380,12 +380,12 @@ const EventDetailsPage = () => {
                 <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 pt-28 pb-16 md:py-24 flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
                     {/* Left: Event Poster */}
-                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[500px] shrink-0 mx-auto md:mx-0">
-                        <div className="aspect-[16/9] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group">
+                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[30%] shrink-0 mx-auto md:mx-0">
+                        <div className="aspect-[3/4] md:aspect-[2/3] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
                             <img
-                                src={images[activeImageIndex] || event.imageUrl}
+                                src={event.portraitEventImage || images[activeImageIndex] || event.imageUrl}
                                 alt={event.name}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1"
                             />
                             {/* Inner glass reflection */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />

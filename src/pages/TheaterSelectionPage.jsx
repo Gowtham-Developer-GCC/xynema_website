@@ -12,6 +12,7 @@ import { cardStyles, animationStyles } from '../styles/components';
 import { getTheatersForMovie } from '../services/movieService';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const timeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
@@ -244,8 +245,14 @@ const TheaterSelectionPage = () => {
             const subtitles = selectedShow?.subtitles || '';
 
             // Persist movie details for the booking flow
+            const posterUrlToStore = movie?.portraitPosterUrl?.url || movie?.portraitPosterUrl || movie?.posterUrl?.url || movie?.posterUrl || '';
+            const landscapeUrlToStore = movie?.backdropUrl || movie?.landscapePosterUrl?.url || movie?.landscapePosterUrl || movie?.landscape_poster?.url || movie?.landscape_poster || '';
+            sessionStorage.setItem('booking_show_id', showId);
+            sessionStorage.setItem('booking_theater_id', theater?.id || theater?._id || '');
+            sessionStorage.setItem('booking_movie_id', movie?.id || movie?._id || '');
             sessionStorage.setItem('booking_movie_title', movie?.title || '');
-            sessionStorage.setItem('booking_movie_poster', movie?.portraitPosterUrl || movie?.posterUrl || '');
+            sessionStorage.setItem('booking_movie_poster', posterUrlToStore);
+            sessionStorage.setItem('booking_movie_landscape_poster', landscapeUrlToStore);
             sessionStorage.setItem('booking_show_date', selectedDate);
             sessionStorage.setItem('booking_show_time', startTime);
             sessionStorage.setItem('booking_screen_name', screenName);
@@ -371,7 +378,7 @@ const TheaterSelectionPage = () => {
                         {/* Poster - Center on mobile */}
                         <div className="w-[100px] md:w-[130px] shrink-0 mt-2 md:mt-0">
                             <img
-                                src={movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image}
+                                src={optimizeImage(movie?.portraitPosterUrl || movie?.posterUrl || movie?.PosterUrl || movie?.image)}
                                 alt={movie?.title}
                                 className="w-full rounded-[12px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 dark:border-gray-800"
                             />

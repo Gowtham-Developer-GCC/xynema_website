@@ -8,6 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const BookingSummaryPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -72,33 +73,34 @@ const BookingSummaryPage = () => {
             if (!showId || !theaterId) return;
             if (hasFetchedData.current) return;
             hasFetchedData.current = true;
-    
+
             try {
                 setLoading(true);
-                // Use cache manager to avoid redundant hits if coming from SeatSelection/FoodSelection
-                // Only fetch food items since seats and show details are in draft/cache
-                const foodResponse = await apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId));
-    
+                const foodResponse = await apiCacheManager.getOrFetchFood(theaterId, () => getFoodAndBeverages(theaterId));
+
                 // Transform API response to match component expectations
                 let foodItemsData = [];
-                if (foodResponse?.data?.items) {
+                const rawItems = foodResponse?.data?.items || foodResponse?.items || foodResponse?.data || [];
+                
+                if (rawItems) {
                     try {
-                        const itemsObject = foodResponse.data.items;
-                        foodItemsData = Object.values(itemsObject).flat().map(item => ({
+                        const itemsToProcess = Array.isArray(rawItems) ? rawItems : (typeof rawItems === 'object' ? Object.values(rawItems).flat() : []);
+                        
+                        foodItemsData = itemsToProcess.map(item => ({
                             id: item._id || item.id,
                             name: item.item_name || item.name,
-                            category: item.category,
-                            price: item.selling_price || item.price,
+                            category: item.category || 'Snacks',
+                            price: item.selling_price || item.price || 0,
                             image: item.foodImageUrl || item.image || '🍿',
                             description: item.description || '',
-                            available: item.is_available !== false
+                            available: item.is_available !== false && item.status !== 'UNAVAILABLE'
                         })).filter(item => item.available);
                     } catch (error) {
                         console.error('Error processing food items:', error);
                         foodItemsData = [];
                     }
                 }
-    
+
                 // No longer needed to clear show if we have it from state or previous steps
                 setShowSeats([]); // No longer needed as we use selectedSeats from draft
                 setFoodItems(foodItemsData);
@@ -109,19 +111,19 @@ const BookingSummaryPage = () => {
                 setLoading(false);
             }
         };
-    
+
         fetchData();
     }, [showId, theaterId]);
 
     const priceGroups = useMemo(() => {
         const draftSeats = bookingState?.selectedSeats || [];
         if (!draftSeats.length) return {};
-        
+
         const groups = {};
         draftSeats.forEach(seat => {
             const price = seat.price || seat.basePrice || 0;
             if (!groups[price]) groups[price] = [];
-            
+
             const seatRow = seat.row ? `${seat.row}` : '';
             const seatNum = seat.number || seat.seatNumber || seat.seatLabel || seat.label || seat.seat_number || seat.id;
             const label = seatRow ? `${seatRow}${seatNum}` : seatNum;
@@ -165,8 +167,8 @@ const BookingSummaryPage = () => {
             if (newSessionId) {
                 // Save true sessionId returned from server
                 bookingSessionManager.startSession(showId, displayTheater, null); // Replaces temp session start logic
-                const updatedDraft = { 
-                    ...bookingState, 
+                const updatedDraft = {
+                    ...bookingState,
                     sessionId: newSessionId,
                     pricing: pricingStatus, // Store the calculated totals
                     show: show // Store show metadata for downstream use
@@ -238,7 +240,7 @@ const BookingSummaryPage = () => {
 
                     <div className="w-24 h-36 sm:w-32 sm:h-44 rounded-xl md:rounded-2xl overflow-hidden shadow-lg mx-auto md:mx-0 flex-shrink-0 relative group">
                         <img
-                            src={displayPoster}
+                            src={optimizeImage(displayPoster, { width: 300, quality: 80 })}
                             alt={displayTitle}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
@@ -246,14 +248,14 @@ const BookingSummaryPage = () => {
                             <p className="text-[9px] font-black tracking-widest uppercase">{displayFormat}</p>
                         </div>
                     </div>
-                    
+
                     <div className="flex flex-col justify-center flex-1 py-1 text-center md:text-left">
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary text-[10px] font-black tracking-widest w-fit mb-2 mx-auto md:mx-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                             {displayLanguage}
                         </div>
                         <h2 className="text-lg md:text-2xl font-black text-gray-900 dark:text-white leading-tight mb-4 tracking-tight font-roboto">{displayTitle}</h2>
-                        
+
                         <div className="grid grid-cols-2 gap-y-4 gap-x-4 md:gap-x-8">
                             <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-2.5 text-center md:text-left">
                                 <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />

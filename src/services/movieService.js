@@ -183,6 +183,7 @@ export const getTheaterDetails = async (theaterId, date) => {
 
         if (body.success) {
             let theaterData = body.data;
+            let foodAvailable = body.isFoodAndBeveragesAvailable;
 
             // If data is an array (movies list), we need to reconstruct the Theater object
             if (Array.isArray(theaterData)) {
@@ -196,11 +197,15 @@ export const getTheaterDetails = async (theaterId, date) => {
                     theaterId: theaterId,
                     movies: theaterData, // The list of movies with shows
                     summary: body.summary,
-                    filters: body.filters
+                    filters: body.filters,
+                    isFoodAndBeveragesAvailable: foodAvailable ?? theatreInfo.isFoodAndBeveragesAvailable ?? true
                 });
             }
 
-            return theaterData ? new Theater(theaterData) : null;
+            return theaterData ? new Theater({
+                ...theaterData,
+                isFoodAndBeveragesAvailable: foodAvailable ?? theaterData.isFoodAndBeveragesAvailable ?? true
+            }) : null;
         }
         return null;
     });

@@ -13,6 +13,7 @@ import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 import { useData } from '../context/DataContext';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const Toast = ({ message, type, onClose }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top duration-500 ${type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
@@ -79,7 +80,8 @@ const SeatSelectionPage = () => {
         if (movie) {
             const movieInfo = {
                 title: movie.title || movie.MovieName || '',
-                portraitPosterUrl: movie.posterUrl || movie.portraitPosterUrl || ''
+                portraitPosterUrl: movie.posterUrl || movie.portraitPosterUrl || '',
+                landscapePosterUrl: movie.backdropUrl || movie.landscapePosterUrl || movie.landscape_poster?.url || movie.landscape_poster || ''
             };
             setMovieData(movieInfo);
 
@@ -88,7 +90,12 @@ const SeatSelectionPage = () => {
                 sessionStorage.setItem('booking_movie_title', movieInfo.title);
             }
             if (!sessionStorage.getItem('booking_movie_poster')) {
-                sessionStorage.setItem('booking_movie_poster', movieInfo.portraitPosterUrl);
+                const posterUrlStr = movieInfo.portraitPosterUrl?.url || movieInfo.portraitPosterUrl || '';
+                sessionStorage.setItem('booking_movie_poster', posterUrlStr);
+            }
+            if (!sessionStorage.getItem('booking_movie_landscape_poster')) {
+                const landscapeUrlStr = movieInfo.landscapePosterUrl?.url || movieInfo.landscapePosterUrl || '';
+                sessionStorage.setItem('booking_movie_landscape_poster', landscapeUrlStr);
             }
         }
     }, [slug, movieId, getMovieById]);
@@ -213,8 +220,8 @@ const SeatSelectionPage = () => {
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(bookingDraft));
 
                 hasProceededRef.current = true;
-                const isFoodAvailable = sessionStorage.getItem('booking_is_food_available') !== 'false';
-
+                const isFoodAvailable = sessionStorage.getItem('booking_is_food_available') === 'true';
+                
                 if (isFoodAvailable) {
                     navigate(`/movie/${slug}/${theaterSlug}/food`, {
                         state: {

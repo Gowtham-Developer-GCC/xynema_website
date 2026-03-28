@@ -18,7 +18,7 @@ const MovieCard = memo(({ movie }) => {
         {/* Full width within its slide to eliminate visual gap between cards */}
         <div className="w-full aspect-[1/1.58] rounded-md overflow-hidden relative bg-gray-200 dark:bg-gray-800 transition-all duration-500">
             <img
-                src={optimizeImage(movie.posterUrl, { width: 400, quality: 100 })}
+                src={optimizeImage(movie.posterUrl || movie.portraitPosterUrl || movie.PosterUrl || movie.image, { width: 400, quality: 100 })}
                 alt={movie.title}
                 loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out"

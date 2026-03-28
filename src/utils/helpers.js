@@ -214,13 +214,19 @@ export const utils = {
      * Image Optimization
      * Safely handles internal and external URLs
      */
-    optimizeImage(url, options = {}) {
-        if (!url) return 'https://placehold.co/400x600/333/FFF?text=XY';
+    optimizeImage(input, options = {}) {
+        // 1. Resolve raw URL from string, object {url}, or fallback
+        let url = (typeof input === 'object' && input !== null) ? (input.url || input.imageUrl || input.PosterUrl) : input;
+        
+        // 2. Security Check: Block [object Object] strings which happen when objects are saved to sessionStorage
+        if (typeof url !== 'string' || !url || url === '[object Object]') {
+            return 'https://placehold.co/400x600/1e293b/FFFFFF?text=XY'; // Premium slate placeholder
+        }
 
-        let processedUrl = url;
+        let processedUrl = url.trim();
 
         // Special handling for BookMyShow (BMS) images to get higher quality
-        if (processedUrl.includes('bmscdn.com')) {
+        if (typeof processedUrl === 'string' && processedUrl.includes('bmscdn.com')) {
             // Replace medium/small/thumbnail with larger versions if present in the path
             processedUrl = processedUrl
                 .replace('/listing/medium/', '/listing/xlarge/')
@@ -230,7 +236,7 @@ export const utils = {
         }
 
         // Skip further optimization for external CDNs that handle their own resizing or might break
-        if (processedUrl.includes('unsplash.com') || processedUrl.includes('cloudinary.com')) {
+        if (typeof processedUrl === 'string' && (processedUrl.includes('unsplash.com') || processedUrl.includes('cloudinary.com'))) {
             return processedUrl;
         }
 
@@ -249,7 +255,7 @@ export const utils = {
             auto: 'format',
         });
 
-        return processedUrl.includes('?') ? `${processedUrl}&${params}` : `${processedUrl}?${params}`;
+        return typeof processedUrl === 'string' && processedUrl.includes('?') ? `${processedUrl}&${params}` : `${processedUrl}?${params}`;
     },
 
     /**

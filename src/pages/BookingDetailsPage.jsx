@@ -9,6 +9,7 @@ import ErrorState from '../components/ErrorState';
 import LoadingScreen from '../components/LoadingScreen';
 import ReviewModal from '../components/ReviewModal';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const BookingDetailsPage = () => {
     const { id } = useParams();
@@ -252,16 +253,16 @@ const BookingDetailsPage = () => {
                     <div className="relative w-full h-56 bg-gray-900 overflow-hidden">
                         {/* Immersive Background - Using img tag for better capture reliability */}
                         <img
-                            src={booking.landscapePosterUrl || booking.posterUrl}
+                            src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 1200, quality: 75 })}
                             className="absolute inset-0 w-full h-full object-cover scale-105 opacity-60 contrast-125 saturate-150"
                             alt=""
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent flex flex-col justify-end p-8">
                             <div className="relative z-10 flex gap-6 items-end">
                                 {/* Portrait Poster inset */}
-                                <div className="w-24 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
+                                <div className="w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
                                     <img
-                                        src={booking.posterUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
+                                        src={optimizeImage(booking.portraitPosterUrl || booking.posterUrl, { width: 300, quality: 80 }) || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
                                         className="w-full h-full object-cover shadow-inner"
                                         alt={booking.movieTitle}
                                     />

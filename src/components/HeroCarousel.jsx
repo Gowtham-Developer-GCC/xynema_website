@@ -63,7 +63,9 @@ const HeroCarousel = memo(({ movies, isMobile }) => {
             >
                 {movies.map((movie, index) => {
                     const linkUrl = movie.linkUrl || (movie.slug || movie.id ? `/movie/${movie.slug || movie.id}` : '#');
-                    const imageUrl = isMobile ? (movie.mobileBannerImage || movie.bannerImageUrl) : movie.bannerImageUrl;
+                    const mobileImg = movie.mobileBannerImage?.url || movie.mobileBannerImage;
+                    const desktopImg = movie.bannerImageUrl?.url || movie.bannerImageUrl;
+                    const imageUrl = isMobile ? (mobileImg || desktopImg) : desktopImg;
 
                     return (
                         <SwiperSlide key={`${movie.id || index}-${index}`} className="!h-auto">

@@ -1,6 +1,7 @@
 import React from 'react';
 import BookingQr from './BookingQr';
 import { Calendar, Monitor, Armchair, MapPin } from 'lucide-react';
+import { optimizeImage } from '../utils/helpers';
 
 const TicketCard = ({ ticket, onClick }) => {
     const formatDate = (dateStr) => {
@@ -31,7 +32,7 @@ const TicketCard = ({ ticket, onClick }) => {
                         {/* Poster */}
                         <div className="w-20 h-28 rounded-xl overflow-hidden shadow-lg flex-shrink-0 border border-white/20">
                             <img
-                                src={ticket.posterUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
+                                src={optimizeImage(ticket.portraitPosterUrl || ticket.landscapePosterUrl || ticket.posterUrl, { width: 200, quality: 80 }) || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
                                 alt={ticket.movieTitle}
                                 className="w-full h-full object-cover"
                             />

@@ -7,6 +7,7 @@ import { getMyTurfBookings } from '../services/turfService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import apiCacheManager from '../services/apiCacheManager';
+import { optimizeImage } from '../utils/helpers';
 
 const MyBookingsPage = () => {
     const navigate = useNavigate();
@@ -448,7 +449,7 @@ const MovieTicketCard = ({ booking }) => {
             {/* Poster */}
             <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img
-                    src={booking.landscapePosterUrl || booking.posterUrl || 'https://placehold.co/400x250/f0f0f5/999?text=Movie'}
+                    src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Movie'}
                     alt={booking.movieTitle}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -502,7 +503,7 @@ const EventTicketCard = ({ booking }) => {
             {/* Poster */}
             <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img
-                    src={booking.eventPoster || booking.posterUrl || booking.imageUrl || 'https://placehold.co/400x250/f0f0f5/999?text=Event'}
+                    src={optimizeImage(booking.eventPoster || booking.posterUrl || booking.imageUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Event'}
                     alt={booking.eventName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -571,7 +572,7 @@ const TurfTicketCard = ({ booking }) => {
             {/* Poster / Venue Image */}
             <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
                 <img
-                    src={primaryImage || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
+                    src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
                     alt={turfName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />

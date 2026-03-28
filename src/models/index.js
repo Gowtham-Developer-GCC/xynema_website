@@ -7,8 +7,12 @@ export class Movie {
     constructor(data = {}) {
         this.id = data._id || data.id || '';
         this.title = data.MovieName || data.movieName || data.title || '';
-        this.posterUrl = data.portraitPosterUrl || data.posterUrl || data.PosterUrl || '';
-        this.backdropUrl = data.landscapePosterUrl || data.backdropUrl || data.BackdropUrl || '';
+        
+        const rawPoster = data.portraitPosterUrl || data.posterUrl || data.PosterUrl || data.image || '';
+        this.posterUrl = (typeof rawPoster === 'object' && rawPoster !== null ? (rawPoster.url || rawPoster.imageUrl || '') : rawPoster);
+
+        const rawBackdrop = data.landscapePosterUrl || data.backdropUrl || data.BackdropUrl || '';
+        this.backdropUrl = (typeof rawBackdrop === 'object' && rawBackdrop !== null ? (rawBackdrop.url || rawBackdrop.imageUrl || '') : rawBackdrop);
 
         // Match sample response: "Genre": ["Action", "Adventure", "Drama"]
         this.genre = Array.isArray(data.Genre)
@@ -178,7 +182,8 @@ export class TheaterMovie {
     constructor(data = {}) {
         this.movieId = data.movieId || '';
         this.name = data.movieName || '';
-        this.posterUrl = data.posterUrl || '';
+        this.posterUrl = data.posterUrl?.url || data.posterUrl || '';
+        this.landscapePosterUrl = data.landscapePosterUrl?.url || data.landscapePosterUrl || '';
         this.releaseDate = data.releaseDate || '';
         this.certification = data.certification || '';
         this.slug = data.slug || (data.movieName ? data.movieName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '');
@@ -438,17 +443,15 @@ export class Booking {
         if (!movieTitle) movieTitle = 'Unknown Movie';
 
         // Extract Poster URL
-        const posterUrl = (
-            movieData.portraitPosterUrl || movieData.posterUrl || movieData.PosterUrl || movieData.image ||
+        const rawPoster = movieData.portraitPosterUrl || movieData.posterUrl || movieData.PosterUrl || movieData.image ||
             (Array.isArray(movieData.images) && movieData.images[0]?.url) ||
-            json.posterUrl || json.PosterUrl || ''
-        ).toString().trim();
+            json.posterUrl || json.PosterUrl || '';
+        const posterUrl = (typeof rawPoster === 'object' && rawPoster !== null ? (rawPoster.url || rawPoster.imageUrl || '') : rawPoster).toString().trim();
 
-        const landscapePosterUrl = (
-            movieData.landscapePosterUrl ||
+        const rawLandscape = movieData.landscapePosterUrl ||
             (Array.isArray(movieData.images) && (movieData.images.find(img => img.type === 'landscape')?.url || movieData.images[1]?.url)) ||
-            ''
-        ).toString().trim();
+            '';
+        const landscapePosterUrl = (typeof rawLandscape === 'object' && rawLandscape !== null ? (rawLandscape.url || rawLandscape.imageUrl || '') : rawLandscape).toString().trim();
 
         // Extract Theater Name
         let theaterName = (theatreData.theatreName || theatreData.theaterName || theatreData.venueName || theatreData.name ||
@@ -679,6 +682,9 @@ export class Event {
 
         this.imageUrl = primaryImg?.url || (allImages.length > 0 ? allImages[0] : 'https://placehold.co/800x400');
         this.allImages = allImages;
+        
+        // Portrait Image
+        this.portraitEventImage = data.portraitEventImage?.url || data.portraitEventImage || null;
 
         this.description = data.description || '';
         this.tags = Array.isArray(data.tags) ? data.tags : [];

@@ -410,8 +410,8 @@ class ApiCacheManager {
     /**
      * Helper: Get or fetch food items
      */
-    async getOrFetchFood(fetchFn, force = false) {
-        return this.getOrExecute('food_items', fetchFn, ApiCacheManager.FOOD_TTL, force);
+    async getOrFetchFood(theaterId, fetchFn, force = false) {
+        return this.getOrExecute(`food_items_${theaterId}`, fetchFn, ApiCacheManager.FOOD_TTL, force);
     }
 
     /**

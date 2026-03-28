@@ -634,7 +634,7 @@ const CastCrewModal = ({ title, items, onClose }) => {
                                     <div className={`w-20 h-20 rounded-full overflow-hidden border border-white/10 flex items-center justify-center shadow-inner ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
                                         {photoUrl && !photoUrl.includes('ui-avatars') ? (
                                             <img
-                                                src={photoUrl}
+                                                src={optimizeImage(photoUrl, { width: 200, quality: 75 })}
                                                 alt={name}
                                                 className="w-full h-full object-cover"
                                             />
@@ -716,7 +716,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                             <div className={`w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-100 ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
                                                 {photoUrl && !photoUrl.includes('ui-avatars') ? (
                                                     <img
-                                                        src={photoUrl}
+                                                        src={optimizeImage(photoUrl, { width: 300, quality: 75 })}
                                                         alt={name}
                                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                     />

@@ -18,6 +18,7 @@ import apiCacheManager from '../services/apiCacheManager';
 import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 import { toast } from 'react-hot-toast';
+import BookingQr from '../components/BookingQr';
 
 const TurfBookingDetailsPage = () => {
     const { bookingId } = useParams();
@@ -169,8 +170,8 @@ const TurfBookingDetailsPage = () => {
 
                         {/* QR Code Section */}
                         <div className="flex flex-col items-center justify-center bg-pink-50 dark:bg-pink-500/5 rounded-2xl p-8 border border-dashed border-pink-200 dark:border-pink-500/10 md:w-64">
-                            <div className="bg-white p-4 rounded-xl shadow-inner mb-4">
-                                <QrCode className="w-32 h-32 md:w-40 md:h-40 text-gray-900" />
+                            <div className="mb-4">
+                                <BookingQr booking={booking} size={220} />
                             </div>
                             <p className="text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                 Scan for Entry

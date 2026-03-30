@@ -775,6 +775,7 @@ export class Turf {
         this.coordinates = loc.coordinates || [];
         this.defaultSlotDuration = data.courts?.[0]?.defaultSlotDuration || 60;
         this.courts = data.courts || [];
+        this.convenienceFeePercent = data.convenienceFeePercent || 0;
     }
 
     static fromJson(json) {

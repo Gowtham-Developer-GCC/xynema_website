@@ -176,7 +176,7 @@ const BookingSlotPage = () => {
 
     const currentCourt = venue?.courts?.find(c => (c._id || c.id) === selectedCourt);
     const turfFee = selectedSlots.reduce((sum, s) => sum + (s.priceOverride || s.pricePerHour || currentCourt?.pricePerHour || venue?.price || 0), 0);
-    const convenienceFee = selectedSlots.length > 0 ? 40 : 0;
+    const convenienceFee = selectedSlots.length > 0 ? Math.round((turfFee * (venue?.convenienceFeePercent || 0)) / 100) : 0;
     const totalAmount = turfFee + convenienceFee;
 
     if (loading) return <LoadingScreen message="Initialising Booking..." />;

@@ -100,6 +100,7 @@ const TurfPaymentPage = () => {
             
             const bookingData = {
                 slotIds: reservation.slotIds,
+                isAdvancePayment: isAdvancePayment,
                 paymentMethod: "online",
                 transactionId: txnId,
                 notes: notes,
@@ -127,9 +128,9 @@ const TurfPaymentPage = () => {
 
     if (!reservation) return <LoadingScreen message="Securing Session..." />;
 
-    const totalAmount = reservation.totalPrice;
-    const convenienceFee = 40;
-    const finalDisplayAmount = isAdvancePayment ? (totalAmount / 2) + convenienceFee : totalAmount + convenienceFee;
+    const turfFee = reservation.totalPrice;
+    const convenienceFee = Math.round((turfFee * (turf?.convenienceFeePercent || 0)) / 100);
+    const finalDisplayAmount = isAdvancePayment ? (turfFee / 2) + convenienceFee : turfFee + convenienceFee;
 
     if (booked) {
         return (
@@ -370,8 +371,8 @@ const TurfPaymentPage = () => {
                                 {/* Detailed Summary Box */}
                                 <div className="space-y-4 pt-4 border-t border-gray-50 dark:border-gray-800/50">
                                     <div className="flex justify-between items-center text-[13px]">
-                                        <span className="text-gray-500 font-bold uppercase tracking-tight">Turf Fee (₹{totalAmount})</span>
-                                        <span className="font-black text-gray-900 dark:text-white">₹{totalAmount}</span>
+                                        <span className="text-gray-500 font-bold uppercase tracking-tight">Turf Fee (₹{turfFee})</span>
+                                        <span className="font-black text-gray-900 dark:text-white">₹{turfFee}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-[13px]">
                                         <span className="text-gray-500 font-bold uppercase tracking-tight">Convenience Fee</span>
@@ -381,7 +382,7 @@ const TurfPaymentPage = () => {
                                     <div className="bg-[#fff1f2] dark:bg-pink-950/20 border border-primary/5 rounded-2xl p-4 flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-tighter">Pay 50% Advance</span>
-                                            <span className="text-[10px] font-bold text-gray-400">Secure booking with ₹{totalAmount / 2}</span>
+                                            <span className="text-[10px] font-bold text-gray-400">Secure booking with ₹{turfFee / 2} + Fixed Fee</span>
                                         </div>
                                         <button 
                                             onClick={() => setIsAdvancePayment(!isAdvancePayment)}

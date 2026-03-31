@@ -43,14 +43,14 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
         <>
             <nav className="bg-white/60 dark:bg-gray-900/30 backdrop-blur-2xl text-gray-800 dark:text-gray-100 sticky top-0 z-[60] border-b border-white/50 dark:border-gray-800 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300 print:hidden">
                 <div className="w-full max-w-[95%] md:max-w-[95%] lg:max-w-[95%] xl:max-w-[95%] 2xl:max-w-[80%] mx-auto px-4">
-                    <div className="flex justify-between items-center h-16 md:h-20 lg:h-20 xl:h-20">
+                    <div className="flex items-center justify-between h-16 md:h-20 lg:h-20 xl:h-20">
 
-                        {/* Left: Logo & City */}
-                        <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
-                            {/* Dev Mode Bicker */}
-                            <DevModeBadge className="hidden sm:flex" />
+                        {/* Left Zone: Logo & City - Takes up 1/3 space to help center middle links */}
+                        <div className="flex-1 flex items-center justify-start gap-4 md:gap-1 min-w-0">
+                            {/* Dev Mode Badge */}
+                            <DevModeBadge className="hidden sm:flex shrink-0" />
 
-                            <Link to="/" className="flex items-center gap-1.5 md:gap-2 group">
+                            <Link to="/" className="flex items-center gap-1.5 md:gap-2 group shrink-0">
                                 <img
                                     src="/assets/primary_Logo.png"
                                     alt="Xynema Logo"
@@ -61,40 +61,51 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                             <button
                                 onClick={openCityModal}
-                                className="hidden md:flex items-center gap-1 md:gap-1.5 px-2 py-1.5 md:px-4 md:py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-colors group text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm ml-1 md:ml-6 border border-white/60 dark:border-gray-700"
+                                className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-all group text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm border border-white/60 dark:border-gray-700 shrink-0"
                             >
-                                <MapPin className="h-3 w-3 md:h-4 md:w-4" />
-                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[60px] md:max-w-none">{selectedCity || 'City'}</span>
-                                <ChevronDown className="h-3 w-3 md:h-4 md:w-4 text-gray-400 group-hover:text-primary mb-[1px] md:mb-0.5" />
+                                <MapPin className="h-4 w-4" />
+                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[100px]">{selectedCity || 'City'}</span>
+                                <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-primary mb-0.5" />
                             </button>
                         </div>
 
-                        {/* Center: Nav Links - Visible from lg breakpoint now that search is an icon */}
-                        <div className="hidden lg:flex items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 absolute left-1/2 -translate-x-1/2">
-                            <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>For You</Link>
-                            <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Movies</Link>
-                            <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Events</Link>
-                            <Link to="/sports" className={`relative py-1 transition-colors ${location.pathname.startsWith('/sports') ? 'text-primary after:content-[\'\'] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-[2px] after:bg-primary' : 'hover:text-primary'}`}>Sports</Link>
+                        {/* Center Zone: Nav Links - Perfectly centered using the Three-Zone pattern */}
+                        <div className="hidden lg:flex flex-none items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 px-6">
+                            <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary' : 'hover:text-primary'}`}>
+                                For You
+                                {location.pathname === '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
+                            </Link>
+                            <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary' : 'hover:text-primary'}`}>
+                                Movies
+                                {location.pathname.startsWith('/movies') && location.pathname !== '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
+                            </Link>
+                            <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary' : 'hover:text-primary'}`}>
+                                Events
+                                {location.pathname.startsWith('/events') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
+                            </Link>
+                            <Link to="/sports" className={`relative py-1 transition-colors ${location.pathname.startsWith('/sports') ? 'text-primary' : 'hover:text-primary'}`}>
+                                Sports
+                                {location.pathname.startsWith('/sports') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
+                            </Link>
                         </div>
 
-                        {/* Right: Search & Actions */}
-                        <div className="flex items-center justify-end gap-1 md:gap-4 flex-1">
-                            {/* Search Icon - Always visible, expands on click */}
+                        {/* Right Zone: Search & Actions - Takes up 1/3 space */}
+                        <div className="flex-1 flex items-center justify-end gap-2 md:gap-2 min-w-0">
+                            {/* Search Icon */}
                             <button
                                 onClick={() => setIsMobileSearchOpen(true)}
-                                className="p-1.5 md:p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all shrink-0"
                                 aria-label="Search"
                             >
-                                <Search className="h-4.5 w-4.5 md:h-5 md:w-5 text-gray-600 dark:text-gray-400" />
+                                <Search className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                             </button>
 
                             {/* Actions Group */}
-                            <div className="flex items-center gap-1 md:gap-2">
-                                {/* Desktop Theme Toggle */}
+                            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                {/* Theme Toggle */}
                                 <button
                                     onClick={toggleTheme}
-                                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden xl:flex items-center justify-center text-gray-600 dark:text-gray-300"
-                                    aria-label="Toggle dark mode"
+                                    className="p-2 ml-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden xl:flex items-center justify-center text-gray-600 dark:text-gray-300"
                                 >
                                     {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                                 </button>
@@ -102,14 +113,13 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 {user ? (
                                     <button
                                         onClick={() => setIsSidebarOpen(true)}
-                                        className="hidden xl:flex items-center gap-2 pl-1.5 pr-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                                        className="hidden xl:flex items-center gap-2 pl-1.5 pr-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all border border-transparent"
                                     >
                                         <img
                                             src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
-                                            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover shadow-sm"
+                                            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover"
                                             alt=""
                                         />
-                                        {/*<span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden 2xl:block">{user.displayName?.split(' ')[0] || 'Guest'}</span>*/}
                                     </button>
                                 ) : (
                                     <button
@@ -121,19 +131,13 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 )}
                             </div>
 
-                            {/* Mobile/Tablet Controls - Visible only below xl */}
-                            <div className="flex items-center gap-1 xl:hidden">
-                                <button
-                                    onClick={toggleTheme}
-                                    className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
-                                >
-                                    {isDarkMode ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+                            {/* Mobile Controls */}
+                            <div className="flex items-center gap-1 xl:hidden shrink-0">
+                                <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all text-gray-600 dark:text-gray-300">
+                                    {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                                 </button>
-                                <button
-                                    onClick={() => setIsSidebarOpen(true)}
-                                    className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all text-gray-600 dark:text-gray-300"
-                                >
-                                    <Menu className="h-4.5 w-4.5" />
+                                <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all text-gray-600 dark:text-gray-300">
+                                    <Menu className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
@@ -239,8 +243,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         openCityModal();
                                     }}
                                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all active:scale-[0.98] ${isDarkMode
-                                            ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                                            : 'bg-black/5 border-black/5 hover:bg-black/10'
+                                        ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                                        : 'bg-black/5 border-black/5 hover:bg-black/10'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -255,7 +259,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     <ChevronRight className={`w-4 h-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                                 </button>
                             </div>
-                            
+
                             {/* Mobile Dev Mode Indicator */}
                             <div className="sm:hidden mt-4 flex justify-center">
                                 <DevModeBadge className="w-full justify-center py-2.5" />
@@ -280,8 +284,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         to={nav.to}
                                         onClick={() => setIsSidebarOpen(false)}
                                         className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${nav.active
-                                                ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5')
-                                                : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
+                                            ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5')
+                                            : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
                                             }`}
                                     >
                                         <nav.icon className={`w-[18px] h-[18px] ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
@@ -313,91 +317,91 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {user && (
 
                             <div className="px-5 pb-6 md:pb-8 pt-2">
-                            <button
-                                onClick={() => {
-                                    logoutUser();
-                                    setIsSidebarOpen(false);
-                                }}
-                                className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isDarkMode ? 'hover:bg-red-500/10' : 'hover:bg-red-50'
-                                    }`}
-                                style={{
-                                    color: '#ef4444',
-                                    border: isDarkMode ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(239, 68, 68, 0.25)',
-                                    background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.03)',
-                                }}
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Log out
-                            </button>
+                                <button
+                                    onClick={() => {
+                                        logoutUser();
+                                        setIsSidebarOpen(false);
+                                    }}
+                                    className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isDarkMode ? 'hover:bg-red-500/10' : 'hover:bg-red-50'
+                                        }`}
+                                    style={{
+                                        color: '#ef4444',
+                                        border: isDarkMode ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(239, 68, 68, 0.25)',
+                                        background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.03)',
+                                    }}
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Log out
+                                </button>
                             </div>
                         )}
-                </div>
+                    </div>
                 </div >
             )
             }
 
-{/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */ }
-{
-    !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
-    !location.pathname.startsWith('/event/') && 
-    !location.pathname.startsWith('/sports/') && (
-        <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe print:hidden">
-            <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
-                <Link
-                    to="/"
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname === '/'
-                            ? 'text-primary scale-110'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}
-                >
-                    <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
-                        <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
-                </Link>
+            {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */}
+            {
+                !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
+                !location.pathname.startsWith('/event/') &&
+                !location.pathname.startsWith('/sports/') && (
+                    <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe print:hidden">
+                        <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
+                            <Link
+                                to="/"
+                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname === '/'
+                                    ? 'text-primary scale-110'
+                                    : 'text-gray-500 dark:text-gray-400'
+                                    }`}
+                            >
+                                <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
+                                    <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
+                            </Link>
 
-                <Link
-                    to="/movies"
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/movies') && location.pathname !== '/'
-                            ? 'text-primary scale-110'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}
-                >
-                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
-                        <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
-                </Link>
+                            <Link
+                                to="/movies"
+                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/movies') && location.pathname !== '/'
+                                    ? 'text-primary scale-110'
+                                    : 'text-gray-500 dark:text-gray-400'
+                                    }`}
+                            >
+                                <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
+                                    <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
+                            </Link>
 
-                <Link
-                    to="/events"
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/events')
-                            ? 'text-primary scale-110'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}
-                >
-                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
-                        <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
-                </Link>
+                            <Link
+                                to="/events"
+                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/events')
+                                    ? 'text-primary scale-110'
+                                    : 'text-gray-500 dark:text-gray-400'
+                                    }`}
+                            >
+                                <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
+                                    <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
+                            </Link>
 
-                <Link
-                    to="/sports"
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/sports')
-                            ? 'text-primary scale-110'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}
-                >
-                    <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/sports') ? 'bg-primary/10' : ''}`}>
-                        <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/sports') ? 'fill-current' : ''}`} />
+                            <Link
+                                to="/sports"
+                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/sports')
+                                    ? 'text-primary scale-110'
+                                    : 'text-gray-500 dark:text-gray-400'
+                                    }`}
+                            >
+                                <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/sports') ? 'bg-primary/10' : ''}`}>
+                                    <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/sports') ? 'fill-current' : ''}`} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Sports</span>
+                            </Link>
+                        </div>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Sports</span>
-                </Link>
-            </div>
-        </div>
-    )
-}
+                )
+            }
         </>
     );
 };

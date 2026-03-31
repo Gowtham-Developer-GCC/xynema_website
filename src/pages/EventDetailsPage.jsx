@@ -245,31 +245,31 @@ const EventDetailsPage = () => {
     const storeItems = [
         {
             id: "store-1",
-            name: "Cold white Tshirt",
-            price: 849,
+            name: "Confetti paper 250g",
+            price: 250,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://img.freepik.com/premium-photo/colorful-background-with-confetti-place-party_577115-136303.jpg"
         },
         {
             id: "store-2",
-            name: "Charlie movie shirt",
-            price: 849,
+            name: "Magician hat",
+            price: 1599,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://thumbs.dreamstime.com/b/magician-top-hat-magic-wand-shiny-grey-background-332855369.jpg"
         },
         {
             id: "store-3",
-            name: "Spiderverse T Shirt",
-            price: 849,
+            name: "Casual Dress set",
+            price: 4399,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://crocodile.in/cdn/shop/files/2_67bc818f-423e-4730-b639-e97cbc7b1533.jpg?v=1756896672&width=1672"
         },
         {
             id: "store-4",
-            name: "Premium Black Tee",
-            price: 849,
+            name: "Painting kit",
+            price: 1000,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://p9artboutique.co.uk/cdn/shop/files/oil_paint_set_amazon_new_version_2000x2000_6a185091-8142-46ac-b4e4-1ee6e6b6d976.png?v=1756616128&width=1946"
         }
     ];
 

@@ -505,6 +505,12 @@ class ApiCacheManager {
     async getOrFetchTurfs(city, fetchFn, force = false) {
         return this.getOrExecute(`turfs_${city || 'all'}`, fetchFn, ApiCacheManager.TURFS_TTL, force);
     }
+    /**
+     * Helper: Get or fetch similar turfs
+     */
+    async getOrFetchSimilarTurfs(turfId, fetchFn) {
+        return this.getOrExecute(`similar_turfs_${turfId}`, fetchFn, ApiCacheManager.TURFS_TTL);
+    }
 }
 
 // Export singleton instance and class

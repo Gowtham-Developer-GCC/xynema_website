@@ -5,7 +5,7 @@ import { optimizeImage } from '../utils/helpers';
 const StoreCard = memo(({ item }) => {
     return (
         <div className="bg-white dark:bg-[#1a1c23] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
-            <Link to={`/store/${item.id}`} className="block w-full">
+            <Link to={``} className="block w-full">
                 <div className="relative aspect-square overflow-hidden bg-white">
                     <img
                         src={optimizeImage(item.imageUrl, { width: 600, quality: 95 }) || 'https://via.placeholder.com/600x600?text=No+Image'}
@@ -16,7 +16,7 @@ const StoreCard = memo(({ item }) => {
                 </div>
             </Link>
             <div className="p-3 sm:p-5 flex flex-col flex-grow bg-white dark:bg-[#1a1c23] border-t border-gray-50 dark:border-gray-800">
-                <Link to={`/store/${item.id}`} className="mb-2 block">
+                <Link to={``} className="mb-2 block">
                     <h3 className="font-bold text-gray-900 dark:text-white text-xs sm:text-[1.05rem] leading-snug truncate transition-colors font-roboto group-hover:text-primary">
                         {item.name}
                     </h3>

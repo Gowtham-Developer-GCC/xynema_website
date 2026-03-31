@@ -12,7 +12,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import StoreCard from '../components/StoreCard';
 import SportCard from '../components/SportCard';
-import { getTurfDetails } from '../services/turfService';
+import { getTurfDetails, getSimilarTurfs } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
 
 const SportDetailsPage = () => {
@@ -37,36 +37,38 @@ const SportDetailsPage = () => {
     const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [fullScreenImage, setFullScreenImage] = useState(null);
+    const [similarSports, setSimilarSports] = useState([]);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
 
     // Mock Store Data from Figma
     const storeItems = [
         {
             id: "s1",
-            name: "KBFC Jersy",
+            name: "Sports wear",
             price: 1500,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://www.jumpusa.in/cdn/shop/products/1_911774af-e103-482b-a637-1f10a2518420.jpg?v=1646462787"
         },
         {
             id: "s2",
-            name: "NIKE Boots",
+            name: "Sports shoes",
             price: 2000,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://uspoloassn.in/cdn/shop/files/1_dddf6968-3bfe-48b1-986b-5ce9d7888f8b_500x.jpg?v=1763723178"
         },
         {
             id: "s3",
-            name: "Cricket set",
+            name: "Badminton racket",
             price: 3200,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://t3.ftcdn.net/jpg/04/67/21/02/360_F_467210294_EZNVxSdoJSKeV2rsU0G49PEj00bjv5gW.jpg"
         },
         {
             id: "s4",
-            name: "Cold Spray",
+            name: "Football",
             price: 849,
             sellers: 3,
-            imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600"
+            imageUrl: "https://as1.ftcdn.net/jpg/01/59/01/16/1000_F_159011637_QFaJ5bZmyPKwurU8esvTqBP6iNvjbw4s.jpg"
         }
     ];
 
@@ -124,19 +126,21 @@ const SportDetailsPage = () => {
         ]
     };
 
-    const fetchTurfDetails = async () => {
-        const turfId = sport?._id || sport?.id || slug;
-        const hasInitialData = !!sport;
+    const fetchTurfDetails = async (targetId) => {
+        const turfId = targetId || sport?._id || sport?.id || slug;
+        const hasInitialData = !!targetId ? false : !!sport;
 
         try {
             if (!hasInitialData) setLoading(true);
             setError(null);
             
-            // Fetch real data with cache support
+            // Fetch real details data with cache support
             const data = await apiCacheManager.getOrFetchTurfDetails(turfId, () => getTurfDetails(turfId));
             
             if (data) {
                 setSport(data);
+                // Also fetch similar sports
+                fetchSimilarSports(turfId);
             } else if (!hasInitialData) {
                 setSport(mockSportDetails);
             }
@@ -148,19 +152,47 @@ const SportDetailsPage = () => {
         }
     };
 
+    const fetchSimilarSports = async (turfId) => {
+        try {
+            setLoadingSimilar(true);
+            const data = await apiCacheManager.getOrFetchSimilarTurfs(turfId, () => getSimilarTurfs(turfId));
+            if (data && Array.isArray(data)) {
+                // Filter out the current turf from recommendations
+                setSimilarSports(data.filter(t => String(t._id || t.id) !== String(turfId)));
+            }
+        } catch (err) {
+            console.error('Error fetching similar sports:', err);
+        } finally {
+            setLoadingSimilar(false);
+        }
+    };
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         const handleScroll = () => setIsScrolled(window.scrollY > 500);
         window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll, { passive: true });
 
-        fetchTurfDetails();
+        // Instant UI Update: Check if we have the next sport in router state
+        const nextSport = location.state?.sport;
+        if (nextSport && String(nextSport._id || nextSport.id) === String(slug)) {
+            // Already have data, just fetch fresh details/similar in background
+            setSport(nextSport);
+            fetchTurfDetails(slug);
+        } else {
+            // Full reset for clean load
+            setSport(null);
+            setSimilarSports([]);
+            fetchTurfDetails(slug);
+        }
+        
+        window.scrollTo(0, 0);
 
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [slug]);
+    }, [slug, location.state]);
 
     const handleGetDirections = () => {
         if (sport?.coordinates && sport.coordinates.length === 2) {
@@ -468,12 +500,12 @@ const SportDetailsPage = () => {
                     </div>
                 </section>
 
-                {/* Explore More Section */}
+                {/* Similar Sports Section */}
                 <section className="space-y-8">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-black dark:text-white">Explore More</h2>
+                        <h2 className="text-2xl font-black dark:text-white">Similar Sports</h2>
                         <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all">
-                            <ChevronRight className="w-6 h-6 text-primary" />
+                            <ChevronRight onClick={() => navigate("/sports")} className="w-6 h-6 text-primary" />
                         </button>
                     </div>
                     <div className="relative group/slider">
@@ -487,11 +519,19 @@ const SportDetailsPage = () => {
                                 1024: { slidesPerView: 3 }
                             }}
                         >
-                            {moreVenues.map(venue => (
-                                <SwiperSlide key={venue.id}>
-                                    <SportCard event={venue} />
-                                </SwiperSlide>
-                            ))}
+                            {similarSports.length > 0 ? (
+                                similarSports.map(venue => (
+                                    <SwiperSlide key={venue._id || venue.id}>
+                                        <SportCard event={venue} />
+                                    </SwiperSlide>
+                                ))
+                            ) : (
+                                !loadingSimilar && (
+                                    <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-400">
+                                        <p className="text-sm font-medium">No similar sports venues found in this area.</p>
+                                    </div>
+                                )
+                            )}
                         </Swiper>
                         <button className="more-prev absolute top-1/2 -left-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
                             <ChevronLeft className="w-6 h-6" />

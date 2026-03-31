@@ -161,3 +161,18 @@ export const getTurfBookingDetails = async (bookingId) => {
         return null;
     });
 };
+/**
+ * Get similar turfs for a specific turf
+ * @param {string} turfId 
+ * @returns {Promise<Turf[]>}
+ */
+export const getSimilarTurfs = async (turfId) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.TURFS.SIMILAR(turfId));
+        const body = response.data;
+        if (body.success && body.data) {
+            return (body.data.turfs || body.data).map(t => new Turf(t));
+        }
+        return [];
+    });
+};

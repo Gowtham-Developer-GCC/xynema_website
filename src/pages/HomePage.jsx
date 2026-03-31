@@ -465,31 +465,31 @@ const EventCard = memo(({ event }) => {
 const MOCK_STORE_ITEMS = [
     {
         id: "store-1",
-        name: "KBFC Jersy",
+        name: "Petta T-Shirt",
         price: 1499,
         sellers: 6,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/kbfc.jpg"
+        imageUrl: "https://gfashion.in/cdn/shop/products/petta-t-shirts_petta-movie-stills_1024x1024.jpg?v=1600843977"
     },
     {
         id: "store-2",
-        name: "Reebok Cricket bat",
+        name: "Salaar Wall frame",
         price: 5599,
         sellers: 2,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/reebok.jpg"
+        imageUrl: "https://m.media-amazon.com/images/I/61R6HVFJ5iL.jpg"
     },
     {
         id: "store-3",
-        name: "Star Wars T-Shirt",
+        name: "Spiderman Mask",
         price: 499,
         sellers: 4,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Star+Wars+Space+Life+T-Shirt.webp"
+        imageUrl: "https://www.heartmades.in/web/image/product.product/1949/image_1024/"
     },
     {
         id: "store-4",
-        name: "Nike High-Top Football Boot",
-        price: 2599,
+        name: "Marvel Mug",
+        price: 55990,
         sellers: 1,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Nike+Mercurial+Superfly+10+Academy+Multi-Ground+High-Top+Football+Boot.jpeg"
+        imageUrl: "https://m.media-amazon.com/images/I/712PMgYmsNL._AC_UF894,1000_QL80_.jpg"
     }
 ];
 

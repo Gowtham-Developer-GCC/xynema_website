@@ -70,6 +70,7 @@ export const ENDPOINTS = {
         CONFIRM: '/customer-turf/confirm-booking',
         CANCEL: '/customer-turf/cancel-reservation',
         MY_BOOKINGS: '/customer-turf/my-bookings',
-        BOOKING_DETAILS: (bookingId) => `/customer-turf/booking/${bookingId}`
+        BOOKING_DETAILS: (bookingId) => `/customer-turf/booking/${bookingId}`,
+        SIMILAR: (turfId) => `/customer-turf/similar-turfs/${turfId}`
     }
 };

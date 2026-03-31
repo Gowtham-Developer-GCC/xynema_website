@@ -77,9 +77,11 @@ const BookingSlotPage = () => {
         fetchDetails();
     }, [turfId]);
 
-    // Fetch Slots whenever court or date changes
     useEffect(() => {
         if (selectedCourt && selectedDate) {
+            // Reset selections when court or date changes
+            setSelectedSlots([]);
+            
             const fetchSlots = async () => {
                 setFetchingSlots(true);
                 const slots = await getAvailableSlots(selectedCourt, selectedDate);
@@ -219,7 +221,10 @@ const BookingSlotPage = () => {
                                 {(currentCourt?.sportTypes || []).map(sport => (
                                     <SwiperSlide key={sport} className="!w-auto">
                                         <button
-                                            onClick={() => setSelectedSport(sport)}
+                                            onClick={() => {
+                                                setSelectedSport(sport);
+                                                setSelectedSlots([]);
+                                            }}
                                             className={`px-6 py-3 sm:px-12 sm:py-4 rounded-xl font-bold text-[13px] sm:text-sm transition-all min-w-[140px] sm:min-w-[180px] capitalize ${
                                                 selectedSport.toLowerCase() === sport.toLowerCase()
                                                 ? 'bg-primary text-white shadow-lg shadow-primary/20' 
@@ -314,9 +319,9 @@ const BookingSlotPage = () => {
                             
                             <div className="flex items-center gap-4">
                                 {fetchingSlots && <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
-                                <span className="text-primary font-bold text-sm hidden sm:block">
+                               {/* <span className="text-primary font-bold text-sm hidden sm:block">
                                     {selectedSlots.length > 0 ? selectedSlots[0].displayLabel : 'No slot selected'}
-                                </span>
+                                </span>*/}
                                 <div className="flex items-center gap-3 bg-white dark:bg-[#1a1c23] border border-gray-200 dark:border-gray-800 rounded-lg p-2 sm:p-3">
                                     <span className="text-[12px] sm:text-sm font-bold dark:text-white min-w-[40px] text-center">
                                         Slot Duration : {currentCourt?.defaultSlotDuration || 60} mins
@@ -471,7 +476,7 @@ const BookingSlotPage = () => {
                         {/* Charges breakdown */}
                         <div className="space-y-4 pt-4 border-t border-gray-50 dark:border-gray-800">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500 dark:text-gray-400 font-medium">Turf Fee (₹{venue?.price || 800})</span>
+                                <span className="text-gray-500 dark:text-gray-400 font-medium">Turf Fee</span>
                                 <span className="font-bold dark:text-white">₹{turfFee}</span>
                             </div>
                             <div className="flex justify-between items-center">

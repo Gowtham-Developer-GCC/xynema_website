@@ -6,9 +6,13 @@ const SportCard = memo(({ event }) => {
     const navigate = useNavigate();
 
     const handleNavigate = () => {
-        // Use ID for API calls as requested, avoiding slug reliance
-        navigate(`/sports/${event.id}`, { state: { sport: event } });
+        const id = event._id || event.id;
+        if (!id) return;
+        navigate(`/sports/${id}`, { state: { sport: event } });
     };
+
+    const displayImage = event.imageUrl || (event.images && event.images[0]?.url) || event.primaryImage || 'https://placehold.co/800x400';
+
 
     return (
         <div 
@@ -17,7 +21,7 @@ const SportCard = memo(({ event }) => {
         >
             <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-900/50">
                 <img
-                    src={event.imageUrl}
+                    src={displayImage}
                     alt={event.name}
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-1"

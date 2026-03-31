@@ -81,38 +81,38 @@ export const getMerchandise = async () => {
     return [
         {
         id: "store-1",
-        name: "KBFC Jersy",
+        name: "Black Shirt",
         price: 1499,
         sellers: 6,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/kbfc.jpg"
+        imageUrl: "https://www.richlook.in/cdn/shop/files/R203194_1_1800x1800.jpg?v=1765006151"
     },
     {
         id: "store-2",
-        name: "Reebok Cricket bat",
+        name: "Tree Poster Frame",
         price: 5599,
         sellers: 2,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/reebok.jpg"
+        imageUrl: "https://m.media-amazon.com/images/I/715gVnLjQfL.jpg"
     },
     {
         id: "store-3",
-        name: "Star Wars T-Shirt",
+        name: "Avengers toy set",
         price: 499,
         sellers: 4,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Star+Wars+Space+Life+T-Shirt.webp"
+        imageUrl: "https://crazygifts.in/cdn/shop/files/WhatsAppImage2022-10-28at6.46.03PM.jpg?v=1721040882&width=1445"
     },
     {
         id: "store-4",
-        name: "Nike High-Top Football Boot",
+        name: "Dhurandhar Leather Jacket",
         price: 2599,
         sellers: 1,
-        imageUrl: "https://tms-storage-images.s3.ap-south-1.amazonaws.com/dummy_images/Nike+Mercurial+Superfly+10+Academy+Multi-Ground+High-Top+Football+Boot.jpeg"
+        imageUrl: "https://img.freepik.com/premium-photo/brown-leather-jacket-isolated-grey-background-mockup-image_985688-10938.jpg?semt=ais_hybrid&w=740&q=80"
     },
     {
         id: "store-5",
-        name: "Dolby Atmos",
+        name: "Master JD Bracelet",
         price: 8999,
         sellers: 1,
-        imageUrl: "https://professional.dolby.com/siteassets/products/cs126mh/a16306.11_16x9.jpg?width=500&mode=min"
+        imageUrl: "https://www.vdmjewellery.co.za/wp-content/uploads/2024/11/vhj.jpg"
     }
     ];
 };

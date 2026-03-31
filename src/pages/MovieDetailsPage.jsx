@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp, Eye, EyeOff, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp, Eye, EyeOff, Volume2, VolumeX, Maximize, ArrowRight, PiIcon, ShieldCloseIcon, SidebarCloseIcon, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toggleInterest, addMovieReview, getSimilarMovies } from '../services/movieService';
 import SEO from '../components/SEO';
@@ -619,11 +619,11 @@ const CastCrewModal = ({ title, items, onClose }) => {
                         onClick={onClose}
                         className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors"
                     >
-                        <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-gray-100 rotate-90 md:rotate-0" />
+                        <X className="w-6 h-6 text-gray-900 dark:text-gray-100 rotate-90 md:rotate-0" />
                     </button>
                 </div>
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-8">
                         {items.map((item, idx) => {
                             const name = item.name || '';
                             const role = item.role || '';
@@ -631,7 +631,7 @@ const CastCrewModal = ({ title, items, onClose }) => {
 
                             return (
                                 <div key={idx} className="flex flex-col items-center text-center space-y-3">
-                                    <div className={`w-20 h-20 rounded-full overflow-hidden border border-white/10 flex items-center justify-center shadow-inner ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
+                                    <div className={`w-20 h-20 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shadow-inner ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
                                         {photoUrl && !photoUrl.includes('ui-avatars') ? (
                                             <img
                                                 src={optimizeImage(photoUrl, { width: 200, quality: 75 })}
@@ -718,7 +718,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                                     <img
                                                         src={optimizeImage(photoUrl, { width: 300, quality: 75 })}
                                                         alt={name}
-                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-1"
                                                     />
                                                 ) : (
                                                     <span className="text-4xl font-black text-white transition-colors tracking-tighter">
@@ -757,7 +757,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                     <div className="flex items-center justify-between pb-2">
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center md:text-left w-full md:w-auto font-roboto">Crew</h3>
                         <div className="hidden md:flex items-center gap-4">
-                            {movie.crew?.length > 0 && (
+                            {movie.crew?.length > 5 && (
                                 <button
                                     onClick={onShowAllCrew}
                                     className="text-[10px] font-black tracking-widest text-primary transition-opacity font-roboto"
@@ -808,7 +808,7 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                                     <img
                                                         src={photoUrl}
                                                         alt={name}
-                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-1"
                                                     />
                                                 ) : (
                                                     <span className="text-4xl font-black text-white transition-colors tracking-tighter">
@@ -865,8 +865,8 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                 480: { slidesPerView: 2, spaceBetween: 20 },
                                 640: { slidesPerView: 3, spaceBetween: 24 },
                                 768: { slidesPerView: 3, spaceBetween: 24 },
-                                1024: { slidesPerView: 5, spaceBetween: 24 },
-                                1280: { slidesPerView: 5, spaceBetween: 24 },
+                                1024: { slidesPerView: 4, spaceBetween: 24 },
+                                1280: { slidesPerView: 4, spaceBetween: 24 },
                             }}
                             className="!pb-8"
                         >

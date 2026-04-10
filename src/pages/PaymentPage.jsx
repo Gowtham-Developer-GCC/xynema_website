@@ -7,6 +7,7 @@ import { initiatePayment } from '../services/paymentService';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import TicketCard from '../components/TicketCard';
+import PaymentButton from '../components/PaymentButton';
 import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
@@ -210,32 +211,6 @@ const PaymentPage = () => {
 
     const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
 
-    const handlePayment = async () => {
-        setIsProcessing(true);
-        setError(null);
-
-        try {
-            // Development/Testing Flow: Generate random transaction ID
-            const randomTxnId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-
-            const bookingPayload = {
-                seatIds: seats,
-                sessionId: sessionId,
-                paymentDetails: {
-                    method: selectedMethod,
-                    transactionId: randomTxnId
-                }
-            };
-
-            const result = await confirmBooking(showId, bookingPayload);
-            handleBookingSuccess(result);
-
-        } catch (err) {
-            console.error('Payment error:', err);
-            setError(err.message || 'Could not process booking. Please try again.');
-            setIsProcessing(false);
-        }
-    };
 
     const localDisplayTitle = show?.movie?.title || show?.movie?.MovieName || show?.movieName || sessionStorage.getItem('booking_movie_title') || 'Movie';
     const localDisplayPoster = show?.movie?.backdropUrl ||
@@ -560,26 +535,27 @@ const PaymentPage = () => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={handlePayment}
-                                        disabled={isProcessing || !isFormValid}
-                                        className={`w-full py-4 rounded-xl font-black text-[14px] md:text-[16px] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl  uppercase tracking-[0.2em]
+                                    <PaymentButton
+                                        amount={grandTotal}
+                                        bookingData={{
+                                            showId,
+                                            seatIds: seats,
+                                            sessionId,
+                                            phone: mobileNumber,
+                                            email: emailDetails,
+                                            selectedMethod
+                                        }}
+                                        onSuccess={handleBookingSuccess}
+                                        onFailure={(err) => setError(err.message || "Payment failed")}
+                                        disabled={!isFormValid}
+                                        className={`w-full py-4 rounded-xl font-black text-[14px] md:text-[16px] transition-all flex items-center justify-center gap-3 shadow-xl uppercase tracking-[0.2em]
                                             ${!isFormValid
                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                                                : isProcessing
-                                                    ? 'bg-primary/50 text-white opacity-100 pointer-events-none'
-                                                    : 'bg-primary hover:brightness-110 text-white'
+                                                : 'bg-primary hover:brightness-110 text-white'
                                             }`}
                                     >
-                                        {isProcessing ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                <span>Securing...</span>
-                                            </>
-                                        ) : (
-                                            <><span>Pay Now</span> <ChevronRight className="w-4 h-4" /></>
-                                        )}
-                                    </button>
+                                        <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
+                                    </PaymentButton>
 
                                     <div className="mt-5 text-center space-y-3">
                                         <div className="flex justify-center items-center gap-2 text-[11px] text-emerald-500 dark:text-emerald-400 font-black uppercase tracking-widest">
@@ -603,23 +579,27 @@ const PaymentPage = () => {
                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Amount</span>
                         <span className="text-xl font-black text-gray-900 dark:text-white font-roboto">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                     </div>
-                    <button
-                        onClick={handlePayment}
-                        disabled={isProcessing || !isFormValid}
+                    <PaymentButton
+                        amount={grandTotal}
+                        bookingData={{
+                            showId,
+                            seatIds: seats,
+                            sessionId,
+                            phone: mobileNumber,
+                            email: emailDetails,
+                            selectedMethod
+                        }}
+                        onSuccess={handleBookingSuccess}
+                        onFailure={(err) => setError(err.message || "Payment failed")}
+                        disabled={!isFormValid}
                         className={`flex-1 py-4 px-6 rounded-xl font-black text-[14px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-[0.15em]
                             ${!isFormValid
                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                                : isProcessing
-                                    ? 'bg-primary/50 text-white pointer-events-none'
-                                    : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110'
+                                : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110'
                             }`}
                     >
-                        {isProcessing ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                            <><span>Pay Now</span> <ChevronRight className="w-4 h-4" /></>
-                        )}
-                    </button>
+                        <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
+                    </PaymentButton>
                 </div>
             </div>
 

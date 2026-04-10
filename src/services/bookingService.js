@@ -44,6 +44,16 @@ export const releaseSeats = async (showId, seatIds) => {
     });
 };
 
+export const createBookingOrder = async (showId, payload) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.BOOKING.SHOWS.CREATE_ORDER(showId), payload);
+        if (response.data.success) {
+            return response.data.data;
+        }
+        throw new Error(response.data.message || 'Failed to create booking order');
+    });
+};
+
 export const confirmBooking = async (showId, bookingData) => {
     try {
         const response = await api.post(ENDPOINTS.BOOKING.SHOWS.CONFIRM(showId), {

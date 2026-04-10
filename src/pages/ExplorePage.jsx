@@ -501,6 +501,7 @@ const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, 
     );
 };
 
+// UPDATED EventCard with landmark support
 const EventCard = memo(({ event }) => {
     // Format the date precisely as requested
     const formattedDate = new Intl.DateTimeFormat('en-US', {
@@ -511,6 +512,9 @@ const EventCard = memo(({ event }) => {
 
     // Use absolute routing for events based on slug or ID
     const eventLink = `/event/${event.slug || event.id}`;
+
+    // Format location string with venue, landmark, and city
+    const locationString = [event.venue, event.landmark, event.city].filter(Boolean).join(', ');
 
     return (
         <Link to={eventLink} className="group block w-full">
@@ -537,7 +541,7 @@ const EventCard = memo(({ event }) => {
                         </div>
                         <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
                             <MapPin className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
-                            <span className="truncate">{event.city || event.venue}</span>
+                            <span className="truncate">{locationString}</span>
                         </div>
                     </div>
 

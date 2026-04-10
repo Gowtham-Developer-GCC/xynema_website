@@ -726,7 +726,8 @@ export class Turf {
         
         const loc = data.location || {};
         this.city = data.city || loc.city || 'City TBD';
-        this.venue = data.venue || loc.venue || loc.landmark || (loc.address ? loc.address.split(',')[0] : 'Venue TBD');
+        this.landmark = data.landmark || loc.landmark || '';
+        this.venue = data.venue || loc.venue || (loc.address ? loc.address.split(',')[0] : 'Venue TBD');
         this.address = data.fullAddress || loc.address || data.address || '';
         
         // Extract price - prioritizing direct pricePerHour from courts if not at top level

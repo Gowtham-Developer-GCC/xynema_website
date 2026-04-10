@@ -48,6 +48,8 @@ const OffersPage = lazy(() => import('./pages/OffersPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const PaymentMethodsPage = lazy(() => import('./pages/PaymentMethodsPage'));
 const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'));
+const BookingSuccess = lazy(() => import('./pages/BookingSuccess'));
+const SwimmingPage = lazy(() => import('./pages/SwimmingPage'));
 const Footer = lazy(() => import('./components/Footer'));
 const LoginModal = lazy(() => import('./components/LoginModal'));
 const CitySelectionModal = lazy(() => import('./components/CitySelectionModal'));
@@ -139,6 +141,7 @@ export default function App() {
                                         <Route path="/movie/:slug/:theaterSlug/food" element={<ProtectedRoute><FoodSelectionPage /></ProtectedRoute>} />
                                         <Route path="/movie/:slug/:theaterSlug/summary" element={<ProtectedRoute><BookingSummaryPage /></ProtectedRoute>} />
                                         <Route path="/movie/:slug/:theaterSlug/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+                                         <Route path="/booking-success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
 
                                         {/* Protected Account Routes */}
                                         <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
@@ -166,6 +169,7 @@ export default function App() {
                                         <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                         <Route path="/cinemas" element={<CinemasListPage />} />
                                         <Route path="/sports" element={<SportsPage />} />
+                                        <Route path="/swimming" element={<SwimmingPage />} />
                                         <Route path="/sports/:slug" element={<SportDetailsPage />} />
                                         <Route path="/favorites" element={<FavoritesPage />} />
                                         <Route path="/offers" element={<OffersPage />} />

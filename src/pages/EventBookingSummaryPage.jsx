@@ -129,7 +129,7 @@ const EventBookingSummaryPage = () => {
                 source: 'web'
             };
 
-            const result = await confirmEventBooking(reservationId, bookingData);
+            const result = await confirmEventBooking(event.id, reservationId, bookingData);
             if (result.success) {
                 setConfirmedBooking(result.data?.booking || result.data);
                 setBooked(true);

@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check, Shield, Info, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -31,100 +31,17 @@ const SportDetailsPage = () => {
 
     const [loading, setLoading] = useState(!sport);
     const [error, setError] = useState(null);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [fullScreenImage, setFullScreenImage] = useState(null);
     const [similarSports, setSimilarSports] = useState([]);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
 
-    // Mock Store Data from Figma
-    const storeItems = [
-        {
-            id: "s1",
-            name: "Sports wear",
-            price: 1500,
-            sellers: 3,
-            imageUrl: "https://www.jumpusa.in/cdn/shop/products/1_911774af-e103-482b-a637-1f10a2518420.jpg?v=1646462787"
-        },
-        {
-            id: "s2",
-            name: "Sports shoes",
-            price: 2000,
-            sellers: 3,
-            imageUrl: "https://uspoloassn.in/cdn/shop/files/1_dddf6968-3bfe-48b1-986b-5ce9d7888f8b_500x.jpg?v=1763723178"
-        },
-        {
-            id: "s3",
-            name: "Badminton racket",
-            price: 3200,
-            sellers: 3,
-            imageUrl: "https://t3.ftcdn.net/jpg/04/67/21/02/360_F_467210294_EZNVxSdoJSKeV2rsU0G49PEj00bjv5gW.jpg"
-        },
-        {
-            id: "s4",
-            name: "Football",
-            price: 849,
-            sellers: 3,
-            imageUrl: "https://as1.ftcdn.net/jpg/01/59/01/16/1000_F_159011637_QFaJ5bZmyPKwurU8esvTqBP6iNvjbw4s.jpg"
-        }
-    ];
-
-    // Mock Explore More venues from Figma
+    // Mock Explore More venues fallback
     const moreVenues = [
-        {
-            id: 'm1',
-            name: "Elite Arena Pro",
-            rating: 4.8,
-            slots: 8,
-            location: "Edapally, Kochi",
-            tags: ["Football"],
-            price: 800,
-            imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018"
-        },
-        {
-            id: 'm2',
-            name: "Aqua Haven Court",
-            rating: 4.8,
-            slots: 8,
-            location: "Edapally, Kochi",
-            tags: ["Swimming"],
-            price: 900,
-            imageUrl: "https://images.unsplash.com/photo-1530541930197-ff16ac917b0e"
-        },
-        {
-            id: 'm3',
-            name: "Boundary Box",
-            rating: 4.8,
-            slots: 8,
-            location: "Kakkabad, Kochi",
-            tags: ["Cricket"],
-            price: 600,
-            imageUrl: "https://images.unsplash.com/photo-1531415074968-036ba1b575da"
-        }
+        { id: 'm1', name: "Elite Arena Pro", rating: 4.8, location: "Edapally, Kochi", tags: ["Football"], price: 800, imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018" },
+        { id: 'm2', name: "Aqua Haven Court", rating: 4.8, location: "Edapally, Kochi", tags: ["Swimming"], price: 900, imageUrl: "https://images.unsplash.com/photo-1530541930197-ff16ac917b0e" }
     ];
-
-    const mockSportDetails = {
-        name: sport?.name || 'Elite Arena Pro',
-        description: 'Our turf features premium FIFA-approved 50mm artificial grass with superior shock absorption. Designed for peak performance, The Arena offers an unparalleled sporting environment for both competitive matches and recreational play. Equipped with professional floodlights and drainage systems for an all-weather experience.',
-        venue: 'Elite Arena Pro',
-        address: 'Edapally, Kochi, Keralam',
-        city: 'Kochi',
-        state: 'Kerala',
-        price: 800,
-        startTime: 'Open 24/7',
-        allImages: [
-            'https://images.unsplash.com/photo-1574629810360-7efbbe195018',
-            'https://images.unsplash.com/photo-1551958219-acbc608c6377',
-            'https://images.unsplash.com/photo-1526232759583-26f1fa1aa75da'
-        ],
-        courts: [
-            { id: 'c1', className: 'Main Turf (8v8)', price: 1200, availableSeats: 5 },
-            { id: 'c2', className: 'Box Cricket (6v6)', price: 800, availableSeats: 10 }
-        ]
-    };
 
     const fetchTurfDetails = async (targetId) => {
         const turfId = targetId || sport?._id || sport?.id || slug;
@@ -133,16 +50,10 @@ const SportDetailsPage = () => {
         try {
             if (!hasInitialData) setLoading(true);
             setError(null);
-            
-            // Fetch real details data with cache support
             const data = await apiCacheManager.getOrFetchTurfDetails(turfId, () => getTurfDetails(turfId));
-            
             if (data) {
                 setSport(data);
-                // Also fetch similar sports
                 fetchSimilarSports(turfId);
-            } else if (!hasInitialData) {
-                setSport(mockSportDetails);
             }
         } catch (err) {
             console.error('Failed to fetch turf details:', err);
@@ -157,7 +68,6 @@ const SportDetailsPage = () => {
             setLoadingSimilar(true);
             const data = await apiCacheManager.getOrFetchSimilarTurfs(turfId, () => getSimilarTurfs(turfId));
             if (data && Array.isArray(data)) {
-                // Filter out the current turf from recommendations
                 setSimilarSports(data.filter(t => String(t._id || t.id) !== String(turfId)));
             }
         } catch (err) {
@@ -169,40 +79,33 @@ const SportDetailsPage = () => {
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
-        const handleScroll = () => setIsScrolled(window.scrollY > 500);
+        const handleScroll = () => setIsScrolled(window.scrollY > 300);
         window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll, { passive: true });
 
-        // Instant UI Update: Check if we have the next sport in router state
         const nextSport = location.state?.sport;
         if (nextSport && String(nextSport._id || nextSport.id) === String(slug)) {
-            // Already have data, just fetch fresh details/similar in background
             setSport(nextSport);
             fetchTurfDetails(slug);
         } else {
-            // Full reset for clean load
             setSport(null);
             setSimilarSports([]);
             fetchTurfDetails(slug);
         }
         
         window.scrollTo(0, 0);
-
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [slug, location.state]);
+    }, [slug]);
 
     const handleGetDirections = () => {
         if (sport?.coordinates && sport.coordinates.length === 2) {
-            // GeoJSON is [lng, lat], Google Maps needs [lat, lng]
             const [lng, lat] = sport.coordinates;
-            const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-            window.open(url, '_blank');
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
         } else if (sport?.address) {
-            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sport.address)}`;
-            window.open(url, '_blank');
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sport.address)}`, '_blank');
         }
     };
 
@@ -211,22 +114,35 @@ const SportDetailsPage = () => {
             openLogin(() => handleCheckout());
             return;
         }
-        
-        // Use the backend ID if available, otherwise fallback to slug
         const turfId = sport?._id || sport?.id || slug;
         navigate(`/sports/book/${turfId}`, { state: { sport } });
     };
 
+    const isSwimming = sport?.tags?.some(tag => tag.toLowerCase().includes('swimming') || tag.toLowerCase().includes('pool')) || 
+                      sport?.name?.toLowerCase().includes('swimming') || sport?.name?.toLowerCase().includes('pool');
+
+    const storeItems = isSwimming ? [
+        { id: "swim1", name: "Decathlon Nabaiji Goggles", price: 599, sellers: 3, imageUrl: "https://contents.mediadecathlon.com/p1498634/k$f2f7ba51c1fce8d76d4352f52d0f0d2c/swimming-goggles-100-soft-clear-lenses-grey.jpg" },
+        { id: "swim2", name: "Nabaiji Swimming Fins", price: 1299, sellers: 2, imageUrl: "https://contents.mediadecathlon.com/p2155554/k$6127e4e138ae348da07a0f670f5e7146/swimming-fins-top-swim-fins-black-blue.jpg" },
+        { id: "swim3", name: "Nabaiji Mesh Bag", price: 499, sellers: 1, imageUrl: "https://contents.mediadecathlon.com/p1747833/k$7d6c6a8f1f7d6f5f9e9f7d6f5f9e9f7d/swimming-mesh-bag-black.jpg" },
+        { id: "swim4", name: "Speedo Silicone Cap", price: 350, sellers: 5, imageUrl: "https://images.unsplash.com/photo-1599058917232-d750c1830028?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60" }
+    ] : [
+        { id: "s1", name: "Sports wear", price: 1500, sellers: 3, imageUrl: "https://www.jumpusa.in/cdn/shop/products/1_911774af-e103-482b-a637-1f10a2518420.jpg?v=1646462787" },
+        { id: "s2", name: "Sports shoes", price: 2000, sellers: 3, imageUrl: "https://uspoloassn.in/cdn/shop/files/1_dddf6968-3bfe-48b1-986b-5ce9d7888f8b_500x.jpg?v=1763723178" },
+        { id: "s3", name: "Badminton racket", price: 3200, sellers: 3, imageUrl: "https://t3.ftcdn.net/jpg/04/67/21/02/360_F_467210294_EZNVxSdoJSKeV2rsU0G49PEj00bjv5gW.jpg" },
+        { id: "s4", name: "Football", price: 849, sellers: 3, imageUrl: "https://as1.ftcdn.net/jpg/01/59/01/16/1000_F_159011637_QFaJ5bZmyPKwurU8esvTqBP6iNvjbw4s.jpg" }
+    ];
+
     if (loading && !sport) return <LoadingScreen message="Loading Sport Details" />;
+    if (error && !sport) return <ErrorState error={error} onRetry={() => fetchTurfDetails()} title="Transmission Interrupted" />;
     if (!sport) return <ErrorState title="Venue not found" />;
 
-    const images = sport.allImages || [sport.imageUrl];
+    const images = (sport.allImages && sport.allImages.length > 0) ? sport.allImages : [sport.imageUrl || "https://images.unsplash.com/photo-1530541930197-ff16ac917b0e"];
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] dark:bg-[#0f1115] pb-1 md:pb-1 transition-colors duration-300 bg-fixed overflow-x-hidden">
+        <div className={`min-h-screen ${isSwimming ? 'bg-[#F5F5F5]' : 'bg-[#FDFDFD]'} dark:bg-[#0f1115] pb-24 transition-colors duration-300 overflow-x-hidden`}>
             <SEO title={`${sport.name} - XYNEMA Sports`} description={sport.description} />
 
-            {/* Sharpness Filter Definition */}
             <svg style={{ visibility: 'hidden', position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
                 <filter id="sharpen-filter">
                     <feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0" preserveAlpha="true" />
@@ -234,12 +150,12 @@ const SportDetailsPage = () => {
             </svg>
 
             {/* Sticky Minimal Nav */}
-            <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'translate-y-0' : '-translate-y-full'} bg-white/90 dark:bg-[#1a1c23]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'translate-y-0' : '-translate-y-full'} bg-white/90 dark:bg-[#1a1c23]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm px-4`}>
+                <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
                     <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-sm font-bold truncate max-w-[200px]">{sport.name}</h1>
+                    <h1 className="text-sm font-bold truncate max-w-[200px] uppercase tracking-tight">{sport.name}</h1>
                     <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
                         <Share2 className="w-4 h-4" />
                     </button>
@@ -247,339 +163,226 @@ const SportDetailsPage = () => {
             </div>
 
             {/* --- HERO SECTION --- */}
-            <div className="relative w-full min-h-[500px] lg:min-h-[600px] bg-gray-50 flex items-center justify-center overflow-hidden">
-                <button onClick={() => navigate(-1)} className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
+            <div className="relative w-full h-[350px] md:h-[500px] lg:h-[600px] overflow-hidden">
+                <button onClick={() => navigate(-1)} className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
                     <ArrowLeft className="w-5 h-5" />
                 </button>
-                <div className="absolute top-6 right-6 z-50 flex gap-2">
-                    <button className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
-                        <Share2 className="w-4 h-4 ml-[-2px]" />
-                    </button>
+                
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-full opacity-20 pointer-events-none">
+                    <div className="absolute top-0 left-0 w-full h-[90px] bg-[#F5F5F5] dark:bg-[#0f1115]" />
+                    <div className="absolute bottom-0 left-0 w-full h-[85px] bg-[#F5F5F5] dark:bg-[#0f1115] shadow-[inset_0px_15px_15px_5px_rgba(0,0,0,0.1)] rounded-full translate-y-1/2" />
                 </div>
 
                 <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[4px] md:blur-none transition-all duration-700"
-                    style={{
-                        backgroundImage: `url(${images[1] || images[0]})`,
-                        filter: isMobile ? 'blur(4px)' : 'url(#sharpen-filter)'
-                    }}
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+                    style={{ backgroundImage: `url(${images[0]})`, filter: isMobile ? 'blur(4px)' : 'none' }}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+            </div>
 
-                <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 pt-28 pb-16 md:py-24 flex flex-col md:flex-row items-center gap-10 md:gap-4">
-                    {/* Left: Poster */}
-                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[700px] shrink-0 mx-auto md:mx-0">
-                        <div className="aspect-[1.5/1] rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/20 relative group">
-                            <img src={images[0]} alt={sport.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1" />
+            {/* Floating Info Section Overlapping Hero */}
+            <div className="relative z-30 -mt-20 md:-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    <div className="flex-1 w-full space-y-6">
+                        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/40 dark:border-gray-800 p-8 md:p-10 rounded-[40px] shadow-2xl">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="flex items-center gap-1 px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-full">
+                                    <Star className="w-3 h-3 fill-white" />
+                                    {sport.rating > 0 ? sport.rating.toFixed(1) : 'New'}
+                                </div>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    {sport.reviewCount > 0 ? `${sport.reviewCount.toLocaleString()} ratings` : 'Verified Venue'}
+                                </span>
+                            </div>
+
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
+                                {sport.name}
+                            </h1>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#F5F5F5] dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                        <MapPin className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Venue Location</p>
+                                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{sport.venue}, {sport.city}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#F5F5F5] dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                        <Calendar className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Availability</p>
+                                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{sport.startTime || 'Open 24/7'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                                { label: 'Min. Slot', value: `${sport.defaultSlotDuration || 60} mins` },
+                                { label: 'Payment', value: sport.paymentType || 'Online/Venue' },
+                                { label: 'Type', value: sport.tags?.slice(0, 1).join('') || 'Sport' },
+                                { label: 'Safety', value: 'High Standards' }
+                            ].map((info, i) => (
+                                <div key={i} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md p-6 rounded-[32px] border border-white/20 dark:border-gray-700">
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{info.label}</p>
+                                    <p className="text-xs font-black dark:text-white uppercase truncate">{info.value}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Right: Glass Details Area */}
-                    <div className="w-full md:flex-1 max-w-md mx-auto md:mx-0">
-                        <div className="bg-black/10 backdrop-blur-xl border border-white/10 rounded-[12px] p-8 sm:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden transition-all duration-300">
-                            <div className="relative z-10 space-y-6 text-left">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary rounded-lg text-white font-bold group">
-                                        <Star className="w-4 h-4 fill-white transition-transform group-hover:scale-125" />
-                                        <span className="text-sm">{sport.rating > 0 ? sport.rating.toFixed(1) : 'New'}</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-white/60">
-                                        {sport.reviewCount > 0 ? `[${sport.reviewCount.toLocaleString()} ratings]` : '[Be the first to rate]'}
-                                    </span>
+                    <div className="w-full lg:w-[400px] shrink-0 sticky top-24">
+                        <div className="relative group">
+                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-[340px] bg-primary rounded-2xl p-6 shadow-2xl border border-white/30 z-20 flex items-center justify-between overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
+                                <div>
+                                    <h4 className="text-[10px] font-black text-white/80 uppercase tracking-widest mb-1">Exclusive Pass</h4>
+                                    <p className="text-lg font-black text-white leading-none uppercase">Xynema Crown</p>
                                 </div>
+                                <button className="px-4 py-2 bg-white text-primary text-[10px] font-black uppercase rounded-lg shadow-md hover:scale-105 transition-all">Upgrade</button>
+                            </div>
 
-                                <h1 className="text-3xl font-black text-white leading-tight tracking-tight">
-                                    {sport.name}
-                                </h1>
-
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-3 text-white/90">
-                                        <Calendar className="w-5 h-5" />
-                                        <span className="text-sm font-bold">
-                                            Available Today, {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 text-white/90">
-                                        <MapPin className="w-5 h-5" />
-                                        <p className="text-sm font-medium">{sport.venue}, {sport.city}</p>
-                                    </div>
+                            <div className="bg-white dark:bg-gray-900 rounded-[40px] p-8 pt-20 border border-gray-100 dark:border-gray-800 shadow-2xl relative">
+                                <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-3">Starting from</p>
+                                <div className="flex items-baseline gap-2 mb-8">
+                                    <span className="text-5xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
+                                    <span className="text-sm font-bold text-gray-400">/ hour</span>
                                 </div>
-
-                                <div className="pt-6 border-t border-white/10">
-                                    <p className="text-[11px] text-white/50 font-bold uppercase tracking-widest mb-3">Starting from</p>
-                                    <div className="flex items-baseline gap-2 mb-10">
-                                        <p className="text-3xl font-black text-white">₹{sport.price.toLocaleString()}</p>
-                                        <p className="text-sm font-medium text-white/60">/ hour</p>
-                                    </div>
-                                    <button
-                                        onClick={handleCheckout}
-                                        className="w-full py-5 bg-primary hover:bg-[#ff4e6a] text-white text-[15px] font-bold rounded-xl transition-all shadow-xl active:scale-95"
-                                    >
-                                        Book Slots
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handleCheckout}
+                                    className="w-full py-6 bg-primary hover:bg-[#ff3d5a] text-white text-base font-black rounded-3xl transition-all shadow-xl shadow-primary/20 active:scale-95 uppercase tracking-widest"
+                                >
+                                    Instant Book
+                                </button>
+                                <p className="text-[10px] text-center text-gray-400 font-medium mt-6 uppercase">Free cancellation up to 6 hours before</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Quick Info Bar - Restored and refined with reduced-height dividers */}
-            <div className="relative z-30 mt-1 mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
-                <div className="flex flex-wrap md:flex-nowrap items-center min-h-[100px]">
-                        <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
-                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</p>
-                            <p className="text-sm font-bold dark:text-white">Min. {sport.defaultSlotDuration || 60} mins</p>
-                        </div>
-                        {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
-                        
-                        <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
-                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Payment</p>
-                            <p className="text-sm font-bold dark:text-white">{sport.paymentType || 'Pay at venue or Online'}</p>
-                        </div>
-                        {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
-                        
-                        <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
-                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sport Type</p>
-                            <p className="text-sm font-bold dark:text-white">{sport.tags?.slice(0, 5).join(' / ') || 'Multi-sport'}</p>
-                        </div>
-                        {/* Divider */}
-                        <div className="hidden md:block w-[1px] h-10 bg-gray-200 dark:bg-gray-800" />
-                        
-                        <div className="flex-1 min-w-[50%] md:min-w-0 px-8 py-6">
-                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Entry</p>
-                            <p className="text-sm font-bold dark:text-white">{sport.entryType || 'Valid Booked QR Code'}</p>
-                        </div>
-                </div>
-            </div>
-
-            {/* --- REDESIGNED SECTIONS BELOW --- */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-4 md:pb-12 space-y-10 md:space-y-10">
-
-                {/* About This Turf */}
-                <section className="space-y-6">
-                    <h2 className="text-xl font-bold dark:text-white">About</h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed max-w-5xl">
-                        {sport.description}
-                    </p>
-                </section>
-                {/* Facilities available */}
-                {(() => {
-                    const hasVerifiedAmenities = Object.values(sport.amenities || {}).some(val => val === true);
-                    const hasDerivedFacilities = sport.description?.toLowerCase().includes('floodlight') || sport.description?.toLowerCase().includes('lighting');
-                    
-                    if (!hasVerifiedAmenities && !hasDerivedFacilities) return null;
-
-                    return (
-                        <section className="space-y-6">
-                            <h2 className="text-xl font-bold dark:text-white">Facilities available</h2>
-                            <div className="bg-white dark:bg-[#1a1c23] border border-gray-100 dark:border-gray-800 rounded-2xl p-0">
-                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-8">
-                                    {[
-                                        { key: 'isChangingRoomAvailable', label: 'Changing Rooms' },
-                                        { key: 'isParkingAvailable', label: 'Parking' },
-                                        { key: 'isWashroomAvailable', label: 'Washroom' },
-                                        { key: 'isFirstAidAvailable', label: 'First aid' },
-                                        { key: 'isFoodAndBeveragesAvailable', label: 'Food & Beverages' }
-                                    ].map((amenity) => (
-                                        sport.amenities?.[amenity.key] === true && (
-                                            <div key={amenity.key} className="flex items-center gap-3">
-                                                <div className="w-5 h-5 rounded-full bg-red-50 dark:bg-red-100 flex items-center justify-center shrink-0">
-                                                    <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />
-                                                </div>
-                                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{amenity.label}</span>
-                                            </div>
-                                        )
-                                    ))}
-                                </div>
-                            </div>
-                        </section>
-                    );
-                })()}
-                <section className="space-y-6">
-                    <h2 className="text-xl font-bold dark:text-white">Location</h2>
-                    <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-red-50 dark:bg-red-950/30 rounded-full flex items-center justify-center shrink-0">
-                            <MapPin className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="text-base font-bold dark:text-white">{sport.venue}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{sport.address}</p>
-                            </div>
-                             <button 
-                                onClick={handleGetDirections}
-                                className="px-4 py-2 bg-primary text-white text-[12px] font-bold rounded-lg hover:bg-[#ff4e6a] transition-all"
-                            >
-                                Get directions
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Turf Gallery Carousel */}
-                <section className="space-y-6 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold dark:text-white">Gallery</h2>
-                        <div className="flex gap-2">
-                            <button className="gallery-prev w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-30">
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button className="gallery-next w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-30">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div className="relative group/gallery">
-                        <Swiper
-                            modules={[Navigation]}
-                            spaceBetween={20}
-                            slidesPerView={1}
-                            navigation={{
-                                nextEl: '.gallery-next',
-                                prevEl: '.gallery-prev',
-                            }}
-                            breakpoints={{
-                                640: { slidesPerView: 2 },
-                                1024: { slidesPerView: 2 }
-                            }}
-                            className="!overflow-visible"
-                        >
-                            {images.map((img, idx) => (
-                                <SwiperSlide key={idx}>
-                                    <div 
-                                        onClick={() => setFullScreenImage(img)}
-                                        className="rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 aspect-video group cursor-zoom-in"
-                                    >
-                                        <img 
-                                            src={img} 
-                                            alt={`Turf Gallery ${idx + 1}`} 
-                                            className="w-full h-full object-cover transition-transform duration-500" 
-                                        />
-                                    </div>
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
-                    </div>
-                </section>
-
-                {/* Explore the store */}
-                <section className="space-y-8 py-6 md:py-8 bg-[#f5f5f5] dark:bg-[#0a0c10] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 rounded-3xl">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-black dark:text-white">Explore the store</h2>
-                        <Link to="/store" className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-all">
-                            <ShoppingBag className="w-4 h-4" /> Visit Store
-                        </Link>
-                    </div>
-                    <div className="relative group/slider">
-                        <Swiper
-                            modules={[Navigation]}
-                            spaceBetween={20}
-                            slidesPerView={2}
-                            navigation={{ nextEl: '.store-next', prevEl: '.store-prev' }}
-                            breakpoints={{
-                                640: { slidesPerView: 3 },
-                                1024: { slidesPerView: 4 }
-                            }}
-                        >
-                            {storeItems.map(item => (
-                                <SwiperSlide key={item.id} className="!h-auto">
-                                    <StoreCard item={item} />
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
-                        <button className="store-prev absolute -left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
-                            <ChevronLeft className="w-6 h-6" />
-                        </button>
-                        <button className="store-next absolute -right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 shadow-xl rounded-full hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
-                            <ChevronRight className="w-6 h-6" />
-                        </button>
-                    </div>
-                </section>
-
-                {/* Similar Sports Section */}
-                <section className="space-y-8">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-black dark:text-white">Similar Sports</h2>
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all">
-                            <ChevronRight onClick={() => navigate("/sports")} className="w-6 h-6 text-primary" />
-                        </button>
-                    </div>
-                    <div className="relative group/slider">
-                        <Swiper
-                            modules={[Navigation]}
-                            spaceBetween={24}
-                            slidesPerView={2}
-                            navigation={{ nextEl: '.more-next', prevEl: '.more-prev' }}
-                            breakpoints={{
-                                768: { slidesPerView: 2 },
-                                1024: { slidesPerView: 3 }
-                            }}
-                        >
-                            {similarSports.length > 0 ? (
-                                similarSports.map(venue => (
-                                    <SwiperSlide key={venue._id || venue.id}>
-                                        <SportCard event={venue} />
-                                    </SwiperSlide>
-                                ))
-                            ) : (
-                                !loadingSimilar && (
-                                    <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-400">
-                                        <p className="text-sm font-medium">No similar sports venues found in this area.</p>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 space-y-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    <section className="space-y-8">
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">The Experience</h2>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed font-medium">{sport.description}</p>
+                        <div className="grid grid-cols-2 gap-6 pt-8">
+                            {[
+                                { key: 'isParkingAvailable', label: 'Spacious Parking' },
+                                { key: 'isWashroomAvailable', label: 'Clean Washrooms' },
+                                { key: 'isChangingRoomAvailable', label: 'Changing Rooms' },
+                                { key: 'isFoodAndBeveragesAvailable', label: 'Cafe & Drinks' }
+                            ].map((amenity) => (
+                                sport.amenities?.[amenity.key] !== false && (
+                                    <div key={amenity.key} className="flex items-center gap-4">
+                                        <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center shrink-0">
+                                            <Check className="w-3.5 h-3.5 text-green-600" />
+                                        </div>
+                                        <span className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-wide">{amenity.label}</span>
                                     </div>
                                 )
-                            )}
-                        </Swiper>
-                        <button className="more-prev absolute top-1/2 -left-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
-                            <ChevronLeft className="w-6 h-6" />
-                        </button>
-                        <button className="more-next absolute top-1/2 -right-4 -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-xl hidden md:flex items-center justify-center border border-gray-100 dark:border-gray-700 opacity-0 group-hover/slider:opacity-100 transition-all">
-                            <ChevronRight className="w-6 h-6" />
-                        </button>
+                            ))}
+                        </div>
+                    </section>
+                    <section className="space-y-8">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Gallery</h2>
+                            <div className="flex gap-2">
+                                <button className="gallery-prev w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronLeft className="w-6 h-6" /></button>
+                                <button className="gallery-next w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronRight className="w-6 h-6" /></button>
+                            </div>
+                        </div>
+                        <div className="relative rounded-[40px] overflow-hidden">
+                            <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={1} navigation={{ nextEl: '.gallery-next', prevEl: '.gallery-prev' }}>
+                                {images.map((img, idx) => (
+                                    <SwiperSlide key={idx}>
+                                        <div onClick={() => setFullScreenImage(img)} className="aspect-[4/3] rounded-[40px] overflow-hidden cursor-zoom-in">
+                                            <img src={img} alt="Venue" className="w-full h-full object-cover" />
+                                        </div>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                        </div>
+                    </section>
+                </div>
+
+                <section className="space-y-12 py-20 px-8 rounded-[60px] bg-[#1E1E1E] text-white">
+                    <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Exclusive Gear</p>
+                            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">Official Merchandise</h2>
+                        </div>
+                        <Link to="/store" className="px-8 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full">Visit Store</Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {storeItems.map(item => (
+                            <div key={item.id} className="group cursor-pointer">
+                                <div className="aspect-[1/1] bg-white rounded-[32px] overflow-hidden mb-6 relative">
+                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" />
+                                    <div className="absolute bottom-4 right-4 translate-y-10 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                                        <button className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white"><ShoppingBag className="w-5 h-5" /></button>
+                                    </div>
+                                </div>
+                                <h3 className="text-lg font-black uppercase tracking-tight mb-1">{item.name}</h3>
+                                <p className="text-primary font-black">₹{item.price}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="py-20 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex flex-col lg:flex-row items-center gap-16">
+                        <div className="flex-1 space-y-8">
+                            <h2 className="text-4xl font-black uppercase tracking-tighter">Explore Location</h2>
+                            <div className="space-y-4">
+                                <h3 className="text-2xl font-black opacity-80 uppercase">{sport.venue}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">{sport.address}</p>
+                            </div>
+                            <button onClick={handleGetDirections} className="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[11px] font-black uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all shadow-2xl">
+                                <MapPin className="w-4 h-4" /> Get Directions
+                            </button>
+                        </div>
+                        <div className="w-full lg:w-[600px] h-[400px] rounded-[40px] overflow-hidden shadow-2xl bg-gray-100 dark:bg-gray-800 relative">
+                            <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1" alt="Map" className="w-full h-full object-cover grayscale opacity-50" />
+                            <div className="absolute inset-0 flex items-center justify-center"><MapPin className="w-12 h-12 text-primary animate-bounce" /></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="pb-20">
+                    <div className="flex items-center justify-between mb-12">
+                        <h2 className="text-4xl font-black uppercase tracking-tighter">Recommended for you</h2>
+                        <Link to="/sports" className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
+                            Explore More <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                        </Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {similarSports.length > 0 ? (
+                            similarSports.slice(0, 3).map(venue => (<SportCard key={venue._id || venue.id} event={venue} />))
+                        ) : (
+                            moreVenues.map(venue => (<SportCard key={venue.id} event={venue} />))
+                        )}
                     </div>
                 </section>
             </main>
 
-            {/* Sticky Minimal Booking Bar (Appears after hero button scrolls out) */}
-            {isScrolled && (
-                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 p-4 safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-                        <div className="flex flex-col">
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Starting from</p>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-black dark:text-white">₹{sport.price.toLocaleString()}</span>
-                                <span className="text-[10px] text-gray-400 font-medium lowercase">/ hour</span>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={handleCheckout} 
-                            className="px-8 py-3.5 bg-primary text-white text-[13px] font-black rounded-lg shadow-lg hover:bg-[#ff4e6a] transition-all flex items-center gap-2 uppercase tracking-wider"
-                        >
-                            Book Slots <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 p-6 px-8 flex items-center justify-between safe-bottom">
+                <div>
+                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Starting at</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white">₹{sport.price}</p>
                 </div>
-            )}
+                <button onClick={handleCheckout} className="px-10 py-4 bg-primary text-white text-[12px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Book Now</button>
+            </div>
 
-            {/* Full Screen Image Modal */}
             {fullScreenImage && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
-                    <button 
-                        onClick={() => setFullScreenImage(null)}
-                        className="absolute top-8 right-8 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 transition-all z-[110]"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                    <div className="relative max-w-7xl w-full h-full flex items-center justify-center">
-                        <img 
-                            src={fullScreenImage} 
-                            alt="Full Screen Turf View" 
-                            className="max-w-full max-h-full object-contain rounded-lg animate-in zoom-in-95 duration-300" 
-                        />
-                    </div>
+                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
+                    <button onClick={() => setFullScreenImage(null)} className="absolute top-8 right-8 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 z-[110]"><X className="w-6 h-6" /></button>
+                    <img src={fullScreenImage} alt="Gallery" className="max-w-full max-h-full object-contain rounded-2xl animate-in zoom-in-95 duration-500 shadow-2xl" />
                 </div>
             )}
         </div>

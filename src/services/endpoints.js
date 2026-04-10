@@ -27,6 +27,7 @@ export const ENDPOINTS = {
             AVAILABLE_SEATS: (showId) => `/booking/shows/${showId}/available-seats`,
             LOCK_SEATS: (showId) => `/booking/shows/${showId}/lock-seats`,
             RELEASE_SEATS: (showId) => `/booking/shows/${showId}/release-seats`,
+            CREATE_ORDER: (showId) => `/booking/shows/${showId}/create-order`,
             CONFIRM: (showId) => `/booking/shows/${showId}/confirm-booking`,
             FOOD_AND_BEVERAGES: (theaterId) => `/booking/food&beverages/${theaterId}/food-and-beverages`,
         },
@@ -39,7 +40,7 @@ export const ENDPOINTS = {
         LIST: '/event-booking/bookings',
         DETAILS: (bookingId) => `/event-booking/bookings/${bookingId}`,
         RESERVE: (eventId) => `/event-booking/${eventId}/reserve`,
-        CONFIRM: (reservationId) => `/event-booking/confirm/${reservationId}`,
+        CONFIRM: (eventId, reservationId) => `/event-booking/${eventId}/confirm/${reservationId}`,
     },
 
     // User Profile

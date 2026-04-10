@@ -52,7 +52,15 @@ const SportCard = memo(({ event }) => {
                 <div className="flex flex-col gap-2 mb-5">
                     <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
                         <MapPin className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500 shrink-0" />
-                        <span className="truncate">{event.city || event.venue}</span>
+                        <span className="truncate">
+                          {(() => {
+                            const parts = [];
+                            if (event.venue) parts.push(event.venue);
+                            if (event.landmark) parts.push(event.landmark);
+                            if (event.city) parts.push(event.city);
+                            return parts.join(', ');
+                          })()}
+                        </span>
                     </div>
                 </div>
 

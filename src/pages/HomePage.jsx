@@ -407,6 +407,9 @@ const EventCard = memo(({ event }) => {
     // Use absolute routing for events based on slug or ID
     const eventLink = `/event/${event.slug || event.id}`;
 
+   // Format location string with venue, landmark, and city
+    const locationString = [event.venue, event.landmark, event.city].filter(Boolean).join(', ');
+
     return (
         <Link to={eventLink} className="group block w-full">
             <div className="bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 cursor-pointer hover:shadow-md">
@@ -432,7 +435,7 @@ const EventCard = memo(({ event }) => {
                         </div>
                         <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
                             <MapPin className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500" />
-                            <span className="truncate">{event.city}</span>
+                            <span className="truncate">{locationString}</span>
                         </div>
                     </div>
 

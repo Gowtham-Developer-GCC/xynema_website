@@ -13,11 +13,16 @@ import SportCard from '../components/SportCard';
 
 const SportsPage = () => {
     const navigate = useNavigate();
-    const { selectedCity, turfs, loading: dataLoading, refreshData } = useData();
+    const { selectedCity, turfs, loading: dataLoading, error: dataError, refreshData } = useData();
     const [searchParams] = useSearchParams();
     const [error, setError] = useState(null);
 
-    const [eventSearchQuery, setEventSearchQuery] = useState('');
+    // Sync context error to local error
+    useEffect(() => {
+        if (dataError) setError(dataError);
+    }, [dataError]);
+
+    const [searchQuery, setSearchQuery] = useState('');
     const [eventFilters, setEventFilters] = useState({
         city: 'All',
         status: 'Active',
@@ -27,19 +32,23 @@ const SportsPage = () => {
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
-    // Dynamic Tags Extraction
+    // Define Main Tabs in specific order
+    const mainTabs = ["Box Cricket", "Football", "Tennis", "Swimming"];
+
+    // Dynamic Tags Extraction for all filters
     const availableEventTags = useMemo(() => {
-        const tags = Array.from(new Set(turfs.flatMap(t => t.tags || []))).filter(t => t).sort();
-        return tags.length > 0 ? tags : ["Football", "Cricket", "Badminton", "Basketball", "Tennis"];
+        const dynamicTags = Array.from(new Set(turfs.flatMap(t => t.tags || []))).filter(t => t);
+        // Combine with defaults and remove duplicates
+        return Array.from(new Set([...mainTabs, ...dynamicTags])).sort();
     }, [turfs]);
 
     // Filter Logic - Memoized for optimization
     const filteredEvents = useMemo(() => {
         let filtered = turfs;
-        if (eventSearchQuery.trim()) {
+        if (searchQuery.trim()) {
             filtered = filtered.filter(e =>
-                (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
-                (e.venue || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
+                (e.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (e.venue || "").toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
         if (eventFilters.city !== 'All') {
@@ -51,7 +60,7 @@ const SportsPage = () => {
             );
         }
         return filtered;
-    }, [turfs, eventSearchQuery, eventFilters]);
+    }, [turfs, searchQuery, eventFilters]);
 
     useEffect(() => {
         // Handle category from URL if present
@@ -74,11 +83,11 @@ const SportsPage = () => {
 
     const resetFilters = () => {
         setEventFilters({ city: 'All', status: 'Active', date: 'All', tags: [] });
-        setEventSearchQuery('');
+        setSearchQuery('');
     };
 
     if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding Available Venues" />;
-    if (error) return <ErrorState error={error} onRetry={() => refreshData(1)} title="Connection Interrupted" />;
+    if (error) return <ErrorState error={error} onRetry={() => refreshData(1)} title="Transmission Interrupted" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
@@ -91,8 +100,8 @@ const SportsPage = () => {
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
                 <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight">Sports</h1>
-                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">Discover sports and book slots near you.</p>
+                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight uppercase">Sports</h1>
+                        <p className="text-[#6B7280] dark:text-gray-400 text-[11px] font-black uppercase tracking-widest">Discover sports and book slots near you.</p>
                     </div>
                 </div>
             </div>
@@ -103,24 +112,21 @@ const SportsPage = () => {
                     <div className="flex items-center gap-8 overflow-x-auto no-scrollbar py-0">
                         <button
                             onClick={() => setEventFilters(prev => ({ ...prev, tags: [] }))}
-                            className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${eventFilters.tags.length === 0 ? 'text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative ${eventFilters.tags.length === 0 ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
                         >
                             All
                             {eventFilters.tags.length === 0 && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
                         </button>
-                        {/* Progressive Dynamic Tags as Tabs */}
-                        {availableEventTags.slice(0, 5).map((tag, idx) => (
+                        
+                        {/* Specific Sports Tabs in Requested Order */}
+                        {mainTabs.map((tag) => (
                             <button
                                 key={tag}
                                 onClick={() => {
                                     setEventFilters(prev => ({ ...prev, tags: [tag] }));
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${idx === 0 ? 'inline-block' :
-                                    idx === 1 ? 'hidden xs:inline-block' :
-                                        idx === 2 ? 'hidden sm:inline-block' :
-                                            'hidden md:inline-block'
-                                    } ${eventFilters.tags.includes(tag) ? 'text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${eventFilters.tags.includes(tag) ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
                             >
                                 {tag}
                                 {eventFilters.tags.includes(tag) && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
@@ -132,28 +138,29 @@ const SportsPage = () => {
                     <div className="relative shrink-0 ml-8" ref={moreFiltersRef}>
                         <button
                             onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                            className={`py-4 text-xs font-bold transition-all flex items-center gap-2 group whitespace-nowrap ${eventFilters.tags.some(t => !["Football", "Badminton", "Basketball", "Cricket", "Tennis"].includes(t)) ? 'text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 group whitespace-nowrap ${eventFilters.tags.some(t => !mainTabs.includes(t)) ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
                         >
                             <span>More Filters</span>
-                            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isMoreFiltersOpen && (
-                            <div className="absolute top-full right-0 mt-0 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-b-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
-                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Categories
+                            <div className="absolute top-full right-0 mt-0 w-64 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-b-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none py-4 z-[100] animate-in fade-in slide-in-from-top-2">
+                                <div className="px-6 py-2 border-b border-gray-50 dark:border-gray-800 mb-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                    All Categories
                                 </div>
-                                <div className="max-h-64 overflow-y-auto px-2">
+                                <div className="max-h-64 overflow-y-auto px-2 custom-scrollbar">
                                     {availableEventTags.map(tag => (
                                         <button
                                             key={tag}
                                             onClick={() => {
                                                 setEventFilters(prev => ({
                                                     ...prev,
-                                                    tags: prev.tags.includes(tag) ? prev.tags.filter(t => t !== tag) : [...prev.tags, tag]
+                                                    tags: [tag] // Switch to single tag for simplicity in this view
                                                 }));
+                                                setIsMoreFiltersOpen(false);
                                             }}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition-colors mb-1 ${eventFilters.tags.includes(tag) ? 'bg-primary/10 text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300'}`}
+                                            className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${eventFilters.tags.includes(tag) ? 'bg-primary/10 text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
                                         >
                                             {tag}
                                         </button>

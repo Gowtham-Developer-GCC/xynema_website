@@ -120,9 +120,9 @@ export const reserveEventTickets = async (eventId, tickets, showDate = null, sho
     });
 };
 
-export const confirmEventBooking = async (reservationId, bookingData) => {
+export const confirmEventBooking = async (eventId, reservationId, bookingData) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.EVENT_BOOKING.CONFIRM(reservationId), {
+        const response = await api.post(ENDPOINTS.EVENT_BOOKING.CONFIRM(eventId, reservationId), {
             ...bookingData,
             source: 'web'
         });

@@ -40,7 +40,7 @@ export const ENDPOINTS = {
         LIST: '/event-booking/bookings',
         DETAILS: (bookingId) => `/event-booking/bookings/${bookingId}`,
         RESERVE: (eventId) => `/event-booking/${eventId}/reserve`,
-        CONFIRM: (eventId, reservationId) => `/event-booking/${eventId}/confirm/${reservationId}`,
+        CONFIRM: (eventId, reservationId) => `/event-booking/confirm/${reservationId}`,
     },
 
     // User Profile

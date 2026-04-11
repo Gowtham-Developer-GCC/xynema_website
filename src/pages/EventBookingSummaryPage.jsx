@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, CheckCircle, ChevronRight, Info, CreditCard, Coffee, Smartphone, Building, Wallet } from 'lucide-react';
 import { confirmEventBooking } from '../services/eventService';
-import { initiatePayment } from '../services/paymentService';
 import LoadingScreen from '../components/LoadingScreen';
+import PaymentButton from '../components/PaymentButton';
 
 const EventBookingSummaryPage = () => {
     const navigate = useNavigate();
@@ -106,87 +106,14 @@ const EventBookingSummaryPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handlePayment = async () => {
-        if (!validateForm()) return;
-
-        setIsProcessing(true);
-        try {
-            // Development/Testing Flow: Generate random transaction ID
-            const randomTxnId = `EVT${Date.now()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-
-            const bookingData = {
-                paymentDetails: {
-                    method: selectedMethod,
-                    transactionId: randomTxnId,
-                    gateway: 'manual'
-                },
-                attendees: attendees.map(a => ({
-                    name: a.name.trim(),
-                    email: a.email.trim(),
-                    phone: a.phone.trim(),
-                    ticketClassId: a.ticketClassId
-                })),
-                source: 'web'
-            };
-
-            const result = await confirmEventBooking(event.id, reservationId, bookingData);
-            if (result.success) {
-                setConfirmedBooking(result.data?.booking || result.data);
-                setBooked(true);
-            } else {
-                alert(result.message || 'Booking confirmation failed. Please contact support.');
-            }
-        } catch (error) {
-            console.error('Payment processing error:', error);
-            alert('Could not process booking. Please try again.');
-        } finally {
-            setIsProcessing(false);
-        }
-    };
+    const isFormValid = attendees.every(a => 
+        a.name.trim() !== "" && 
+        a.email.trim() !== "" && 
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) &&
+        /^\d{10}$/.test(a.phone)
+    );
 
     if (!event) return <LoadingScreen />;
-
-    if (booked) {
-        return (
-            <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 sm:p-6 transition-colors duration-300 font-sans">
-                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[32px] md:rounded-[40px] p-6 md:p-10 text-center shadow-2xl dark:shadow-none space-y-6 md:space-y-10 animate-in zoom-in duration-500 border border-gray-50 dark:border-gray-800">
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20 dark:border-primary/30 shadow-xl shadow-primary/10 dark:shadow-none">
-                        <CheckCircle className="w-10 h-10 md:w-12 md:h-12 text-primary" />
-                    </div>
-
-                    <div className="space-y-3 md:space-y-4">
-                        <div className="space-y-1">
-                            <h1 className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] font-roboto">Booking Confirmed</h1>
-                            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-roboto">Successfully</h2>
-                        </div>
-                        <p className="text-[11px] md:text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-2 uppercase tracking-wider">
-                            Your tickets for <span className="text-slate-900 dark:text-white border-b-2 border-primary/20 pb-0.5">{event?.name}</span> are ready.
-                        </p>
-                    </div>
-
-                    <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
-                        <button
-                            onClick={() => navigate(`/event-bookings/${confirmedBooking?.bookingId || confirmedBooking?.id}`)}
-                            className="w-full bg-primary text-white font-black text-[11px] md:text-xs uppercase tracking-[0.15em] py-4 rounded-xl md:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98] font-roboto"
-                        >
-                            View Digital Ticket
-                        </button>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="w-full text-slate-400 dark:text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest py-2 hover:text-primary transition-colors font-roboto"
-                        >
-                            Back to Home
-                        </button>
-                    </div>
-
-                    <div className="pt-2 flex items-center justify-center gap-2">
-                        <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-[8px] md:text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest font-roboto">Sent to your registered email</span>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 text-slate-900 dark:text-gray-100">
@@ -442,24 +369,32 @@ const EventBookingSummaryPage = () => {
                                         </div>
                                     </div>
  
-                                    <button
-                                        onClick={handlePayment}
-                                        disabled={isProcessing}
+                                    <PaymentButton
+                                        amount={totalAmount}
+                                        bookingData={{
+                                            eventId: event.id,
+                                            reservationId: reservationId,
+                                            attendees: attendees.map(a => ({
+                                                name: a.name.trim(),
+                                                email: a.email.trim(),
+                                                phone: a.phone.trim(),
+                                                ticketClassId: a.ticketClassId
+                                            })),
+                                            selectedMethod
+                                        }}
+                                        onSuccess={(result) => {
+                                            // Redirect is now handled by PaymentButton
+                                        }}
+                                        onFailure={(err) => alert(err.message || 'Payment failed')}
+                                        disabled={!isFormValid}
                                         className={`w-full py-3 md:py-4 rounded-xl font-black text-[13px] md:text-[16px] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl uppercase tracking-[0.2em]
-                                            ${isProcessing
-                                                ? 'bg-primary/50 text-white opacity-100 pointer-events-none shadow-none'
+                                            ${!isFormValid
+                                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
                                                 : 'bg-primary hover:brightness-110 text-white'
                                             }`}
                                     >
-                                        {isProcessing ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                <span>Processing...</span>
-                                            </>
-                                        ) : (
-                                            `Pay ₹${totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
-                                        )}
-                                    </button>
+                                        <span>Pay ₹{totalAmount.toLocaleString()}</span>
+                                    </PaymentButton>
 
                                     <div className="mt-4 text-center space-y-2">
                                         <div className="flex justify-center items-center gap-2 text-[11px] text-[#22c55e] font-medium">
@@ -491,21 +426,32 @@ const EventBookingSummaryPage = () => {
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Final Amount</span>
                         <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{totalAmount.toLocaleString()}</span>
                     </div>
-                    <button
-                        onClick={handlePayment}
-                        disabled={isProcessing}
+                    <PaymentButton
+                        amount={totalAmount}
+                        bookingData={{
+                            eventId: event.id,
+                            reservationId: reservationId,
+                            attendees: attendees.map(a => ({
+                                name: a.name.trim(),
+                                email: a.email.trim(),
+                                phone: a.phone.trim(),
+                                ticketClassId: a.ticketClassId
+                            })),
+                            selectedMethod
+                        }}
+                        onSuccess={(result) => {
+                            // Redirect is now handled by PaymentButton
+                        }}
+                        onFailure={(err) => alert(err.message || 'Payment failed')}
+                        disabled={!isFormValid}
                         className={`flex-1 h-11 rounded-xl font-black text-[13px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider
-                            ${isProcessing
-                                ? 'bg-primary/50 text-white pointer-events-none'
+                            ${!isFormValid
+                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                                 : 'bg-primary text-white shadow-lg shadow-primary/25 hover:brightness-110'
                             }`}
                     >
-                        {isProcessing ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                            <><span>Pay Now</span> <ChevronRight className="w-4 h-4" /></>
-                        )}
-                    </button>
+                        <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
+                    </PaymentButton>
                 </div>
             </div>
  

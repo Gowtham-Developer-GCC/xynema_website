@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link, useLocation } from 'react-router-dom';
 import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building } from 'lucide-react';
 import SEO from '../components/SEO';
 import { designSystem } from '../config/design-system';
@@ -14,9 +14,13 @@ import apiCacheManager from '../services/apiCacheManager';
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { selectedCity } = useData();
-    const [searchParams] = useSearchParams();
-    const [activeTab, setActiveTab] = useState(initialTab);
+    
+    // Get tab from URL query parameter, default to initialTab or 'public_events'
+    const tabFromUrl = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(tabFromUrl || initialTab);
     const [events, setEvents] = useState([]);
 
 
@@ -38,10 +42,28 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
-    // Sync tab with prop
+    // Sync tab with URL parameter
     useEffect(() => {
-        setActiveTab(initialTab);
-    }, [initialTab]);
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl && (tabFromUrl === 'public_events' || tabFromUrl === 'private_events')) {
+            setActiveTab(tabFromUrl);
+        } else if (!tabFromUrl) {
+            // If no tab in URL, set to default
+            setActiveTab(initialTab);
+        }
+    }, [searchParams, initialTab]);
+
+    // Update URL when tab changes
+    const handleTabChange = (tabId) => {
+        try {
+            setActiveTab(tabId);
+            setShowFilters(false);
+            // Update URL with the new tab parameter
+            setSearchParams({ tab: tabId });
+        } catch (err) {
+            console.error('Tab change error:', err);
+        }
+    };
 
     // Handle clicks outside "More Filters" dropdown
     useEffect(() => {
@@ -157,43 +179,51 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         }
     };
 
-    const handleTabChange = (tabId) => {
-        try {
-            setActiveTab(tabId);
-            setShowFilters(false);
-        } catch (err) {
-            console.error('Tab change error:', err);
-        }
-    };
-
     if (loading) return <LoadingScreen message="Scanning Library" />;
     if (error) return <ErrorState error={error} onRetry={fetchData} title="Access Interrupted" buttonText="Try Refreshing" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
             <SEO
-                title="Explore Events - XYNEMA"
-                description="Discover live events near you"
+                title={activeTab === 'private_events' ? "Host Your Event - XYNEMA" : "Explore Events - XYNEMA"}
+                description={activeTab === 'private_events' ? "Host your private event with XYNEMA" : "Discover live events near you"}
             />
 
             {/* Header */}
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
                 <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight">Events</h1>
-                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">Discover curated experiences near you.</p>
+                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight">
+                            {activeTab === 'private_events' ? 'Host Your Event' : 'Events'}
+                        </h1>
+                        <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">
+                            {activeTab === 'private_events' 
+                                ? 'Create unforgettable experiences with our premium venues' 
+                                : 'Discover curated experiences near you.'}
+                        </p>
                     </div>
-                    <button
-                        onClick={() => handleTabChange('private_events')}
-                        className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display"
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        Host Your Event
-                    </button>
+                    {activeTab === 'public_events' && (
+                        <button
+                            onClick={() => handleTabChange('private_events')}
+                            className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Host Your Event
+                        </button>
+                    )}
+                    {activeTab === 'private_events' && (
+                        <button
+                            onClick={() => handleTabChange('public_events')}
+                            className="flex items-center gap-2 text-sm font-bold text-[#374151] dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-display"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Events
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Filter Section - Matching Sports Page UI */}
+            {/* Filter Section - Only for public events */}
             {activeTab !== 'private_events' && (
                 <div className="bg-[#F5F5FA] dark:bg-[#0f1115] transition-all duration-300 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
                     <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">

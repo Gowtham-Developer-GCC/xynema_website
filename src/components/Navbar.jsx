@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -15,6 +15,7 @@ const DevModeBadge = ({ className = "" }) => (
         <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">Dev Mode</span>
     </div>
 );
+
 const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -22,6 +23,71 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+    const searchRef = useRef(null);
+
+    // Prevent body scroll when sidebar is open
+    useEffect(() => {
+        if (isSidebarOpen) {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            document.body.dataset.scrollY = scrollY;
+        } else {
+            const scrollY = document.body.dataset.scrollY;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY));
+                delete document.body.dataset.scrollY;
+            }
+        }
+        
+        return () => {
+            if (isSidebarOpen) {
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.overflow = '';
+            }
+        };
+    }, [isSidebarOpen]);
+
+    // Prevent body scroll when location modal is open
+    useEffect(() => {
+        const handleLocationModal = () => {
+            // This effect listens for when city modal opens/closes
+            // The modal component should call this effect, but as fallback
+            const checkModal = setInterval(() => {
+                const modal = document.querySelector('[data-city-modal]');
+                if (modal && modal.style.display !== 'none') {
+                    const scrollY = window.scrollY;
+                    document.body.style.position = 'fixed';
+                    document.body.style.top = `-${scrollY}px`;
+                    document.body.style.width = '100%';
+                    document.body.style.overflow = 'hidden';
+                    document.body.dataset.modalScrollY = scrollY;
+                } else if (document.body.style.position === 'fixed' && !document.body.dataset.modalScrollY === undefined) {
+                    const scrollY = document.body.dataset.modalScrollY;
+                    document.body.style.position = '';
+                    document.body.style.top = '';
+                    document.body.style.width = '';
+                    document.body.style.overflow = '';
+                    if (scrollY) {
+                        window.scrollTo(0, parseInt(scrollY));
+                        delete document.body.dataset.modalScrollY;
+                    }
+                }
+            }, 100);
+            
+            return () => clearInterval(checkModal);
+        };
+        
+        handleLocationModal();
+    }, []);
 
     useEffect(() => {
         if (location.state?.openLogin && !user) {
@@ -29,6 +95,31 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             window.history.replaceState({}, document.title);
         }
     }, [location, user, openLogin]);
+
+    // Handle click outside for search bar
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isMobileSearchOpen && searchRef.current && !searchRef.current.contains(event.target)) {
+                setIsMobileSearchOpen(false);
+            }
+        };
+
+        // Add event listener when search is open
+        if (isMobileSearchOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            // Also prevent body scroll when search is open on mobile
+            if (window.innerWidth < 1024) {
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = '';
+        };
+    }, [isMobileSearchOpen]);
 
     const sidebarItems = [
         { icon: Ticket, title: 'My tickets', path: '/bookings' },
@@ -144,27 +235,35 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                     </div>
                 </div>
 
-
-                {/* Mobile/Desktop Search Overlay */}
+                {/* Mobile/Desktop Search Overlay - Updated with click outside functionality */}
                 {isMobileSearchOpen && (
-                    <div className="absolute inset-x-0 lg:left-auto lg:right-8 lg:top-3 lg:h-14 lg:w-[450px] bg-white dark:bg-gray-900 z-[65] border-b lg:border lg:border-white/20 lg:dark:border-gray-700 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2 lg:rounded-2xl lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all">
-                        <div className="flex-1 flex items-center gap-3">
-                            <UniversalSearch
-                                variant="navbar"
-                                className="flex-1"
-                                onSelect={() => setIsMobileSearchOpen(false)}
-                            />
-                            <button
-                                onClick={() => setIsMobileSearchOpen(false)}
-                                className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                            </button>
+                    <>
+                        {/* Backdrop for mobile */}
+                        <div 
+                            className="fixed inset-0 bg-black/50 z-[64] lg:hidden"
+                            onClick={() => setIsMobileSearchOpen(false)}
+                        />
+                        <div 
+                            ref={searchRef}
+                            className="absolute left-0 right-0 lg:left-auto lg:right-8 lg:top-3 lg:h-14 lg:w-[450px] bg-white dark:bg-gray-900 z-[65] border-b lg:border lg:border-white/20 lg:dark:border-gray-700 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2 lg:rounded-2xl lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all"
+                        >
+                            <div className="flex-1 flex items-center gap-3">
+                                <UniversalSearch
+                                    variant="navbar"
+                                    className="flex-1"
+                                    onSelect={() => setIsMobileSearchOpen(false)}
+                                />
+                                <button
+                                    onClick={() => setIsMobileSearchOpen(false)}
+                                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
-
-            </nav >
+            </nav>
 
             {/* Side Drawer Overlay — Liquid Glass Effect */}
             {isSidebarOpen && (
@@ -277,7 +376,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     { to: '/#recommended-section', label: 'For You', icon: Heart, active: location.pathname === '/' },
                                     { to: '/movies', label: 'Movies', icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
                                     { to: '/events', label: 'Events', icon: Calendar, active: location.pathname.startsWith('/events') },
-                                    { to: '/sports', label: 'Sports', icon: MapPin, active: location.pathname.startsWith('/sports') }, // Used MapPin for lack of a better icon in the imports, or I could use something else.
+                                    { to: '/sports', label: 'Sports', icon: MapPin, active: location.pathname.startsWith('/sports') },
                                 ].map((nav) => (
                                     <Link
                                         key={nav.to}
@@ -315,7 +414,6 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                         {/* Log out */}
                         {user && (
-
                             <div className="px-5 pb-6 md:pb-8 pt-2">
                                 <button
                                     onClick={() => {
@@ -336,9 +434,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             </div>
                         )}
                     </div>
-                </div >
-            )
-            }
+                </div>
+            )}
 
             {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */}
             {

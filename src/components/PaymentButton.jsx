@@ -30,12 +30,12 @@ const loadRazorpayScript = () => {
  * @param {boolean} props.disabled - Disable state
  * @returns {JSX.Element}
  */
-const PaymentButton = ({ 
-    amount, 
-    bookingData, 
-    onSuccess, 
-    onFailure, 
-    className = "", 
+const PaymentButton = ({
+    amount,
+    bookingData,
+    onSuccess,
+    onFailure,
+    className = "",
     disabled = false,
     children
 }) => {
@@ -44,7 +44,7 @@ const PaymentButton = ({
 
     const handlePayment = async () => {
         if (disabled || status === "loading") return;
-        
+
         setStatus("loading");
         console.log("[Payment] Initializing payment for amount:", amount);
 
@@ -60,25 +60,33 @@ const PaymentButton = ({
             if (bookingData?.showId) {
                 // Use the specific show booking order creation API
                 const { showId, seatIds, sessionId } = bookingData;
-                response = await api.post(ENDPOINTS.BOOKING.SHOWS.CREATE_ORDER(showId), { 
-                    seatIds, 
-                    sessionId 
+                response = await api.post(ENDPOINTS.BOOKING.SHOWS.CREATE_ORDER(showId), {
+                    seatIds,
+                    sessionId
+                });
+            } else if (bookingData?.reservationId) {
+                // Use the event booking order creation API
+                response = await api.post(ENDPOINTS.EVENT_BOOKING.CREATE_ORDER(bookingData.reservationId));
+            } else if (bookingData?.slotIds) {
+                // Use the turf booking order creation API
+                response = await api.post(ENDPOINTS.TURFS.CREATE_ORDER, {
+                    slotIds: bookingData.slotIds
                 });
             } else {
                 // Use generic payment initiation
-                response = await api.post(ENDPOINTS.PAYMENT.INITIATE, { 
-                    amount, 
-                    ...bookingData 
+                response = await api.post(ENDPOINTS.PAYMENT.INITIATE, {
+                    amount,
+                    ...bookingData
                 });
             }
-            
+
             const result = response.data;
             const order = result.success ? result.data : result;
-            
+
             // Support both orderId (new backend) and id (standard)
             const razorpayOrderId = order.orderId || order.id;
             const razorpayKey = order.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
-            
+
             if (!order || !razorpayOrderId) throw new Error(result.message || "Invalid order data from server");
 
             const options = {
@@ -93,7 +101,7 @@ const PaymentButton = ({
                 handler: async function (response) {
                     try {
                         let verifyResult;
-                        
+
                         if (bookingData?.showId) {
                             // Use show-specific confirmation API with custom body
                             const { showId, seatIds, sessionId, selectedMethod } = bookingData;
@@ -108,6 +116,32 @@ const PaymentButton = ({
                                 }
                             });
                             verifyResult = confirmResponse.data;
+                        } else if (bookingData?.reservationId) {
+                            // Use event-specific confirmation API
+                            const { eventId, reservationId, selectedMethod } = bookingData;
+                            const confirmResponse = await api.post(ENDPOINTS.EVENT_BOOKING.CONFIRM(eventId, reservationId), {
+                                ...bookingData,
+                                amount: amount, // Pass the paid amount to ensure verification
+                                paymentDetails: {
+                                    method: selectedMethod || 'upi',
+                                    transactionId: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature
+                                }
+                            });
+                            verifyResult = confirmResponse.data;
+                        } else if (bookingData?.slotIds) {
+                            // Use turf-specific confirmation API
+                            const { selectedMethod } = bookingData;
+                            const confirmResponse = await api.post(ENDPOINTS.TURFS.CONFIRM, {
+                                ...bookingData,
+                                amount: amount, // Pass the paid amount
+                                paymentMethod: selectedMethod || 'upi',
+                                transactionId: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+                            verifyResult = confirmResponse.data;
                         } else {
                             // Generic payment verification
                             const result = await api.post(ENDPOINTS.PAYMENT.VERIFY, {
@@ -119,15 +153,38 @@ const PaymentButton = ({
 
                         if (verifyResult.success) {
                             setStatus("success");
+
+                            // Determine navigation target based on booking type
+                            let targetPath = "/booking-success";
+                            let navigationState = {
+                                bookingData: {
+                                    ...bookingData,
+                                    bookingId: verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || "BK" + Date.now()
+                                }
+                            };
+
+                            if (bookingData?.showId) {
+                                // Cinema Booking - Redirect to Boarding Pass
+                                const bId = verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || verifyResult.id;
+                                targetPath = `/bookings/${bId}`;
+                                navigationState = { isNewBooking: true };
+                            } else if (bookingData?.reservationId) {
+                                // Event Booking
+                                const bId = verifyResult.data?.bookingId || verifyResult.data?.booking?._id || verifyResult.data?.id;
+                                targetPath = `/event-bookings/${bId}`;
+                                navigationState = { isNewBooking: true };
+                            } else if (bookingData?.slotIds) {
+                                // Turf Booking
+                                const bId = verifyResult.data?.bookingId || verifyResult.data?.bookings?.[0]?.bookingId || verifyResult.data?.id;
+                                targetPath = `/sports/bookings/${bId}`;
+                                navigationState = { isNewBooking: true };
+                            }
+
                             if (onSuccess) onSuccess(verifyResult);
 
-                            navigate("/booking-success", {
-                                state: { 
-                                    bookingData: {
-                                        ...bookingData,
-                                        bookingId: verifyResult.data?.bookingId || verifyResult.bookingId || "BK" + Date.now()
-                                    } 
-                                }
+                            navigate(targetPath, {
+                                state: navigationState,
+                                replace: true
                             });
                         } else {
                             throw new Error(verifyResult.message || "Verification failed");
@@ -182,7 +239,7 @@ const PaymentButton = ({
                     children || `Pay ₹${amount}`
                 )}
             </button>
-            
+
             {status === "failed" && (
                 <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest text-center">
                     Payment Failed. Please try again.

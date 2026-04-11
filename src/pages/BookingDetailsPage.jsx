@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock, CheckCircle2 } from 'lucide-react';
 import { getBookingDetails } from '../services/bookingService';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
@@ -14,6 +14,7 @@ import { optimizeImage } from '../utils/helpers';
 const BookingDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { userBookings } = useData();
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -246,6 +247,17 @@ const BookingDetailsPage = () => {
             </header>
 
             <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                {/* Success Banner - Only show on direct redirect after booking */}
+                {location.state?.isNewBooking && (
+                    <div className="mb-8 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-700">
+                        <div className="w-16 h-16 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-4">
+                            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-500" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Booking Confirmed!</h2>
+                        <p className="text-gray-500 dark:text-gray-400 uppercase text-[10px] font-black tracking-widest">Your ticket is ready for scanning</p>
+                    </div>
+                )}
+
                 {/* Main High-Fidelity Ticket Card */}
                 <div ref={ticketRef} className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-primary/5 dark:shadow-black/50 border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
 

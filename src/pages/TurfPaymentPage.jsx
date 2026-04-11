@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, Che
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import { getTurfDetails, getAvailableSlots, reserveSlots, confirmTurfBooking, cancelTurfReservation } from "../services/turfService";
+import PaymentButton from '../components/PaymentButton';
 
 // Fallback for toast notifications if react-hot-toast is not available
 const toast = {
@@ -87,90 +88,13 @@ const TurfPaymentPage = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handlePayment = async () => {
-        if (mobileNumber.length !== 10) {
-            toast.error('Please enter a valid 10-digit mobile number');
-            return;
-        }
-
-        setIsProcessing(true);
-        try {
-            // Generate a random transaction ID for demo/online payment
-            const txnId = `TXN_TURF_${Date.now()}`;
-            
-            const bookingData = {
-                slotIds: reservation.slotIds,
-                isAdvancePayment: isAdvancePayment,
-                paymentMethod: "online",
-                transactionId: txnId,
-                notes: notes,
-                phone: mobileNumber,
-                email: email,
-                couponCode: couponCode
-            };
-
-            const result = await confirmTurfBooking(bookingData);
-            
-            if (result) {
-                setBookingResult(result);
-                setBooked(true);
-                window.scrollTo({ top: 0, behavior: 'instant' });
-            } else {
-                toast.error('Could not confirm booking. Please contact support.');
-            }
-        } catch (error) {
-            console.error('Payment processing error:', error);
-            toast.error('Could not process booking. Please try again.');
-        } finally {
-            setIsProcessing(false);
-        }
-    };
+    const isFormValid = mobileNumber.length === 10;
 
     if (!reservation) return <LoadingScreen message="Securing Session..." />;
 
     const turfFee = reservation.totalPrice;
     const convenienceFee = Math.round((turfFee * (turf?.convenienceFeePercent || 0)) / 100);
     const finalDisplayAmount = isAdvancePayment ? (turfFee / 2) + convenienceFee : turfFee + convenienceFee;
-
-    if (booked) {
-        return (
-            <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-center justify-center p-4 sm:p-6 transition-colors duration-300 font-sans">
-                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-[32px] md:rounded-[40px] p-6 md:p-10 text-center shadow-2xl dark:shadow-none space-y-6 md:space-y-10 animate-in zoom-in duration-500 border border-gray-50 dark:border-gray-800">
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20 dark:border-primary/30 shadow-xl shadow-primary/10 dark:shadow-none">
-                        <CheckCircle className="w-10 h-10 md:w-12 md:h-12 text-primary" />
-                    </div>
-
-                    <div className="space-y-3 md:space-y-4">
-                        <div className="space-y-1">
-                            <h1 className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] font-roboto">Booking Confirmed</h1>
-                            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight font-roboto">Successfully</h2>
-                        </div>
-                        <p className="text-[11px] md:text-xs text-slate-400 dark:text-gray-500 font-bold leading-relaxed px-2 uppercase tracking-wider">
-                            Your reservation at <span className="text-slate-900 dark:text-white border-b-2 border-primary/20 pb-0.5">{turf?.venueName}</span> is complete.
-                        </p>
-                    </div>
-
-                    <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
-                        <button
-                            onClick={() => {
-                                const bId = bookingResult?.bookings?.[0]?.bookingId || bookingResult?.bookingId || bookingResult?._id || bookingResult?.id;
-                                navigate(`/sports/bookings/${bId}`, { state: { isNewBooking: true } });
-                            }}
-                            className="w-full bg-primary text-white font-black text-[11px] md:text-xs uppercase tracking-[0.15em] py-4 rounded-xl md:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98] font-roboto"
-                        >
-                            View Ticket
-                        </button>
-                        <button
-                            onClick={() => navigate(`/sports`)}
-                            className="w-full bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-gray-500 font-black text-[10px] md:text-[11px] uppercase tracking-widest py-4 rounded-xl md:rounded-2xl border border-slate-100 dark:border-gray-700 transition-all hover:bg-slate-100 dark:hover:bg-gray-750 font-roboto"
-                        >
-                            Back to Sports
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 text-slate-900 dark:text-gray-100">
@@ -399,21 +323,28 @@ const TurfPaymentPage = () => {
                                     <span className="text-xl md:text-3xl font-black text-primary font-roboto">₹{finalDisplayAmount}</span>
                                 </div>
 
-                                <button
-                                    onClick={handlePayment}
-                                    disabled={isProcessing}
+                                <PaymentButton
+                                    amount={finalDisplayAmount}
+                                    bookingData={{
+                                        slotIds: reservation.slotIds,
+                                        isAdvancePayment: isAdvancePayment,
+                                        sport: sport,
+                                        notes: notes,
+                                        phone: mobileNumber,
+                                        email: email,
+                                        couponCode: couponCode,
+                                        selectedMethod
+                                    }}
+                                    onSuccess={(result) => {
+                                        // Redirect is now handled by PaymentButton
+                                    }}
+                                    onFailure={(err) => toast.error(err.message || 'Payment failed')}
+                                    disabled={!isFormValid}
                                     className={`w-full py-4 md:py-5 rounded-2xl font-black text-[14px] md:text-[16px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-primary/20
-                                        ${isProcessing ? 'bg-primary/50 text-white cursor-not-allowed' : 'bg-primary hover:brightness-110 text-white'}`}
+                                        ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none' : 'bg-primary hover:brightness-110 text-white'}`}
                                 >
-                                    {isProcessing ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                            <span>Processing...</span>
-                                        </>
-                                    ) : (
-                                        `Pay ₹${finalDisplayAmount}`
-                                    )}
-                                </button>
+                                    <span>Pay ₹{finalDisplayAmount}</span>
+                                </PaymentButton>
 
                                 <p className="text-[10px] text-gray-400 text-center font-bold uppercase tracking-wider">Cancellation policy applies • Secure checkout</p>
                             </div>
@@ -428,18 +359,28 @@ const TurfPaymentPage = () => {
                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">To Pay</span>
                     <span className="text-2xl font-black text-primary font-roboto tracking-tight">₹{finalDisplayAmount}</span>
                 </div>
-                <button
-                    onClick={handlePayment}
-                    disabled={isProcessing}
+                <PaymentButton
+                    amount={finalDisplayAmount}
+                    bookingData={{
+                        slotIds: reservation.slotIds,
+                        isAdvancePayment: isAdvancePayment,
+                        sport: sport,
+                        notes: notes,
+                        phone: mobileNumber,
+                        email: email,
+                        couponCode: couponCode,
+                        selectedMethod
+                    }}
+                    onSuccess={(result) => {
+                        // Redirect is now handled by PaymentButton
+                    }}
+                    onFailure={(err) => toast.error(err.message || 'Payment failed')}
+                    disabled={!isFormValid}
                     className={`flex-1 h-14 rounded-2xl font-black text-[14px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2
-                        ${isProcessing ? 'bg-primary/50 text-white' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
+                        ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
                 >
-                    {isProcessing ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : (
-                        <>Pay Now <ChevronRight className="w-5 h-5" /></>
-                    )}
-                </button>
+                    <span>Pay Now</span> <ChevronRight className="w-5 h-5" />
+                </PaymentButton>
             </div>
             <div className="lg:hidden h-24"></div>
         </div>

@@ -27,6 +27,42 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
     const [isDetecting, setIsDetecting] = useState(false);
     const scrollRef = useRef(null);
     const alphabetRefs = useRef({});
+    const modalRef = useRef(null);
+
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            // Save current scroll position
+            const scrollY = window.scrollY;
+            
+            // Apply styles to prevent background scrolling
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            
+            // Store scroll position to restore later
+            document.body.dataset.modalScrollY = scrollY;
+            
+            // Add a class to body for additional styling if needed
+            document.body.classList.add('modal-open');
+            
+            return () => {
+                // Restore scrolling when modal closes
+                const storedScrollY = document.body.dataset.modalScrollY;
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.overflow = '';
+                document.body.classList.remove('modal-open');
+                
+                if (storedScrollY) {
+                    window.scrollTo(0, parseInt(storedScrollY));
+                    delete document.body.dataset.modalScrollY;
+                }
+            };
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -151,14 +187,28 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
         );
     };
 
+    const handleClose = () => {
+        if (currentCity) {
+            onClose();
+        }
+    };
+
+    const handleSelect = (city) => {
+        onSelect(city);
+    };
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-4">
+        <div 
+            className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-4"
+            ref={modalRef}
+            data-city-modal="true"
+        >
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
-                onClick={() => currentCity && onClose()}
+                onClick={handleClose}
             />
 
             {/* Modal Container */}
@@ -169,7 +219,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
                         {currentCity && (
-                            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                 <X className="w-5 h-5 text-gray-500" />
                             </button>
                         )}
@@ -216,7 +266,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                         {popularCities.map((city) => (
                                             <button
                                                 key={city.name}
-                                                onClick={() => city.isAvailable && onSelect(city.name)}
+                                                onClick={() => city.isAvailable && handleSelect(city.name)}
                                                 disabled={!city.isAvailable}
                                                 className={`flex flex-col items-center group transition-transform ${city.isAvailable ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
                                             >
@@ -270,7 +320,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                                 {cities.map(city => (
                                                     <button
                                                         key={city}
-                                                        onClick={() => onSelect(city)}
+                                                        onClick={() => handleSelect(city)}
                                                         className={`text-left py-2 text-[13px] font-medium transition-colors hover:text-primary ${currentCity === city ? 'text-primary' : 'text-gray-600'}`}
                                                     >
                                                         {city}

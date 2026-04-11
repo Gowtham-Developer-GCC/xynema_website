@@ -40,6 +40,7 @@ export const ENDPOINTS = {
         LIST: '/event-booking/bookings',
         DETAILS: (bookingId) => `/event-booking/bookings/${bookingId}`,
         RESERVE: (eventId) => `/event-booking/${eventId}/reserve`,
+        CREATE_ORDER: (reservationId) => `/event-booking/create-order/${reservationId}`,
         CONFIRM: (eventId, reservationId) => `/event-booking/confirm/${reservationId}`,
     },
 
@@ -68,6 +69,7 @@ export const ENDPOINTS = {
         DETAILS: (turfId) => `/customer-turf/available-turf/${turfId}`,
         SLOTS: (courtId) => `/customer-turf/available-slots/${courtId}`,
         RESERVE: '/customer-turf/reserve-slot',
+        CREATE_ORDER: '/customer-turf/create-order',
         CONFIRM: '/customer-turf/confirm-booking',
         CANCEL: '/customer-turf/cancel-reservation',
         MY_BOOKINGS: '/customer-turf/my-bookings',

@@ -133,6 +133,16 @@ export const confirmEventBooking = async (eventId, reservationId, bookingData) =
     });
 };
 
+export const createEventBookingOrder = async (reservationId) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.EVENT_BOOKING.CREATE_ORDER(reservationId));
+        if (response.data.success) {
+            return response.data;
+        }
+        throw new Error(response.data.message || 'Failed to create payment order');
+    });
+};
+
 export const submitPrivateEventEnquiry = async (data) => {
     return safeApiCall(async () => {
         const response = await api.post(ENDPOINTS.EVENTS.ENQUIRY, data);

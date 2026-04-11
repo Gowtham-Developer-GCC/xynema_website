@@ -112,6 +112,21 @@ export const confirmTurfBooking = async (bookingData) => {
 };
 
 /**
+ * Create a payment order for turf booking
+ * @param {string[]} slotIds - Array of slot IDs
+ * @returns {Promise<Object|null>}
+ */
+export const createTurfOrder = async (slotIds) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.TURFS.CREATE_ORDER, { slotIds });
+        if (response.data?.success) {
+            return response.data;
+        }
+        throw new Error(response.data?.message || 'Failed to create turf order');
+    });
+};
+
+/**
  * Cancel a turf reservation and release the slots
  * @param {string[]} slotIds - Array of slot IDs to release
  * @returns {Promise<Object|null>}

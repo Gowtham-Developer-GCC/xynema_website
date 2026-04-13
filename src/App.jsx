@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoadingScreen from './components/LoadingScreen';
 import OfflineScreen from './components/OfflineScreen';
 import ScrollToTop from './components/ScrollToTop';
+import NoticePage from './pages/NoticePage';
 import bookingSessionManager from './utils/bookingSessionManager';
 
 // Lazy load enhanced pages
@@ -79,6 +80,9 @@ export default function App() {
     const [selectedCity, setSelectedCity] = useState(() => {
         return localStorage.getItem('selected_city') || "";
     });
+    const [isNoticeAccepted, setIsNoticeAccepted] = useState(() => {
+        return localStorage.getItem('xynema_notice_accepted') === 'true';
+    });
     const [isCityModalManualOpen, setIsCityModalManualOpen] = useState(false);
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -102,91 +106,95 @@ export default function App() {
 
     return (
         <HelmetProvider>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <ScrollToTop />
-                <BookingFlowGuard />
-                {isOffline && <OfflineScreen />}
-                <DataProvider selectedCity={selectedCity}>
-                    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
-                        <SEO />
-                        <Navbar
-                            selectedCity={selectedCity}
-                            setSelectedCity={handleCityChange}
-                            openCityModal={() => setIsCityModalManualOpen(true)}
-                        />
-                        <Suspense fallback={null}>
-                            <LoginModal />
-                        </Suspense>
-
-                        <Suspense fallback={null}>
-                            <CitySelectionModal
-                                isOpen={!selectedCity || isCityModalManualOpen}
-                                onClose={() => setIsCityModalManualOpen(false)}
-                                onSelect={handleCityChange}
-                                currentCity={selectedCity}
+            {!isNoticeAccepted ? (
+                <NoticePage onAccept={() => setIsNoticeAccepted(true)} />
+            ) : (
+                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <ScrollToTop />
+                    <BookingFlowGuard />
+                    {isOffline && <OfflineScreen />}
+                    <DataProvider selectedCity={selectedCity}>
+                        <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
+                            <SEO />
+                            <Navbar
+                                selectedCity={selectedCity}
+                                setSelectedCity={handleCityChange}
+                                openCityModal={() => setIsCityModalManualOpen(true)}
                             />
-                        </Suspense>
-
-                        <main className="flex-grow">
-                            <ErrorBoundary>
-                                <Suspense fallback={<PageLoader />}>
-                                    <Routes>
-                                        <Route path="/" element={<HomePage selectedCity={selectedCity} />} />
-                                        <Route path="/movies" element={<MoviesPage selectedCity={selectedCity} />} />
-                                        <Route path="/movie/:slug" element={<MovieDetailsPage />} />
-                                        <Route path="/movie/:slug/reviews" element={<AllReviewsPage />} />
-                                        <Route path="/movie/:slug/theaters" element={<TheaterSelectionPage selectedCity={selectedCity} />} />
-
-                                        <Route path="/movie/:slug/:theaterSlug/seats" element={<ProtectedRoute><SeatSelectionPage /></ProtectedRoute>} />
-                                        <Route path="/movie/:slug/:theaterSlug/food" element={<ProtectedRoute><FoodSelectionPage /></ProtectedRoute>} />
-                                        <Route path="/movie/:slug/:theaterSlug/summary" element={<ProtectedRoute><BookingSummaryPage /></ProtectedRoute>} />
-                                        <Route path="/movie/:slug/:theaterSlug/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
-                                         <Route path="/booking-success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
-
-                                        {/* Protected Account Routes */}
-                                        <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
-                                        <Route path="/events-bookings" element={<ProtectedRoute><MyEventBookingsPage /></ProtectedRoute>} />
-                                        <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailsPage /></ProtectedRoute>} />
-                                        <Route path="/event-bookings/:id" element={<ProtectedRoute><EventBookingDetailsPage /></ProtectedRoute>} />
-                                        <Route path="/events/booking-summary" element={<ProtectedRoute><EventBookingSummaryPage /></ProtectedRoute>} />
-                                        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-
-                                        <Route path="/events" element={<ExplorePage initialTab="public_events" />} />
-                                        <Route path="/private-events" element={<ExplorePage initialTab="private_events" />} />
-                                        <Route path="/explore" element={<ExplorePage initialTab="public_events" />} />
-                                        <Route path="/event/:slug" element={<EventDetailsPage />} />
-                                        <Route path="/event/:slug/shows" element={<EventShowSelectionPage />} />
-                                        <Route path="/stream" element={<StorePage />} />
-                                        <Route path="/store" element={<StorePage />} />
-                                        <Route path="/privacy" element={<PrivacyPolicy />} />
-                                        <Route path="/terms" element={<TermsOfUse />} />
-                                        <Route path="/help" element={<HelpCenter />} />
-                                        <Route path="/about" element={<AboutUs />} />
-                                        <Route path="/refund" element={<RefundPolicy />} />
-                                        <Route path="/sports/book/:turfId" element={<BookingSlotPage />} />
-                                        <Route path="/sports/payment" element={<ProtectedRoute><TurfPaymentPage /></ProtectedRoute>} />
-                        <Route path="/sports/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
-                                        <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
-                                        <Route path="/cinemas" element={<CinemasListPage />} />
-                                        <Route path="/sports" element={<SportsPage />} />
-                                        <Route path="/swimming" element={<SwimmingPage />} />
-                                        <Route path="/sports/:slug" element={<SportDetailsPage />} />
-                                        <Route path="/favorites" element={<FavoritesPage />} />
-                                        <Route path="/offers" element={<OffersPage />} />
-                                        <Route path="/notifications" element={<NotificationsPage />} />
-                                        <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
-                                        <Route path="/account-settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
-                                        <Route path="/*" element={<NotFoundState title="Page Not Found" message="We couldn't find the page you're looking for." />} />
-                                    </Routes>
-                                </Suspense>
-                            </ErrorBoundary>
-                        </main>
-                        <Suspense fallback={<div className="h-20 bg-slate-900" />}>
-                            <Footer />
-                        </Suspense>
-                    </div>
-                </DataProvider>
-            </Router>
+                            <Suspense fallback={null}>
+                                <LoginModal />
+                            </Suspense>
+    
+                            <Suspense fallback={null}>
+                                <CitySelectionModal
+                                    isOpen={!selectedCity || isCityModalManualOpen}
+                                    onClose={() => setIsCityModalManualOpen(false)}
+                                    onSelect={handleCityChange}
+                                    currentCity={selectedCity}
+                                />
+                            </Suspense>
+    
+                            <main className="flex-grow">
+                                <ErrorBoundary>
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Routes>
+                                            <Route path="/" element={<HomePage selectedCity={selectedCity} />} />
+                                            <Route path="/movies" element={<MoviesPage selectedCity={selectedCity} />} />
+                                            <Route path="/movie/:slug" element={<MovieDetailsPage />} />
+                                            <Route path="/movie/:slug/reviews" element={<AllReviewsPage />} />
+                                            <Route path="/movie/:slug/theaters" element={<TheaterSelectionPage selectedCity={selectedCity} />} />
+    
+                                            <Route path="/movie/:slug/:theaterSlug/seats" element={<ProtectedRoute><SeatSelectionPage /></ProtectedRoute>} />
+                                            <Route path="/movie/:slug/:theaterSlug/food" element={<ProtectedRoute><FoodSelectionPage /></ProtectedRoute>} />
+                                            <Route path="/movie/:slug/:theaterSlug/summary" element={<ProtectedRoute><BookingSummaryPage /></ProtectedRoute>} />
+                                            <Route path="/movie/:slug/:theaterSlug/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+                                             <Route path="/booking-success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
+    
+                                            {/* Protected Account Routes */}
+                                            <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
+                                            <Route path="/events-bookings" element={<ProtectedRoute><MyEventBookingsPage /></ProtectedRoute>} />
+                                            <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/event-bookings/:id" element={<ProtectedRoute><EventBookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/events/booking-summary" element={<ProtectedRoute><EventBookingSummaryPage /></ProtectedRoute>} />
+                                            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+    
+                                            <Route path="/events" element={<ExplorePage initialTab="public_events" />} />
+                                            <Route path="/private-events" element={<ExplorePage initialTab="private_events" />} />
+                                            <Route path="/explore" element={<ExplorePage initialTab="public_events" />} />
+                                            <Route path="/event/:slug" element={<EventDetailsPage />} />
+                                            <Route path="/event/:slug/shows" element={<EventShowSelectionPage />} />
+                                            <Route path="/stream" element={<StorePage />} />
+                                            <Route path="/store" element={<StorePage />} />
+                                            <Route path="/privacy" element={<PrivacyPolicy />} />
+                                            <Route path="/terms" element={<TermsOfUse />} />
+                                            <Route path="/help" element={<HelpCenter />} />
+                                            <Route path="/about" element={<AboutUs />} />
+                                            <Route path="/refund" element={<RefundPolicy />} />
+                                            <Route path="/sports/book/:turfId" element={<BookingSlotPage />} />
+                                            <Route path="/sports/payment" element={<ProtectedRoute><TurfPaymentPage /></ProtectedRoute>} />
+                            <Route path="/sports/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
+                                            <Route path="/cinemas" element={<CinemasListPage />} />
+                                            <Route path="/sports" element={<SportsPage />} />
+                                            <Route path="/swimming" element={<SwimmingPage />} />
+                                            <Route path="/sports/:slug" element={<SportDetailsPage />} />
+                                            <Route path="/favorites" element={<FavoritesPage />} />
+                                            <Route path="/offers" element={<OffersPage />} />
+                                            <Route path="/notifications" element={<NotificationsPage />} />
+                                            <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
+                                            <Route path="/account-settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+                                            <Route path="/*" element={<NotFoundState title="Page Not Found" message="We couldn't find the page you're looking for." />} />
+                                        </Routes>
+                                    </Suspense>
+                                </ErrorBoundary>
+                            </main>
+                            <Suspense fallback={<div className="h-20 bg-slate-900" />}>
+                                <Footer />
+                            </Suspense>
+                        </div>
+                    </DataProvider>
+                </Router>
+            )}
         </HelmetProvider>
     );
 }

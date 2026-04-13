@@ -241,11 +241,10 @@ const SportDetailsPage = () => {
                             <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-[340px] bg-primary rounded-2xl p-6 shadow-2xl border border-white/30 z-20 flex items-center justify-between overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
                                 <div>
-                                    <h4 className="text-[10px] font-black text-white/80 uppercase tracking-widest mb-1">Exclusive Pass</h4>
-                                    <p className="text-lg font-black text-white leading-none uppercase">Xynema Crown</p>
+                                    
+                                    <p className="text-lg font-black text-white leading-none uppercase">Book here </p>
                                 </div>
-                                <button className="px-4 py-2 bg-white text-primary text-[10px] font-black uppercase rounded-lg shadow-md hover:scale-105 transition-all">Upgrade</button>
-                            </div>
+                            </div>  
 
                             <div className="bg-white dark:bg-gray-900 rounded-[40px] p-8 pt-20 border border-gray-100 dark:border-gray-800 shadow-2xl relative">
                                 <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-3">Starting from</p>
@@ -259,7 +258,7 @@ const SportDetailsPage = () => {
                                 >
                                     Instant Book
                                 </button>
-                                <p className="text-[10px] text-center text-gray-400 font-medium mt-6 uppercase">Free cancellation up to 6 hours before</p>
+                               
                             </div>
                         </div>
                     </div>

@@ -172,27 +172,27 @@ const ProfilePage = () => {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <SEO title="My Profile - XYNEMA" description="Manage your XYNEMA account" />
 
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate("/")}
-                        className="text-gray-600 hover:text-gray-900 transition-colors"
+                        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                         aria-label="Go back"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-lg font-bold text-gray-900">My Profile</h1>
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-white">My Profile</h1>
                     <div className="w-5" />
                 </div>
             </div>
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Profile Card */}
-                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-8">
                         {/* User Info */}
                         <div className="flex items-center gap-4">
@@ -216,8 +216,8 @@ const ProfilePage = () => {
                                 </div>
                             </div>
                             <div className="flex-1">
-                                <h2 className="text-2xl font-bold text-gray-900">{user.displayName}</h2>
-                                <p className="text-gray-600 text-sm mt-1">{user.email}</p>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.displayName}</h2>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{user.email}</p>
                             </div>
                         </div>
 
@@ -232,7 +232,7 @@ const ProfilePage = () => {
                                     });
                                 }
                             }}
-                            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${editMode ? 'bg-gray-100 text-gray-900 hover:bg-gray-200' : 'bg-xynemaRose text-white hover:bg-xynemaRose/80'}`}
+                            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${editMode ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-xynemaRose text-white hover:bg-xynemaRose/80'}`}
                         >
                             {editMode ? 'Cancel' : 'Edit Profile'}
                         </button>
@@ -242,13 +242,13 @@ const ProfilePage = () => {
 
                 {/* Edit Form - Collapsible */}
                 {editMode && (
-                    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 animate-in fade-in slide-in-from-bottom-4">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6">Edit Personal Details</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700 mb-6 animate-in fade-in slide-in-from-bottom-4">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Edit Personal Details</h3>
 
                         <form onSubmit={handleUpdateProfile} className="space-y-4">
                             {/* Name Field */}
                             <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-2">Full Name *</label>
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-2">Full Name *</label>
                                 <input
                                     type="text"
                                     value={formData.name}
@@ -257,15 +257,15 @@ const ProfilePage = () => {
                                         const error = validateName(e.target.value);
                                         setFieldErrors({ ...fieldErrors, name: error });
                                     }}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-xynemaRose transition-all ${fieldErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-xynemaRose transition-all dark:bg-gray-700 dark:text-white ${fieldErrors.name ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="Enter your full name"
                                 />
-                                {fieldErrors.name && <p className="text-red-600 text-xs mt-1">{fieldErrors.name}</p>}
+                                {fieldErrors.name && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{fieldErrors.name}</p>}
                             </div>
 
                             {/* Phone Field */}
                             <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-2">Phone Number</label>
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-2">Phone Number</label>
                                 <input
                                     type="text"
                                     value={formData.phone}
@@ -274,20 +274,20 @@ const ProfilePage = () => {
                                         const error = validatePhone(e.target.value);
                                         setFieldErrors({ ...fieldErrors, phone: error });
                                     }}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-xynemaRose transition-all ${fieldErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-xynemaRose transition-all dark:bg-gray-700 dark:text-white ${fieldErrors.phone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="Enter phone number (optional)"
                                 />
-                                {fieldErrors.phone && <p className="text-red-600 text-xs mt-1">{fieldErrors.phone}</p>}
+                                {fieldErrors.phone && <p className="text-red-600 dark:text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                             </div>
 
                             {/* Messages */}
                             {successMsg && (
-                                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
                                     ✓ {successMsg}
                                 </div>
                             )}
                             {errorMsg && (
-                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
                                     ✕ {errorMsg}
                                 </div>
                             )}
@@ -303,7 +303,7 @@ const ProfilePage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setEditMode(false)}
-                                    className="px-4 py-2.5 bg-gray-100 text-gray-900 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -314,22 +314,22 @@ const ProfilePage = () => {
 
                 {/* Recent Bookings Section */}
                 {allUserBookings && allUserBookings.length > 0 && (
-                    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
                         <div className="flex items-center gap-2 mb-6">
                             <Ticket className="w-5 h-5 text-xynemaRose" />
-                            <h3 className="text-lg font-bold text-gray-900">Recent Bookings</h3>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Bookings</h3>
                         </div>
 
                         <div className="space-y-3">
                             {allUserBookings.slice(0, 3).map((booking) => (
-                                <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                     <div className="flex-1">
-                                        <p className="font-semibold text-gray-900">{booking.movieTitle || booking.eventName}</p>
-                                        <p className="text-sm text-gray-600">{booking.theaterName || booking.venue?.name} • {booking.date || booking.showDate}</p>
+                                        <p className="font-semibold text-gray-900 dark:text-white">{booking.movieTitle || booking.eventName}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{booking.theaterName || booking.venue?.name} • {booking.date || booking.showDate}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-semibold text-gray-900">{booking.seats?.length || booking.tickets?.length} ticket{(booking.seats?.length || booking.tickets?.length) !== 1 ? 's' : ''}</p>
-                                        <p className="text-sm text-gray-600">₹{booking.totalAmount}</p>
+                                        <p className="font-semibold text-gray-900 dark:text-white">{booking.seats?.length || booking.tickets?.length} ticket{(booking.seats?.length || booking.tickets?.length) !== 1 ? 's' : ''}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">₹{booking.totalAmount}</p>
                                     </div>
                                 </div>
                             ))}
@@ -337,7 +337,7 @@ const ProfilePage = () => {
 
                         {allUserBookings.length > 3 && (
                             <button
-                                className="w-full mt-4 py-2.5 text-xynemaRose font-semibold hover:bg-gray-50 rounded-lg transition-colors"
+                                className="w-full mt-4 py-2.5 text-xynemaRose font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                             >
                                 View All Bookings
                             </button>
@@ -347,7 +347,7 @@ const ProfilePage = () => {
                 {/* Logout Button */}
                 <button
                     onClick={handleLogout}
-                    className="w-full py-3 bg-white border-2 border-gray-300 text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                 >
                     <LogOut className="w-5 h-5" />
                     Sign Out
@@ -358,10 +358,10 @@ const ProfilePage = () => {
 };
 
 const LoadingState = () => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-gray-200 border-t-xynemaRose rounded-full animate-spin" />
-            <p className="text-gray-600 text-sm font-medium">Loading Profile...</p>
+            <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-xynemaRose rounded-full animate-spin" />
+            <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Loading Profile...</p>
         </div>
     </div>
 );

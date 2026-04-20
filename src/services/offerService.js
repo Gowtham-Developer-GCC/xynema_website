@@ -13,3 +13,13 @@ export const getOffers = async () => {
         return [];
     }
 };
+
+export const getCoupons = async () => {
+    try {
+        const response = await api.get(ENDPOINTS.USER.COUPONS);
+        return response?.data ?? null;
+    } catch (error) {
+        console.error('Error fetching coupons:', error);
+        return null;
+    }
+};

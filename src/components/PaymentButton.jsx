@@ -70,7 +70,8 @@ const PaymentButton = ({
             } else if (bookingData?.slotIds) {
                 // Use the turf booking order creation API
                 response = await api.post(ENDPOINTS.TURFS.CREATE_ORDER, {
-                    slotIds: bookingData.slotIds
+                    slotIds: bookingData.slotIds,
+                    isAdvancePayment: bookingData.isAdvancePayment || false
                 });
             } else {
                 // Use generic payment initiation

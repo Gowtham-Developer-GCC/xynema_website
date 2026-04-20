@@ -50,6 +50,7 @@ export const ENDPOINTS = {
         UPDATE: '/user/profile-update',
         GOOGLE_LOGIN: '/user/google',
         LOGOUT: '/user/logout',
+        COUPONS: '/user/coupons',
     },
 
     // Payment

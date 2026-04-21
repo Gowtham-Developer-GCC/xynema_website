@@ -712,6 +712,7 @@ export class Event {
         this.organizerEmail = org.email || '';
 
         this.status = data.status || 'published';
+        this.isInterested = data.interested || data.isInterested || false;
     }
 
     static fromJson(json) {
@@ -777,6 +778,7 @@ export class Turf {
         this.defaultSlotDuration = data.courts?.[0]?.defaultSlotDuration || 60;
         this.courts = data.courts || [];
         this.convenienceFeePercent = data.convenienceFeePercent || 0;
+        this.isInterested = data.interested || data.isInterested || false;
     }
 
     static fromJson(json) {

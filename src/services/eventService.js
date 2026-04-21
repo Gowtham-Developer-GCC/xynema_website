@@ -149,3 +149,10 @@ export const submitPrivateEventEnquiry = async (data) => {
         return response.data;
     }, 'submit private event enquiry');
 };
+
+export const toggleEventInterest = async (eventId, interested) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.EVENTS.INTEREST(eventId), { interested });
+        return response.data;
+    }, 'toggle event interest');
+};

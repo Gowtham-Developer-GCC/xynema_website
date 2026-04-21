@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check, Shield, Info, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check, Shield, Info, ArrowRight, Heart } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +12,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import StoreCard from '../components/StoreCard';
 import SportCard from '../components/SportCard';
-import { getTurfDetails, getSimilarTurfs } from '../services/turfService';
+import { getTurfDetails, getSimilarTurfs, toggleTurfInterest } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
 
 const SportDetailsPage = () => {
@@ -36,6 +36,8 @@ const SportDetailsPage = () => {
     const [fullScreenImage, setFullScreenImage] = useState(null);
     const [similarSports, setSimilarSports] = useState([]);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
     // Mock Explore More venues fallback
     const moreVenues = [
@@ -53,6 +55,7 @@ const SportDetailsPage = () => {
             const data = await apiCacheManager.getOrFetchTurfDetails(turfId, () => getTurfDetails(turfId));
             if (data) {
                 setSport(data);
+                setIsFavorite(data.isInterested || false);
                 fetchSimilarSports(turfId);
             }
         } catch (err) {
@@ -118,6 +121,28 @@ const SportDetailsPage = () => {
         navigate(`/sports/book/${turfId}`, { state: { sport } });
     };
 
+    const handleFavoriteClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            openLogin();
+            return;
+        }
+
+        setIsFavoriteLoading(true);
+        try {
+            const res = await toggleTurfInterest(sport?._id || sport?.id || slug, !isFavorite);
+            if (res.success) {
+                setIsFavorite(!isFavorite);
+            }
+        } catch (error) {
+            console.error('Error toggling interest:', error);
+        } finally {
+            setIsFavoriteLoading(false);
+        }
+    };
+
     const isSwimming = sport?.tags?.some(tag => tag.toLowerCase().includes('swimming') || tag.toLowerCase().includes('pool')) || 
                       sport?.name?.toLowerCase().includes('swimming') || sport?.name?.toLowerCase().includes('pool');
 
@@ -167,6 +192,19 @@ const SportDetailsPage = () => {
                 <button onClick={() => navigate(-1)} className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
                     <ArrowLeft className="w-5 h-5" />
                 </button>
+
+                <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+                    <button
+                        onClick={handleFavoriteClick}
+                        disabled={isFavoriteLoading}
+                        className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md group/fav"
+                    >
+                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-primary text-primary' : 'text-white group-hover/fav:text-primary'}`} />
+                    </button>
+                    <button className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
+                        <Share2 className="w-4 h-4" />
+                    </button>
+                </div>
                 
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-full opacity-20 pointer-events-none">
                     <div className="absolute top-0 left-0 w-full h-[90px] bg-[#F5F5F5] dark:bg-[#0f1115]" />

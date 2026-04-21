@@ -191,3 +191,15 @@ export const getSimilarTurfs = async (turfId) => {
         return [];
     });
 };
+
+/**
+ * Toggle interest for a specific turf
+ * @param {string} turfId 
+ * @returns {Promise<Object>}
+ */
+export const toggleTurfInterest = async (turfId, interested) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.TURFS.INTEREST(turfId), { interested });
+        return response.data;
+    }, 'toggle turf interest');
+};

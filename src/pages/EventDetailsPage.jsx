@@ -5,9 +5,9 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import StoreCard from '../components/StoreCard';
-import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Ticket, Share2, Globe, Phone, Mail, Instagram, Twitter, Facebook, ExternalLink, Info, Star, ChevronLeft, ChevronRight, PartyPopper, ShoppingBag, Heart } from 'lucide-react';
 import SEO from '../components/SEO';
-import { getEventDetails, reserveEventTickets, getSimilarEvents } from '../services/eventService';
+import { getEventDetails, reserveEventTickets, getSimilarEvents, toggleEventInterest } from '../services/eventService';
 import apiCacheManager from '../services/apiCacheManager';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +35,8 @@ const EventDetailsPage = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const storeScrollRef = useRef(null);
     const galleryScrollRef = useRef(null);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
     // Multi-day selection state
     const [selectedShowTimeIndex, setSelectedShowTimeIndex] = useState(0);
@@ -85,6 +87,7 @@ const EventDetailsPage = () => {
                     console.error('Failed to fetch similar events:', err);
                     setSimilarEvents([]);
                 }
+                setIsFavorite(foundEvent.isInterested || false);
             } else {
                 setError('Event not found');
             }
@@ -234,6 +237,28 @@ const EventDetailsPage = () => {
         }
     };
 
+    const handleFavoriteClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            openLogin();
+            return;
+        }
+
+        setIsFavoriteLoading(true);
+        try {
+            const res = await toggleEventInterest(event.id || event._id, !isFavorite);
+            if (res.success) {
+                setIsFavorite(!isFavorite);
+            }
+        } catch (error) {
+            console.error('Error toggling interest:', error);
+        } finally {
+            setIsFavoriteLoading(false);
+        }
+    };
+
     const scrollStore = (direction) => {
         if (storeScrollRef.current) {
             const scrollAmount = direction === 'left' ? -300 : 300;
@@ -357,7 +382,14 @@ const EventDetailsPage = () => {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
 
-                <div className="absolute top-6 right-6 z-50">
+                <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+                    <button
+                        onClick={handleFavoriteClick}
+                        disabled={isFavoriteLoading}
+                        className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md group/fav"
+                    >
+                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-primary text-primary' : 'text-white group-hover/fav:text-primary'}`} />
+                    </button>
                     <button className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
                         <Share2 className="w-4 h-4 ml-[-2px]" />
                     </button>

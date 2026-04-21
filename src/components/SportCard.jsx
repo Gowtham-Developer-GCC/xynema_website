@@ -13,7 +13,6 @@ const SportCard = memo(({ event }) => {
 
     const displayImage = event.imageUrl || (event.images && event.images[0]?.url) || event.primaryImage || 'https://placehold.co/800x400';
 
-
     return (
         <div 
             onClick={handleNavigate}
@@ -86,5 +85,7 @@ const SportCard = memo(({ event }) => {
         </div>
     );
 });
+
+SportCard.displayName = 'SportCard';
 
 export default SportCard;

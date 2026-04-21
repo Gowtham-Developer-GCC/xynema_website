@@ -19,6 +19,7 @@ export const ENDPOINTS = {
         DETAILS: (eventId) => `/movies/events/${eventId}`,
         SIMILAR: (eventId) => `/movies/similar-events/${eventId}`,
         ENQUIRY: '/events/enquiry',
+        INTEREST: (eventId) => `/movies/interest/event/${eventId}`,
     },
 
     // Booking & Seats
@@ -75,6 +76,7 @@ export const ENDPOINTS = {
         CANCEL: '/customer-turf/cancel-reservation',
         MY_BOOKINGS: '/customer-turf/my-bookings',
         BOOKING_DETAILS: (bookingId) => `/customer-turf/booking/${bookingId}`,
-        SIMILAR: (turfId) => `/customer-turf/similar-turfs/${turfId}`
+        SIMILAR: (turfId) => `/customer-turf/similar-turfs/${turfId}`,
+        INTEREST: (turfId) => `/movies/interest/turf/${turfId}`,
     }
 };

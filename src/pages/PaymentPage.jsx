@@ -209,7 +209,7 @@ const PaymentPage = () => {
         return calculateBookingTotal(ticketsTotal, snackTotal);
     }, [bookingState?.pricing, ticketsTotal, snackTotal]);
 
-    const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
+    const { convenienceFee, gstAmount, discount, finalTotal: grandTotal } = pricingStatus;
 
 
     const localDisplayTitle = show?.movie?.title || show?.movie?.MovieName || show?.movieName || sessionStorage.getItem('booking_movie_title') || 'Movie';
@@ -521,6 +521,12 @@ const PaymentPage = () => {
                                             <span>GST</span>
                                             <span className="font-bold text-gray-900 dark:text-white">₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
+                                        {discount > 0 && (
+                                            <div className="flex justify-between text-[13px] text-green-600 dark:text-green-400">
+                                                <span>Coupon Discount</span>
+                                                <span className="font-bold">- ₹{discount.toLocaleString()}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

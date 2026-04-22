@@ -74,3 +74,13 @@ export const logout = async () => {
         removeUser();
     }
 };
+
+export const getCoupons = async () => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.USER.COUPONS);
+        if (response.data.success) {
+            return response.data.data.coupons;
+        }
+        return [];
+    });
+};

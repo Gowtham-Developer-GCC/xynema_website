@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { ChevronRight, Star, Heart, TrendingUp, ThumbsUp, AlertCircle, X, CheckCircle, Calendar, MapPin, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useLanguage } from '../context/LanguageContext';
 import ErrorState from '../components/ErrorState';
 import { optimizeImage } from '../utils/helpers';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -18,6 +19,7 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const HomePage = ({ selectedCity }) => {
     const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { t } = useLanguage();
 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -104,7 +106,7 @@ const HomePage = ({ selectedCity }) => {
     }, [upcomingMovies]);
 
     // Loading State -> Common Loading Animation
-    if (loading && !movies?.length) return <LoadingScreen message="Finding the best movies for you..." />;
+    if (loading && !movies?.length) return <LoadingScreen message={t('loading_movies') || 'Finding the best movies for you...'} />;
 
     // Error State
     if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Connection Failed" />;
@@ -174,7 +176,7 @@ const HomePage = ({ selectedCity }) => {
                     <section id="recommended-section" className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
-                                Recommended for you
+                                {t('recommended_for_you')}
                             </h2>
                             <Link to="/movies?tab=now-showing" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
@@ -298,7 +300,7 @@ const HomePage = ({ selectedCity }) => {
                     <section className="relative mt-16 group/events">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
-                                Trending events
+                                {t('trending_events')}
                             </h2>
                             <Link to="/events" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
                                 <ChevronRight className="w-5 h-5" />
@@ -347,11 +349,11 @@ const HomePage = ({ selectedCity }) => {
                     <section className="relative mt-16 mb-8 group/store">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
-                                Official merchandise
+                                {t('official_merchandise')}
                             </h2>
                             <Link to="" className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2 font-medium text-sm">
                                 <ShoppingBag className="w-4 h-4" />
-                                Visit Store
+                                {t('visit_store')}
                             </Link>
                         </div>
 

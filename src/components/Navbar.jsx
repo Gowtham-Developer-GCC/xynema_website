@@ -3,6 +3,7 @@ import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UniversalSearch from './UniversalSearch';
 
@@ -21,6 +22,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const { user, logoutUser, openLogin } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
     const searchRef = useRef(null);
@@ -122,12 +124,12 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     }, [isMobileSearchOpen]);
 
     const sidebarItems = [
-        { icon: Ticket, title: 'My tickets', path: '/bookings' },
-        { icon: CreditCard, title: 'Payment methods', path: '/payment-methods' },
-        { icon: Gift, title: 'Offers & Promos', path: '/offers' },
-        { icon: Bell, title: 'Notifications', path: '/notifications' },
-        { icon: Shield, title: 'Account & settings', path: '/account-settings' },
-        { icon: HelpCircle, title: 'Help & support', path: '/help' },
+        { icon: Ticket, title: t('my_tickets') || 'My tickets', path: '/bookings' },
+        { icon: CreditCard, title: t('payment_methods') || 'Payment methods', path: '/payment-methods' },
+        { icon: Gift, title: t('offers_promos') || 'Offers & Promos', path: '/offers' },
+        { icon: Bell, title: t('notifications') || 'Notifications', path: '/notifications' },
+        { icon: Shield, title: t('account_settings'), path: '/account-settings' },
+        { icon: HelpCircle, title: t('help_center'), path: '/help' },
     ];
 
     return (
@@ -155,7 +157,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-all group text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm border border-white/60 dark:border-gray-700 shrink-0"
                             >
                                 <MapPin className="h-4 w-4" />
-                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[100px]">{selectedCity || 'City'}</span>
+                                <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[100px]">{selectedCity || t('select_city')}</span>
                                 <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-primary mb-0.5" />
                             </button>
                         </div>
@@ -163,19 +165,19 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {/* Center Zone: Nav Links - Perfectly centered using the Three-Zone pattern */}
                         <div className="hidden lg:flex flex-none items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 px-6">
                             <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary' : 'hover:text-primary'}`}>
-                                For You
+                                {t('for_you')}
                                 {location.pathname === '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
                             <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary' : 'hover:text-primary'}`}>
-                                Movies
+                                {t('movies')}
                                 {location.pathname.startsWith('/movies') && location.pathname !== '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
                             <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary' : 'hover:text-primary'}`}>
-                                Events
+                                {t('events')}
                                 {location.pathname.startsWith('/events') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
                             <Link to="/sports" className={`relative py-1 transition-colors ${location.pathname.startsWith('/sports') ? 'text-primary' : 'hover:text-primary'}`}>
-                                Sports
+                                {t('sports')}
                                 {location.pathname.startsWith('/sports') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
                         </div>
@@ -217,7 +219,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         onClick={openLogin}
                                         className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm hidden xl:block"
                                     >
-                                        Sign Up
+                                        {t('sign_up')}
                                     </button>
                                 )}
                             </div>
@@ -325,7 +327,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             {/* Name & Email */}
                             <div className="space-y-0.5">
                                 <h2 className={`text-[15px] font-medium leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    {user ? user.displayName : 'Welcome!'}
+                                    {user ? user.displayName : t('welcome') || 'Welcome!'}
                                 </h2>
                                 {user?.email && (
                                     <p className={`text-[12px] font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -373,10 +375,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             {/* Mobile Only Browsing Links */}
                             <div className="2xl:hidden pb-2 mb-2">
                                 {[
-                                    { to: '/#recommended-section', label: 'For You', icon: Heart, active: location.pathname === '/' },
-                                    { to: '/movies', label: 'Movies', icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
-                                    { to: '/events', label: 'Events', icon: Calendar, active: location.pathname.startsWith('/events') },
-                                    { to: '/sports', label: 'Sports', icon: MapPin, active: location.pathname.startsWith('/sports') },
+                                    { to: '/#recommended-section', label: t('for_you'), icon: Heart, active: location.pathname === '/' },
+                                    { to: '/movies', label: t('movies'), icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
+                                    { to: '/events', label: t('events'), icon: Calendar, active: location.pathname.startsWith('/events') },
+                                    { to: '/sports', label: t('sports'), icon: MapPin, active: location.pathname.startsWith('/sports') },
                                 ].map((nav) => (
                                     <Link
                                         key={nav.to}
@@ -429,7 +431,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     }}
                                 >
                                     <LogOut className="w-4 h-4" />
-                                    Log out
+                                    {t('logout') || 'Log out'}
                                 </button>
                             </div>
                         )}
@@ -454,7 +456,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <div className={`p-1 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-primary/10' : ''}`}>
                                     <Heart className={`w-5 h-5 ${location.pathname === '/' ? 'fill-current' : ''}`} />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">For You</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('for_you')}</span>
                             </Link>
 
                             <Link
@@ -467,7 +469,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'bg-primary/10' : ''}`}>
                                     <Play className={`w-5 h-5 ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'fill-current' : ''}`} />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Movies</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('movies')}</span>
                             </Link>
 
                             <Link
@@ -480,7 +482,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/events') ? 'bg-primary/10' : ''}`}>
                                     <Calendar className={`w-5 h-5 ${location.pathname.startsWith('/events') ? 'fill-current' : ''}`} />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Events</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('events')}</span>
                             </Link>
 
                             <Link
@@ -493,7 +495,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/sports') ? 'bg-primary/10' : ''}`}>
                                     <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/sports') ? 'fill-current' : ''}`} />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Sports</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('sports')}</span>
                             </Link>
                         </div>
                     </div>

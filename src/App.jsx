@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import { DataProvider } from './context/DataContext';
+import { LanguageProvider } from './context/LanguageContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import SEO from './components/SEO';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -113,6 +114,7 @@ export default function App() {
                     <ScrollToTop />
                     <BookingFlowGuard />
                     {isOffline && <OfflineScreen />}
+                    <LanguageProvider>
                     <DataProvider selectedCity={selectedCity}>
                         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
                             <SEO />
@@ -193,6 +195,7 @@ export default function App() {
                             </Suspense>
                         </div>
                     </DataProvider>
+                    </LanguageProvider>
                 </Router>
             )}
         </HelmetProvider>

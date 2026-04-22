@@ -3,12 +3,14 @@ import { useSearchParams, useNavigate, useLocation, useParams } from 'react-rout
 import { ArrowLeft, Info, ShieldCheck, ChevronRight, MapPin, Calendar, Clock, MonitorPlay } from 'lucide-react';
 import * as api from '../services/api';
 import { getShowSeats, getFoodAndBeverages, lockSeats } from '../services/bookingService';
+import { getCoupons } from '../services/userService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
+import { Ticket, Tag, CheckCircle2, XCircle, Gift } from 'lucide-react';
 
 const BookingSummaryPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -59,6 +61,16 @@ const BookingSummaryPage = () => {
     const [foodItems, setFoodItems] = useState([]);
     const [error, setError] = useState(null);
     const [isLocking, setIsLocking] = useState(false);
+    
+    // Coupons state
+    const [availableCoupons, setAvailableCoupons] = useState([]);
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [promoCode, setPromoCode] = useState('');
+    const [couponError, setCouponError] = useState(null);
+    const [showCouponList, setShowCouponList] = useState(false);
+    const [discount, setDiscount] = useState(0);
+    const [showCelebration, setShowCelebration] = useState(false);
+
     const hasProceededRef = useRef(false);
     const seatsRef = useRef(seats);
     const hasFetchedData = useRef(false);
@@ -104,6 +116,14 @@ const BookingSummaryPage = () => {
                 // No longer needed to clear show if we have it from state or previous steps
                 setShowSeats([]); // No longer needed as we use selectedSeats from draft
                 setFoodItems(foodItemsData);
+
+                // Fetch coupons
+                try {
+                    const coupons = await getCoupons();
+                    setAvailableCoupons(coupons || []);
+                } catch (couponErr) {
+                    console.error('Failed to fetch coupons:', couponErr);
+                }
             } catch (err) {
                 console.error('Data fetch error in summary:', err);
                 setError('Failed to load booking summary');
@@ -145,8 +165,63 @@ const BookingSummaryPage = () => {
         }, 0);
     }, [cart, foodItems]);
 
-    const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal);
+    const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal, discount);
     const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
+
+    const handleApplyCoupon = (code) => {
+        setCouponError(null);
+        const codeToTry = code || promoCode;
+        
+        if (!codeToTry) {
+            setCouponError('Please enter a coupon code');
+            return;
+        }
+
+        const coupon = availableCoupons.find(c => c.coupon_code.toUpperCase() === codeToTry.toUpperCase());
+        
+        if (!coupon) {
+            setCouponError('Invalid coupon code');
+            setDiscount(0);
+            setAppliedCoupon(null);
+            return;
+        }
+
+        // Validate coupon
+        const subtotal = ticketsTotal + snackTotal;
+        if (coupon.min_order_value && subtotal < coupon.min_order_value) {
+            setCouponError(`Minimum order value of ₹${coupon.min_order_value} required`);
+            setDiscount(0);
+            setAppliedCoupon(null);
+            return;
+        }
+
+        // Calculate discount
+        let calculatedDiscount = 0;
+        if (coupon.discount_type === 'flat') {
+            calculatedDiscount = coupon.discount_amount;
+        } else if (coupon.discount_type === 'percentage') {
+            calculatedDiscount = (subtotal * coupon.discount_percentage) / 100;
+            if (coupon.max_discount && calculatedDiscount > coupon.max_discount) {
+                calculatedDiscount = coupon.max_discount;
+            }
+        }
+
+        setDiscount(calculatedDiscount);
+        setAppliedCoupon(coupon);
+        setPromoCode(coupon.coupon_code);
+        setShowCouponList(false);
+        setShowCelebration(true);
+        
+        // Auto-close celebration after 3 seconds
+        setTimeout(() => setShowCelebration(false), 5000);
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setDiscount(0);
+        setPromoCode('');
+        setCouponError(null);
+    };
     const handleProceedToPayment = async () => {
         if (isLocking) return;
         setIsLocking(true);
@@ -171,7 +246,8 @@ const BookingSummaryPage = () => {
                     ...bookingState,
                     sessionId: newSessionId,
                     pricing: pricingStatus, // Store the calculated totals
-                    show: show // Store show metadata for downstream use
+                    show: show, // Store show metadata for downstream use
+                    appliedCoupon: appliedCoupon
                 };
                 sessionStorage.setItem(`booking_draft_${showId}`, JSON.stringify(updatedDraft));
 
@@ -367,6 +443,12 @@ const BookingSummaryPage = () => {
                                     <p className="text-gray-900 dark:text-white font-bold">₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                             )}
+                            {discount > 0 && (
+                                <div className="flex justify-between text-xs font-medium font-roboto text-green-600 dark:text-green-400">
+                                    <p className="tracking-widest text-[10px] font-black uppercase">Coupon Discount</p>
+                                    <p className="font-bold">- ₹{discount.toLocaleString()}</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Total Highlight */}
@@ -375,6 +457,115 @@ const BookingSummaryPage = () => {
                             <p className="text-xl font-black text-primary font-roboto">₹{grandTotal.toLocaleString()}</p>
                         </div>
                     </div>
+                </div>
+
+                {/* Promo Code Section */}
+                <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 p-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-5 h-5 text-primary" />
+                        <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-widest uppercase font-roboto">Offers & Promo Codes</h3>
+                    </div>
+
+                    {!appliedCoupon ? (
+                        <div className="space-y-4">
+                            <div className="relative flex gap-2">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Promo Code"
+                                        value={promoCode}
+                                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-roboto"
+                                    />
+                                    {promoCode && (
+                                        <button 
+                                            onClick={() => setPromoCode('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            <XCircle size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => handleApplyCoupon()}
+                                    className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest uppercase hover:bg-primary/90 transition-colors shadow-sm font-roboto"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                            
+                            {couponError && (
+                                <p className="text-[11px] font-bold text-red-500 font-roboto pl-1">{couponError}</p>
+                            )}
+
+                            {availableCoupons.length > 0 && !showCouponList && (
+                                <button 
+                                    onClick={() => setShowCouponList(true)}
+                                    className="text-primary text-[11px] font-black tracking-widest uppercase flex items-center gap-1.5 font-roboto"
+                                >
+                                    View Available Offers <ChevronRight size={14} />
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/20 p-4 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
+                                    <CheckCircle2 size={20} />
+                                </div>
+                                <div className="font-roboto">
+                                    <p className="text-[10px] font-black text-green-600 dark:text-green-400 tracking-widest uppercase mb-0.5">Applied</p>
+                                    <p className="text-sm font-black text-gray-900 dark:text-white uppercase">{appliedCoupon.coupon_code}</p>
+                                    <p className="text-[11px] font-medium text-green-600/80">₹{discount.toLocaleString()} saved on this booking!</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={handleRemoveCoupon}
+                                className="text-red-500 hover:text-red-600 text-[10px] font-black tracking-widest uppercase font-roboto"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    )}
+
+                    {showCouponList && (
+                        <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="text-[10px] font-black text-gray-400 tracking-widest uppercase font-roboto">Available Coupons</p>
+                                <button onClick={() => setShowCouponList(false)} className="text-gray-400 text-[10px] font-bold uppercase font-roboto">Hide</button>
+                            </div>
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {availableCoupons.map((coupon) => (
+                                    <div 
+                                        key={coupon._id}
+                                        className="group relative bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer"
+                                        onClick={() => handleApplyCoupon(coupon.coupon_code)}
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center text-primary shadow-sm">
+                                                    <Gift size={16} />
+                                                </div>
+                                                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight font-roboto">{coupon.coupon_code}</p>
+                                            </div>
+                                            <div className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-md uppercase tracking-widest">
+                                                {coupon.discount_type === 'flat' ? `₹${coupon.discount_amount} OFF` : `${coupon.discount_percentage}% OFF`}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 font-roboto leading-relaxed">
+                                            {coupon.description}
+                                        </p>
+                                        <div className="flex items-center justify-between border-t border-gray-200/10 pt-3 mt-1">
+                                            <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 font-roboto uppercase tracking-widest">
+                                                Min. Order: ₹{coupon.min_order_value}
+                                            </p>
+                                            <button className="text-[9px] font-black text-primary uppercase tracking-widest group-hover:underline">Apply</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
 
@@ -394,6 +585,66 @@ const BookingSummaryPage = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Celebration Modal */}
+            {showCelebration && appliedCoupon && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                        onClick={() => setShowCelebration(false)}
+                    ></div>
+                    
+                    {/* Modal Content */}
+                    <div className="relative bg-white dark:bg-gray-900 rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-zoom-in border border-green-100 dark:border-green-900/30">
+                        {/* Confetti Background effect */}
+                        <div className="absolute inset-0 pointer-events-none opacity-20">
+                            {[...Array(12)].map((_, i) => (
+                                <div 
+                                    key={i}
+                                    className={`absolute w-3 h-3 rounded-full animate-bounce`}
+                                    style={{
+                                        top: `${Math.random() * 100}%`,
+                                        left: `${Math.random() * 100}%`,
+                                        backgroundColor: ['#E91E63', '#4CAF50', '#2196F3', '#FFC107'][i % 4],
+                                        animationDelay: `${i * 0.1}s`,
+                                        animationDuration: `${1 + Math.random()}s`
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="p-8 flex flex-col items-center text-center">
+                            {/* Success Icon */}
+                            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6 relative">
+                                <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping"></div>
+                                <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400 relative z-10" />
+                            </div>
+
+                            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2 font-roboto uppercase tracking-tight">
+                                Congratulations!
+                            </h2>
+                            <p className="text-gray-500 dark:text-gray-400 mb-6 font-roboto">
+                                You just unlocked a massive saving!
+                            </p>
+
+                            <div className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-dashed border-green-200 dark:border-green-900/30 mb-8">
+                                <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-[0.2em] uppercase mb-2">Saved with {appliedCoupon.coupon_code}</p>
+                                <p className="text-4xl font-black text-green-600 dark:text-green-400 font-roboto">
+                                    ₹{discount.toLocaleString()}
+                                </p>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowCelebration(false)}
+                                className="w-full bg-primary text-white py-4 rounded-xl font-black text-sm tracking-widest uppercase hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 font-roboto"
+                            >
+                                Awesome!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

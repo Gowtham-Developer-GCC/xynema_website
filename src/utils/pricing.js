@@ -16,16 +16,17 @@ export const PRICING_CONFIG = {
  * @param {number} snackTotal - Subtotal of all added food and beverage items
  * @returns {Object} breakdown - Detailed price components
  */
-export const calculateBookingTotal = (ticketsTotal = 0, snackTotal = 0) => {
+export const calculateBookingTotal = (ticketsTotal = 0, snackTotal = 0, discount = 0) => {
     const convenienceFee = ticketsTotal * PRICING_CONFIG.CONVENIENCE_FEE_PERCENT;
     const gstAmount = convenienceFee * PRICING_CONFIG.GST_RATE;
-    const finalTotal = ticketsTotal + snackTotal + convenienceFee + gstAmount;
+    const finalTotal = Math.max(0, ticketsTotal + snackTotal + convenienceFee + gstAmount - discount);
 
     return {
         ticketsTotal,
         snackTotal,
         convenienceFee,
         gstAmount,
+        discount,
         finalTotal,
         // Helper to format currency values consistently
         format: (val) => val.toLocaleString('en-IN', { 

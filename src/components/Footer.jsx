@@ -1,8 +1,10 @@
 import React from 'react';
 import { Facebook, Instagram, Youtube, Linkedin, Phone, Mail, MapPin, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
+    const { t } = useLanguage();
     return (
         <footer className="bg-[#1a202c] text-gray-400 font-sans text-sm relative z-10 w-full mt-20 border-t border-gray-800 pb-24 lg:pb-0 print:hidden">
             {/* Main Footer Content */}
@@ -26,7 +28,7 @@ const Footer = () => {
                         </div>
 
                         <p className="text-sm text-gray-400 leading-relaxed mb-10 max-w-sm">
-                            Your ultimate destination for booking movie tickets, discovering events, and streaming premium content.
+                            {t('footer_tagline') || 'Your ultimate destination for booking movie tickets, discovering events, and streaming premium content.'}
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-stretch lg:items-center gap-4 sm:gap-6 md:gap-10">
@@ -35,7 +37,7 @@ const Footer = () => {
                                     <Phone className="w-5 h-5 text-primary/80 group-hover:scale-110 transition-transform" />
                                 </div>
                                 <div className="flex flex-col gap-0.5">
-                                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-500 uppercase tracking-widest leading-none">Call Us</span>
+                                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-500 uppercase tracking-widest leading-none">{t('call_us') || 'Call Us'}</span>
                                     <span className="text-sm font-bold text-gray-300 whitespace-nowrap">0484-4531182</span>
                                 </div>
                             </a>
@@ -45,7 +47,7 @@ const Footer = () => {
                                     <Mail className="w-5 h-5 text-primary/80 group-hover:scale-110 transition-transform" />
                                 </div>
                                 <div className="flex flex-col gap-0.5">
-                                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-500 uppercase tracking-widest leading-none">Email Support</span>
+                                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-500 uppercase tracking-widest leading-none">{t('email_support') || 'Email Support'}</span>
                                     <span className="text-sm font-bold text-gray-300">care@xynema.in</span>
                                 </div>
                             </a>
@@ -64,35 +66,35 @@ const Footer = () => {
                     {/* Links Columns */}
                     <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8 md:pl-10">
                         <div>
-                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">Movies</h4>
+                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('movies')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/movies" className="text-gray-500 hover:text-primary transition-colors">Now Showing</Link></li>
-                                <li><Link to="/movies?tab=upcoming" className="text-gray-500 hover:text-primary transition-colors">Coming Soon</Link></li>
+                                <li><Link to="/movies" className="text-gray-500 hover:text-primary transition-colors">{t('now_showing')}</Link></li>
+                                <li><Link to="/movies?tab=upcoming" className="text-gray-500 hover:text-primary transition-colors">{t('coming_soon')}</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">Events</h4>
+                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('events')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/events" className="text-gray-500 hover:text-primary transition-colors">Public Events</Link></li>
-                                <li><Link to="/private-events" className="text-gray-500 hover:text-primary transition-colors">Private Hosting</Link></li>
+                                <li><Link to="/events" className="text-gray-500 hover:text-primary transition-colors">{t('public_events')}</Link></li>
+                                <li><Link to="/private-events" className="text-gray-500 hover:text-primary transition-colors">{t('private_hosting')}</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">Company</h4>
+                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('company')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/about" className="text-gray-500 hover:text-primary transition-colors">About Us</Link></li>
-                                <li><Link to="/help" className="text-gray-500 hover:text-primary transition-colors">Help Center</Link></li>
+                                <li><Link to="/about" className="text-gray-500 hover:text-primary transition-colors">{t('about_us')}</Link></li>
+                                <li><Link to="/help" className="text-gray-500 hover:text-primary transition-colors">{t('help_center')}</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">Terms & Policies</h4>
+                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('terms_policies')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/terms" className="text-gray-500 hover:text-primary transition-colors">Terms of Service</Link></li>
-                                <li><Link to="/privacy" className="text-gray-500 hover:text-primary transition-colors">Privacy Policy</Link></li>
-                                <li><Link to="/refund" className="text-gray-500 hover:text-primary transition-colors">Refund Policy</Link></li>
+                                <li><Link to="/terms" className="text-gray-500 hover:text-primary transition-colors">{t('terms_service')}</Link></li>
+                                <li><Link to="/privacy" className="text-gray-500 hover:text-primary transition-colors">{t('privacy_policy')}</Link></li>
+                                <li><Link to="/refund" className="text-gray-500 hover:text-primary transition-colors">{t('refund_policy')}</Link></li>
                             </ul>
                         </div>
                     </div>
@@ -117,10 +119,10 @@ const Footer = () => {
 
                     <div className="flex flex-col items-center md:items-end gap-1.5">
                         <p className="text-xs text-gray-500 tracking-wide">
-                            © 2026 Xynema. All rights reserved.
+                            {t('copyright')}
                         </p>
                         <p className="text-[11px] text-gray-600 font-medium flex items-center gap-1 opacity-80">
-                            Made with <span className="text-gray-500 text-[10px]">♥</span> in India
+                            {t('made_with')} <span className="text-gray-500 text-[10px]">♥</span> {t('in_india')}
                         </p>
                     </div>
                 </div>
@@ -130,7 +132,7 @@ const Footer = () => {
             {/* Absolute Bottom Strip */}
             <div className="bg-[#151924]/80 backdrop-blur-sm py-8 lg:py-4 px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-6 border-t border-gray-800/30">
                 <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4">
-                    <span className="text-[10px] sm:text-[11px] text-gray-600 font-black uppercase tracking-wider md:mr-2 w-full md:w-auto text-center md:text-left mb-2 md:mb-0">We accept:</span>
+                    <span className="text-[10px] sm:text-[11px] text-gray-600 font-black uppercase tracking-wider md:mr-2 w-full md:w-auto text-center md:text-left mb-2 md:mb-0">{t('accept_payments')}</span>
                     {['Visa', 'Mastercard', 'UPI', 'Rupay'].map(method => (
                         <div key={method} className="bg-[#1c2230] border border-white/5 text-gray-500 text-[9px] font-black px-3 py-1.5 rounded uppercase tracking-widest shadow-sm">
                             {method}
@@ -140,7 +142,7 @@ const Footer = () => {
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     <div className="flex items-center lg:border-r border-gray-800/80 lg:pr-6 lg:mr-2">
-                        <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Download App</span>
+                        <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">{t('download_app')}</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <a href="#" className="transition-all hover:scale-105 active:scale-95 duration-200 shadow-lg rounded-md overflow-hidden border border-white/5 shrink-0">

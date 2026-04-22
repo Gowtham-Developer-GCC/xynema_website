@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const AccountSettingsPage = () => {
     const navigate = useNavigate();
     const { user, updateUser } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
+    const { language, setLanguage, t } = useLanguage();
 
     const [activeTab, setActiveTab] = useState('profile');
     const [showPassword, setShowPassword] = useState(false);
@@ -20,19 +22,24 @@ const AccountSettingsPage = () => {
         name: user?.displayName || 'GOWTHAM MAYA LABS',
         email: user?.email || 'emp6mayalabs@gmail.com',
         phone: user?.phoneNumber || '+91 9876543210',
-        language: 'English (US)',
+        language: language,
         region: 'India'
     });
 
+    const [tempLanguage, setTempLanguage] = useState(language);
+
     const categories = [
-        { id: 'profile', label: 'Profile Info', icon: User },
-        { id: 'security', label: 'Security', icon: Lock },
-        { id: 'preferences', label: 'Preferences', icon: Globe },
-        { id: 'privacy', label: 'Privacy', icon: Shield },
+        { id: 'profile', label: t('profile_info'), icon: User },
+        { id: 'security', label: t('security'), icon: Lock },
+        { id: 'preferences', label: t('preferences'), icon: Globe },
+        { id: 'privacy', label: t('privacy'), icon: Shield },
     ];
 
     const handleSave = () => {
         setIsSaving(true);
+        // Apply language change
+        setLanguage(tempLanguage);
+        
         // Mock save logic
         setTimeout(() => {
             setIsSaving(false);
@@ -89,7 +96,7 @@ const AccountSettingsPage = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">
-                            Account <span className="text-primary">& Settings</span>
+                            {t('account_settings').split(' & ')[0]} <span className="text-primary">& {t('account_settings').split(' & ')[1]}</span>
                         </h1>
                     </div>
                 </div>
@@ -122,9 +129,9 @@ const AccountSettingsPage = () => {
                         {/* Theme Quick Toggle Card */}
                         <div className="mt-6 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[32px] p-6 text-white shadow-xl shadow-indigo-600/10 relative overflow-hidden group">
                             <div className="relative z-10 flex flex-col h-full">
-                                <h4 className="text-xs font-black uppercase tracking-widest mb-4 opacity-80">Quick Settings</h4>
+                                <h4 className="text-xs font-black uppercase tracking-widest mb-4 opacity-80">{t('quick_settings')}</h4>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Dark Mode</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('dark_mode')}</span>
                                     <button 
                                         onClick={toggleTheme}
                                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-white/20`}
@@ -144,8 +151,8 @@ const AccountSettingsPage = () => {
                             {activeTab === 'profile' && (
                                 <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                     <SectionHeader 
-                                        title="Personal Information" 
-                                        subtitle="Update your basic profile and contact details" 
+                                        title={t('personal_info')} 
+                                        subtitle={t('update_profile')} 
                                     />
 
                                     <div className="flex flex-col sm:flex-row items-center gap-8 mb-10">
@@ -169,21 +176,21 @@ const AccountSettingsPage = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <InputField 
-                                            label="Full Name" 
+                                            label={t('full_name')} 
                                             icon={User} 
                                             value={formData.name} 
                                             onChange={(val) => setFormData({...formData, name: val})}
                                             placeholder="GOWTHAM MAYA LABS" 
                                         />
                                         <InputField 
-                                            label="Email Address" 
+                                            label={t('email_address')} 
                                             icon={Mail} 
                                             value={formData.email} 
                                             onChange={(val) => setFormData({...formData, email: val})}
                                             placeholder="name@example.com" 
                                         />
                                         <InputField 
-                                            label="Phone Number" 
+                                            label={t('phone_number')} 
                                             icon={Phone} 
                                             value={formData.phone} 
                                             onChange={(val) => setFormData({...formData, phone: val})}
@@ -209,19 +216,19 @@ const AccountSettingsPage = () => {
                             {activeTab === 'security' && (
                                 <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                     <SectionHeader 
-                                        title="Account Security" 
-                                        subtitle="Manage your password and authentication methods" 
+                                        title={t('account_security')} 
+                                        subtitle={t('manage_password')} 
                                     />
 
                                     <div className="space-y-6">
                                         <InputField 
-                                            label="Current Password" 
+                                            label={t('current_password')} 
                                             icon={Lock} 
                                             type={showPassword ? "text" : "password"}
                                             placeholder="••••••••••••" 
                                         />
                                         <InputField 
-                                            label="New Password" 
+                                            label={t('new_password')} 
                                             icon={Lock} 
                                             type={showPassword ? "text" : "password"}
                                             placeholder="MIN 8 CHARACTERS" 
@@ -231,7 +238,7 @@ const AccountSettingsPage = () => {
                                             className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2 hover:opacity-80 transition-opacity"
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                            {showPassword ? "Hide Passwords" : "Show Passwords"}
+                                            {showPassword ? t('hide_passwords') : t('show_passwords')}
                                         </button>
                                     </div>
 
@@ -243,12 +250,12 @@ const AccountSettingsPage = () => {
                                                 <Shield className="w-5 h-5 text-orange-500" />
                                             </div>
                                             <div>
-                                                <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Two-Factor Authentication</h4>
-                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Enhance your account safety</p>
+                                                <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">{t('two_factor')}</h4>
+                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('enhance_safety')}</p>
                                             </div>
                                         </div>
                                         <button className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-gray-800 text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-gray-700 transition-colors">
-                                            Configure
+                                            {t('configure')}
                                         </button>
                                     </div>
                                 </div>
@@ -257,15 +264,15 @@ const AccountSettingsPage = () => {
                             {activeTab === 'privacy' && (
                                 <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                     <SectionHeader 
-                                        title="Privacy & Data" 
-                                        subtitle="Manage how your data is used and shared" 
+                                        title={t('privacy_data')} 
+                                        subtitle={t('manage_data')} 
                                     />
 
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between group">
                                             <div>
-                                                <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Public Profile</h4>
-                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Allow others to see your reviews</p>
+                                                <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">{t('public_profile')}</h4>
+                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('allow_reviews')}</p>
                                             </div>
                                             <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary border-2 border-transparent">
                                                 <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white transition duration-200" />
@@ -276,8 +283,8 @@ const AccountSettingsPage = () => {
 
                                         <div className="flex items-center justify-between group">
                                             <div>
-                                                <h4 className="text-[11px] font-black text-red-500 uppercase tracking-wider">Delete Account</h4>
-                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Permanently remove your Xynema data</p>
+                                                <h4 className="text-[11px] font-black text-red-500 uppercase tracking-wider">{t('delete_account')}</h4>
+                                                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('remove_data')}</p>
                                             </div>
                                             <button className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all">
                                                 <Trash2 className="w-4 h-4" />
@@ -290,18 +297,22 @@ const AccountSettingsPage = () => {
                             {activeTab === 'preferences' && (
                                 <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                     <SectionHeader 
-                                        title="General Preferences" 
-                                        subtitle="Customize your experience within the app" 
+                                        title={t('general_preferences')} 
+                                        subtitle={t('customize_experience')} 
                                     />
 
                                     <div className="grid grid-cols-1 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Interface Language</label>
-                                            <select className="w-full bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl px-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 appearance-none">
-                                                <option>English (US)</option>
-                                                <option>Hindi</option>
-                                                <option>Malayalam</option>
-                                                <option>Spanish</option>
+                                            <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">{t('interface_language')}</label>
+                                            <select 
+                                                value={tempLanguage}
+                                                onChange={(e) => setTempLanguage(e.target.value)}
+                                                className="w-full bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl px-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 appearance-none bg-no-repeat bg-[right_1.25rem_center] bg-[length:1em_1em] cursor-pointer"
+                                            >
+                                                <option value="English (US)">English (US)</option>
+                                                <option value="Malayalam">Malayalam</option>
+                                                <option value="Hindi">Hindi (Soon)</option>
+                                                <option value="Spanish">Spanish (Soon)</option>
                                             </select>
                                         </div>
 
@@ -313,8 +324,8 @@ const AccountSettingsPage = () => {
                                                     <Bell className="w-5 h-5 text-indigo-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Newsletter Subscription</h4>
-                                                    <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Get weekly movie recommendations</p>
+                                                    <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{t('newsletter_subscription')}</h4>
+                                                    <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('get_weekly_recommendations')}</p>
                                                 </div>
                                             </div>
                                             <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-indigo-500 border-2 border-transparent">
@@ -335,14 +346,14 @@ const AccountSettingsPage = () => {
                                     {isSaving ? (
                                         <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                     ) : (
-                                        "Save Changes"
+                                        t('save_changes')
                                     )}
                                 </button>
                                 <button 
                                     onClick={() => navigate(-1)}
                                     className="px-10 py-5 bg-gray-50 dark:bg-white/[0.03] text-gray-400 dark:text-gray-500 text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-all"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                             </div>
                         </div>
@@ -356,7 +367,7 @@ const AccountSettingsPage = () => {
             }`}>
                 <div className="bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl shadow-emerald-500/20 flex items-center gap-4">
                     <Check className="w-5 h-5" />
-                    <span className="text-xs font-black uppercase tracking-[0.2em]">Profile Updated</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">{t('profile_updated')}</span>
                 </div>
             </div>
         </div>

@@ -35,6 +35,7 @@ const PaymentButton = ({
     bookingData,
     onSuccess,
     onFailure,
+    onClick,
     className = "",
     disabled = false,
     children
@@ -42,7 +43,12 @@ const PaymentButton = ({
     const navigate = useNavigate();
     const [status, setStatus] = useState("idle"); // idle | loading | success | failed | cancelled
 
-    const handlePayment = async () => {
+    const handlePayment = async (e) => {
+        if (onClick) {
+            const shouldContinue = await onClick(e);
+            if (shouldContinue === false) return;
+        }
+
         if (disabled || status === "loading") return;
 
         setStatus("loading");

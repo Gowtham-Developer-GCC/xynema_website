@@ -540,7 +540,8 @@ export class User {
         this.email = userData.email || '';
         this.photoUrl = userData.photoUrl || userData.picture || userData.logoUrl || '';
         this.phoneNumber = userData.phoneNumber || userData.phone || '';
-        this.token = data.token || userData.token || '';
+        this.token = data.token || data.accessToken || userData.token || userData.accessToken || '';
+        this.loginMethod = userData.loginMethod || data.loginMethod || ''; // 'google' or 'phone'
         this.createdAt = userData.createdAt || new Date().toISOString();
     }
 
@@ -569,6 +570,7 @@ export class User {
             photoUrl: this.photoUrl,
             phoneNumber: this.phoneNumber,
             token: this.token,
+            loginMethod: this.loginMethod,
         };
     }
 }

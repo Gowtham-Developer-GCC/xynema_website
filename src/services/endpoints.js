@@ -50,6 +50,8 @@ export const ENDPOINTS = {
         PROFILE: '/user/profile',
         UPDATE: '/user/profile-update',
         GOOGLE_LOGIN: '/user/google',
+        PHONE_LOGIN: '/user/phone-login',
+        VERIFY_OTP: '/user/verify-phone-otp',
         LOGOUT: '/user/logout',
         COUPONS: '/user/coupons',
     },

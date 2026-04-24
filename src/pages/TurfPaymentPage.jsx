@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, CheckCircle, ChevronRight, Info, CreditCard, Smartphone, Building, Wallet, Ticket, Scissors, Percent, Tag } from 'lucide-react';
+import EmailPrompt from '../components/EmailPrompt';
+import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import { getTurfDetails, getAvailableSlots, reserveSlots, confirmTurfBooking, cancelTurfReservation } from "../services/turfService";
@@ -27,6 +29,7 @@ const TurfPaymentPage = () => {
     const [isAdvancePayment, setIsAdvancePayment] = useState(true);
     const [selectedMethod, setSelectedMethod] = useState('upi');
     const [timeLeft, setTimeLeft] = useState(reservation?.expiresInSeconds || 300);
+    const { user, isAuthenticated, ensureAuthAndEmail } = useAuth();
 
     const bookedRef = useRef(false);
     const cancelledRef = useRef(false);
@@ -80,6 +83,10 @@ const TurfPaymentPage = () => {
             await cancelTurfReservation(reservation.slotIds);
         }
         navigate(-1);
+    };
+
+    const handleBeforePayment = () => {
+        return ensureAuthAndEmail(() => handleBeforePayment());
     };
 
     const formatTime = (seconds) => {
@@ -340,6 +347,7 @@ const TurfPaymentPage = () => {
                                     }}
                                     onFailure={(err) => toast.error(err.message || 'Payment failed')}
                                     disabled={!isFormValid}
+                                    onClick={() => handleBeforePayment()}
                                     className={`w-full py-4 md:py-5 rounded-2xl font-black text-[14px] md:text-[16px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-primary/20
                                         ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none' : 'bg-primary hover:brightness-110 text-white'}`}
                                 >
@@ -376,6 +384,7 @@ const TurfPaymentPage = () => {
                     }}
                     onFailure={(err) => toast.error(err.message || 'Payment failed')}
                     disabled={!isFormValid}
+                    onClick={() => handleBeforePayment()}
                     className={`flex-1 h-14 rounded-2xl font-black text-[14px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2
                         ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
                 >

@@ -56,6 +56,7 @@ const Footer = lazy(() => import('./components/Footer'));
 const LoginModal = lazy(() => import('./components/LoginModal'));
 const CitySelectionModal = lazy(() => import('./components/CitySelectionModal'));
 const NotFoundState = lazy(() => import('./components/NotFoundState'));
+const EmailPrompt = lazy(() => import('./components/EmailPrompt'));
 const PageLoader = () => <LoadingScreen message="Loading your Cinema" />;
 
 function BookingFlowGuard() {
@@ -135,6 +136,7 @@ export default function App() {
                                     currentCity={selectedCity}
                                 />
                             </Suspense>
+    
     
                             <main className="flex-grow">
                                 <ErrorBoundary>

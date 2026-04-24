@@ -94,9 +94,11 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     useEffect(() => {
         if (location.state?.openLogin && !user) {
             openLogin();
+        }
+        if (location.state?.openLogin) {
             window.history.replaceState({}, document.title);
         }
-    }, [location, user, openLogin]);
+    }, [location.pathname]);
 
     // Handle click outside for search bar
     useEffect(() => {

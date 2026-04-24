@@ -1,39 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, Headphones, ChevronRight, MessageCircle, HelpCircle, FileText } from 'lucide-react';
-import { buttonStyles, cardStyles } from '../styles/components';
+import { 
+  ArrowLeft, Mail, Phone, Headphones, ChevronRight, 
+  MessageCircle, HelpCircle, FileText, X, Send 
+} from 'lucide-react';
 import SEO from '../components/SEO';
 
 const HelpCenter = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('contact');
-
     const [openFaq, setOpenFaq] = useState(null);
-
-    const toggleFaq = (index) => {
-        setOpenFaq(openFaq === index ? null : index);
-    };
-
-    const [reportForm, setReportForm] = useState({
-        issueType: '',
-        description: ''
-    });
+    const [reportForm, setReportForm] = useState({ issueType: '', description: '' });
     const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const handleReportSubmit = (e) => {
-        e.preventDefault();
-        // Simulate submission
-        setIsSubmitted(true);
-        setTimeout(() => setIsSubmitted(false), 3000);
-        setReportForm({ issueType: '', description: '' });
-    };
+    // ----- Chatbot State -----
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [messages, setMessages] = useState([
+        { sender: 'bot', text: "Hi! I'm XYNEMA's virtual assistant. Ask me anything about bookings, payments, refunds, or account issues." }
+    ]);
+    const [inputMessage, setInputMessage] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const chatEndRef = useRef(null);
 
-    const tabs = [
-        { id: 'faqs', label: 'FAQs', icon: HelpCircle },
-        { id: 'contact', label: 'Contact', icon: MessageCircle },
-        { id: 'report', label: 'Report', icon: FileText }
-    ];
-
+    // FAQ data (same as used in the FAQs tab)
     const faqItems = [
         {
             q: "How do I book tickets on XYNEMA?",
@@ -65,26 +54,89 @@ const HelpCenter = () => {
         }
     ];
 
+    // Helper: find best matching FAQ based on user's question
+    const findBestAnswer = (question) => {
+        const lowerQuestion = question.toLowerCase();
+        // Score each FAQ item by keyword matches
+        const scored = faqItems.map(item => {
+            const keywords = item.q.toLowerCase().split(/\s+/);
+            let score = 0;
+            keywords.forEach(keyword => {
+                if (lowerQuestion.includes(keyword)) score += 1;
+            });
+            return { ...item, score };
+        });
+        // Sort by score descending
+        scored.sort((a, b) => b.score - a.score);
+        const best = scored[0];
+        if (best && best.score > 0) {
+            return best.a;
+        }
+        return null;
+    };
+
+    // Auto-scroll to latest message
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
+    const handleSendMessage = async () => {
+        if (!inputMessage.trim()) return;
+        const userMsg = inputMessage.trim();
+        setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+        setInputMessage('');
+        setIsTyping(true);
+
+        // Simulate bot thinking
+        setTimeout(() => {
+            const answer = findBestAnswer(userMsg);
+            let botReply = '';
+            if (answer) {
+                botReply = answer;
+            } else {
+                botReply = "I'm sorry, I couldn't find an exact answer to your question. Would you like to contact our human support team? You can click the 'Start Chat' button again to reach a live agent or email us at care@xynema.in.";
+            }
+            setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
+            setIsTyping(false);
+        }, 800);
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    const tabs = [
+        { id: 'faqs', label: 'FAQs', icon: HelpCircle },
+        { id: 'contact', label: 'Contact', icon: MessageCircle },
+        { id: 'report', label: 'Report', icon: FileText }
+    ];
+
+    const handleReportSubmit = (e) => {
+        e.preventDefault();
+        setIsSubmitted(true);
+        setTimeout(() => setIsSubmitted(false), 3000);
+        setReportForm({ issueType: '', description: '' });
+    };
+
+    const toggleFaq = (index) => {
+        setOpenFaq(openFaq === index ? null : index);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#0f1115] transition-colors duration-300">
-            <SEO 
-                title="Help & Support | Xynema" 
-                description="Get in touch with Xynema support for any queries or issues."
-            />
+            <SEO title="Help & Support | Xynema" description="Get in touch with Xynema support for any queries or issues." />
 
             {/* Header Area */}
             <div className="bg-white dark:bg-[#151924] border-b border-gray-100 dark:border-gray-800 transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => navigate(-1)}
-                            className="p-2 mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
-                        >
+                        <button onClick={() => navigate(-1)} className="p-2 mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-roboto">
-                            Help & support
-                        </h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Help & support</h1>
                     </div>
                 </div>
 
@@ -96,15 +148,11 @@ const HelpCenter = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-8 py-5 text-sm font-semibold transition-all relative ${
-                                    activeTab === tab.id
-                                        ? 'text-primary'
-                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    activeTab === tab.id ? 'text-primary' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
                             >
                                 <span>{tab.label}</span>
-                                {activeTab === tab.id && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-in fade-in duration-300" />
-                                )}
+                                {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-in fade-in duration-300" />}
                             </button>
                         ))}
                     </div>
@@ -117,7 +165,7 @@ const HelpCenter = () => {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Welcome Text */}
                         <div className="mb-12">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 font-roboto">XYNEMA Help Center</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">XYNEMA Help Center</h2>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm md:text-base">
                                 Welcome to the XYNEMA Help Center. This section provides assistance with bookings, payments, cancellations, account management, and partner services. Our goal is to ensure that your experience on the XYNEMA platform is smooth, secure, and enjoyable. If you cannot find the information you need, our support team is available to assist you.
                             </p>
@@ -128,15 +176,9 @@ const HelpCenter = () => {
                         {/* FAQ Accordions */}
                         <div className="space-y-4 mb-20">
                             {faqItems.map((item, index) => (
-                                <div 
-                                    key={index}
-                                    className="bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm transition-all"
-                                >
-                                    <button 
-                                        onClick={() => toggleFaq(index)}
-                                        className="w-full px-6 py-5 flex items-center justify-between gap-4 text-left hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                                    >
-                                        <span className="font-bold text-gray-900 dark:text-gray-100 font-roboto leading-tight">{item.q}</span>
+                                <div key={index} className="bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm transition-all">
+                                    <button onClick={() => toggleFaq(index)} className="w-full px-6 py-5 flex items-center justify-between gap-4 text-left hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                        <span className="font-bold text-gray-900 dark:text-gray-100 leading-tight">{item.q}</span>
                                         <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${openFaq === index ? 'rotate-90' : ''}`} />
                                     </button>
                                     <div className={`transition-all duration-300 ease-in-out ${openFaq === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
@@ -152,31 +194,23 @@ const HelpCenter = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                             <div className="space-y-4">
                                 <h4 className="text-primary font-bold uppercase tracking-widest text-[11px]">Customer Support</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    If you need help with bookings, payments, refunds, or technical issues, our team is here.
-                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">If you need help with bookings, payments, refunds, or technical issues, our team is here.</p>
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">For Customer Service:</span>
                                     <a href="mailto:care@xynema.in" className="text-primary font-bold hover:underline">care@xynema.in</a>
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <h4 className="text-primary font-bold uppercase tracking-widest text-[11px]">Partner Support</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Existing partners or venue owners wishing to onboard with Xynema.
-                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Existing partners or venue owners wishing to onboard with Xynema.</p>
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">For Partner Support:</span>
                                     <a href="mailto:support@xynema.in" className="text-primary font-bold hover:underline">support@xynema.in</a>
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <h4 className="text-primary font-bold uppercase tracking-widest text-[11px]">Corporate Information</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Communication, media inquiries, and business partnerships for GCCDYNAMICS PVT LTD.
-                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Communication, media inquiries, and business partnerships for GCCDYNAMICS PVT LTD.</p>
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">For Corporate Info:</span>
                                     <a href="mailto:info@xynema.in" className="text-primary font-bold hover:underline">info@xynema.in</a>
@@ -184,23 +218,19 @@ const HelpCenter = () => {
                             </div>
                         </div>
 
-                        {/* Closing Footer Call-to-action */}
+                        {/* Closing Call-to-action */}
                         <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-8 text-center border border-primary/10">
-                             <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-roboto tracking-tight">Still Need Help?</h4>
+                             <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">Still Need Help?</h4>
                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-xl mx-auto leading-relaxed">
                                  If you cannot find the answer you are looking for, contact our support team. Please include your **booking ID** and registered email for faster assistance.
                              </p>
-                             <div className="flex justify-center flex-wrap gap-4">
-                                 <button 
-                                    onClick={() => setActiveTab('contact')}
-                                    className="px-8 py-3 bg-primary text-white rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                                 >
-                                     Go to Contact
-                                 </button>
-                             </div>
+                             <button onClick={() => setActiveTab('contact')} className="px-8 py-3 bg-primary text-white rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                 Go to Contact
+                             </button>
                         </div>
                     </div>
                 )}
+
                 {activeTab === 'contact' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Email Support Card */}
@@ -209,17 +239,10 @@ const HelpCenter = () => {
                                 <Mail className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 font-roboto">Email Support</h3>
-                                <a href="mailto:care@xynema.in" className="text-primary hover:underline text-sm font-medium mb-1 block">
-                                    care@xynema.in
-                                </a>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Our team aims to respond as quickly as possible.
-                                </p>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Email Support</h3>
+                                <a href="mailto:care@xynema.in" className="text-primary hover:underline text-sm font-medium mb-1 block">care@xynema.in</a>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Our team aims to respond as quickly as possible.</p>
                             </div>
-                            <button className="text-gray-400 hover:text-primary transition-colors hidden md:block">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
                         </div>
 
                         {/* Phone Support Card */}
@@ -228,31 +251,25 @@ const HelpCenter = () => {
                                 <Phone className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 font-roboto">Phone Support</h3>
-                                <a href="tel:+04944531182" className="text-primary hover:underline text-sm font-medium mb-1 block">
-                                    0494-4531182
-                                </a>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">
-                                    Available Mon-Sat, 9 AM - 9 PM
-                                </p>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Phone Support</h3>
+                                <a href="tel:+04944531182" className="text-primary hover:underline text-sm font-medium mb-1 block">0494-4531182</a>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Available Mon-Sat, 9 AM - 9 PM</p>
                             </div>
-                            <button className="text-gray-400 hover:text-primary transition-colors hidden md:block">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
                         </div>
 
-                        {/* Live Chat Card */}
+                        {/* Live Chat Card - NOW ACTIVATED */}
                         <div className="bg-white dark:bg-[#151924] rounded-xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-6">
                             <div className="w-14 h-14 rounded-xl bg-primary/5 dark:bg-primary/10 flex items-center justify-center border border-primary/10 dark:border-primary/20 shrink-0">
                                 <Headphones className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 font-roboto tracking-tight">Live Chat</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Chat with our support team in real-time
-                                </p>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 tracking-tight">Live Chat</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Chat with our support team in real-time</p>
                             </div>
-                            <button className="w-full md:w-auto px-10 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-primary/20">
+                            <button 
+                                onClick={() => setIsChatOpen(true)}
+                                className="w-full md:w-auto px-10 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-primary/20"
+                            >
                                 Start Chat
                             </button>
                         </div>
@@ -271,16 +288,13 @@ const HelpCenter = () => {
                             </div>
                         ) : (
                             <div className="max-w-2xl mx-auto">
-                                {/* Advisory Banner */}
                                 <div className="bg-[#fff1f1] border border-[#ffe4e4] rounded-lg p-4 mb-8 flex items-start gap-4">
                                     <HelpCircle className="w-5 h-5 text-[#ff4d4d] shrink-0 mt-0.5" />
                                     <p className="text-[13px] md:text-sm text-[#c0392b] font-medium leading-relaxed">
                                         Report any issues, bugs, or inappropriate content. We take all reports seriously.
                                     </p>
                                 </div>
-
                                 <form onSubmit={handleReportSubmit} className="space-y-6">
-                                    {/* Issue Type Selector */}
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Issue Type</label>
                                         <div className="relative">
@@ -305,8 +319,6 @@ const HelpCenter = () => {
                                             <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
                                         </div>
                                     </div>
-
-                                    {/* Description Textarea */}
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Description</label>
                                         <textarea 
@@ -318,12 +330,7 @@ const HelpCenter = () => {
                                             className="w-full bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-gray-700 dark:text-gray-300"
                                         />
                                     </div>
-
-                                    {/* Submit Button */}
-                                    <button 
-                                        type="submit"
-                                        className="w-full py-4 bg-[#ff4d4d] hover:bg-[#ff3333] text-white rounded-xl font-bold text-sm tracking-widest uppercase transition-all shadow-lg shadow-red-500/10 active:scale-[0.98]"
-                                    >
+                                    <button type="submit" className="w-full py-4 bg-[#ff4d4d] hover:bg-[#ff3333] text-white rounded-xl font-bold text-sm tracking-widest uppercase transition-all shadow-lg shadow-red-500/10 active:scale-[0.98]">
                                         Submit Report
                                     </button>
                                 </form>
@@ -332,6 +339,80 @@ const HelpCenter = () => {
                     </div>
                 )}
             </div>
+
+            {/* ---------- CHATBOT MODAL ---------- */}
+            {isChatOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#1e1f2a] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                        {/* Chat Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 bg-primary/5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">X</div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">XYNEMA Assistant</h3>
+                                    <p className="text-xs text-gray-500">Online • FAQ Bot</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setIsChatOpen(false)}
+                                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Chat Messages */}
+                        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50/40 dark:bg-slate-900/20">
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                                        msg.sender === 'user' 
+                                            ? 'bg-primary text-white rounded-br-none' 
+                                            : 'bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-bl-none'
+                                    }`}>
+                                        <p className="text-sm">{msg.text}</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {isTyping && (
+                                <div className="flex justify-start">
+                                    <div className="bg-white dark:bg-[#151924] border border-gray-100 dark:border-gray-800 rounded-2xl rounded-bl-none px-4 py-2">
+                                        <div className="flex gap-1">
+                                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={chatEndRef} />
+                        </div>
+
+                        {/* Chat Input */}
+                        <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-[#151924]">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="Ask me anything..."
+                                    className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white"
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={!inputMessage.trim()}
+                                    className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2 text-center">AI-powered FAQ assistant • Responses based on our knowledge base</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ---------- END CHATBOT ---------- */}
         </div>
     );
 };

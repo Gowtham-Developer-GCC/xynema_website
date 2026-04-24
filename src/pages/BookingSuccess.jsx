@@ -14,8 +14,17 @@ const BookingSuccess = () => {
         // If someone directly accesses this page without state, redirect to home
         if (!bookingData) {
             navigate('/', { replace: true });
+            return;
         }
-    }, [bookingData, navigate]);
+
+        // Trigger a local notification for immediate feedback
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Booking Confirmed!", {
+                body: `Your seats for ${movieTitle} are locked in!`,
+                icon: "/logo.png"
+            });
+        }
+    }, [bookingData, navigate, movieTitle]);
 
     if (!bookingData) return null;
 

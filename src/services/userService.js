@@ -32,13 +32,15 @@ export const loginWithGoogle = async (idToken) => {
     return safeApiCall(async () => {
         const response = await api.post(ENDPOINTS.USER.GOOGLE_LOGIN, { idToken });
         if (response.data.success) {
-            const initialUser = new User(response.data.data);
+            // Token may be at root level OR inside data — check both
+            const token = response.data.token || response.data.data?.token || '';
+            const initialUser = new User({ ...response.data.data, token, loginMethod: 'google' });
             storeUser(initialUser.toJson());
 
             try {
                 const fullProfile = await getUserProfile();
                 if (fullProfile) {
-                    fullProfile.token = initialUser.token;
+                    fullProfile.token = token || initialUser.token;
                     storeUser(fullProfile.toJson());
                     return {
                         success: true,
@@ -62,6 +64,49 @@ export const loginWithGoogle = async (idToken) => {
     });
 };
 
+export const sendPhoneLogin = async (phone) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.USER.PHONE_LOGIN, { phone });
+        return response.data;
+    });
+};
+
+export const verifyPhoneOtp = async (phone, otp) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.USER.VERIFY_OTP, { phone, otp });
+        if (response.data.success) {
+            // Token may be at root level OR inside data — check both
+            const token = response.data.token || response.data.data?.token || '';
+            const initialUser = new User({ ...response.data.data, token, loginMethod: 'phone' });
+            storeUser(initialUser.toJson());
+
+            try {
+                const fullProfile = await getUserProfile();
+                if (fullProfile) {
+                    fullProfile.token = token || initialUser.token;
+                    storeUser(fullProfile.toJson());
+                    return {
+                        success: true,
+                        data: fullProfile,
+                        user: fullProfile,
+                        token: fullProfile.token,
+                    };
+                }
+            } catch (error) {
+                console.warn('Failed to fetch full profile after login, proceeding with basic info:', error);
+            }
+
+            return {
+                success: true,
+                data: initialUser,
+                user: initialUser,
+                token: initialUser.token,
+            };
+        }
+        throw new Error(response.data.message || 'OTP Verification failed');
+    });
+};
+
 export const logout = async () => {
     try {
         const user = getStoredUser();
@@ -82,5 +127,12 @@ export const getCoupons = async () => {
             return response.data.data.coupons;
         }
         return [];
+    });
+};
+
+export const addEmail = async (email) => {
+    return safeApiCall(async () => {
+        const response = await api.post('/user/add-email', { email });
+        return response.data;
     });
 };

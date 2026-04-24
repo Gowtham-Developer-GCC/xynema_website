@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Mail, Phone, Lock, Eye, EyeOff, Shield, Globe, Bell, Moon, Trash2, Camera, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { registerNotificationToken, removeNotificationToken } from '../services/notificationService';
+import { getUserProfile, updateUserProfile } from '../services/userService';
+import { toast } from 'react-hot-toast';
 
 const AccountSettingsPage = () => {
     const navigate = useNavigate();
@@ -19,12 +22,49 @@ const AccountSettingsPage = () => {
 
     // Form states with mock defaults
     const [formData, setFormData] = useState({
-        name: user?.displayName || 'GOWTHAM MAYA LABS',
-        email: user?.email || 'emp6mayalabs@gmail.com',
-        phone: user?.phoneNumber || '+91 9876543210',
+        name: user?.displayName || '',
+        email: user?.email || '',
+        phone: user?.phoneNumber || '',
         language: language,
-        region: 'India'
+        region: 'India',
+        pushNotifications: !!localStorage.getItem('fcmToken')
     });
+
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch full profile on mount
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const profile = await getUserProfile();
+                if (profile) {
+                    setFormData(prev => ({
+                        ...prev,
+                        name: profile.displayName || '',
+                        email: profile.email || '',
+                        phone: profile.phoneNumber || '',
+                    }));
+                    // Update global user context if needed
+                    updateUser(profile);
+                }
+            } catch (err) {
+                console.error('Failed to fetch profile:', err);
+                // Fallback to minimal data from auth context
+                if (user) {
+                    setFormData(prev => ({
+                        ...prev,
+                        name: user.displayName || '',
+                        email: user.email || '',
+                        phone: user.phoneNumber || '',
+                    }));
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
 
     const [tempLanguage, setTempLanguage] = useState(language);
 
@@ -35,17 +75,85 @@ const AccountSettingsPage = () => {
         { id: 'privacy', label: t('privacy'), icon: Shield },
     ];
 
-    const handleSave = () => {
+    const handleSendTestNotification = () => {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Test Notification", {
+                body: "This is a test notification from XYNEMA.",
+                icon: "/logo.png"
+            });
+            toast.success("Test notification sent!");
+        } else {
+            toast.error("Please enable notifications to test.");
+        }
+    };
+
+    const handleSave = async () => {
         setIsSaving(true);
-        // Apply language change
-        setLanguage(tempLanguage);
-        
-        // Mock save logic
-        setTimeout(() => {
+        try {
+            // 1. Update language preference
+            setLanguage(tempLanguage);
+            
+            // 2. Call Update Profile API
+            const updatedProfile = await updateUserProfile({
+                displayName: formData.name,
+                // Usually email/phone might be read-only depending on backend, 
+                // but we send them if the endpoint supports it.
+                email: formData.email,
+                phoneNumber: formData.phone
+            });
+
+            if (updatedProfile) {
+                updateUser(updatedProfile);
+                setSaveSuccess(true);
+                toast.success(t('profile_updated'));
+                setTimeout(() => setSaveSuccess(false), 3000);
+            }
+        } catch (err) {
+            console.error('Save failed:', err);
+            toast.error(err.message || 'Failed to update profile');
+        } finally {
             setIsSaving(false);
-            setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 3000);
-        }, 1500);
+        }
+    };
+
+    const [isTogglingPush, setIsTogglingPush] = useState(false);
+
+    const handleTogglePush = async () => {
+        if (isTogglingPush) return;
+        
+        const newState = !formData.pushNotifications;
+        console.log('[AccountSettings] Attempting to toggle push notifications to:', newState);
+        
+        setIsTogglingPush(true);
+        try {
+            if (newState) {
+                // Enabling
+                const token = await registerNotificationToken();
+                if (token) {
+                    // Token is fetched! Update UI immediately for responsiveness
+                    setFormData(prev => ({ ...prev, pushNotifications: true }));
+                    toast.success('Push Notifications Enabled!');
+                    console.log('[AccountSettings] UI updated, backend registration should be complete.');
+                }
+            } else {
+                // Disabling
+                await removeNotificationToken();
+                setFormData(prev => ({ ...prev, pushNotifications: false }));
+                toast.success('Push Notifications Disabled.');
+            }
+        } catch (err) {
+            console.error('[AccountSettings] Catch block:', err);
+            // Show more descriptive error messages to the user
+            if (err.message?.includes('permission')) {
+                toast.error('Notification permission denied. Please reset in browser settings.');
+            } else if (err.message?.includes('Service Worker')) {
+                toast.error('Service worker failed to activate. Please refresh.');
+            } else {
+                toast.error(`Error: ${err.message || 'Action failed'}`);
+            }
+        } finally {
+            setIsTogglingPush(false);
+        }
     };
 
     const SectionHeader = ({ title, subtitle }) => (
@@ -77,6 +185,17 @@ const AccountSettingsPage = () => {
             </div>
         </div>
     );
+
+    if (isLoading && !user) {
+        return (
+            <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] transition-colors duration-300">
@@ -159,7 +278,7 @@ const AccountSettingsPage = () => {
                                         <div className="relative group">
                                             <div className="w-24 h-24 md:w-32 md:h-32 rounded-[32px] overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-xl group-hover:scale-105 transition-all duration-500">
                                                 <img 
-                                                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Gowtham&backgroundColor=b6e3f4" 
+                                                    src={user?.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.displayName || 'Gowtham'}&backgroundColor=b6e3f4`} 
                                                     alt="Avatar"
                                                     className="w-full h-full object-cover" 
                                                 />
@@ -332,6 +451,58 @@ const AccountSettingsPage = () => {
                                                 <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white transition duration-200" />
                                             </div>
                                         </div>
+
+                                        <div className="h-px bg-gray-100 dark:bg-white/5" />
+
+                                        <div className="flex items-center justify-between p-6 rounded-3xl bg-xynemaRose/5 border border-xynemaRose/10">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-xynemaRose/10 flex items-center justify-center">
+                                                    <Bell className="w-5 h-5 text-xynemaRose" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-[11px] font-black text-xynemaRose uppercase tracking-wider">{t('push_notifications')}</h4>
+                                                    <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('push_notifications_desc')}</p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={handleTogglePush}
+                                                disabled={isTogglingPush}
+                                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out ${formData.pushNotifications ? 'bg-xynemaRose' : 'bg-gray-200 dark:bg-gray-700'} ${isTogglingPush ? 'opacity-50 grayscale cursor-wait' : ''}`}
+                                            >
+                                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-300 ease-in-out flex items-center justify-center ${formData.pushNotifications ? 'translate-x-5' : 'translate-x-0'}`}>
+                                                    {isTogglingPush && <div className="w-2 h-2 border-2 border-xynemaRose/20 border-t-xynemaRose rounded-full animate-spin" />}
+                                                </span>
+                                            </button>
+                                        </div>
+
+                                        {formData.pushNotifications && (
+                                            <button 
+                                                type="button"
+                                                onClick={() => {
+                                                    console.log('[Test] Triggering test notification...');
+                                                    try {
+                                                        if (Notification.permission !== 'granted') {
+                                                            toast.error(`Permission is ${Notification.permission}. Please allow it!`);
+                                                            return;
+                                                        }
+                                                        const n = new Notification("Test Notification", {
+                                                            body: "Your notifications are working perfectly! 🚀",
+                                                            icon: "/logo.png",
+                                                            requireInteraction: true // Keep on screen until clicked
+                                                        });
+                                                        console.log('[Test] Notification object created:', n);
+                                                        toast.success('Test notification sent!');
+                                                    } catch (err) {
+                                                        console.error('[Test] Notification failed:', err);
+                                                        toast.error('Browser blocked the notification.');
+                                                    }
+                                                }}
+                                                className="w-full py-3 bg-gray-50 dark:bg-white/[0.03] text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] rounded-xl border border-dashed border-gray-200 dark:border-white/10 hover:border-primary/50 hover:text-primary transition-all"
+                                            >
+                                                Send Test Notification
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}

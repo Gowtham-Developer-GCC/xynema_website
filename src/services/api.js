@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { emitUnauthorized } from './authEvents';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -81,9 +80,23 @@ export const removeUser = () => {
  */
 api.interceptors.request.use(
     (config) => {
-        const user = getStoredUser();
-        if (user && user.token) {
-            config.headers.Authorization = `Bearer ${user.token}`;
+        try {
+            // Aggressive Token Discovery
+            const storedUser = localStorage.getItem('auth_user');
+            const storedToken = localStorage.getItem('auth_token');
+            
+            let token = storedToken;
+            if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                token = parsed?.token || parsed?.accessToken || token;
+            }
+
+            if (token) {
+                // Use bracket notation for maximum compatibility
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
+        } catch (e) {
+            console.error('[API] Interceptor token error:', e);
         }
         return config;
     },
@@ -91,16 +104,17 @@ api.interceptors.request.use(
 );
 
 /**
- * Response interceptor - Handle errors and unauthorized access
+ * Response interceptor - Handle errors
+ * NOTE: We do NOT auto-logout on 401 here because it causes the login modal
+ * to appear unexpectedly when the user is browsing. API components handle
+ * their own auth errors gracefully.
  */
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const isLogoutRequest = error.config?.url?.includes('/user/logout');
-
-        if (error.response?.status === 401 && !isLogoutRequest) {
-            removeUser();
-            emitUnauthorized();
+        // Log error for debugging but do NOT force logout
+        if (error.response?.status === 401) {
+            console.warn('[API] 401 Unauthorized on:', error.config?.url);
         }
         return Promise.reject(error);
     }

@@ -3,23 +3,19 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-    const { user, loading } = useAuth();
+    const { user } = useAuth();
     const location = useLocation();
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="w-10 h-10 border-4 border-xynemaRose border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+    // Check both React state AND localStorage to avoid race condition flashes
+    const hasStoredSession = !!localStorage.getItem('auth_user');
+    const isLoggedIn = !!user || hasStoredSession;
 
-    if (!user) {
-        // Redirect to home but save the intended location
+    if (!isLoggedIn) {
+        // Only redirect with openLogin if there's truly no session
         return <Navigate to="/" state={{ from: location, openLogin: true }} replace />;
     }
 
-    if (adminOnly && user.role !== 'admin') {
+    if (adminOnly && user?.role !== 'admin') {
         return <Navigate to="/" replace />;
     }
 

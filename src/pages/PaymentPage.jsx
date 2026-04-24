@@ -11,6 +11,8 @@ import PaymentButton from '../components/PaymentButton';
 import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
+import EmailPrompt from '../components/EmailPrompt';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -30,6 +32,7 @@ const PaymentPage = () => {
     const [timeLeft, setTimeLeft] = useState(600);
     const [mobileNumber, setMobileNumber] = useState('');
     const [emailDetails, setEmailDetails] = useState('');
+    const { user, isAuthenticated, ensureAuthAndEmail } = useAuth();
 
     const seats = useMemo(() => bookingState?.seats || [], [bookingState]);
     const cartData = useMemo(() => bookingState?.cart || {}, [bookingState]);
@@ -133,6 +136,10 @@ const PaymentPage = () => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleBeforePayment = () => {
+        return ensureAuthAndEmail(() => handleBeforePayment());
     };
 
 
@@ -554,6 +561,7 @@ const PaymentPage = () => {
                                         onSuccess={handleBookingSuccess}
                                         onFailure={(err) => setError(err.message || "Payment failed")}
                                         disabled={!isFormValid}
+                                        onClick={() => handleBeforePayment()}
                                         className={`w-full py-4 rounded-xl font-black text-[14px] md:text-[16px] transition-all flex items-center justify-center gap-3 shadow-xl uppercase tracking-[0.2em]
                                             ${!isFormValid
                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
@@ -598,6 +606,7 @@ const PaymentPage = () => {
                         onSuccess={handleBookingSuccess}
                         onFailure={(err) => setError(err.message || "Payment failed")}
                         disabled={!isFormValid}
+                        onClick={() => handleBeforePayment()}
                         className={`flex-1 py-4 px-6 rounded-xl font-black text-[14px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-[0.15em]
                             ${!isFormValid
                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'

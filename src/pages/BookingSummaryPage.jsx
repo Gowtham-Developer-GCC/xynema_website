@@ -11,6 +11,8 @@ import { calculateBookingTotal } from '../utils/pricing';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
 import { Ticket, Tag, CheckCircle2, XCircle, Gift } from 'lucide-react';
+import EmailPrompt from '../components/EmailPrompt';
+import { useAuth } from '../context/AuthContext';
 
 const BookingSummaryPage = () => {
     const { slug, theaterSlug } = useParams();
@@ -21,6 +23,7 @@ const BookingSummaryPage = () => {
 
     // Hydrate State from Session Storage
     const [bookingState, setBookingState] = useState(null);
+    const { user, isAuthenticated, ensureAuthAndEmail } = useAuth();
 
     useEffect(() => {
         // Validate session first
@@ -222,9 +225,13 @@ const BookingSummaryPage = () => {
         setPromoCode('');
         setCouponError(null);
     };
+
     const handleProceedToPayment = async () => {
+        const canProceed = ensureAuthAndEmail(() => handleProceedToPayment());
+        if (!canProceed) return false;
+
         if (isLocking) return;
-        setIsLocking(true);
+       setIsLocking(true);
         setError(null);
 
         try {

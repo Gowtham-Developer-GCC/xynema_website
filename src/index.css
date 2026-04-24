@@ -42,6 +42,10 @@
         animation-delay: 100ms;
     }
 
+    .delay-150 {
+        animation-delay: 150ms;
+    }
+
     .delay-200 {
         animation-delay: 200ms;
     }
@@ -187,5 +191,51 @@
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Animation Utilities */
+    .animate-in {
+        animation-duration: 500ms;
+        animation-fill-mode: both;
+    }
+
+    .fade-in {
+        animation-name: fadeIn;
+    }
+
+    .zoom-in-95 {
+        animation-name: zoomIn95;
+    }
+
+    .slide-in-from-bottom-4 {
+        animation-name: slideInFromBottom4;
+    }
+
+    .slide-in-from-right-4 {
+        animation-name: slideInFromRight4;
+    }
+
+    .fill-mode-both {
+        animation-fill-mode: both !important;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes zoomIn95 {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideInFromBottom4 {
+        from { opacity: 0; transform: translateY(1rem); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInFromRight4 {
+        from { opacity: 0; transform: translateX(1rem); }
+        to { opacity: 1; transform: translateX(0); }
     }
 }

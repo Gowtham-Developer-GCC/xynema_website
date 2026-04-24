@@ -91,21 +91,37 @@ const BookingDetailsPage = () => {
         return loc;
     };
 
-    // Helper: Convert an image URL to base64 via our server proxy
+    // Helper: Convert an image URL to base64 via our server proxy or direct fetch
     const fetchImageAsBase64 = async (url) => {
-        if (!url || url.startsWith('data:')) return url; // Already inline
+        if (!url || url.startsWith('data:')) return url;
+        
+        // Determine if it's an external URL that needs proxying
+        const isExternal = url.startsWith('http') && !url.includes(window.location.host);
+        
         try {
-            const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
-            const response = await fetch(proxyUrl);
-            if (!response.ok) return null;
-            const blob = await response.blob();
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = () => resolve(null);
-                reader.readAsDataURL(blob);
-            });
-        } catch {
+            if (isExternal) {
+                const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } else {
+                // Local image - fetch directly to avoid proxy overhead/limitations
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            }
+        } catch (err) {
+            console.error('[fetchImageAsBase64] Failed:', url, err);
             return null;
         }
     };
@@ -127,10 +143,16 @@ const BookingDetailsPage = () => {
             if (!toPng || !jsPDF) throw new Error('Download libraries failed to load');
             
             const element = ticketRef.current;
+            const originalWidth = element.style.width;
+            
+            // Force a stable width for capture to prevent responsive shifting
+            if (window.innerWidth < 768) {
+                element.style.width = '700px';
+            }
 
-            // Step 1: Pre-convert ALL images to inline base64 via proxy (bypasses CORS)
+            // Step 1: Pre-convert ALL images to inline base64
             const images = [...element.getElementsByTagName('img')];
-            const originalSrcs = []; // Store originals to restore later
+            const originalSrcs = [];
 
             for (const img of images) {
                 const originalSrc = img.src;
@@ -144,34 +166,69 @@ const BookingDetailsPage = () => {
                 }
             }
 
-            // Step 2: Wait for all swapped images to settle
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Step 1.5: Convert QR Canvas to static Image for reliable PDF capture
+            const canvases = [...element.getElementsByTagName('canvas')];
+            const canvasReplacements = [];
+            for (const canvas of canvases) {
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const img = document.createElement('img');
+                    img.src = dataUrl;
+                    img.style.width = canvas.style.width || (canvas.width / 2) + 'px';
+                    img.style.height = canvas.style.height || (canvas.height / 2) + 'px';
+                    img.className = canvas.className;
+                    canvas.parentNode.insertBefore(img, canvas);
+                    canvas.style.display = 'none';
+                    canvasReplacements.push({ canvas, img });
+                } catch (e) {
+                    console.warn("Canvas capture error", e);
+                }
+            }
 
-            // Step 3: Capture the ticket (now all images are inline, no CORS issues)
+            // Step 2: Wait for all swapped assets to settle in DOM
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const captureWidth = element.offsetWidth;
+            const captureHeight = element.offsetHeight;
+
+            // Step 3: Capture the ticket with high-fidelity settings
             const dataUrl = await toPng(element, {
-                pixelRatio: 2.5, // Increased from 2 for better detail
+                pixelRatio: 3, // High resolution
                 backgroundColor: '#ffffff',
-                cacheBust: false,
-                skipFonts: true,
+                cacheBust: true,
+                skipFonts: false,
                 style: {
-                    transform: 'scale(1)',
-                    transformOrigin: 'top left'
+                    transform: 'none',
+                    borderRadius: '0px'
+                },
+                filter: (node) => {
+                    // Filter out elements that shouldn't be in the PDF
+                    if (node.classList && node.classList.contains('print:hidden')) return false;
+                    return true;
                 }
             });
 
-            // Step 4: Restore original image sources
+            // Step 4: Restore original state
+            // Restore images
             for (const { img, src } of originalSrcs) {
                 img.src = src;
             }
+            // Restore canvases
+            for (const { canvas, img } of canvasReplacements) {
+                canvas.style.display = '';
+                img.remove();
+            }
+            // Restore width
+            element.style.width = originalWidth;
             
             // Step 5: Generate PDF
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
-                format: [element.offsetWidth, element.offsetHeight]
+                format: [captureWidth, captureHeight]
             });
             
-            pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.offsetHeight);
+            pdf.addImage(dataUrl, 'PNG', 0, 0, captureWidth, captureHeight);
             pdf.save(`XYNEMA-Ticket-${booking.bookingId || booking.id}.pdf`);
         } catch (err) {
             console.error('PDF generation failed:', err);

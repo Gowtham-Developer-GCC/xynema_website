@@ -52,6 +52,8 @@ export const translations = {
         delete_account: 'Delete Account',
         remove_data: 'Permanently remove your Xynema data',
         profile_updated: 'Profile Updated',
+        push_notifications: 'Push Notifications',
+        push_notifications_desc: 'Get instant updates about your bookings.',
 
         // Footer
         about_us: 'About Us',
@@ -138,6 +140,8 @@ export const translations = {
         delete_account: 'അക്കൗണ്ട് ഇല്ലാതാക്കുക',
         remove_data: 'നിങ്ങളുടെ Xynema ഡാറ്റ ശാശ്വതമായി നീക്കം ചെയ്യുക',
         profile_updated: 'പ്രൊഫൈൽ അപ്ഡേറ്റ് ചെയ്തു',
+        push_notifications: 'പുഷ് അറിയിപ്പുകൾ',
+        push_notifications_desc: 'നിങ്ങളുടെ ബുക്കിംഗുകളെക്കുറിച്ചുള്ള തൽക്ഷണ അപ്‌ഡേറ്റുകൾ നേടുക.',
 
         // Footer
         about_us: 'ഞങ്ങളെക്കുറിച്ച്',

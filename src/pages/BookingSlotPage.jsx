@@ -9,6 +9,8 @@ import 'swiper/css/navigation';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import { getTurfDetails, getAvailableSlots, reserveSlots } from '../services/turfService';
+import { useAuth } from '../context/AuthContext';
+import EmailPrompt from '../components/EmailPrompt';
 
 const toast = {
     error: (msg) => alert(`Error: ${msg}`),
@@ -36,6 +38,7 @@ const BookingSlotPage = () => {
     const [isAdvancePay, setIsAdvancePay] = useState(true);
     const [timeSlots, setTimeSlots] = useState({ morning: [], afternoon: [], evening: [] });
     const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const { user, isAuthenticated, ensureAuthAndEmail } = useAuth();
 
     const isSwimming = venue?.tags?.some(tag => tag.toLowerCase().includes('swimming') || tag.toLowerCase().includes('pool')) || 
                       venue?.name?.toLowerCase().includes('swimming') || venue?.name?.toLowerCase().includes('pool');
@@ -123,6 +126,9 @@ const BookingSlotPage = () => {
             toast.error('Please select at least one slot');
             return;
         }
+
+        const canProceed = ensureAuthAndEmail(() => handleBooking());
+        if (!canProceed) return false;
         try {
             setReserving(true);
             const slotIds = selectedSlots.map(s => s._id || s.id);

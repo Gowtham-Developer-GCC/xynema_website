@@ -71,21 +71,37 @@ const TurfBookingDetailsPage = () => {
         });
     };
 
-    // Helper: Convert an image URL to base64 via our server proxy
+    // Helper: Convert an image URL to base64 via our server proxy or direct fetch
     const fetchImageAsBase64 = async (url) => {
-        if (!url || url.startsWith('data:')) return url; // Already inline
+        if (!url || url.startsWith('data:')) return url;
+        
+        // Determine if it's an external URL that needs proxying
+        const isExternal = url.startsWith('http') && !url.includes(window.location.host);
+        
         try {
-            const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
-            const response = await fetch(proxyUrl);
-            if (!response.ok) return null;
-            const blob = await response.blob();
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = () => resolve(null);
-                reader.readAsDataURL(blob);
-            });
-        } catch {
+            if (isExternal) {
+                const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } else {
+                // Local image - fetch directly to avoid proxy overhead/limitations
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            }
+        } catch (err) {
+            console.error('[fetchImageAsBase64] Failed:', url, err);
             return null;
         }
     };

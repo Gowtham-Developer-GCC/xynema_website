@@ -4,6 +4,8 @@ import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, Che
 import { confirmEventBooking } from '../services/eventService';
 import LoadingScreen from '../components/LoadingScreen';
 import PaymentButton from '../components/PaymentButton';
+import EmailPrompt from '../components/EmailPrompt';
+import { useAuth } from '../context/AuthContext';
 
 const EventBookingSummaryPage = () => {
     const navigate = useNavigate();
@@ -24,6 +26,7 @@ const EventBookingSummaryPage = () => {
     const [errors, setErrors] = useState({});
     const [selectedMethod, setSelectedMethod] = useState('upi');
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+    const { user, isAuthenticated, ensureAuthAndEmail } = useAuth();
 
     const paymentMethods = [
         { id: 'upi', name: 'UPI / QR', icon: <Smartphone className="w-5 h-5" /> },
@@ -112,6 +115,10 @@ const EventBookingSummaryPage = () => {
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) &&
         /^\d{10}$/.test(a.phone)
     );
+
+    const handleProceed = () => {
+        return ensureAuthAndEmail(() => handleProceed());
+    };
 
     if (!event) return <LoadingScreen />;
 
@@ -387,6 +394,7 @@ const EventBookingSummaryPage = () => {
                                         }}
                                         onFailure={(err) => alert(err.message || 'Payment failed')}
                                         disabled={!isFormValid}
+                                        onClick={() => handleProceed()}
                                         className={`w-full py-3 md:py-4 rounded-xl font-black text-[13px] md:text-[16px] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl uppercase tracking-[0.2em]
                                             ${!isFormValid
                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
@@ -444,6 +452,7 @@ const EventBookingSummaryPage = () => {
                         }}
                         onFailure={(err) => alert(err.message || 'Payment failed')}
                         disabled={!isFormValid}
+                        onClick={() => handleProceed()}
                         className={`flex-1 h-11 rounded-xl font-black text-[13px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider
                             ${!isFormValid
                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'

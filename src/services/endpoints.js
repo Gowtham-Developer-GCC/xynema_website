@@ -30,6 +30,7 @@ export const ENDPOINTS = {
             RELEASE_SEATS: (showId) => `/booking/shows/${showId}/release-seats`,
             CREATE_ORDER: (showId) => `/booking/shows/${showId}/create-order`,
             CONFIRM: (showId) => `/booking/shows/${showId}/confirm-booking`,
+            APPLY_COUPON: (showId) => `/booking/shows/${showId}/apply-coupon`,
             FOOD_AND_BEVERAGES: (theaterId) => `/booking/food&beverages/${theaterId}/food-and-beverages`,
         },
         MY_BOOKINGS: '/booking/my-bookings',

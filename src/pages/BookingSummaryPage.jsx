@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Info, ShieldCheck, ChevronRight, MapPin, Calendar, Clock, MonitorPlay } from 'lucide-react';
 import * as api from '../services/api';
-import { getShowSeats, getFoodAndBeverages, lockSeats } from '../services/bookingService';
+import { getShowSeats, getFoodAndBeverages, lockSeats, applyCoupon } from '../services/bookingService';
 import { getCoupons } from '../services/userService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
@@ -171,7 +171,7 @@ const BookingSummaryPage = () => {
     const pricingStatus = calculateBookingTotal(ticketsTotal, snackTotal, discount);
     const { convenienceFee, gstAmount, finalTotal: grandTotal } = pricingStatus;
 
-    const handleApplyCoupon = (code) => {
+    const handleApplyCoupon = async (code) => {
         setCouponError(null);
         const codeToTry = code || promoCode;
         
@@ -180,43 +180,28 @@ const BookingSummaryPage = () => {
             return;
         }
 
-        const coupon = availableCoupons.find(c => c.coupon_code.toUpperCase() === codeToTry.toUpperCase());
-        
-        if (!coupon) {
-            setCouponError('Invalid coupon code');
+        try {
+            const subtotal = ticketsTotal + snackTotal;
+            const data = await applyCoupon(showId, codeToTry.toUpperCase(), subtotal);
+            
+            // The API response structure usually provides either the discount amount 
+            // or the coupon details which we can use to calculate/display
+            const discountAmount = data.discount_amount || data.discount || 0;
+            
+            setDiscount(discountAmount);
+            setAppliedCoupon(data.coupon || { ...data, coupon_code: codeToTry.toUpperCase() });
+            setPromoCode(codeToTry.toUpperCase());
+            setShowCouponList(false);
+            setShowCelebration(true);
+            
+            // Auto-close celebration after 5 seconds
+            setTimeout(() => setShowCelebration(false), 5000);
+        } catch (err) {
+            console.error('Apply coupon error:', err);
+            setCouponError(err.message || 'Invalid coupon code');
             setDiscount(0);
             setAppliedCoupon(null);
-            return;
         }
-
-        // Validate coupon
-        const subtotal = ticketsTotal + snackTotal;
-        if (coupon.min_order_value && subtotal < coupon.min_order_value) {
-            setCouponError(`Minimum order value of ₹${coupon.min_order_value} required`);
-            setDiscount(0);
-            setAppliedCoupon(null);
-            return;
-        }
-
-        // Calculate discount
-        let calculatedDiscount = 0;
-        if (coupon.discount_type === 'flat') {
-            calculatedDiscount = coupon.discount_amount;
-        } else if (coupon.discount_type === 'percentage') {
-            calculatedDiscount = (subtotal * coupon.discount_percentage) / 100;
-            if (coupon.max_discount && calculatedDiscount > coupon.max_discount) {
-                calculatedDiscount = coupon.max_discount;
-            }
-        }
-
-        setDiscount(calculatedDiscount);
-        setAppliedCoupon(coupon);
-        setPromoCode(coupon.coupon_code);
-        setShowCouponList(false);
-        setShowCelebration(true);
-        
-        // Auto-close celebration after 3 seconds
-        setTimeout(() => setShowCelebration(false), 5000);
     };
 
     const handleRemoveCoupon = () => {

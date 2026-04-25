@@ -111,3 +111,16 @@ export const getFoodAndBeverages = async (theaterId) => {
         return response.data;
     });
 };
+
+export const applyCoupon = async (showId, coupon_code, orderTotal) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.BOOKING.SHOWS.APPLY_COUPON(showId), {
+            coupon_code,
+            orderTotal
+        });
+        if (response.data.success) {
+            return response.data.data || response.data;
+        }
+        throw new Error(response.data.message || 'Failed to apply coupon');
+    });
+};

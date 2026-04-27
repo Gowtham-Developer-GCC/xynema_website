@@ -115,6 +115,7 @@ const PaymentButton = ({
                             const confirmResponse = await api.post(ENDPOINTS.BOOKING.SHOWS.CONFIRM(showId), {
                                 seatIds,
                                 sessionId,
+                                platform: 'web',
                                 paymentDetails: {
                                     method: selectedMethod || 'upi',
                                     transactionId: response.razorpay_payment_id,

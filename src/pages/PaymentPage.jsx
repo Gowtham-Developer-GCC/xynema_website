@@ -564,7 +564,7 @@ const PaymentPage = () => {
                                         onClick={() => handleBeforePayment()}
                                         className={`w-full py-4 rounded-xl font-black text-[14px] md:text-[16px] transition-all flex items-center justify-center gap-3 shadow-xl uppercase tracking-[0.2em]
                                             ${!isFormValid
-                                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
                                                 : 'bg-primary hover:brightness-110 text-white'
                                             }`}
                                     >
@@ -609,7 +609,7 @@ const PaymentPage = () => {
                         onClick={() => handleBeforePayment()}
                         className={`flex-1 py-4 px-6 rounded-xl font-black text-[14px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-[0.15em]
                             ${!isFormValid
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
                                 : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110'
                             }`}
                     >

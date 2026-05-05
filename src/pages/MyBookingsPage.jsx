@@ -398,7 +398,7 @@ const MyBookingsPage = () => {
                 {/* ━━━ Explore Button ━━━ */}
                 <div className="flex justify-center mt-14 mb-4">
                     <button
-                        onClick={() => navigate(bookingType === 'events' ? '/events' : '/sports')}
+                        onClick={() => navigate(bookingType === 'events' ? '/events' : '/activities')}
                         className="flex items-center justify-center gap-3 w-full max-w-xl px-8 py-4 bg-primary/90 dark:bg-primary/80 text-white text-[15px] font-semibold rounded-xl hover:bg-primary transition-colors shadow-sm"
                     >
                         {bookingType === 'movies' ? 'Explore movies' : bookingType === 'events' ? 'Explore events' : 'Discover sports'}
@@ -566,7 +566,7 @@ const TurfTicketCard = ({ booking }) => {
 
     return (
         <div
-            onClick={() => navigate(booking.turf ? `/sports/bookings/${booking.bookingId || booking._id || booking.id}` : `/event-bookings/${booking.bookingId || booking._id || booking.id}`)}
+            onClick={() => navigate(booking.turf ? `/activities/bookings/${booking.bookingId || booking._id || booking.id}` : `/event-bookings/${booking.bookingId || booking._id || booking.id}`)}
             className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
         >
             {/* Poster / Venue Image */}

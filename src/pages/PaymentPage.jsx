@@ -184,7 +184,7 @@ const PaymentPage = () => {
                     setShow(bookingState.show);
                 }
             } catch (err) {
-                console.error('Failed to fetch payment data:', err);
+                console.error('Failed to0 fetch payment data:', err);
                 setError('Failed to load booking details. Please try again.');
             } finally {
                 setLoading(false);

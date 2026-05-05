@@ -8,7 +8,7 @@ const SportCard = memo(({ event }) => {
     const handleNavigate = () => {
         const id = event._id || event.id;
         if (!id) return;
-        navigate(`/sports/${id}`, { state: { sport: event } });
+        navigate(`/activities/${id}`, { state: { sport: event } });
     };
 
     const displayImage = event.imageUrl || (event.images && event.images[0]?.url) || event.primaryImage || 'https://placehold.co/800x400';

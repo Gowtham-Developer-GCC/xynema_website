@@ -36,7 +36,7 @@ const TurfPaymentPage = () => {
 
     useEffect(() => {
         if (!reservation) {
-            navigate('/sports');
+            navigate('/activities');
         }
     }, [reservation, navigate]);
 

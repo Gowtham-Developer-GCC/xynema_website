@@ -11,7 +11,7 @@ const VAPID_KEY = 'BNhLhAAujCphhZ-XlurxuJlIvG_lU86eiBd_uQx93Ytz6N5GQh2TOhEEu1UWF
  * 1. Requests permission
  * 2. Registers service worker
  * 3. Fetches FCM token                                                                                         
- * 4. Sends token to backend
+ * 4. Sends token to backend    
  */
 export async function registerNotificationToken() {
     try {
@@ -100,6 +100,35 @@ export async function removeNotificationToken() {
         localStorage.removeItem('fcmToken');
     } catch (err) {
         console.error('Token removal failed:', err);
+    }
+}
+
+/**
+ * Fetch all notifications for the current user
+ */
+export async function getUserNotifications() {
+    try {
+        const response = await api.get('/user/notifications');
+        if (response.data.success) {
+            return response.data.data.notifications || [];
+        }
+        return [];
+    } catch (err) {
+        console.error('Failed to fetch notifications:', err);
+        return [];
+    }
+}
+
+/**
+ * Mark a specific notification as read
+ */
+export async function markNotificationAsRead(notificationId) {
+    try {
+        await api.post(`/user/notifications/mark-read/${notificationId}`, {});
+        return true;
+    } catch (err) {
+        console.error('Failed to mark notification as read:', err);
+        return false;
     }
 }
 

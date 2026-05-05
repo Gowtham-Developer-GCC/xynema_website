@@ -184,7 +184,7 @@ const PaymentButton = ({
                             } else if (bookingData?.slotIds) {
                                 // Turf Booking
                                 const bId = verifyResult.data?.bookingId || verifyResult.data?.bookings?.[0]?.bookingId || verifyResult.data?.id;
-                                targetPath = `/sports/bookings/${bId}`;
+                                targetPath = `/activities/bookings/${bId}`;
                                 navigationState = { isNewBooking: true };
                             }
 

@@ -134,7 +134,7 @@ const BookingSlotPage = () => {
             const slotIds = selectedSlots.map(s => s._id || s.id);
             const result = await reserveSlots(slotIds, selectedSport);
             if (result) {
-                navigate('/sports/payment', { 
+                navigate('/activities/payment', { 
                     state: { 
                         reservation: result,
                         turf: venue,

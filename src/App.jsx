@@ -40,7 +40,11 @@ const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const AllReviewsPage = lazy(() => import('./pages/AllReviewsPage'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const SportsPage = lazy(() => import('./pages/SportsPage'));
+const ActivitiesPage = lazy(() => import('./pages/ActivitiesPage'));
 const SportDetailsPage = lazy(() => import('./pages/SportDetailsPage'));
+const ParkDetailsPage = lazy(() => import('./pages/ParkDetailsPage'));
+const ParkTicketPage = lazy(() => import('./pages/ParkTicketPage'));
+const ParkPaymentPage = lazy(() => import('./pages/ParkPaymentPage'));
 const BookingSlotPage = lazy(() => import('./pages/BookingSlotPage'));
 const TurfPaymentPage = lazy(() => import('./pages/TurfPaymentPage'));
 const TurfBookingDetailsPage = lazy(() => import('./pages/TurfBookingDetailsPage'));
@@ -48,6 +52,7 @@ const AboutUs = lazy(() => import('./pages/AboutUs'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
 const OffersPage = lazy(() => import('./pages/OffersPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'));
 const PaymentMethodsPage = lazy(() => import('./pages/PaymentMethodsPage'));
 const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'));
 const BookingSuccess = lazy(() => import('./pages/BookingSuccess'));
@@ -158,6 +163,7 @@ export default function App() {
                                             <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
                                             <Route path="/events-bookings" element={<ProtectedRoute><MyEventBookingsPage /></ProtectedRoute>} />
                                             <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/bookings/movies/:id" element={<ProtectedRoute><BookingDetailsPage /></ProtectedRoute>} />
                                             <Route path="/event-bookings/:id" element={<ProtectedRoute><EventBookingDetailsPage /></ProtectedRoute>} />
                                             <Route path="/events/booking-summary" element={<ProtectedRoute><EventBookingSummaryPage /></ProtectedRoute>} />
                                             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -174,17 +180,31 @@ export default function App() {
                                             <Route path="/help" element={<HelpCenter />} />
                                             <Route path="/about" element={<AboutUs />} />
                                             <Route path="/refund" element={<RefundPolicy />} />
+                                            <Route path="/activities" element={<ActivitiesPage />} />
+                                            <Route path="/activities/book/:turfId" element={<BookingSlotPage />} />
+                                            <Route path="/activities/payment" element={<ProtectedRoute><TurfPaymentPage /></ProtectedRoute>} />
+                                            <Route path="/activities/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/activities/:slug" element={<SportDetailsPage />} />
+                                            
+                                            {/* Park Routes */}
+                                            <Route path="/park/:slug" element={<ParkDetailsPage />} />
+                                            <Route path="/park/:slug/tickets" element={<ParkTicketPage />} />
+                                            <Route path="/park/:slug/payment" element={<ProtectedRoute><ParkPaymentPage /></ProtectedRoute>} />
+
+                                            {/* Legacy /sports routes kept for backward compatibility */}
+                                            <Route path="/sports" element={<ActivitiesPage />} />
                                             <Route path="/sports/book/:turfId" element={<BookingSlotPage />} />
                                             <Route path="/sports/payment" element={<ProtectedRoute><TurfPaymentPage /></ProtectedRoute>} />
-                            <Route path="/sports/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/sports/bookings/:bookingId" element={<ProtectedRoute><TurfBookingDetailsPage /></ProtectedRoute>} />
+                                            <Route path="/sports/:slug" element={<SportDetailsPage />} />
                                             <Route path="/theater/:slug" element={<TheaterDetailsPage />} />
                                             <Route path="/cinemas" element={<CinemasListPage />} />
-                                            <Route path="/sports" element={<SportsPage />} />
                                             <Route path="/swimming" element={<SwimmingPage />} />
-                                            <Route path="/sports/:slug" element={<SportDetailsPage />} />
                                             <Route path="/favorites" element={<FavoritesPage />} />
                                             <Route path="/offers" element={<OffersPage />} />
                                             <Route path="/notifications" element={<NotificationsPage />} />
+                                            <Route path="/user/notifications" element={<NotificationsPage />} />
+                                            <Route path="/notifications/settings" element={<NotificationSettingsPage />} />
                                             <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
                                             <Route path="/account-settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
                                             <Route path="/*" element={<NotFoundState title="Page Not Found" message="We couldn't find the page you're looking for." />} />

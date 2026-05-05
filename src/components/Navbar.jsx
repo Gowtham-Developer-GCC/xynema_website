@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3 } from 'lucide-react';
+import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3, ArrowLeft, Inbox } from 'lucide-react';
+import { getUserNotifications, markNotificationAsRead } from '../services/notificationService';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
@@ -26,6 +27,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const searchRef = useRef(null);
+    const [sidebarView, setSidebarView] = useState('menu'); // 'menu' or 'notifications'
+    const [notifications, setNotifications] = useState([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
 
     // Prevent body scroll when sidebar is open
     useEffect(() => {
@@ -129,10 +133,58 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
         { icon: Ticket, title: t('my_tickets') || 'My tickets', path: '/bookings' },
         { icon: CreditCard, title: t('payment_methods') || 'Payment methods', path: '/payment-methods' },
         { icon: Gift, title: t('offers_promos') || 'Offers & Promos', path: '/offers' },
-        { icon: Bell, title: t('notifications') || 'Notifications', path: '/notifications' },
+        { icon: Bell, title: t('notifications') || 'Notifications', onClick: async () => {
+            setSidebarView('notifications');
+            setLoadingNotifications(true);
+            try {
+                const data = await getUserNotifications();
+                const unreadOnly = (Array.isArray(data) ? data : []).filter(n => !n.isRead);
+                setNotifications(unreadOnly);
+            } catch (error) {
+                console.error('Failed to load notifications in sidebar:', error);
+            } finally {
+                setLoadingNotifications(false);
+            }
+        }},
         { icon: Shield, title: t('account_settings'), path: '/account-settings' },
         { icon: HelpCircle, title: t('help_center'), path: '/help' },
     ];
+
+    const getRelativeTime = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        if (diffInSeconds < 60) return 'now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    };
+
+    const getNotifIcon = (type = '') => {
+        const lowerType = type.toLowerCase();
+        if (lowerType.includes('booking')) return Ticket;
+        if (lowerType.includes('payment')) return CreditCard;
+        return Bell;
+    };
+
+    const handleNotificationClick = async (notif) => {
+        try {
+            if (!notif.isRead) {
+                // Optimistic update - Remove from list instead of just marking read
+                setNotifications(prev => prev.filter(n => n._id !== notif._id));
+                await markNotificationAsRead(notif._id);
+            }
+            
+            // Handle navigation if notif has a URL
+            if (notif.data?.url) {
+                setIsSidebarOpen(false);
+                navigate(notif.data.url);
+            }
+        } catch (err) {
+            console.error('[Notification Sidebar] Error in click handler:', err);
+        }
+    };
 
     return (
         <>
@@ -178,9 +230,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 {t('events')}
                                 {location.pathname.startsWith('/events') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
-                            <Link to="/sports" className={`relative py-1 transition-colors ${location.pathname.startsWith('/sports') ? 'text-primary' : 'hover:text-primary'}`}>
-                                {t('sports')}
-                                {location.pathname.startsWith('/sports') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
+                            <Link to="/activities" className={`relative py-1 transition-colors ${location.pathname.startsWith('/activities') ? 'text-primary' : 'hover:text-primary'}`}>
+                                {t('activities')}
+                                {location.pathname.startsWith('/activities') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
                         </div>
 
@@ -273,7 +325,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             {isSidebarOpen && (
                 <div
                     className="fixed inset-0 z-[100]"
-                    onClick={() => setIsSidebarOpen(false)}
+                    onClick={() => {
+                        setIsSidebarOpen(false);
+                        setTimeout(() => setSidebarView('menu'), 300);
+                    }}
                 >
                     {/* Frosted overlay backdrop */}
                     <div className={`absolute inset-0 backdrop-blur-[2px] transition-colors duration-500 ${isDarkMode ? 'bg-black/40' : 'bg-black/20'}`} />
@@ -372,48 +427,143 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         {/* Separator */}
                         <div className="mx-5 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }} />
 
-                        {/* Menu Items */}
-                        <div className="flex-1 overflow-y-auto py-3 px-3">
-                            {/* Mobile Only Browsing Links */}
-                            <div className="2xl:hidden pb-2 mb-2">
-                                {[
-                                    { to: '/#recommended-section', label: t('for_you'), icon: Heart, active: location.pathname === '/' },
-                                    { to: '/movies', label: t('movies'), icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
-                                    { to: '/events', label: t('events'), icon: Calendar, active: location.pathname.startsWith('/events') },
-                                    { to: '/sports', label: t('sports'), icon: MapPin, active: location.pathname.startsWith('/sports') },
-                                ].map((nav) => (
-                                    <Link
-                                        key={nav.to}
-                                        to={nav.to}
-                                        onClick={() => setIsSidebarOpen(false)}
-                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${nav.active
-                                            ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5')
-                                            : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
-                                            }`}
-                                    >
-                                        <nav.icon className={`w-[18px] h-[18px] ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
-                                            } transition-colors`} />
-                                        <span className={`text-[14px] font-medium ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-300' : 'text-gray-700')
-                                            }`}>{nav.label}</span>
-                                    </Link>
-                                ))}
-                                <div className="mt-2 mx-3 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }} />
-                            </div>
+                        {/* Sidebar Views */}
+                        <div className="flex-1 overflow-y-auto">
+                            {sidebarView === 'menu' ? (
+                                <div className="py-3 px-3">
+                                    {/* Mobile Only Browsing Links */}
+                                    <div className="2xl:hidden pb-2 mb-2">
+                                        {[
+                                            { to: '/#recommended-section', label: t('for_you'), icon: Heart, active: location.pathname === '/' },
+                                            { to: '/movies', label: t('movies'), icon: Play, active: location.pathname.startsWith('/movies') && location.pathname !== '/' },
+                                            { to: '/events', label: t('events'), icon: Calendar, active: location.pathname.startsWith('/events') },
+                                            { to: '/activities', label: t('activities'), icon: MapPin, active: location.pathname.startsWith('/activities') },
+                                        ].map((nav) => (
+                                            <Link
+                                                key={nav.to}
+                                                to={nav.to}
+                                                onClick={() => setIsSidebarOpen(false)}
+                                                className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${nav.active
+                                                    ? (isDarkMode ? 'bg-primary/10' : 'bg-primary/5')
+                                                    : (isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]')
+                                                    }`}
+                                            >
+                                                <nav.icon className={`w-[18px] h-[18px] ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600')
+                                                    } transition-colors`} />
+                                                <span className={`text-[14px] font-medium ${nav.active ? 'text-primary' : (isDarkMode ? 'text-gray-300' : 'text-gray-700')
+                                                    }`}>{nav.label}</span>
+                                            </Link>
+                                        ))}
+                                        <div className="mt-2 mx-3 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }} />
+                                    </div>
 
-                            {sidebarItems.map((item, idx) => (
-                                <Link
-                                    key={idx}
-                                    to={item.path}
-                                    onClick={() => setIsSidebarOpen(false)}
-                                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'
-                                        }`}
-                                >
-                                    <item.icon className={`w-[18px] h-[18px] transition-colors ${isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'
-                                        }`} />
-                                    <span className={`text-[14px] font-medium transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'
-                                        }`}>{item.title}</span>
-                                </Link>
-                            ))}
+                                    {sidebarItems.map((item, idx) => (
+                                        item.onClick ? (
+                                            <button
+                                                key={idx}
+                                                onClick={item.onClick}
+                                                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'}`}
+                                            >
+                                                <item.icon className={`w-[18px] h-[18px] transition-colors ${isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                                <span className={`text-[14px] font-medium transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'}`}>{item.title}</span>
+                                            </button>
+                                        ) : (
+                                            <Link
+                                                key={idx}
+                                                to={item.path}
+                                                onClick={() => setIsSidebarOpen(false)}
+                                                className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group ${isDarkMode ? 'hover:bg-white/[0.04]' : 'hover:bg-black/[0.02]'}`}
+                                            >
+                                                <item.icon className={`w-[18px] h-[18px] transition-colors ${isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                                <span className={`text-[14px] font-medium transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'}`}>{item.title}</span>
+                                            </Link>
+                                        )
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4">
+                                    {/* Notifications Header */}
+                                    <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 dark:border-white/5 bg-white/30 dark:bg-black/20 backdrop-blur-md sticky top-0 z-10">
+                                        <div className="flex items-center gap-3">
+                                            <button 
+                                                onClick={() => setSidebarView('menu')}
+                                                className={`p-2 rounded-lg transition-all ${isDarkMode ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-black/5 text-gray-500'}`}
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                            </button>
+                                            <span className={`text-[13px] font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                setIsSidebarOpen(false);
+                                                setSidebarView('menu');
+                                                navigate('/notifications/settings');
+                                            }}
+                                            className="p-2 rounded-lg text-primary hover:bg-primary/10 transition-all"
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* Notifications List */}
+                                    <div className="flex-1 overflow-y-auto px-3 py-4">
+                                        {loadingNotifications ? (
+                                            <div className="flex flex-col items-center justify-center py-10 opacity-50">
+                                                <div className="w-8 h-8 rounded-xl border-2 border-primary border-t-transparent animate-spin mb-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing...</span>
+                                            </div>
+                                        ) : notifications.length > 0 ? (
+                                            <div className="space-y-2.5">
+                                                {notifications.map((notif) => {
+                                                    const Icon = getNotifIcon(notif.type);
+                                                    return (
+                                                        <div 
+                                                            key={notif._id}
+                                                            onClick={() => handleNotificationClick(notif)}
+                                                            className={`p-4 rounded-2xl border transition-all flex gap-3 cursor-pointer ${isDarkMode 
+                                                                ? 'bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04]' 
+                                                                : 'bg-black/[0.02] border-black/[0.03] hover:bg-black/[0.04]'} ${!notif.isRead ? 'border-primary/20 bg-primary/5' : ''}`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                                                (notif.type || '').toLowerCase().includes('booking') ? 'bg-primary/10 text-primary' :
+                                                                (notif.type || '').toLowerCase().includes('payment') ? 'bg-blue-500/10 text-blue-500' :
+                                                                'bg-gray-500/10 text-gray-400'
+                                                            }`}>
+                                                                <Icon className="w-5 h-5" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2 mb-1">
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <h4 className={`text-[11px] font-black uppercase tracking-tight line-clamp-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                                            {notif.title}
+                                                                        </h4>
+                                                                        {!notif.isRead && (
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="text-[9px] font-bold text-gray-400 whitespace-nowrap pt-0.5">
+                                                                        {getRelativeTime(notif.createdAt)}
+                                                                    </span>
+                                                                </div>
+                                                                <p className={`text-[10px] font-medium leading-relaxed line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                                    {notif.body}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-white/[0.02]' : 'bg-black/[0.02]'}`}>
+                                                    <Inbox className="w-5 h-5 text-gray-400/30" />
+                                                </div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400/60">No alerts found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Log out */}
@@ -445,7 +595,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             {
                 !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
                 !location.pathname.startsWith('/event/') &&
-                !location.pathname.startsWith('/sports/') && (
+                !location.pathname.startsWith('/activities/') && (
                     <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe print:hidden">
                         <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
                             <Link
@@ -488,16 +638,16 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                             </Link>
 
                             <Link
-                                to="/sports"
-                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/sports')
+                                to="/activities"
+                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 flex-1 py-2 ${location.pathname.startsWith('/activities')
                                     ? 'text-primary scale-110'
                                     : 'text-gray-500 dark:text-gray-400'
                                     }`}
                             >
-                                <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/sports') ? 'bg-primary/10' : ''}`}>
-                                    <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/sports') ? 'fill-current' : ''}`} />
+                                <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/activities') ? 'bg-primary/10' : ''}`}>
+                                    <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/activities') ? 'fill-current' : ''}`} />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('sports')}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('activities')}</span>
                             </Link>
                         </div>
                     </div>

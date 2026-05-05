@@ -118,7 +118,7 @@ const SportDetailsPage = () => {
             return;
         }
         const turfId = sport?._id || sport?.id || slug;
-        navigate(`/sports/book/${turfId}`, { state: { sport } });
+        navigate(`/activities/book/${turfId}`, { state: { sport } });
     };
 
     const handleFavoriteClick = async (e) => {
@@ -394,7 +394,7 @@ const SportDetailsPage = () => {
                 <section className="pb-20">
                     <div className="flex items-center justify-between mb-12">
                         <h2 className="text-4xl font-black uppercase tracking-tighter">Recommended for you</h2>
-                        <Link to="/sports" className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
+                        <Link to="/activities" className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
                             Explore More <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                         </Link>
                     </div>

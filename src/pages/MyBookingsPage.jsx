@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Calendar as Calendar
 import { getUserBookings } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
 import { getMyTurfBookings } from '../services/turfService';
+import { getMyParkBookings } from '../services/parkService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import apiCacheManager from '../services/apiCacheManager';
@@ -30,6 +31,8 @@ const MyBookingsPage = () => {
     const [loading, setLoading] = useState(!bookings?.length);
     const [eventLoading, setEventLoading] = useState(!eventBookings?.length);
     const [turfLoading, setTurfLoading] = useState(!turfBookings?.length);
+    const [parkBookings, setParkBookings] = useState([]);
+    const [parkLoading, setParkLoading] = useState(true);
     const [pageLoading, setPageLoading] = useState(false);
     const [bookingType, setBookingType] = useState(location.state?.activeTab || 'movies');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -124,6 +127,22 @@ const MyBookingsPage = () => {
         }
     };
 
+    const fetchParkBookings = async (force = false) => {
+        try {
+            if (parkBookings.length > 0) setPageLoading(true);
+            else setParkLoading(true);
+
+            const result = await getMyParkBookings();
+            const bookingsArray = result.data?.bookings || result.data || result || [];
+            setParkBookings(Array.isArray(bookingsArray) ? bookingsArray : []);
+        } catch (err) {
+            console.error('Failed to fetch park bookings:', err);
+        } finally {
+            setParkLoading(false);
+            setPageLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (location.state?.activeTab) {
             setBookingType(location.state.activeTab);
@@ -140,6 +159,7 @@ const MyBookingsPage = () => {
         fetchMovieBookings(1, false);
         fetchEventBookings(1, false);
         fetchTurfBookings(false);
+        fetchParkBookings(false);
     }, []);
 
     const handlePageChange = (newPage) => {
@@ -196,8 +216,8 @@ const MyBookingsPage = () => {
     // ─── Filtering ───
     const filterByStatus = (booking, type) => {
         if (filterStatus === 'all') return true;
-        const dateStr = type === 'movies' ? booking.date : (type === 'events' ? booking.showDate : (booking.snapshot?.date || booking.slots?.[0]?.date || booking.date));
-        const timeStr = type === 'movies' ? booking.time : (type === 'events' ? booking.showTime : (booking.snapshot?.startTime || booking.slots?.[0]?.startTime));
+        const dateStr = type === 'movies' ? booking.date : (type === 'events' ? booking.showDate : (booking.bookingDay?.date || booking.snapshot?.date || booking.slots?.[0]?.date || booking.date));
+        const timeStr = type === 'movies' ? booking.time : (type === 'events' ? booking.showTime : (booking.bookingDay?.openingTime || booking.snapshot?.startTime || booking.slots?.[0]?.startTime));
         const showDate = parseDateTime(dateStr, timeStr);
         if (!showDate) return false;
         
@@ -219,12 +239,12 @@ const MyBookingsPage = () => {
 
     const sortBookings = (a, b, type) => {
         const dateA = parseDateTime(
-            type === 'movies' ? a.date : (type === 'events' ? a.showDate : (a.snapshot?.date || a.slots?.[0]?.date || a.date)), 
-            type === 'movies' ? a.time : (type === 'events' ? a.showTime : (a.snapshot?.startTime || a.slots?.[0]?.startTime))
+            type === 'movies' ? a.date : (type === 'events' ? a.showDate : (a.bookingDay?.date || a.snapshot?.date || a.slots?.[0]?.date || a.date)), 
+            type === 'movies' ? a.time : (type === 'events' ? a.showTime : (a.bookingDay?.openingTime || a.snapshot?.startTime || a.slots?.[0]?.startTime))
         );
         const dateB = parseDateTime(
-            type === 'movies' ? b.date : (type === 'events' ? b.showDate : (b.snapshot?.date || b.slots?.[0]?.date || b.date)), 
-            type === 'movies' ? b.time : (type === 'events' ? b.showTime : (b.snapshot?.startTime || b.slots?.[0]?.startTime))
+            type === 'movies' ? b.date : (type === 'events' ? b.showDate : (b.bookingDay?.date || b.snapshot?.date || b.slots?.[0]?.date || b.date)), 
+            type === 'movies' ? b.time : (type === 'events' ? b.showTime : (b.bookingDay?.openingTime || b.snapshot?.startTime || b.slots?.[0]?.startTime))
         );
         if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
@@ -244,11 +264,16 @@ const MyBookingsPage = () => {
         return turfBookings.filter(b => filterByStatus(b, 'sports')).sort((a, b) => sortBookings(a, b, 'sports'));
     }, [turfBookings, filterStatus]);
 
+    const filteredParks = useMemo(() => {
+        if (!Array.isArray(parkBookings)) return [];
+        return parkBookings.filter(b => filterByStatus(b, 'parks')).sort((a, b) => sortBookings(a, b, 'parks'));
+    }, [parkBookings, filterStatus]);
+
     // ─── Group By Month ───
     const groupByMonth = (items, type) => {
         const groups = {};
         items.forEach(item => {
-            const dateStr = type === 'movies' ? item.date : (type === 'events' ? item.showDate : (item.snapshot?.date || item.slots?.[0]?.date || item.date));
+            const dateStr = type === 'movies' ? item.date : (type === 'events' ? item.showDate : (item.bookingDay?.date || item.snapshot?.date || item.slots?.[0]?.date || item.date));
             if (!dateStr) return;
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return;
@@ -262,6 +287,7 @@ const MyBookingsPage = () => {
     const movieGroups = useMemo(() => groupByMonth(filteredMovies, 'movies'), [filteredMovies]);
     const eventGroups = useMemo(() => groupByMonth(filteredEvents, 'events'), [filteredEvents]);
     const turfGroups = useMemo(() => groupByMonth(filteredTurfs, 'sports'), [filteredTurfs]);
+    const parkGroups = useMemo(() => groupByMonth(filteredParks, 'parks'), [filteredParks]);
 
     // ─── Initial Load ───
     if (loading && bookings.length === 0) return <LoadingScreen message="Loading Tickets" />;
@@ -269,7 +295,8 @@ const MyBookingsPage = () => {
     const tabs = [
         { key: 'movies', label: 'Movies' },
         { key: 'events', label: 'Events' },
-        { key: 'sports', label: 'Sports' }
+        { key: 'sports', label: 'Sports' },
+        { key: 'parks', label: 'Parks' }
     ];
 
     const filterOptions = [
@@ -278,8 +305,8 @@ const MyBookingsPage = () => {
         { value: 'past', label: 'Past' },
     ];
 
-    const activeGroups = bookingType === 'movies' ? movieGroups : (bookingType === 'events' ? eventGroups : turfGroups);
-    const isContentLoading = bookingType === 'movies' ? pageLoading : (bookingType === 'events' ? eventLoading : turfLoading);
+    const activeGroups = bookingType === 'movies' ? movieGroups : (bookingType === 'events' ? eventGroups : (bookingType === 'sports' ? turfGroups : parkGroups));
+    const isContentLoading = bookingType === 'movies' ? pageLoading : (bookingType === 'events' ? eventLoading : (bookingType === 'sports' ? turfLoading : parkLoading));
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300">
@@ -381,7 +408,9 @@ const MyBookingsPage = () => {
                                             ? <MovieTicketCard key={`movie-${item.id}-${idx}`} booking={item} />
                                             : bookingType === 'events'
                                                 ? <EventTicketCard key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
-                                                : <TurfTicketCard key={`turf-${item._id || item.id}-${idx}`} booking={item} />
+                                                : bookingType === 'sports'
+                                                    ? <TurfTicketCard key={`turf-${item._id || item.id}-${idx}`} booking={item} />
+                                                    : <ParkTicketCard key={`park-${item.bookingRef || item.id}-${idx}`} booking={item} />
                                     )}
                                 </div>
                             </div>
@@ -411,11 +440,11 @@ const MyBookingsPage = () => {
                     movieTotalPages >= 1 && (
                         <Pagination page={moviePage} totalPages={movieTotalPages} onPageChange={handlePageChange} />
                     )
-                ) : (
+                ) : bookingType === 'events' ? (
                     eventTotalPages >= 1 && (
                         <Pagination page={eventPage} totalPages={eventTotalPages} onPageChange={handlePageChange} />
                     )
-                )}
+                ) : null}
             </div>
         </div>
     );
@@ -607,6 +636,74 @@ const TurfTicketCard = ({ booking }) => {
                     </p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
                         (status === 'paid' || status === 'confirmed') ? 'bg-green-100/10 text-green-600' : 'bg-orange-100/10 text-orange-600'
+                    }`}>
+                        {status}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// ─────────────────────────────────────
+// Park Ticket Card
+// ─────────────────────────────────────
+const ParkTicketCard = ({ booking }) => {
+    const navigate = useNavigate();
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        } catch { return dateStr; }
+    };
+
+    const parkName = booking.park?.parkName || booking.parkName || 'Amusement Park';
+    const city = booking.park?.city || booking.parkCity || '';
+    const bookingDate = booking.date || booking.bookingDay?.date || booking.bookingDate;
+    const amount = booking.pricing?.totalAmount || booking.amount || booking.totalPrice || booking.paidAmount || 0;
+    const status = booking.status || 'Confirmed';
+    const bookingRef = booking.bookingRef || booking.id || booking._id;
+
+    const primaryImage = booking.park?.parkImage?.url || booking.parkImage?.url || 'https://images.unsplash.com/photo-1513889959013-c2845acbaf3d?auto=format&fit=crop&q=80&w=600';
+
+    return (
+        <div
+            onClick={() => navigate(`/activities/park-bookings/${bookingRef}`)}
+            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
+        >
+            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
+                <img
+                    src={optimizeImage(primaryImage, { width: 600, quality: 75 })}
+                    alt={parkName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
+                    Park
+                </div>
+            </div>
+
+            <div className="p-4 space-y-1">
+                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
+                    {parkName}
+                </h3>
+                <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    <span>{formatDate(bookingDate)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[12px] text-gray-400 dark:text-gray-500">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="line-clamp-1">{city}</span>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-primary font-bold text-[15px]">
+                        ₹{amount.toLocaleString()}
+                    </p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                        (status === 'confirmed' || status === 'completed') ? 'bg-green-100/10 text-green-600' : 'bg-orange-100/10 text-orange-600'
                     }`}>
                         {status}
                     </span>

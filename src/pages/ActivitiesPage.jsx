@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
     Search, Star, MapPin, ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles
@@ -21,42 +21,59 @@ const ActivitiesPage = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
+    // Use context data but manage errors locally to be more resilient
+    const { selectedCity, turfs, loading: dataLoading, refreshData: refreshGlobalData } = useData();
+
     // Read active section from URL param (default: All)
     const sectionFromUrl = searchParams.get('section') || 'All';
     const [activeSection, setActiveSection] = useState(
         SECTION_TABS.includes(sectionFromUrl) ? sectionFromUrl : 'All'
     );
 
-    const { selectedCity, turfs, loading: dataLoading, error: dataError, refreshData } = useData();
     const [visitedParks, setVisitedParks] = useState([]);
     const [allParks, setAllParks] = useState([]);
     const [error, setError] = useState(null);
     const [parksLoading, setParksLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchParks = async () => {
-            try {
-                setParksLoading(true);
-                const [visited, all] = await Promise.all([getVisitedParks(), getAllParks()]);
-                setVisitedParks(visited);
-                setAllParks(all);
-            } catch (err) {
-                console.error("Error fetching parks:", err);
-            } finally {
-                setParksLoading(false);
-            }
-        };
-        fetchParks();
-    }, []);
-
-    useEffect(() => {
-        if (dataError) setError(dataError);
-    }, [dataError]);
-
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
+
+    const fetchParks = useCallback(async () => {
+        try {
+            setParksLoading(true);
+            setError(null);
+            const params = {
+                city: selectedCity,
+                search: searchQuery,
+                page: 1,
+                limit: 20
+            };
+            const [visited, all] = await Promise.all([
+                getVisitedParks(),
+                getAllParks(params)
+            ]);
+            setVisitedParks(visited);
+            setAllParks(all);
+        } catch (err) {
+            console.error("Error fetching parks:", err);
+            if (allParks.length === 0) {
+                setError("Failed to load activity parks. Please try again.");
+            }
+        } finally {
+            setParksLoading(false);
+        }
+    }, [selectedCity, searchQuery]);
+
+    useEffect(() => {
+        fetchParks();
+    }, [fetchParks]);
+
+    const handleRetry = () => {
+        setError(null);
+        refreshGlobalData(1);
+        fetchParks();
+    };
 
     // Dynamic tags from turf data
     const availableSportTags = useMemo(() => {
@@ -100,7 +117,7 @@ const ActivitiesPage = () => {
     }, []);
 
     if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding activities near you" />;
-    if (error) return <ErrorState error={error} onRetry={() => refreshData(1)} title="Connection Issue" />;
+    if (error) return <ErrorState error={error} onRetry={handleRetry} title="Connection Issue" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
@@ -128,11 +145,10 @@ const ActivitiesPage = () => {
                         <button
                             key={tab}
                             onClick={() => handleSectionChange(tab)}
-                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${
-                                activeSection === tab
+                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeSection === tab
                                     ? 'text-primary'
                                     : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                            }`}
+                                }`}
                         >
                             {tab}
                             {activeSection === tab && (
@@ -206,11 +222,10 @@ const ActivitiesPage = () => {
                         <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
                             <button
                                 onClick={() => setActiveSportTag('All')}
-                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-                                    activeSportTag === 'All'
+                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === 'All'
                                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                                         : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                }`}
+                                    }`}
                             >
                                 All
                             </button>
@@ -218,11 +233,10 @@ const ActivitiesPage = () => {
                                 <button
                                     key={tag}
                                     onClick={() => setActiveSportTag(tag)}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-                                        activeSportTag === tag
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === tag
                                             ? 'bg-primary text-white shadow-md shadow-primary/20'
                                             : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                    }`}
+                                        }`}
                                 >
                                     {tag}
                                 </button>
@@ -232,11 +246,10 @@ const ActivitiesPage = () => {
                             <div className="relative shrink-0 ml-auto" ref={moreFiltersRef}>
                                 <button
                                     onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
-                                        isMoreFiltersOpen
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
                                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
                                             : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
-                                    }`}
+                                        }`}
                                 >
                                     More
                                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
@@ -249,11 +262,10 @@ const ActivitiesPage = () => {
                                                 <button
                                                     key={tag}
                                                     onClick={() => { setActiveSportTag(tag); setIsMoreFiltersOpen(false); }}
-                                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${
-                                                        activeSportTag === tag
+                                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeSportTag === tag
                                                             ? 'bg-primary/10 text-primary'
                                                             : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {tag}
                                                 </button>
@@ -357,9 +369,8 @@ const TurfEmptyState = ({ onReset }) => (
 
 const ParksComingSoon = ({ compact = false }) => (
     <div
-        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/40 dark:to-teal-900/30 border border-emerald-200/60 dark:border-emerald-800/30 ${
-            compact ? 'py-16' : 'py-32'
-        } text-center`}
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/40 dark:to-teal-900/30 border border-emerald-200/60 dark:border-emerald-800/30 ${compact ? 'py-16' : 'py-32'
+            } text-center`}
     >
         {/* Decorative blobs */}
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-emerald-200/30 dark:bg-emerald-700/20 blur-3xl pointer-events-none" />

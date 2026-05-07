@@ -13,14 +13,11 @@ import SportCard from '../components/SportCard';
 
 const SportsPage = () => {
     const navigate = useNavigate();
-    const { selectedCity, turfs, loading: dataLoading, error: dataError, refreshData } = useData();
+    const { selectedCity, turfs, loading: dataLoading, refreshData: refreshGlobalData } = useData();
     const [searchParams] = useSearchParams();
     const [error, setError] = useState(null);
 
-    // Sync context error to local error
-    useEffect(() => {
-        if (dataError) setError(dataError);
-    }, [dataError]);
+    // Error handling moved to local level for resilience
 
     const [searchQuery, setSearchQuery] = useState('');
     const [eventFilters, setEventFilters] = useState({
@@ -87,7 +84,7 @@ const SportsPage = () => {
     };
 
     if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding Available Venues" />;
-    if (error) return <ErrorState error={error} onRetry={() => refreshData(1)} title="Transmission Interrupted" />;
+    if (error) return <ErrorState error={error} onRetry={() => refreshGlobalData(1)} title="Transmission Interrupted" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">

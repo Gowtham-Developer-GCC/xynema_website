@@ -95,46 +95,49 @@ export const DataProvider = ({ children, selectedCity }) => {
 
             const [movieData, foodData, upcomingData, latestData, eventData, highlightsData, turfData] = await Promise.all([
                 // Now Showing (based on city)
-                page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
+                (page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getNowShowingMovies(selectedCity, page),
                     shouldRevalidate
-                ) : getNowShowingMovies(selectedCity, page),
+                ) : getNowShowingMovies(selectedCity, page)).catch(err => { console.error("Movies failed:", err); return { movies: [], theaters: [], pagination: { total: 0, page: 1, pages: 1 } }; }),
 
                 // Food items
                 apiCacheManager.getOrExecute('food_items',
                     () => getFoodItems(),
                     1800,
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Food failed:", err); return []; }),
 
                 // Upcoming movies
                 apiCacheManager.getOrFetchUpcomingMovies(null,
                     () => getUpcomingMovies(),
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Upcoming failed:", err); return []; }),
 
                 // Latest movies
                 apiCacheManager.getOrExecute('latest_movies',
                     () => getNotNowMovies(selectedCity),
                     1800,
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Latest failed:", err); return []; }),
+
                 // Events
                 apiCacheManager.getOrFetchEvents(selectedCity,
                     () => getEvents(selectedCity),
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Events failed:", err); return []; }),
+
                 // Highlights
                 apiCacheManager.getOrExecute('highlights_movies',
                     () => getHighlightsMovies(),
                     1800,
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Highlights failed:", err); return []; }),
+
                 // Turfs
                 apiCacheManager.getOrFetchTurfs(selectedCity,
                     () => getAvailableTurfs({ city: selectedCity }),
                     shouldRevalidate
-                ),
+                ).catch(err => { console.error("Turfs failed:", err); return []; }),
             ]);
 
             // Parse movie and theater data

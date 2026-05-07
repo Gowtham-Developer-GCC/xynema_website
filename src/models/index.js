@@ -848,3 +848,80 @@ export class EventBooking {
         return new EventBooking(json);
     }
 }
+
+export class ActivityPark {
+    constructor(data = {}) {
+        this.id = data._id || data.id || '';
+        this.name = data.parkName || data.name || 'Unnamed Park';
+        this.shortName = data.shortName || this.name.split(' ')[0] || 'Park';
+        this.slug = data.slug || this.id;
+        this.type = data.parkType || data.type || 'Activity Park';
+
+        const loc = data.location || {};
+        this.city = data.city || loc.city || 'City TBD';
+        this.location = data.fullAddress || loc.address || data.address || '';
+        this.mapUrl = data.mapUrl || '';
+
+        // Ratings
+        this.rating = data.ratingSummary?.average || data.rating || 0;
+        this.reviewCount = data.ratingSummary?.count || data.reviewCount || 0;
+
+        // Pricing - handle different ways it might come
+        // Often parks have multiple ticket types, we pick the minimum price
+        this.price = data.minPrice || data.basePrice || data.price || 0;
+        this.originalPrice = data.originalPrice || null;
+        this.discount = data.discount || (this.originalPrice ? Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100) : null);
+
+        const ticketList = data.tickets || data.ticketTypes || [];
+        if (!this.price && Array.isArray(ticketList)) {
+            const prices = ticketList.map(t => t.price || 0).filter(p => p > 0);
+            if (prices.length > 0) {
+                this.price = Math.min(...prices);
+            }
+        }
+
+        this.openingHours = data.openingHours || '';
+        this.bestFor = data.bestFor || '';
+        this.topTime = data.topTime || '';
+        this.bestSeason = data.bestSeason || '';
+        this.description = data.description || '';
+        this.safetyText = data.safetyText || 'Standard safety rules apply';
+        this.facilities = data.facilities || [];
+
+        // Image Handling
+        const imgs = Array.isArray(data.images)
+            ? data.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean)
+            : [];
+
+        this.posterImage = data.posterImage?.url || data.posterImage || imgs[0] || 'https://placehold.co/800x400';
+        this.bannerImage = data.bannerImage?.url || data.bannerImage || imgs[1] || this.posterImage;
+        this.cardImage = data.cardImage?.url || data.cardImage || this.posterImage;
+        this.gallery = imgs;
+
+        this.topRides = (data.topRides || []).map(ride => ({
+            name: ride.name || '',
+            image: ride.image?.url || ride.image || '',
+            description: ride.description || ''
+        }));
+
+        this.ticketTypes = ticketList.map(t => ({
+            id: t._id || t.id || '',
+            label: t.ticketName || t.label || t.name || '',
+            price: t.price || 0,
+            min: t.min || 0,
+            max: t.max || t.capacity || 0,
+            description: t.description || t.ageRule || ''
+        }));
+
+        this.storeItems = (data.storeItems || []).map(item => ({
+            name: item.name || '',
+            price: item.price || 0,
+            image: item.image?.url || item.image || '',
+            reviews: item.reviews || 0
+        }));
+    }
+
+    static fromJson(json) {
+        return new ActivityPark(json);
+    }
+}

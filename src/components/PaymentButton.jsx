@@ -70,6 +70,14 @@ const PaymentButton = ({
                     seatIds,
                     sessionId
                 });
+            } else if (bookingData?.isPark) {
+                // Use the park booking order creation API
+                response = await api.post(ENDPOINTS.PARKS.CREATE_ORDER(bookingData.reservationId), {
+                    parkId: bookingData.parkId,
+                    date: bookingData.date,
+                    bookingDayId: bookingData.bookingDayId,
+                    tickets: bookingData.tickets
+                });
             } else if (bookingData?.reservationId) {
                 // Use the event booking order creation API
                 response = await api.post(ENDPOINTS.EVENT_BOOKING.CREATE_ORDER(bookingData.reservationId));
@@ -116,6 +124,19 @@ const PaymentButton = ({
                                 seatIds,
                                 sessionId,
                                 platform: 'web',
+                                paymentDetails: {
+                                    method: selectedMethod || 'upi',
+                                    transactionId: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature
+                                }
+                            });
+                            verifyResult = confirmResponse.data;
+                        } else if (bookingData?.isPark) {
+                            // Use park-specific confirmation API
+                            const { reservationId, selectedMethod } = bookingData;
+                            const confirmResponse = await api.post(ENDPOINTS.PARKS.CONFIRM(reservationId), {
+                                ...bookingData,
                                 paymentDetails: {
                                     method: selectedMethod || 'upi',
                                     transactionId: response.razorpay_payment_id,
@@ -176,6 +197,22 @@ const PaymentButton = ({
                                 const bId = verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || verifyResult.id;
                                 targetPath = `/bookings/${bId}`;
                                 navigationState = { isNewBooking: true };
+                            } else if (bookingData?.isPark) {
+                                // Park Booking - Redirect to dedicated success page
+                                const bId = verifyResult.data?.bookingRef || 
+                                            verifyResult.data?.booking?.bookingRef || 
+                                            verifyResult.data?.bookingId || 
+                                            verifyResult.data?.id || 
+                                            verifyResult.data?._id;
+                                targetPath = `/activities/park-bookings/${bId}`;
+                                navigationState = { 
+                                    isNewBooking: true,
+                                    bookingData: {
+                                        ...bookingData,
+                                        ...verifyResult.data,
+                                        bookingId: bId
+                                    }
+                                };
                             } else if (bookingData?.reservationId) {
                                 // Event Booking
                                 const bId = verifyResult.data?.bookingId || verifyResult.data?.booking?._id || verifyResult.data?.id;

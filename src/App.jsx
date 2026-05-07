@@ -56,6 +56,7 @@ const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettings
 const PaymentMethodsPage = lazy(() => import('./pages/PaymentMethodsPage'));
 const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'));
 const BookingSuccess = lazy(() => import('./pages/BookingSuccess'));
+const ParkBookingDetailsPage = lazy(() => import('./pages/ParkBookingDetailsPage'));
 const SwimmingPage = lazy(() => import('./pages/SwimmingPage'));
 const Footer = lazy(() => import('./components/Footer'));
 const LoginModal = lazy(() => import('./components/LoginModal'));
@@ -190,6 +191,7 @@ export default function App() {
                                             <Route path="/park/:slug" element={<ParkDetailsPage />} />
                                             <Route path="/park/:slug/tickets" element={<ParkTicketPage />} />
                                             <Route path="/park/:slug/payment" element={<ProtectedRoute><ParkPaymentPage /></ProtectedRoute>} />
+                                            <Route path="/activities/park-bookings/:id" element={<ProtectedRoute><ParkBookingDetailsPage /></ProtectedRoute>} />
 
                                             {/* Legacy /sports routes kept for backward compatibility */}
                                             <Route path="/sports" element={<ActivitiesPage />} />

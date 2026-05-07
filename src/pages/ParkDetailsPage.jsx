@@ -5,6 +5,7 @@ import {
     ChevronLeft, ChevronRight, Info, CheckCircle2, ShoppingBag, Tag
 } from 'lucide-react';
 import { getParkBySlug, getAllParks } from '../services/parkService';
+import { useData } from '../context/DataContext';
 import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 import ParkCard from '../components/ParkCard';
@@ -13,6 +14,7 @@ const ParkDetailsPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+    const { selectedCity } = useData();
     const [park, setPark] = useState(location.state?.park || null);
     const [allParks, setAllParks] = useState([]);
     const [loading, setLoading] = useState(!park);
@@ -21,13 +23,15 @@ const ParkDetailsPage = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                if (!park) setLoading(true);
+                const fetchParkTask = (!park || !park.description) ? getParkBySlug(slug) : Promise.resolve(park);
+                
                 const [data, parks] = await Promise.all([
-                    getParkBySlug(slug),
-                    getAllParks()
+                    fetchParkTask,
+                    getAllParks({ city: selectedCity || 'Kochi' })
                 ]);
-                setPark(data);
-                setAllParks(parks.filter(p => p.slug !== slug));
+                
+                if (data) setPark(data);
+                if (parks) setAllParks(parks.filter(p => p.slug !== slug && p.id !== slug));
             } catch (err) {
                 console.error("Error fetching park details:", err);
             } finally {
@@ -36,7 +40,7 @@ const ParkDetailsPage = () => {
         };
         fetchDetails();
         window.scrollTo(0, 0);
-    }, [slug]);
+    }, [slug, selectedCity]);
 
     const visibleStoreItems = park?.storeItems?.slice(storeScrollIdx, storeScrollIdx + 4) || [];
     const canScrollLeft = storeScrollIdx > 0;
@@ -54,60 +58,71 @@ const ParkDetailsPage = () => {
             <SEO title={`${park.name} - Xynema`} description={park.description} />
 
             {/* ── HERO / BANNER ── */}
-            <div className="relative pt-24 md:pt-32 pb-0 overflow-hidden">
-                {/* Blurred background */}
+            <div className="relative pt-32 md:pt-40 pb-16 overflow-hidden">
+                {/* Background Image with Blur and Overlay */}
                 <div className="absolute inset-0 z-0">
                     <img
                         src={park.bannerImage}
                         alt=""
-                        className="w-full h-[500px] object-cover blur-3xl scale-125 opacity-40 dark:opacity-20"
+                        width="3840"
+                        height="2400"
+                        className="w-full h-full object-cover scale-110 brightness-[0.4] saturate-[1.2]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white dark:via-[#0f1115]/60 dark:to-[#0f1115]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] via-transparent to-transparent" />
                 </div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
-                    <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-start text-center md:text-left pb-12">
-
-                        {/* Poster */}
-                        <div className="w-56 md:w-72 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl shadow-black/30 ring-4 ring-white/10 shrink-0">
-                            <img
-                                src={park.posterImage}
-                                alt={park.name}
-                                className="w-full h-full object-cover"
-                            />
+                    <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-center md:items-end">
+                        
+                        {/* Poster with Glow – now using 2000x3160 aspect ratio */}
+                        <div className="relative group shrink-0">
+                            <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="w-64 md:w-80 aspect-[2000/3160] rounded-[32px] overflow-hidden shadow-2xl shadow-black/50 relative border border-white/10">
+                                <img
+                                    src={park.posterImage}
+                                    alt={park.name}
+                                    width="2000"
+                                    height="3160"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                            </div>
                         </div>
 
-                        {/* Info */}
-                        <div className="flex-1 pt-2 md:pt-6">
-                            {/* Type badge */}
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 backdrop-blur-md rounded-full mb-4">
-                                <span className="text-[10px] font-black tracking-widest text-primary uppercase">
-                                    {park.type}
-                                </span>
-                            </div>
-
-                            {/* Title */}
-                            <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-5 leading-tight">
-                                {park.name}
-                            </h1>
-
-                            {/* Meta */}
-                            <div className="space-y-3 mb-8">
-                                <div className="flex items-center justify-center md:justify-start gap-2 text-gray-700 dark:text-gray-300">
-                                    <Star className="w-4 h-4 text-primary fill-current" />
-                                    <span className="text-sm font-bold">{park.rating}/5</span>
-                                    <span className="text-xs text-gray-400 font-medium">({park.reviewCount} ratings)</span>
+                        {/* Info Card - Glassmorphism */}
+                        <div className="flex-1 w-full md:w-auto">
+                            <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 rounded-[32px] p-8 md:p-10 shadow-2xl mb-6">
+                                {/* Type badge */}
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary rounded-full mb-4">
+                                    <span className="text-[10px] font-black tracking-widest text-white uppercase">
+                                        {park.type}
+                                    </span>
                                 </div>
-                                <div className="flex items-center justify-center md:justify-start gap-2 text-gray-700 dark:text-gray-300">
-                                    <MapPin className="w-4 h-4 text-primary" />
-                                    <span className="text-sm font-bold">{park.city}</span>
+
+                                {/* Title */}
+                                <h1 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight drop-shadow-sm">
+                                    {park.name}
+                                </h1>
+
+                                {/* Meta */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 text-white/90">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-xl border border-white/10">
+                                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                            <span className="text-sm font-bold">{park.rating || '4.8'}/5</span>
+                                        </div>
+                                        <span className="text-xs text-white/60 font-medium">({park.reviewCount || '2.5K'} ratings)</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-white/80">
+                                        <MapPin className="w-4 h-4 text-primary" />
+                                        <span className="text-sm font-bold tracking-wide">{park.city}</span>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* CTA */}
                             <button
                                 onClick={() => navigate(`/park/${slug}/tickets`, { state: { park } })}
-                                className="w-full md:w-auto px-14 py-4 bg-primary text-white font-black tracking-widest uppercase rounded-xl shadow-xl shadow-primary/30 hover:brightness-110 active:scale-95 transition-all text-sm"
+                                className="w-full py-5 bg-primary text-white font-black tracking-[0.2em] uppercase rounded-2xl shadow-2xl shadow-primary/40 hover:brightness-110 hover:-translate-y-1 active:scale-95 transition-all text-sm"
                             >
                                 Book Tickets
                             </button>

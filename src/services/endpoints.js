@@ -81,5 +81,18 @@ export const ENDPOINTS = {
         BOOKING_DETAILS: (bookingId) => `/customer-turf/booking/${bookingId}`,
         SIMILAR: (turfId) => `/customer-turf/similar-turfs/${turfId}`,
         INTEREST: (turfId) => `/movies/interest/turf/${turfId}`,
+    },
+
+    // Parks
+    PARKS: {
+        LIST: '/customer-activity/activity-parks',
+        DETAILS: (parkId) => `/customer-activity/activity-park/${parkId}`,
+        AVAILABILITY: (parkId) => `/customer-activity/activity-parks/${parkId}/availability`,
+        RESERVE: '/customer-activity/activity-parks/reserve-ticket',
+        CANCEL_RESERVE: '/customer-activity/activity-parks/cancel-reserve',
+        CREATE_ORDER: (reservationId) => `/customer-activity/activity-parks/create-order/${reservationId}`,
+        CONFIRM: (reservationId) => `/customer-activity/activity-parks/confirm-booking/${reservationId}`,
+        BOOKING_DETAILS: (bookingId) => `/customer-activity/activity-parks/bookings/${bookingId}`,
+        MY_BOOKINGS: '/customer-activity/activity-parks/mybookings',
     }
 };

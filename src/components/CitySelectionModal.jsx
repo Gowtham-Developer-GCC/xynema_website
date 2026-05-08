@@ -16,8 +16,8 @@ const POPULAR_CITY_CONFIG = [
     { name: 'Palakkad', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/goa.png)', WebkitMaskImage: 'url(/assets/cites/goa.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
     { name: 'Malappuram', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/chandigarh.png)', WebkitMaskImage: 'url(/assets/cites/chandigarh.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
     { name: 'Kozhikode', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/puducherry.png)', WebkitMaskImage: 'url(/assets/cites/puducherry.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
-    { name: 'Kannur', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/puducherry.png)', WebkitMaskImage: 'url(/assets/cites/puducherry.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
-    { name: 'Kasargod', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/puducherry.png)', WebkitMaskImage: 'url(/assets/cites/puducherry.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
+    //{ name: 'Kannur', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/puducherry.png)', WebkitMaskImage: 'url(/assets/cites/puducherry.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
+    //{ name: 'Kasargod', icon: <div className="w-12 h-12 bg-current" style={{ maskImage: 'url(/assets/cites/puducherry.png)', WebkitMaskImage: 'url(/assets/cites/puducherry.png)', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskPosition: 'center' }} /> },
 
 ];
 
@@ -215,15 +215,15 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
             />
 
             {/* Modal Container */}
-            <div className="relative w-full max-w-[800px] bg-white md:rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-300 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+            <div className="relative w-full max-w-[800px] bg-white dark:bg-[#1a1c23] md:rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-300 flex flex-col h-full md:h-auto md:max-h-[90vh] border border-transparent dark:border-gray-800">
                 
                 {/* Search Header */}
                 <div className="px-6 md:px-10 pt-8 pb-4">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Select Location</h2>
                         {currentCity && (
-                            <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                <X className="w-5 h-5 text-gray-500" />
+                            <button onClick={handleClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                             </button>
                         )}
                     </div>
@@ -234,7 +234,7 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                             placeholder="Search city, area or locality"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                            className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                             autoFocus
                         />
                     </div>
@@ -257,14 +257,14 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 space-y-4">
                             <Loader className="w-8 h-8 animate-spin text-primary" />
-                            <p className="text-sm font-medium text-gray-400">Loading cities...</p>
+                            <p className="text-sm font-medium text-gray-400 dark:text-gray-500">Loading cities...</p>
                         </div>
                     ) : (
                         <>
                             {/* Popular Cities */}
                             {!searchQuery && popularCities.length > 0 && (
                                 <div className="mb-10">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Popular Cities</h3>
+                                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6">Popular Cities</h3>
                                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-y-8 gap-x-4">
                                         {popularCities.map((city) => (
                                             <button
@@ -275,15 +275,15 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                             >
                                                 <div className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-2xl mb-3 transition-all duration-300 
                                                     ${city.isAvailable 
-                                                        ? (currentCity === city.name ? 'border-primary bg-primary/5 text-primary' : 'border-gray-50 bg-gray-50/50 text-gray-400 group-hover:border-primary/30 group-hover:bg-primary/5 group-hover:text-primary/70')
-                                                        : 'border-transparent bg-gray-50/30 text-gray-300 grayscale opacity-100'}
+                                                        ? (currentCity === city.name ? 'border-primary bg-primary/5 text-primary dark:bg-primary/10' : 'border-gray-50 dark:border-gray-800  text-gray-400 dark:text-gray-300 group-hover:border-primary/30 group-hover:text-primary')
+                                                        : 'border-transparent bg-gray-50/30 dark:bg-gray-800/20 text-gray-300 dark:text-gray-700 grayscale opacity-100'}
                                                 `}>
                                                     {city.icon}
                                                 </div>
                                                 <span className={`text-[11px] md:text-xs font-semibold text-center transition-colors 
                                                     ${city.isAvailable 
-                                                        ? (currentCity === city.name ? 'text-primary' : 'text-gray-600 group-hover:text-gray-900')
-                                                        : 'text-gray-300'}
+                                                        ? (currentCity === city.name ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200')
+                                                        : 'text-gray-300 dark:text-gray-700'}
                                                 `}>{city.name}</span>
                                             </button>
                                         ))}
@@ -294,11 +294,11 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                             {/* All Cities Section */}
                             <div className="space-y-8">
                                 <div className="flex flex-col gap-6">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">All Cities</h3>
+                                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">All Cities</h3>
                                     
                                     {/* Alpha Index */}
                                     {!searchQuery && (
-                                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-primary/60 border-b border-gray-100 pb-4">
+                                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-primary/60 border-b border-gray-100 dark:border-gray-800 pb-4">
                                             {ALPHABET.map(letter => (
                                                 <button 
                                                     key={letter} 
@@ -317,14 +317,14 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                     {Object.entries(remainingCitiesGrouped).map(([letter, cities]) => (
                                         <div key={letter} ref={el => alphabetRefs.current[letter] = el} className="contents md:block">
                                             {!searchQuery && (
-                                                <div className="hidden md:block text-xs font-bold text-gray-300 mb-3 border-b border-gray-50 pb-1">{letter}</div>
+                                                <div className="hidden md:block text-xs font-bold text-gray-300 dark:text-gray-600 mb-3 border-b border-gray-50 dark:border-gray-800 pb-1">{letter}</div>
                                             )}
                                             <div className="contents md:flex md:flex-col md:gap-2">
                                                 {cities.map(city => (
                                                     <button
                                                         key={city}
                                                         onClick={() => handleSelect(city)}
-                                                        className={`text-left py-2 text-[13px] font-medium transition-colors hover:text-primary ${currentCity === city ? 'text-primary' : 'text-gray-600'}`}
+                                                        className={`text-left py-2 text-[13px] font-medium transition-colors hover:text-primary dark:hover:text-primary ${currentCity === city ? 'text-primary font-bold' : 'text-gray-600 dark:text-gray-400'}`}
                                                     >
                                                         {city}
                                                     </button>
@@ -335,9 +335,9 @@ const CitySelectionModal = ({ isOpen, onClose, onSelect, currentCity }) => {
                                 </div>
 
                                 {Object.keys(remainingCitiesGrouped).length === 0 && (
-                                    <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                        <p className="text-gray-500 font-medium">Oh no! We couldn't find matches for "{searchQuery}"</p>
-                                        <p className="text-xs text-gray-400 mt-2">Try searching for a different city or check spelling</p>
+                                    <div className="text-center w-full py-20 bg-gray-50 dark:bg-gray-800/20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 col-span-full">
+                                        <p className="text-gray-500 dark:text-gray-400 font-medium">Oh no! We couldn't find matches for "{searchQuery}"</p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Try searching for a different city or check spelling</p>
                                     </div>
                                 )}
                             </div>

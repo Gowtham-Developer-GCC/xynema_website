@@ -20,7 +20,7 @@ const ParkCard = memo(({ park }) => {
                     src={park.cardImage || park.posterImage}
                     alt={park.name}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-1"
                 />
                 {/* Discount badge */}
                 {park.discount && (
@@ -39,7 +39,7 @@ const ParkCard = memo(({ park }) => {
 
                 <div className="flex items-center gap-1.5 mb-3">
                     <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="w-3.5 h-3.5 fill-current" />
+                        <Star className="w-3.5 h-3.5 fill-current text-primary" />
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{park.rating}</span>
                     </div>
                     <span className="text-gray-300 dark:text-gray-600 text-xs">•</span>

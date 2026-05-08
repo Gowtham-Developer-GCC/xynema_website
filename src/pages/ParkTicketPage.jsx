@@ -82,8 +82,8 @@ const ParkTicketPage = () => {
                         description: t.description || t.ageRule || ''
                     }));
                     setAvailableTickets(mapped);
-                } else if (park.ticketTypes) {
-                    setAvailableTickets(park.ticketTypes);
+                } else {
+                    setAvailableTickets([]);
                 }
             } catch (err) {
                 console.error("Error fetching availability:", err);
@@ -214,22 +214,30 @@ const ParkTicketPage = () => {
                         
                         {/* Date Selection */}
                         <section>
-                            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                                {dates.map((d, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setSelectedDate(d)}
-                                        className={`shrink-0 w-24 h-24 rounded-2xl flex flex-col items-center justify-center transition-all border-2 ${
-                                            selectedDate?.full === d.full
-                                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30 scale-105'
-                                                : 'bg-white dark:bg-gray-800 border-gray-50 dark:border-gray-700 text-gray-500 hover:border-primary/30'
-                                        }`}
-                                    >
-                                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${selectedDate?.full === d.full ? 'text-white/80' : 'text-gray-400'}`}>{d.day}</p>
-                                        <p className="text-xl font-black">{d.date}</p>
-                                        <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${selectedDate?.full === d.full ? 'text-white/80' : 'text-gray-400'}`}>{d.month}</p>
-                                    </button>
-                                ))}
+                            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
+                                {dates.map((d, idx) => {
+                                    const isSelected = selectedDate?.full === d.full;
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setSelectedDate(d)}
+                                            className={`
+                                                flex-shrink-0 min-w-[70px] py-2 px-3 rounded flex flex-col items-center justify-center transition-all duration-200
+                                                ${isSelected
+                                                    ? 'bg-primary text-white shadow-md scale-105'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-100 dark:border-gray-700 hover:bg-gray-50 hover:border-gray-200'
+                                                }
+                                            `}
+                                        >
+                                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'} mb-0.5`}>
+                                                {d.day}
+                                            </span>
+                                            <span className={`text-[13px] ${isSelected ? 'text-white' : 'text-gray-500'}`}>
+                                                {d.month} {d.date}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </section>
 
@@ -287,8 +295,13 @@ const ParkTicketPage = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="bg-white dark:bg-[#16181d] rounded-3xl p-12 border border-gray-100 dark:border-gray-800 text-center">
-                                    <p className="text-gray-500 font-bold">No tickets available for this date.</p>
+                                <div className="bg-white dark:bg-[#16181d] rounded-3xl p-12 border border-red-100 dark:border-red-950/30 text-center space-y-3 bg-red-50/10 dark:bg-red-500/5">
+                                    <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto text-red-500">
+                                        <Info className="w-6 h-6" />
+                                    </div>
+                                    <p className="text-red-500 font-black text-sm uppercase tracking-wide">
+                                        {availabilityFullData?.message || "No tickets available for this date."}
+                                    </p>
                                 </div>
                             )}
                         </section>

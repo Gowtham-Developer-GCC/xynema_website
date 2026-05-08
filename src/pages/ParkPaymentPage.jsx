@@ -373,6 +373,9 @@ const ParkPaymentPage = () => {
                         bookingData={{
                             isPark: true,
                             parkId: park.id || park._id,
+                            parkName: park.name || park.parkName,
+                            parkImage: park.images?.[0]?.url,
+                            parkCity: park.city,
                             date: selectedDate.full,
                             bookingDayId: bookingDayId,
                             reservationId: reservationId,
@@ -390,7 +393,7 @@ const ParkPaymentPage = () => {
                             isPaymentComplete.current = true;
                         }}
                         disabled={isCancelling || !phone}
-                        className={`flex-1 h-14 text-white font-black tracking-widest uppercase rounded-2xl transition-all flex items-center justify-center ${
+                        className={`flex-1 w-full h-14 text-white font-black tracking-widest uppercase rounded-2xl transition-all flex items-center justify-center ${
                             !phone || isCancelling
                             ? 'bg-gray-400 cursor-not-allowed shadow-none' 
                             : 'bg-primary shadow-xl shadow-primary/20'

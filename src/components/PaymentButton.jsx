@@ -198,19 +198,21 @@ const PaymentButton = ({
                                 targetPath = `/bookings/${bId}`;
                                 navigationState = { isNewBooking: true };
                             } else if (bookingData?.isPark) {
-                                // Park Booking - Redirect to dedicated success page
+                                // Park Booking - Redirect to booking success page first
                                 const bId = verifyResult.data?.bookingRef || 
                                             verifyResult.data?.booking?.bookingRef || 
                                             verifyResult.data?.bookingId || 
                                             verifyResult.data?.id || 
                                             verifyResult.data?._id;
-                                targetPath = `/activities/park-bookings/${bId}`;
+                                targetPath = "/booking-success";
                                 navigationState = { 
-                                    isNewBooking: true,
                                     bookingData: {
-                                        ...bookingData,
-                                        ...verifyResult.data,
-                                        bookingId: bId
+                                        isPark: true,
+                                        parkName: bookingData.parkName || verifyResult.data?.booking?.park?.parkName || "Wonderla",
+                                        posterUrl: bookingData.parkImage || verifyResult.data?.booking?.park?.images?.[0]?.url,
+                                        date: bookingData.date,
+                                        bookingId: bId,
+                                        tickets: bookingData.tickets || verifyResult.data?.booking?.tickets
                                     }
                                 };
                             } else if (bookingData?.reservationId) {

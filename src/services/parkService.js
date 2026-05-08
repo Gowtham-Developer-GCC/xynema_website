@@ -76,9 +76,10 @@ export const getParkAvailability = async (parkId, date) => {
             });
             const body = response.data;
 
-            if (body.success && body.data) {
-                // Include top-level bookingDayId in the data object if present
-                const result = body.data;
+            if (body.success) {
+                const result = body.data || {};
+                result.success = body.success;
+                result.message = body.message;
                 if (body.bookingDayId) {
                     result.bookingDayId = body.bookingDayId;
                 }

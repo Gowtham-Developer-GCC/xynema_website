@@ -384,7 +384,7 @@ const BookingSlotPage = () => {
                         <button 
                             disabled={reserving || selectedSlots.length === 0}
                             onClick={handleBooking}
-                            className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest disabled:bg-gray-200"
+                            className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest disabled:bg-gray-200 disabled:shadow-gray-300 disabled:dark:shadow-gray-900 disabled:dark:bg-gray-800 disabled:cursor-not-allowed cursor-pointer"
                         >
                             {reserving ? 'Processing...' : 'Continue to Payment'}
                         </button>

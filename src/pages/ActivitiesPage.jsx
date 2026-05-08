@@ -36,8 +36,11 @@ const ActivitiesPage = () => {
     const [parksLoading, setParksLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
+    const [activeParkType, setActiveParkType] = useState('All');
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+    const [isMoreParksFiltersOpen, setIsMoreParksFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
+    const moreParksFiltersRef = useRef(null);
 
     const fetchParks = useCallback(async () => {
         try {
@@ -96,6 +99,44 @@ const ActivitiesPage = () => {
         return list;
     }, [turfs, searchQuery, activeSportTag]);
 
+    // Dynamic sport tag slices
+    const mainSportTags = useMemo(() => {
+        return availableSportTags.slice(0, 4);
+    }, [availableSportTags]);
+
+    const dropdownSportTags = useMemo(() => {
+        return availableSportTags.slice(4);
+    }, [availableSportTags]);
+
+    // Dynamic types from park data
+    const parkTypesOnly = useMemo(() => {
+        return Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort();
+    }, [allParks]);
+
+    const mainParkTypes = useMemo(() => {
+        return parkTypesOnly.slice(0, 4);
+    }, [parkTypesOnly]);
+
+    const dropdownParkTypes = useMemo(() => {
+        return parkTypesOnly.slice(4);
+    }, [parkTypesOnly]);
+
+    // Filter parks
+    const filteredParks = useMemo(() => {
+        let list = allParks;
+        if (searchQuery.trim()) {
+            list = list.filter(p =>
+                (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        if (activeParkType !== 'All') {
+            list = list.filter(p => p.type === activeParkType);
+        }
+        return list;
+    }, [allParks, searchQuery, activeParkType]);
+
     // Handle section change — update URL param
     const handleSectionChange = (section) => {
         setActiveSection(section);
@@ -103,6 +144,7 @@ const ActivitiesPage = () => {
         // Reset filters when switching tabs
         setSearchQuery('');
         setActiveSportTag('All');
+        setActiveParkType('All');
     };
 
     // Close More Filters on outside click
@@ -110,6 +152,9 @@ const ActivitiesPage = () => {
         const handleClickOutside = (e) => {
             if (moreFiltersRef.current && !moreFiltersRef.current.contains(e.target)) {
                 setIsMoreFiltersOpen(false);
+            }
+            if (moreParksFiltersRef.current && !moreParksFiltersRef.current.contains(e.target)) {
+                setIsMoreParksFiltersOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -132,8 +177,8 @@ const ActivitiesPage = () => {
                     <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-1 tracking-tight uppercase">
                         Activities
                     </h1>
-                    <p className="text-[#6B7280] dark:text-gray-400 text-[11px] font-black uppercase tracking-widest">
-                        0 Newer things to do
+                    <p className="text-[#6B7280] dark:text-gray-400 text-[11px] font-medium uppercase tracking-widest">
+                        Discover activities near you
                     </p>
                 </div>
             </div>
@@ -205,8 +250,8 @@ const ActivitiesPage = () => {
                                 </button>
                             </div>
                             {allParks.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {allParks.slice(0, 4).map((park) => (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {allParks.slice(0, 3).map((park) => (
                                         <ParkCard key={park.id} park={park} />
                                     ))}
                                 </div>
@@ -229,7 +274,7 @@ const ActivitiesPage = () => {
                             >
                                 All
                             </button>
-                            {SPORT_TAGS.map((tag) => (
+                            {mainSportTags.map((tag) => (
                                 <button
                                     key={tag}
                                     onClick={() => setActiveSportTag(tag)}
@@ -243,37 +288,39 @@ const ActivitiesPage = () => {
                             ))}
 
                             {/* More filters */}
-                            <div className="relative shrink-0 ml-auto" ref={moreFiltersRef}>
-                                <button
-                                    onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
-                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
-                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
-                                        }`}
-                                >
-                                    More
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                {isMoreFiltersOpen && (
-                                    <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
-                                        <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Categories</div>
-                                        <div className="max-h-52 overflow-y-auto px-2">
-                                            {availableSportTags.map(tag => (
-                                                <button
-                                                    key={tag}
-                                                    onClick={() => { setActiveSportTag(tag); setIsMoreFiltersOpen(false); }}
-                                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeSportTag === tag
-                                                            ? 'bg-primary/10 text-primary'
-                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
-                                                        }`}
-                                                >
-                                                    {tag}
-                                                </button>
-                                            ))}
+                            {dropdownSportTags.length > 0 && (
+                                <div className="relative shrink-0 ml-auto" ref={moreFiltersRef}>
+                                    <button
+                                        onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
+                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                            }`}
+                                    >
+                                        More
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isMoreFiltersOpen && (
+                                        <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                            <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Categories</div>
+                                            <div className="max-h-52 overflow-y-auto px-2">
+                                                {dropdownSportTags.map(tag => (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => { setActiveSportTag(tag); setIsMoreFiltersOpen(false); }}
+                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeSportTag === tag
+                                                                ? 'bg-primary/10 text-primary'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                            }`}
+                                                    >
+                                                        {tag}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Search */}
@@ -311,35 +358,105 @@ const ActivitiesPage = () => {
 
                 {/* ===== PARKS TAB ===== */}
                 {activeSection === 'Parks' && (
-                    <div className="space-y-12">
-                        {/* Visit Again Section */}
-                        {visitedParks.length > 0 && (
-                            <section>
-                                <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight mb-6">Visit again</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                                    {visitedParks.map(park => (
-                                        <div key={park.id} onClick={() => navigate(`/park/${park.slug}`)} className="cursor-pointer group">
-                                            <div className="aspect-[16/9] rounded-2xl overflow-hidden mb-2">
-                                                <img src={park.bannerImage} alt={park.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                            </div>
-                                            <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{park.shortName}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
+                    <div>
+                        {/* Park Type filter chips */}
+                        <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
+                            <button
+                                onClick={() => setActiveParkType('All')}
+                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === 'All'
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                    }`}
+                            >
+                                All
+                            </button>
+                            {mainParkTypes.map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => setActiveParkType(type)}
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === type
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                        }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
 
-                        {/* Offers & Deals Section */}
-                        <section>
-                            <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight mb-6">Offers & deals</h2>
-                            {allParks.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {allParks.map(park => (
-                                        <ParkCard key={park.id} park={park} />
-                                    ))}
+                            {/* More filters */}
+                            {dropdownParkTypes.length > 0 && (
+                                <div className="relative shrink-0 ml-auto" ref={moreParksFiltersRef}>
+                                    <button
+                                        onClick={() => setIsMoreParksFiltersOpen(!isMoreParksFiltersOpen)}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreParksFiltersOpen
+                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                            }`}
+                                    >
+                                        More
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreParksFiltersOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isMoreParksFiltersOpen && (
+                                        <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                            <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Categories</div>
+                                            <div className="max-h-52 overflow-y-auto px-2">
+                                                {dropdownParkTypes.map((type) => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => { setActiveParkType(type); setIsMoreParksFiltersOpen(false); }}
+                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeParkType === type
+                                                                ? 'bg-primary/10 text-primary'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                            }`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            ) : <ParksComingSoon />}
-                        </section>
+                            )}
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative mb-8 max-w-md">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search parks..."
+                                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
+                                {activeParkType === 'All' ? 'All near by parks' : activeParkType}
+                            </h2>
+                            <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">
+                                {filteredParks.length} {filteredParks.length === 1 ? 'park' : 'parks'} available
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[40vh]">
+                            {filteredParks.length > 0 ? (
+                                filteredParks.map((park) => (
+                                    <ParkCard key={park.id} park={park} />
+                                ))
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+                                    <p className="text-lg font-bold mb-2">No parks found</p>
+                                    <button
+                                        onClick={() => { setSearchQuery(''); setActiveParkType('All'); }}
+                                        className="text-xs text-primary font-bold uppercase tracking-wider hover:underline"
+                                    >
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

@@ -208,7 +208,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
                             <button
                                 onClick={openCityModal}
-                                className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-all group text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm border border-white/60 dark:border-gray-700 shrink-0"
+                                className="hidden md:flex items-center gap-1.5 px-4 py-2  hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-all group text-sm font-semibold text-gray-700 dark:text-gray-300 shrink-0"
                             >
                                 <MapPin className="h-4 w-4" />
                                 <span className="text-gray-800 dark:text-gray-200 group-hover:text-primary truncate max-w-[100px]">{selectedCity || t('select_city')}</span>
@@ -595,7 +595,8 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
             {
                 !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
                 !location.pathname.startsWith('/event/') &&
-                !location.pathname.startsWith('/activities/') && (
+                !location.pathname.startsWith('/activities/') &&
+                !location.pathname.startsWith('/park/') && (
                     <div className="fixed bottom-0 left-0 right-0 z-[55] lg:hidden bg-white/70 dark:bg-gray-950/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-800/60 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 pb-safe print:hidden">
                         <div className="flex items-center justify-around h-16 md:h-18 px-4 max-w-md mx-auto">
                             <Link

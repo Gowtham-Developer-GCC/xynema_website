@@ -1,14 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
     MapPin, Star, Clock, Users, Calendar, ArrowLeft, ArrowRight,
-    ChevronLeft, ChevronRight, Info, CheckCircle2, ShoppingBag, Tag
+    ChevronLeft, ChevronRight, Info, CheckCircle2, ShoppingBag, Tag, Share2
 } from 'lucide-react';
 import { getParkBySlug, getAllParks } from '../services/parkService';
 import { useData } from '../context/DataContext';
 import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 import ParkCard from '../components/ParkCard';
+import StoreCard from '../components/StoreCard';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 const ParkDetailsPage = () => {
     const { slug } = useParams();
@@ -18,7 +23,35 @@ const ParkDetailsPage = () => {
     const [park, setPark] = useState(location.state?.park || null);
     const [allParks, setAllParks] = useState([]);
     const [loading, setLoading] = useState(!park);
-    const [storeScrollIdx, setStoreScrollIdx] = useState(0);
+
+    const heroButtonRef = useRef(null);
+    const [heroButtonVisible, setHeroButtonVisible] = useState(true);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setHeroButtonVisible(entry.isIntersecting);
+            },
+            { threshold: 0 }
+        );
+
+        if (heroButtonRef.current) {
+            observer.observe(heroButtonRef.current);
+        }
+
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 800);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            if (heroButtonRef.current) {
+                observer.unobserve(heroButtonRef.current);
+            }
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [park]);
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -42,9 +75,7 @@ const ParkDetailsPage = () => {
         window.scrollTo(0, 0);
     }, [slug, selectedCity]);
 
-    const visibleStoreItems = park?.storeItems?.slice(storeScrollIdx, storeScrollIdx + 4) || [];
-    const canScrollLeft = storeScrollIdx > 0;
-    const canScrollRight = park?.storeItems && storeScrollIdx + 4 < park.storeItems.length;
+
 
     if (loading) return <LoadingScreen message="Loading park details..." />;
     if (!park) return (
@@ -70,6 +101,35 @@ const ParkDetailsPage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] via-transparent to-transparent" />
                 </div>
+
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    title="Go Back"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
+
+                {/* Share Button */}
+                <button
+                    onClick={() => {
+                        if (navigator.share) {
+                            navigator.share({
+                                title: park.name,
+                                text: park.description,
+                                url: window.location.href,
+                            }).catch(err => console.error(err));
+                        } else {
+                            navigator.clipboard.writeText(window.location.href);
+                            alert("Link copied to clipboard!");
+                        }
+                    }}
+                    className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                    title="Share Park"
+                >
+                    <Share2 className="w-4 h-4" />
+                </button>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-center md:items-end">
@@ -121,6 +181,7 @@ const ParkDetailsPage = () => {
 
                             {/* CTA */}
                             <button
+                                ref={heroButtonRef}
                                 onClick={() => navigate(`/park/${slug}/tickets`, { state: { park } })}
                                 className="w-full py-5 bg-primary text-white font-black tracking-[0.2em] uppercase rounded-2xl shadow-2xl shadow-primary/40 hover:brightness-110 hover:-translate-y-1 active:scale-95 transition-all text-sm"
                             >
@@ -257,99 +318,139 @@ const ParkDetailsPage = () => {
                 </section>
 
                 {/* Store Section */}
-                {park.storeItems && park.storeItems.length > 0 && (
-                    <section>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-base font-black text-gray-900 dark:text-white">Explore the store</h2>
-                            <Link
-                                to="/store"
-                                className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors"
-                            >
-                                <ShoppingBag className="w-3.5 h-3.5" />
-                                Visit Store
-                            </Link>
-                        </div>
-
-                        {/* Scrollable store row */}
-                        <div className="relative">
-                            {/* Left Arrow */}
-                            {canScrollLeft && (
-                                <button
-                                    onClick={() => setStoreScrollIdx(i => Math.max(0, i - 1))}
-                                    className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-[#1a1c21] border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow"
-                                >
-                                    <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                                </button>
-                            )}
-
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-                                {visibleStoreItems.map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="bg-white dark:bg-[#16181d] rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden group cursor-pointer hover:border-gray-200 dark:hover:border-gray-700 transition-colors"
-                                    >
-                                        <div className="aspect-[3/4] bg-gray-50 dark:bg-gray-800/50 overflow-hidden">
-                                            <img
-                                                src={item.image}
-                                                alt={item.name}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                            />
-                                        </div>
-                                        <div className="p-3.5">
-                                            <h4 className="text-[10px] font-black text-gray-800 dark:text-gray-200 line-clamp-1 mb-1.5">
-                                                {item.name}
-                                            </h4>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-xs font-black text-gray-900 dark:text-white">
-                                                    ₹{item.price}
-                                                </p>
-                                                <div className="flex items-center gap-1 opacity-60">
-                                                    <Star className="w-2.5 h-2.5 text-yellow-400 fill-current" />
-                                                    <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400">
-                                                        {item.reviews}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                {(() => {
+                    const storeItemsToRender = park.storeItems && park.storeItems.length > 0 ? park.storeItems : MOCK_STORE_ITEMS;
+                    return storeItemsToRender && storeItemsToRender.length > 0 && (
+                        <section className=" relative group/store">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Explore the store</h3>
+                                <Link to="/store" className="text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 flex items-center gap-2">
+                                    <ShoppingBag className="w-4 h-4" />
+                                    Visit Store
+                                </Link>
                             </div>
 
-                            {/* Right Arrow */}
-                            {canScrollRight && (
-                                <button
-                                    onClick={() => setStoreScrollIdx(i => i + 1)}
-                                    className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-[#1a1c21] border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow"
+                            <div className="relative">
+                                <Swiper
+                                    modules={[Navigation]}
+                                    slidesPerView={2}
+                                    spaceBetween={16}
+                                    navigation={{
+                                        nextEl: '.park-store-next',
+                                        prevEl: '.park-store-prev',
+                                    }}
+                                    breakpoints={{
+                                        640: { slidesPerView: 3, spaceBetween: 24 },
+                                        768: { slidesPerView: 3, spaceBetween: 24 },
+                                        1024: { slidesPerView: 4, spaceBetween: 24 },
+                                    }}
+                                    className="!pb-6 !px-1"
                                 >
-                                    <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                    {storeItemsToRender.map((item, idx) => (
+                                        <SwiperSlide key={item.id || idx} className="!h-auto">
+                                            <StoreCard item={{ ...item, imageUrl: item.imageUrl || item.image }} />
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
+
+                                {/* Custom Navigation Arrows */}
+                                <button className="park-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
+                                    <ChevronRight className="w-6 h-6 rotate-180" />
                                 </button>
-                            )}
-                        </div>
-                    </section>
-                )}
+                                <button className="park-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
+                                    <ChevronRight className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </section>
+                    );
+                })()}
 
                 {/* Similar Picks */}
-                <section>
-                    <h2 className="text-base font-black text-gray-900 dark:text-white mb-6">Similar picks</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                        {allParks.slice(0, 3).map((p) => (
-                            <ParkCard key={p.id} park={p} />
-                        ))}
+                <section className="relative group/similar">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-base font-black text-gray-900 dark:text-white">Similar picks</h2>
+                        <div className="flex gap-2">
+                            <button className="similar-parks-prev w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary hover:border-primary transition-all disabled:opacity-30 disabled:pointer-events-none bg-white dark:bg-gray-900 shadow-sm">
+                                <ChevronRight className="w-5 h-5 rotate-180" />
+                            </button>
+                            <button className="similar-parks-next w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary hover:border-primary transition-all disabled:opacity-30 disabled:pointer-events-none bg-white dark:bg-gray-900 shadow-sm">
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <Swiper
+                            modules={[Navigation]}
+                            slidesPerView={1}
+                            spaceBetween={16}
+                            navigation={{
+                                nextEl: '.similar-parks-next',
+                                prevEl: '.similar-parks-prev',
+                            }}
+                            breakpoints={{
+                                640: { slidesPerView: 3, spaceBetween: 24 },
+                                768: { slidesPerView: 3, spaceBetween: 24 },
+                                1024: { slidesPerView: 4, spaceBetween: 24 },
+                            }}
+                            className="!pb-6 !px-1"
+                        >
+                            {allParks.map((p) => (
+                                <SwiperSlide key={p.id} className="!h-auto">
+                                    <ParkCard park={p} />
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
                     </div>
                 </section>
             </div>
 
             {/* ── MOBILE BOTTOM BAR ── */}
-            <div className="md:hidden fixed bottom-16 left-4 right-4 z-40">
-                <button
-                    onClick={() => navigate(`/park/${slug}/tickets`, { state: { park } })}
-                    className="w-full py-4 bg-primary text-white font-black tracking-widest uppercase rounded-xl shadow-2xl shadow-primary/40 text-sm active:scale-95 transition-transform"
-                >
-                    Book Tickets
-                </button>
-            </div>
+            {(!heroButtonVisible || isScrolled) && (
+                <div className="md:hidden fixed bottom-0 left-0 right-0 z-[70] animate-in slide-in-from-bottom duration-300 pb-safe">
+                    <div className="bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-2xl border-t border-gray-100 dark:border-gray-800 shadow-[0_-15px_50px_rgba(0,0,0,0.12)] p-4">
+                        <button
+                            onClick={() => navigate(`/park/${slug}/tickets`, { state: { park } })}
+                            className="w-full py-4 bg-primary text-white font-black tracking-widest uppercase rounded-2xl shadow-xl shadow-primary/20 text-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
+                        >
+                            <span>Book Tickets</span>
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+const MOCK_STORE_ITEMS = [
+    {
+        id: "store-1",
+        name: "Confetti paper 250g",
+        price: 250,
+        sellers: 3,
+        imageUrl: "https://img.freepik.com/premium-photo/colorful-background-with-confetti-place-party_577115-136303.jpg"
+    },
+    {
+        id: "store-2",
+        name: "Magician hat",
+        price: 1599,
+        sellers: 3,
+        imageUrl: "https://thumbs.dreamstime.com/b/magician-top-hat-magic-wand-shiny-grey-background-332855369.jpg"
+    },
+    {
+        id: "store-3",
+        name: "Casual Dress set",
+        price: 4399,
+        sellers: 3,
+        imageUrl: "https://crocodile.in/cdn/shop/files/2_67bc818f-423e-4730-b639-e97cbc7b1533.jpg?v=1756896672&width=1672"
+    },
+    {
+        id: "store-4",
+        name: "Painting kit",
+        price: 1000,
+        sellers: 3,
+        imageUrl: "https://p9artboutique.co.uk/cdn/shop/files/oil_paint_set_amazon_new_version_2000x2000_6a185091-8142-46ac-b4e4-1ee6e6b6d976.png?v=1756616128&width=1946"
+    }
+];
 
 export default ParkDetailsPage;

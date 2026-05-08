@@ -264,32 +264,35 @@ const ActivitiesPage = () => {
                 {activeSection === 'Turfs' && (
                     <div>
                         {/* Sport filter chips */}
-                        <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
-                            <button
-                                onClick={() => setActiveSportTag('All')}
-                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === 'All'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                    }`}
-                            >
-                                All
-                            </button>
-                            {mainSportTags.map((tag) => (
+                        <div className="relative flex items-center justify-between gap-6 pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
+                            {/* Scrollable Chips */}
+                            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar flex-1">
                                 <button
-                                    key={tag}
-                                    onClick={() => setActiveSportTag(tag)}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === tag
+                                    onClick={() => setActiveSportTag('All')}
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === 'All'
                                             ? 'bg-primary text-white shadow-md shadow-primary/20'
                                             : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                         }`}
                                 >
-                                    {tag}
+                                    All
                                 </button>
-                            ))}
+                                {mainSportTags.map((tag) => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => setActiveSportTag(tag)}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === tag
+                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                            }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
 
                             {/* More filters */}
                             {dropdownSportTags.length > 0 && (
-                                <div className="relative shrink-0 ml-auto" ref={moreFiltersRef}>
+                                <div className="relative shrink-0" ref={moreFiltersRef}>
                                     <button
                                         onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
@@ -360,32 +363,35 @@ const ActivitiesPage = () => {
                 {activeSection === 'Parks' && (
                     <div>
                         {/* Park Type filter chips */}
-                        <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
-                            <button
-                                onClick={() => setActiveParkType('All')}
-                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === 'All'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                    }`}
-                            >
-                                All
-                            </button>
-                            {mainParkTypes.map((type) => (
+                        <div className="relative flex items-center justify-between gap-6 pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
+                            {/* Scrollable Chips */}
+                            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar flex-1">
                                 <button
-                                    key={type}
-                                    onClick={() => setActiveParkType(type)}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === type
+                                    onClick={() => setActiveParkType('All')}
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === 'All'
                                             ? 'bg-primary text-white shadow-md shadow-primary/20'
                                             : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                         }`}
                                 >
-                                    {type}
+                                    All
                                 </button>
-                            ))}
+                                {mainParkTypes.map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setActiveParkType(type)}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === type
+                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                            }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
 
                             {/* More filters */}
                             {dropdownParkTypes.length > 0 && (
-                                <div className="relative shrink-0 ml-auto" ref={moreParksFiltersRef}>
+                                <div className="relative shrink-0" ref={moreParksFiltersRef}>
                                     <button
                                         onClick={() => setIsMoreParksFiltersOpen(!isMoreParksFiltersOpen)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreParksFiltersOpen

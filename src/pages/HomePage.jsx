@@ -16,16 +16,21 @@ import MovieCard from '../components/MovieCard';
 import EventCard from '../components/EventCard';
 import HeroCarousel from '../components/HeroCarousel';
 import LoadingScreen from '../components/LoadingScreen';
+import SportCard from '../components/SportCard';
+import ParkCard from '../components/ParkCard';
+
 
 const HomePage = ({ selectedCity }) => {
-    const { movies, latestMovies, upcomingMovies, highlightsMovies, events, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { movies, latestMovies, upcomingMovies, highlightsMovies, events, turfs, parks, loading, error, refreshData, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
     const { t } = useLanguage();
 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
+        // window.scrollTo(0, 0);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -338,6 +343,104 @@ const HomePage = ({ selectedCity }) => {
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
                             <button className="events-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0 -mr-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                {/* Turf Near You Section */}
+                {turfs?.length > 0 && (
+                    <section className="relative mt-16 group/turfs">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
+                                Turfs near you
+                            </h2>
+                            <Link to="/activities?section=Turfs" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+                                <ChevronRight className="w-5 h-5" />
+                            </Link>
+                        </div>
+
+                        <div className="relative">
+                            <Swiper
+                                modules={[Navigation]}
+                                spaceBetween={24}
+                                slidesPerView={1}
+                                navigation={{
+                                    nextEl: '.turfs-next',
+                                    prevEl: '.turfs-prev',
+                                }}
+                                breakpoints={{
+                                    320: { slidesPerView: 1, spaceBetween: 16 },
+                                    480: { slidesPerView: 1, spaceBetween: 16 },
+                                    640: { slidesPerView: 2, spaceBetween: 20 },
+                                    768: { slidesPerView: 2, spaceBetween: 24 },
+                                    1024: { slidesPerView: 3, spaceBetween: 24 },
+                                    1280: { slidesPerView: 3, spaceBetween: 24 },
+                                }}
+                                className="!pb-6"
+                            >
+                                {turfs.slice(0, 3).map((turf, idx) => (
+                                    <SwiperSlide key={`turf-${turf.id || turf._id || idx}`}>
+                                        <SportCard event={turf} />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+
+                            {/* Custom Navigation Arrows */}
+                            <button className="turfs-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/turfs:opacity-100 disabled:opacity-0 -ml-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                            </button>
+                            <button className="turfs-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/turfs:opacity-100 disabled:opacity-0 -mr-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                {/* Parks Near You Section */}
+                {parks?.length > 0 && (
+                    <section className="relative mt-16 group/parks">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
+                                Parks near you
+                            </h2>
+                            <Link to="/activities?section=Parks" className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+                                <ChevronRight className="w-5 h-5" />
+                            </Link>
+                        </div>
+
+                        <div className="relative">
+                            <Swiper
+                                modules={[Navigation]}
+                                spaceBetween={24}
+                                slidesPerView={1}
+                                navigation={{
+                                    nextEl: '.parks-next',
+                                    prevEl: '.parks-prev',
+                                }}
+                                breakpoints={{
+                                    320: { slidesPerView: 1, spaceBetween: 16 },
+                                    480: { slidesPerView: 1, spaceBetween: 16 },
+                                    640: { slidesPerView: 2, spaceBetween: 20 },
+                                    768: { slidesPerView: 2, spaceBetween: 24 },
+                                    1024: { slidesPerView: 3, spaceBetween: 24 },
+                                    1280: { slidesPerView: 3, spaceBetween: 24 },
+                                }}
+                                className="!pb-6"
+                            >
+                                {parks.slice(0, 3).map((park, idx) => (
+                                    <SwiperSlide key={`park-${park.id || park._id || idx}`}>
+                                        <ParkCard park={park} />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+
+                            {/* Custom Navigation Arrows */}
+                            <button className="parks-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/parks:opacity-100 disabled:opacity-0 -ml-4">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                            </button>
+                            <button className="parks-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/parks:opacity-100 disabled:opacity-0 -mr-4">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>

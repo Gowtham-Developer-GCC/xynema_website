@@ -340,7 +340,13 @@ const TurfPaymentPage = () => {
                                         phone: mobileNumber,
                                         email: email,
                                         couponCode: couponCode,
-                                        selectedMethod
+                                        selectedMethod,
+                                        isTurf: true,
+                                        turfName: turf?.name || "Turf",
+                                        turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+                                        courtName: court?.name || "",
+                                        date: date,
+                                        time: reservation?.time || ""
                                     }}
                                     onSuccess={(result) => {
                                         // Redirect is now handled by PaymentButton
@@ -377,7 +383,13 @@ const TurfPaymentPage = () => {
                         phone: mobileNumber,
                         email: email,
                         couponCode: couponCode,
-                        selectedMethod
+                        selectedMethod,
+                        isTurf: true,
+                        turfName: turf?.name || "Turf",
+                        turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+                        courtName: court?.name || "",
+                        date: date,
+                        time: reservation?.time || ""
                     }}
                     onSuccess={(result) => {
                         // Redirect is now handled by PaymentButton

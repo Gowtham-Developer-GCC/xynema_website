@@ -22,7 +22,22 @@ const EventDetailsPage = () => {
     const location = useLocation();
     const { selectedCity } = useData();
     const { user, openLogin } = useAuth();
-    const [event, setEvent] = useState(location.state?.event || null);
+    const [event, setEvent] = useState(() => {
+        if (location.state?.event) return location.state.event;
+        const directDetails = apiCacheManager.get(`event_details_${slug}`);
+        if (directDetails) return directDetails;
+        const cachedLocal = apiCacheManager.get(`events_${selectedCity || 'all'}`);
+        if (Array.isArray(cachedLocal)) {
+            const found = cachedLocal.find(e => e.slug === slug || e.id === slug || e._id === slug);
+            if (found) return found;
+        }
+        const cachedGlobal = apiCacheManager.get('events_all');
+        if (Array.isArray(cachedGlobal)) {
+            const found = cachedGlobal.find(e => e.slug === slug || e.id === slug || e._id === slug);
+            if (found) return found;
+        }
+        return null;
+    });
     const [loading, setLoading] = useState(!event);
     const [error, setError] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -397,10 +412,10 @@ const EventDetailsPage = () => {
 
                 {/* Blurred Background Image - Blur only on mobile */}
                 <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[4px] md:blur-none scale-[1]"
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
                     style={{
                         backgroundImage: `url(${optimizeImage(images[activeImageIndex] || event.imageUrl, { width: isMobile ? 800 : 1920, quality: 95 })})`,
-                        filter: isMobile ? 'blur(4px)' : 'url(#sharpen-filter)',
+                        filter: isMobile ? 'blur(4px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
                         imageRendering: '-webkit-optimize-contrast'
                     }}
                 />
@@ -418,6 +433,10 @@ const EventDetailsPage = () => {
                                 src={event.portraitEventImage || images[activeImageIndex] || event.imageUrl}
                                 alt={event.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1"
+                                style={{
+                                    filter: 'contrast(100%) brightness(1.3) saturate(1.2)',
+                                    imageRendering: '-webkit-optimize-contrast'
+                                }}
                             />
                             {/* Inner glass reflection */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />

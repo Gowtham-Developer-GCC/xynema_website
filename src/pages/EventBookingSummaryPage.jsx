@@ -387,7 +387,13 @@ const EventBookingSummaryPage = () => {
                                                 phone: a.phone.trim(),
                                                 ticketClassId: a.ticketClassId
                                             })),
-                                            selectedMethod
+                                            selectedMethod,
+                                            isEvent: true,
+                                            eventName: event?.name || "Event",
+                                            eventImage: event?.imageUrl || "",
+                                            venueName: event?.venue || event?.city || "",
+                                            date: selectedDate,
+                                            time: selectedTime
                                         }}
                                         onSuccess={(result) => {
                                             // Redirect is now handled by PaymentButton
@@ -445,7 +451,13 @@ const EventBookingSummaryPage = () => {
                                 phone: a.phone.trim(),
                                 ticketClassId: a.ticketClassId
                             })),
-                            selectedMethod
+                            selectedMethod,
+                            isEvent: true,
+                            eventName: event?.name || "Event",
+                            eventImage: event?.imageUrl || "",
+                            venueName: event?.venue || event?.city || "",
+                            date: selectedDate,
+                            time: selectedTime
                         }}
                         onSuccess={(result) => {
                             // Redirect is now handled by PaymentButton

@@ -68,7 +68,9 @@ class ApiCacheManager {
                 key.startsWith('cities') ||
                 key.startsWith('merchandise_') ||
                 key.startsWith('theater_details_') ||
-                key.startsWith('booking_details_')
+                key.startsWith('booking_details_') ||
+                key.startsWith('parks_') ||
+                key.startsWith('park_details_')
             );
 
             keysToPersist.forEach(key => {
@@ -93,6 +95,7 @@ class ApiCacheManager {
     static EVENTS_TTL = 1800;        // 30 minutes - event data
     static TURFS_TTL = 1800;         // 30 minutes - turf data
     static FOOD_TTL = 1800;          // 30 minutes - food items
+    static PARKS_TTL = 1800;         // 30 minutes - park data
 
     /**
      * Production-ready get-or-execute with full error handling
@@ -510,6 +513,18 @@ class ApiCacheManager {
      */
     async getOrFetchSimilarTurfs(turfId, fetchFn) {
         return this.getOrExecute(`similar_turfs_${turfId}`, fetchFn, ApiCacheManager.TURFS_TTL);
+    }
+    /**
+     * Helper: Get or fetch available parks
+     */
+    async getOrFetchParks(city, fetchFn, force = false) {
+        return this.getOrExecute(`parks_${city || 'all'}`, fetchFn, ApiCacheManager.PARKS_TTL, force);
+    }
+    /**
+     * Helper: Get or fetch park details
+     */
+    async getOrFetchParkDetails(parkSlug, fetchFn) {
+        return this.getOrExecute(`park_details_${parkSlug}`, fetchFn, ApiCacheManager.PARKS_TTL);
     }
 }
 

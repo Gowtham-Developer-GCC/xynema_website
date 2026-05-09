@@ -556,7 +556,14 @@ const PaymentPage = () => {
                                             sessionId,
                                             phone: mobileNumber,
                                             email: emailDetails,
-                                            selectedMethod
+                                            selectedMethod,
+                                            isMovie: true,
+                                            movieTitle: localDisplayTitle,
+                                            posterUrl: localDisplayPoster,
+                                            theaterName: localDisplayTheater,
+                                            date: selectedDate,
+                                            time: localDisplayTime,
+                                            seats: seats
                                         }}
                                         onSuccess={handleBookingSuccess}
                                         onFailure={(err) => setError(err.message || "Payment failed")}
@@ -601,7 +608,14 @@ const PaymentPage = () => {
                             sessionId,
                             phone: mobileNumber,
                             email: emailDetails,
-                            selectedMethod
+                            selectedMethod,
+                            isMovie: true,
+                            movieTitle: localDisplayTitle,
+                            posterUrl: localDisplayPoster,
+                            theaterName: localDisplayTheater,
+                            date: selectedDate,
+                            time: localDisplayTime,
+                            seats: seats
                         }}
                         onSuccess={handleBookingSuccess}
                         onFailure={(err) => setError(err.message || "Payment failed")}

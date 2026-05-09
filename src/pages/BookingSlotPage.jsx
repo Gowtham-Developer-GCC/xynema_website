@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, MapPin, ChevronRight, Sun, Moon, Clock, Info, Check, Minus, Plus, ChevronLeft, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, ChevronRight, Sun, Moon, Clock, Info, Check, Minus, Plus, ChevronLeft, Shield, MoonStar, MoonIcon, SunMoon } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Navigation } from 'swiper/modules';
 import 'swiper/css';
@@ -275,25 +275,29 @@ const BookingSlotPage = () => {
                         </div>
                     </section>
 
-                    {/* Slot Selection with Duration */}
+                    {/* Slot Selection with Guest Count */}
                     <section className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold dark:text-white">Select Slot</h2>
                             <div className="flex items-center gap-4">
-                                <div className="text-[12px] font-bold text-primary uppercase tracking-wider bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-2">
+                                {/* <div className="text-[12px] font-bold text-primary uppercase tracking-wider bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-2">
                                     {selectedSlots.length > 0 ? selectedSlots[0].displayLabel : '08:00 AM - 09:00 AM'}
-                                </div>
+                                </div> */}
                                 <div className="flex items-center gap-4 bg-white dark:bg-[#1a1c23] p-1.5 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <button 
-                                        onClick={() => setDuration(Math.max(1, duration - 1))}
-                                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800"
+                                        onClick={() => setPeopleCount(Math.max(1, peopleCount - 1))}
+                                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        title="Decrease guests"
                                     >
-                                        <Minus className="w-4 h-4 text-gray-400" />
+                                        <Minus className="w-4 h-4 text-gray-400 dark:text-gray-300" />
                                     </button>
-                                    <span className="text-base font-bold dark:text-white">{duration} hr</span>
+                                    <span className="text-base font-bold dark:text-white min-w-[75px] text-center">
+                                        {peopleCount} Guest{peopleCount !== 1 ? 's' : ''}
+                                    </span>
                                     <button 
-                                        onClick={() => setDuration(duration + 1)}
-                                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white"
+                                        onClick={() => setPeopleCount(peopleCount + 1)}
+                                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white hover:brightness-110 transition-all"
+                                        title="Increase guests"
                                     >
                                         <Plus className="w-4 h-4" />
                                     </button>
@@ -306,25 +310,29 @@ const BookingSlotPage = () => {
                                 timeSlots[period].length > 0 && (
                                     <div key={period} className="space-y-4">
                                         <div className="flex items-center gap-2 text-gray-400 font-bold text-[13px] uppercase tracking-widest">
-                                            {period === 'morning' ? <Sun className="w-4 h-4" /> : period === 'afternoon' ? <Sun className="w-4 h-4 text-orange-400" /> : <Moon className="w-4 h-4" />}
+                                            {period === 'morning' ? <SunMoon className="w-4 h-4 text-yellow-400" /> : period === 'afternoon' ? <Sun className="w-4 h-4 text-orange-400" /> : <Moon className="w-4 h-4 text-blue-400" />}
                                             {period}
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             {timeSlots[period].map(slot => {
                                                 const isSelected = selectedSlots.some(s => (s._id || s.id) === (slot._id || slot.id));
                                                 const isUnavailable = slot.status !== 'available' || slot.isPast;
+                                                const slotPrice = slot.priceOverride || slot.pricePerHour || currentCourt?.pricePerHour || venue?.price || 400;
                                                 return (
                                                     <button
                                                         key={slot._id || slot.id}
                                                         disabled={isUnavailable}
                                                         onClick={() => handleSlotClick(slot)}
-                                                        className={`py-4 rounded-xl font-bold text-sm transition-all border ${
+                                                        className={`py-3 px-4 rounded-xl font-bold text-sm transition-all border flex flex-col items-center justify-center gap-1.5 ${
                                                             isSelected ? 'bg-primary border-primary text-white shadow-lg' :
                                                             isUnavailable ? 'bg-gray-50 text-gray-300 dark:bg-gray-900 dark:text-gray-700 cursor-not-allowed border-gray-50' :
                                                             'bg-white dark:bg-[#1a1c23] border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300'
                                                         }`}
                                                     >
-                                                        {slot.displayLabel}
+                                                        <span className="text-[13px] font-black">{slot.displayLabel}</span>
+                                                        <span className={`text-[11px] font-black ${isSelected ? 'text-white/90' : 'text-primary'}`}>
+                                                            ₹{slotPrice}
+                                                        </span>
                                                     </button>
                                                 );
                                             })}
@@ -368,7 +376,7 @@ const BookingSlotPage = () => {
                             </div>
                         </div>
 
-                        <div className="p-5 bg-[#F5F7FF] dark:bg-blue-950/10 rounded-2xl flex items-center justify-between border border-blue-50/50 dark:border-blue-900/20">
+                        {/* <div className="p-5 bg-[#F5F7FF] dark:bg-blue-950/10 rounded-2xl flex items-center justify-between border border-blue-50/50 dark:border-blue-900/20">
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-6 rounded-full p-1 transition-all flex items-center cursor-pointer ${isAdvancePay ? 'bg-primary' : 'bg-gray-300'}`} onClick={() => setIsAdvancePay(!isAdvancePay)}>
                                     <div className={`w-4 h-4 bg-white rounded-full transition-all ${isAdvancePay ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -379,7 +387,7 @@ const BookingSlotPage = () => {
                                 </div>
                             </div>
                             <Info className="w-4 h-4 text-gray-300" />
-                        </div>
+                        </div> */}
 
                         <button 
                             disabled={reserving || selectedSlots.length === 0}

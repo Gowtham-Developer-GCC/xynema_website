@@ -147,10 +147,10 @@ const SportDetailsPage = () => {
                       sport?.name?.toLowerCase().includes('swimming') || sport?.name?.toLowerCase().includes('pool');
 
     const storeItems = isSwimming ? [
-        { id: "swim1", name: "Decathlon Nabaiji Goggles", price: 599, sellers: 3, imageUrl: "https://contents.mediadecathlon.com/p1498634/k$f2f7ba51c1fce8d76d4352f52d0f0d2c/swimming-goggles-100-soft-clear-lenses-grey.jpg" },
-        { id: "swim2", name: "Nabaiji Swimming Fins", price: 1299, sellers: 2, imageUrl: "https://contents.mediadecathlon.com/p2155554/k$6127e4e138ae348da07a0f670f5e7146/swimming-fins-top-swim-fins-black-blue.jpg" },
-        { id: "swim3", name: "Nabaiji Mesh Bag", price: 499, sellers: 1, imageUrl: "https://contents.mediadecathlon.com/p1747833/k$7d6c6a8f1f7d6f5f9e9f7d6f5f9e9f7d/swimming-mesh-bag-black.jpg" },
-        { id: "swim4", name: "Speedo Silicone Cap", price: 350, sellers: 5, imageUrl: "https://images.unsplash.com/photo-1599058917232-d750c1830028?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60" }
+        { id: "swim1", name: "Swimming Suit for Men", price: 599, sellers: 3, imageUrl: "https://image.made-in-china.com/202f0j00sJiowvFCdWqB/Men-s-Swim-Trunks-Men-s-Quick-Dry-Long-Sleeve-Sun-Protection-Swimming-Pants-Board-Shorts-Two-Piece-Set-Slim-Fit-Swimwear-Beach-Pants-.webp" },
+        { id: "swim2", name: "Swimming goggle", price: 1299, sellers: 2, imageUrl: "https://img01.ztat.net/article/spp-media-p1/6813e0c3de4a4587bb0aacb2d9dda232/e25bfd71eb454cffa6bad0b123656d68.jpg?imwidth=1800&filter=packshot" },
+        { id: "swim3", name: "Waterproof Bag", price: 499, sellers: 1, imageUrl: "https://static.thcdn.com/images/v2/productimg/original/17468288-3295297902511442.jpg?width=960&height=960" },
+        { id: "swim4", name: "Speedo Silicone Cap", price: 350, sellers: 5, imageUrl: "https://www.hairbrella.com/cdn/shop/files/Grey_Background_Product_Details_-_Swim_Cap_90a7acc1-a5c0-4b0a-a157-9ab80a1a02f5.png?v=1762294613" }
     ] : [
         { id: "s1", name: "Sports wear", price: 1500, sellers: 3, imageUrl: "https://www.jumpusa.in/cdn/shop/products/1_911774af-e103-482b-a637-1f10a2518420.jpg?v=1646462787" },
         { id: "s2", name: "Sports shoes", price: 2000, sellers: 3, imageUrl: "https://uspoloassn.in/cdn/shop/files/1_dddf6968-3bfe-48b1-986b-5ce9d7888f8b_500x.jpg?v=1763723178" },
@@ -213,7 +213,11 @@ const SportDetailsPage = () => {
 
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
-                    style={{ backgroundImage: `url(${images[0]})`, filter: isMobile ? 'blur(4px)' : 'none' }}
+                    style={{
+                        backgroundImage: `url(${images[0]})`,
+                        filter: isMobile ? 'blur(4px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
+                        imageRendering: '-webkit-optimize-contrast',
+                    }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
             </div>
@@ -233,7 +237,7 @@ const SportDetailsPage = () => {
                                 </span>
                             </div>
 
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
+                            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
                                 {sport.name}
                             </h1>
 
@@ -276,38 +280,29 @@ const SportDetailsPage = () => {
 
                     <div className="w-full lg:w-[400px] shrink-0 sticky top-24">
                         <div className="relative group">
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-[340px] bg-primary rounded-2xl p-6 shadow-2xl border border-white/30 z-20 flex items-center justify-between overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
-                                <div>
-                                    
-                                    <p className="text-lg font-black text-white leading-none uppercase">Book here </p>
-                                </div>
-                            </div>  
-
-                            <div className="bg-white dark:bg-gray-900 rounded-[40px] p-8 pt-20 border border-gray-100 dark:border-gray-800 shadow-2xl relative">
+                            <div className="bg-white dark:bg-gray-900 rounded-[32px] p-8 md:p-10 border border-gray-100 dark:border-gray-800 shadow-2xl relative flex flex-col items-start text-left">
                                 <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-3">Starting from</p>
-                                <div className="flex items-baseline gap-2 mb-8">
-                                    <span className="text-5xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
-                                    <span className="text-sm font-bold text-gray-400">/ hour</span>
+                                <div className="flex items-baseline gap-1.5 mb-8">
+                                    <span className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
+                                    <span className="text-xs sm:text-sm font-bold text-gray-400">/ hour</span>
                                 </div>
                                 <button
                                     onClick={handleCheckout}
                                     className="w-full py-6 bg-primary hover:bg-[#ff3d5a] text-white text-base font-black rounded-3xl transition-all shadow-xl shadow-primary/20 active:scale-95 uppercase tracking-widest"
                                 >
-                                    Instant Book
+                                    Book Now
                                 </button>
-                               
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 space-y-20">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16 space-y-10 md:space-y-16">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
                     <section className="space-y-8">
-                        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">The Experience</h2>
-                        <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed font-medium">{sport.description}</p>
+                        <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">The Experience</h2>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed font-medium">{sport.description}</p>
                         <div className="grid grid-cols-2 gap-6 pt-8">
                             {[
                                 { key: 'isParkingAvailable', label: 'Spacious Parking' },
@@ -328,7 +323,7 @@ const SportDetailsPage = () => {
                     </section>
                     <section className="space-y-8">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Gallery</h2>
+                            <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Gallery</h2>
                             <div className="flex gap-2">
                                 <button className="gallery-prev w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronLeft className="w-6 h-6" /></button>
                                 <button className="gallery-next w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronRight className="w-6 h-6" /></button>
@@ -348,37 +343,61 @@ const SportDetailsPage = () => {
                     </section>
                 </div>
 
-                <section className="space-y-12 py-20 px-8 rounded-[60px] bg-[#1E1E1E] text-white">
-                    <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+                <section className="relative group/store pt-8 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex flex-row justify-between items-end mb-8 gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Exclusive Gear</p>
-                            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">Official Merchandise</h2>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Exclusive Gear</p>
+                            <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Official Merchandise</h2>
                         </div>
-                        <Link to="/store" className="px-8 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full">Visit Store</Link>
+                        <Link to="/store" className="text-xs md:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-1.5 shrink-0 pb-1">
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            Visit Store
+                        </Link>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {storeItems.map(item => (
-                            <div key={item.id} className="group cursor-pointer">
-                                <div className="aspect-[1/1] bg-white rounded-[32px] overflow-hidden mb-6 relative">
-                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" />
-                                    <div className="absolute bottom-4 right-4 translate-y-10 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                                        <button className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white"><ShoppingBag className="w-5 h-5" /></button>
-                                    </div>
-                                </div>
-                                <h3 className="text-lg font-black uppercase tracking-tight mb-1">{item.name}</h3>
-                                <p className="text-primary font-black">₹{item.price}</p>
-                            </div>
-                        ))}
+
+                    <div className="relative">
+                        <Swiper
+                            modules={[Navigation]}
+                            slidesPerView={2}
+                            spaceBetween={16}
+                            navigation={{
+                                nextEl: '.sport-store-next',
+                                prevEl: '.sport-store-prev',
+                            }}
+                            breakpoints={{
+                                640: { slidesPerView: 3, spaceBetween: 24 },
+                                768: { slidesPerView: 3, spaceBetween: 24 },
+                                1024: { slidesPerView: 4, spaceBetween: 24 },
+                            }}
+                            className="!pb-6 !px-1"
+                        >
+                            {storeItems.map((item, idx) => (
+                                <SwiperSlide key={item.id || idx} className="!h-auto">
+                                    <StoreCard item={{ ...item, imageUrl: item.imageUrl || item.image }} />
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+                        {/* Custom Navigation Arrows */}
+                        <button className="sport-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
+                            <ChevronRight className="w-6 h-6 rotate-180" />
+                        </button>
+                        <button className="sport-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
+                            <ChevronRight className="w-6 h-6" />
+                        </button>
                     </div>
                 </section>
 
-                <section className="py-20 border-t border-gray-100 dark:border-gray-800">
+                <section className="py-8 md:py-12 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
-                        <div className="flex-1 space-y-8">
-                            <h2 className="text-4xl font-black uppercase tracking-tighter">Explore Location</h2>
-                            <div className="space-y-4">
-                                <h3 className="text-2xl font-black opacity-80 uppercase">{sport.venue}</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">{sport.address}</p>
+                        <div className="flex-1 space-y-6">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Venue Map</p>
+                                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Explore Location</h2>
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className="text-lg md:text-2xl font-black opacity-80 uppercase">{sport.venue}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm md:text-lg font-medium leading-relaxed">{sport.address}</p>
                             </div>
                             <button onClick={handleGetDirections} className="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[11px] font-black uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all shadow-2xl">
                                 <MapPin className="w-4 h-4" /> Get Directions
@@ -391,19 +410,46 @@ const SportDetailsPage = () => {
                     </div>
                 </section>
 
-                <section className="pb-20">
-                    <div className="flex items-center justify-between mb-12">
-                        <h2 className="text-4xl font-black uppercase tracking-tighter">Recommended for you</h2>
-                        <Link to="/activities" className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2 group">
-                            Explore More <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                <section className="pb-8 relative group/recommended border-t border-gray-100 dark:border-gray-800 pt-8">
+                    <div className="flex flex-row justify-between items-end mb-8 gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Recommended for you</p>
+                            <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Top Choices</h2>
+                        </div>
+                        <Link to="/activities" className="text-xs md:text-sm font-black text-primary uppercase tracking-widest flex items-center gap-1.5 shrink-0 pb-1 group">
+                            Explore More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {similarSports.length > 0 ? (
-                            similarSports.slice(0, 3).map(venue => (<SportCard key={venue._id || venue.id} event={venue} />))
-                        ) : (
-                            moreVenues.map(venue => (<SportCard key={venue.id} event={venue} />))
-                        )}
+                    
+                    <div className="relative">
+                        <Swiper
+                            modules={[Navigation]}
+                            slidesPerView={1}
+                            spaceBetween={16}
+                            navigation={{
+                                nextEl: '.sport-rec-next',
+                                prevEl: '.sport-rec-prev',
+                            }}
+                            breakpoints={{
+                                640: { slidesPerView: 2, spaceBetween: 24 },
+                                1024: { slidesPerView: 3, spaceBetween: 24 },
+                            }}
+                            className="!pb-6 !px-1"
+                        >
+                            {(similarSports.length > 0 ? similarSports : moreVenues).map((venue, idx) => (
+                                <SwiperSlide key={venue._id || venue.id || idx} className="!h-auto">
+                                    <SportCard event={venue} />
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+                        {/* Custom Navigation Arrows */}
+                        <button className="sport-rec-prev absolute left-2 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary transition-all cursor-pointer opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 hidden md:flex">
+                            <ChevronRight className="w-6 h-6 rotate-180" />
+                        </button>
+                        <button className="sport-rec-next absolute right-2 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary transition-all cursor-pointer opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 hidden md:flex">
+                            <ChevronRight className="w-6 h-6" />
+                        </button>
                     </div>
                 </section>
             </main>

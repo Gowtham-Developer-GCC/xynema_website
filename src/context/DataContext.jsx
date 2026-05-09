@@ -5,6 +5,7 @@ import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
 import { getUserProfile, updateUserProfile } from '../services/userService';
 import { getAvailableTurfs } from '../services/turfService';
+import { getAllParks } from '../services/parkService';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
 import { errorHandler } from '../utils/helpers';
@@ -62,6 +63,10 @@ export const DataProvider = ({ children, selectedCity }) => {
         const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
         return Array.isArray(cached) ? cached : [];
     });
+    const [parks, setParks] = useState(() => {
+        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
 
     const [userMovieBookings, setUserMovieBookings] = useState([]);
     const [userEventBookings, setUserEventBookings] = useState([]);
@@ -93,7 +98,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             // SWR: Force a background revalidation for page 1
             const shouldRevalidate = page === 1;
 
-            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData, turfData] = await Promise.all([
+            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData, turfData, parkData] = await Promise.all([
                 // Now Showing (based on city)
                 (page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getNowShowingMovies(selectedCity, page),
@@ -138,6 +143,12 @@ export const DataProvider = ({ children, selectedCity }) => {
                     () => getAvailableTurfs({ city: selectedCity }),
                     shouldRevalidate
                 ).catch(err => { console.error("Turfs failed:", err); return []; }),
+
+                // Parks
+                apiCacheManager.getOrFetchParks(selectedCity,
+                    () => getAllParks({ city: selectedCity, limit: 100 }),
+                    shouldRevalidate
+                ).catch(err => { console.error("Parks failed:", err); return []; }),
             ]);
 
             // Parse movie and theater data
@@ -156,6 +167,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setEvents(eventData || []);
             setFoodItems(foodList);
             setTurfs(turfData || []);
+            setParks(parkData || []);
             setPagination(movieData.pagination || { total: 0, page: 1, pages: 1 });
             setLastUpdated(new Date());
         } catch (err) {
@@ -321,6 +333,7 @@ export const DataProvider = ({ children, selectedCity }) => {
                 setTheaters([]);
                 setEvents([]);
                 setTurfs([]);
+                setParks([]);
                 setLoading(true);
             }
             
@@ -441,6 +454,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         theaters,
         events,
         turfs,
+        parks,
         foodItems,
         loading,
         error,

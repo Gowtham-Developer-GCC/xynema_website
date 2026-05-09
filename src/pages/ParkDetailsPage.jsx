@@ -7,6 +7,7 @@ import {
 import { getParkBySlug, getAllParks } from '../services/parkService';
 import { useData } from '../context/DataContext';
 import LoadingScreen from '../components/LoadingScreen';
+import apiCacheManager from '../services/apiCacheManager';
 import SEO from '../components/SEO';
 import ParkCard from '../components/ParkCard';
 import StoreCard from '../components/StoreCard';
@@ -20,8 +21,21 @@ const ParkDetailsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { selectedCity } = useData();
-    const [park, setPark] = useState(location.state?.park || null);
-    const [allParks, setAllParks] = useState([]);
+    const [park, setPark] = useState(() => {
+        if (location.state?.park) return location.state.park;
+        const directDetails = apiCacheManager.get(`park_details_${slug}`);
+        if (directDetails) return directDetails;
+        const cachedParks = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
+        if (Array.isArray(cachedParks)) {
+            const found = cachedParks.find(p => p.slug === slug || p.id === slug || p._id === slug);
+            if (found) return found;
+        }
+        return null;
+    });
+    const [allParks, setAllParks] = useState(() => {
+        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
     const [loading, setLoading] = useState(!park);
 
     const heroButtonRef = useRef(null);
@@ -56,11 +70,20 @@ const ParkDetailsPage = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                const fetchParkTask = (!park || !park.description) ? getParkBySlug(slug) : Promise.resolve(park);
+                const statePark = location.state?.park;
+                const hasMatchingStatePark = statePark && (statePark.slug === slug || statePark.id === slug || statePark._id === slug);
+                
+                if (!hasMatchingStatePark) {
+                    setLoading(true);
+                }
+
+                const fetchParkTask = (!hasMatchingStatePark || !statePark.description) 
+                    ? apiCacheManager.getOrFetchParkDetails(slug, () => getParkBySlug(slug)) 
+                    : Promise.resolve(statePark);
                 
                 const [data, parks] = await Promise.all([
                     fetchParkTask,
-                    getAllParks({ city: selectedCity || 'Kochi' })
+                    apiCacheManager.getOrFetchParks(selectedCity || 'Kochi', () => getAllParks({ city: selectedCity || 'Kochi' }))
                 ]);
                 
                 if (data) setPark(data);
@@ -73,7 +96,7 @@ const ParkDetailsPage = () => {
         };
         fetchDetails();
         window.scrollTo(0, 0);
-    }, [slug, selectedCity]);
+    }, [slug, selectedCity, location.state]);
 
 
 
@@ -88,6 +111,17 @@ const ParkDetailsPage = () => {
         <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300">
             <SEO title={`${park.name} - Xynema`} description={park.description} />
 
+            {/* Sharpness Filter Definition */}
+            <svg style={{ visibility: 'hidden', position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
+                <filter id="sharpen-filter">
+                    <feConvolveMatrix
+                        order="3"
+                        kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"
+                        preserveAlpha="true"
+                    />
+                </filter>
+            </svg>
+
             {/* ── HERO / BANNER ── */}
             <div className="relative pt-32 md:pt-40 pb-16 overflow-hidden">
                 {/* Background Image with Blur and Overlay */}
@@ -97,7 +131,11 @@ const ParkDetailsPage = () => {
                         alt=""
                         width="3840"
                         height="2400"
-                        className="w-full h-full object-cover scale-110 brightness-[0.4] saturate-[1.2]"
+                        className="w-full h-full object-cover scale-1 transition-all duration-700"
+                        style={{
+                            filter: 'contrast(100%) brightness(0.8) saturate(1.2) url(#sharpen-filter)',
+                            imageRendering: '-webkit-optimize-contrast'
+                        }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] via-transparent to-transparent" />
                 </div>
@@ -143,7 +181,11 @@ const ParkDetailsPage = () => {
                                     alt={park.name}
                                     width="2000"
                                     height="3160"
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1"
+                                    style={{
+                                        filter: 'contrast(100%) brightness(1.3) saturate(1.2) ',
+                                        imageRendering: '-webkit-optimize-contrast'
+                                    }}
                                 />
                             </div>
                         </div>

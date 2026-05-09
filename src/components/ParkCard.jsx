@@ -57,7 +57,7 @@ const ParkCard = memo(({ park }) => {
                         </div>
                     </div>
                     <button className="px-4 py-2 bg-primary text-white text-[10px] font-black rounded-lg tracking-widest uppercase hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20">
-                        Book Tickets
+                        Book now
                     </button>
                 </div>
             </div>

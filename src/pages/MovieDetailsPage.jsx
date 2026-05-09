@@ -342,6 +342,10 @@ const MovieDetailsPage = () => {
                                     src={optimizeImage(isMobile ? (movie.backdropUrl || movie.posterUrl) : movie.posterUrl, { width: 600, quality: 95 })}
                                     alt={movie.title}
                                     className="w-full h-full object-cover"
+                                    style={{
+                                        filter: 'contrast(100%) brightness(1.3) saturate(1.2) ',
+                                        imageRendering: '-webkit-optimize-contrast'
+                                    }}
                                 />
                                 <div className="absolute bottom-0 inset-x-0 h-10 bg-black/80 backdrop-blur-md flex items-center justify-center pointer-events-none">
                                     <p className="text-xs font-bold text-white uppercase tracking-wider">

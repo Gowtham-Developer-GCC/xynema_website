@@ -193,12 +193,22 @@ const PaymentButton = ({
                             };
 
                             if (bookingData?.showId) {
-                                // Cinema Booking - Redirect to Boarding Pass
+                                // Cinema Booking - Redirect to Booking Success
                                 const bId = verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || verifyResult.id;
-                                targetPath = `/bookings/${bId}`;
-                                navigationState = { isNewBooking: true };
+                                targetPath = "/booking-success";
+                                navigationState = { 
+                                    bookingData: {
+                                        movieTitle: bookingData.movieTitle || sessionStorage.getItem('booking_movie_title') || "Movie",
+                                        posterUrl: bookingData.posterUrl || sessionStorage.getItem('booking_movie_landscape_poster') || "",
+                                        theaterName: bookingData.theaterName || sessionStorage.getItem('booking_theater_name') || "Theater",
+                                        date: bookingData.date || sessionStorage.getItem('booking_show_date') || "",
+                                        time: bookingData.time || sessionStorage.getItem('booking_show_time') || "",
+                                        seats: bookingData.seats || [],
+                                        bookingId: bId
+                                    }
+                                };
                             } else if (bookingData?.isPark) {
-                                // Park Booking - Redirect to booking success page first
+                                // Park Booking - Redirect to Booking Success
                                 const bId = verifyResult.data?.bookingRef || 
                                             verifyResult.data?.booking?.bookingRef || 
                                             verifyResult.data?.bookingId || 
@@ -216,15 +226,36 @@ const PaymentButton = ({
                                     }
                                 };
                             } else if (bookingData?.reservationId) {
-                                // Event Booking
-                                const bId = verifyResult.data?.bookingId || verifyResult.data?.booking?._id || verifyResult.data?.id;
-                                targetPath = `/event-bookings/${bId}`;
-                                navigationState = { isNewBooking: true };
+                                // Event Booking - Redirect to Booking Success
+                                const bId = verifyResult.data?.bookingId || verifyResult.data?.booking?._id || verifyResult.data?.id || verifyResult.id;
+                                targetPath = "/booking-success";
+                                navigationState = {
+                                    bookingData: {
+                                        isEvent: true,
+                                        eventName: bookingData.eventName || "Event",
+                                        eventImage: bookingData.eventImage,
+                                        venueName: bookingData.venueName,
+                                        date: bookingData.date,
+                                        time: bookingData.time,
+                                        bookingId: bId
+                                    }
+                                };
                             } else if (bookingData?.slotIds) {
-                                // Turf Booking
-                                const bId = verifyResult.data?.bookingId || verifyResult.data?.bookings?.[0]?.bookingId || verifyResult.data?.id;
-                                targetPath = `/activities/bookings/${bId}`;
-                                navigationState = { isNewBooking: true };
+                                // Turf Booking - Redirect to Booking Success
+                                const bId = verifyResult.data?.bookingId || verifyResult.data?.bookings?.[0]?.bookingId || verifyResult.data?.id || verifyResult.id;
+                                targetPath = "/booking-success";
+                                navigationState = {
+                                    bookingData: {
+                                        isTurf: true,
+                                        turfName: bookingData.turfName || "Turf",
+                                        turfImage: bookingData.turfImage,
+                                        courtName: bookingData.courtName,
+                                        sport: bookingData.sport,
+                                        date: bookingData.date,
+                                        time: bookingData.time,
+                                        bookingId: bId
+                                    }
+                                };
                             }
 
                             if (onSuccess) onSuccess(verifyResult);

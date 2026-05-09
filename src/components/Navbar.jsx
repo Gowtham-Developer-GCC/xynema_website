@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3, ArrowLeft, Inbox } from 'lucide-react';
+import { Search, MapPin, ChevronDown, LogOut, Ticket, Calendar, Menu, Bell, Play, CreditCard, HelpCircle, Settings, Gift, X, MessageSquare, ChevronRight, Heart, Moon, Sun, Wallet, Shield, Edit3, ArrowLeft, Inbox, Trophy } from 'lucide-react';
 import { getUserNotifications, markNotificationAsRead } from '../services/notificationService';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -646,7 +646,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     }`}
                             >
                                 <div className={`p-1 rounded-lg transition-colors ${location.pathname.startsWith('/activities') ? 'bg-primary/10' : ''}`}>
-                                    <MapPin className={`w-5 h-5 ${location.pathname.startsWith('/activities') ? 'fill-current' : ''}`} />
+                                    <Trophy className={`w-5 h-5 ${location.pathname.startsWith('/activities') ? 'fill-current scale-110 text-primary' : ''}`} />
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{t('activities')}</span>
                             </Link>

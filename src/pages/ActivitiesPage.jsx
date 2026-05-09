@@ -10,6 +10,7 @@ import { useData } from '../context/DataContext';
 import SportCard from '../components/SportCard';
 import ParkCard from '../components/ParkCard';
 import { getVisitedParks, getAllParks } from '../services/parkService';
+import apiCacheManager from '../services/apiCacheManager';
 
 // ─────────────── Main Tabs ───────────────
 const SECTION_TABS = ['All', 'Turfs', 'Parks'];
@@ -31,9 +32,15 @@ const ActivitiesPage = () => {
     );
 
     const [visitedParks, setVisitedParks] = useState([]);
-    const [allParks, setAllParks] = useState([]);
+    const [allParks, setAllParks] = useState(() => {
+        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
     const [error, setError] = useState(null);
-    const [parksLoading, setParksLoading] = useState(true);
+    const [parksLoading, setParksLoading] = useState(() => {
+        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
+        return !Array.isArray(cached) || cached.length === 0;
+    });
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
     const [activeParkType, setActiveParkType] = useState('All');
@@ -54,10 +61,10 @@ const ActivitiesPage = () => {
             };
             const [visited, all] = await Promise.all([
                 getVisitedParks(),
-                getAllParks(params)
+                apiCacheManager.getOrFetchParks(selectedCity, () => getAllParks(params))
             ]);
             setVisitedParks(visited);
-            setAllParks(all);
+            setAllParks(all || []);
         } catch (err) {
             console.error("Error fetching parks:", err);
             if (allParks.length === 0) {

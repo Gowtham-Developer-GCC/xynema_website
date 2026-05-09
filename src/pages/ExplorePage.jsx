@@ -24,7 +24,10 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     // Get tab from URL query parameter, default to initialTab or 'public_events'
     const tabFromUrl = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState(tabFromUrl || initialTab);
-    const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState(() => {
+        const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : [];
+    });
 
 
     // Events State
@@ -39,9 +42,15 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [availableEventTags, setAvailableEventTags] = useState([]);
     const [availableEventCities, setAvailableEventCities] = useState([]);
 
-    const [allGlobalEvents, setAllGlobalEvents] = useState([]);
+    const [allGlobalEvents, setAllGlobalEvents] = useState(() => {
+        const cached = apiCacheManager.get('events_all');
+        return Array.isArray(cached) ? cached : [];
+    });
     const [filteredGlobalEvents, setFilteredGlobalEvents] = useState([]);
-    const [loadingGlobalEvents, setLoadingGlobalEvents] = useState(true);
+    const [loadingGlobalEvents, setLoadingGlobalEvents] = useState(() => {
+        const cached = apiCacheManager.get('events_all');
+        return !Array.isArray(cached) || cached.length === 0;
+    });
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
@@ -79,13 +88,18 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => {
+        const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
+        return !Array.isArray(cached) || cached.length === 0;
+    });
     const [error, setError] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
 
     const fetchData = async () => {
         try {
-            setLoading(true);
+            if (events.length === 0) {
+                setLoading(true);
+            }
             setError(null);
 
 
@@ -336,7 +350,9 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {activeTab !== 'private_events' && (
                     <div className="mb-6 mt-2">
-                        <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">Trending Events</h2>
+                        <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
+                            {selectedCity && selectedCity !== 'All' ? `Events in ${selectedCity}` : 'Trending Events'}
+                        </h2>
                         <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">Popular right now</p>
                     </div>
                 )}
@@ -361,7 +377,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                         {/* All Global Events */}
                         {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
                             <div className="mt-8">
-                                <h2 className="text-[24px] sm:text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-6 sm:mb-8">All events</h2>
+                                <h2 className="text-[24px] sm:text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-6 sm:mb-8">Events in Global</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                     {filteredGlobalEvents.map((event, idx) => (
                                         <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />

@@ -13,6 +13,7 @@ import { errorHandler, optimizeImage } from '../utils/helpers';
 import { memo } from 'react';
 import apiCacheManager from '../services/apiCacheManager';
 import EventCard from '../components/EventCard';
+const Cardslice = 6;
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
@@ -24,6 +25,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     // Get tab from URL query parameter, default to initialTab or 'public_events'
     const tabFromUrl = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState(tabFromUrl || initialTab);
+    const SECTION_TABS = ['Near for you', 'Global'];
+    const [activeSection, setActiveSection] = useState('Near for you');
     const [events, setEvents] = useState(() => {
         const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
         return Array.isArray(cached) ? cached : [];
@@ -196,6 +199,11 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         }
     };
 
+    const activeSectionTags = useMemo(() => {
+        const sourceEvents = activeSection === 'Near for you' ? events : allGlobalEvents;
+        return Array.from(new Set(sourceEvents.flatMap(e => e.tags || []).filter(Boolean))).sort();
+    }, [activeSection, events, allGlobalEvents]);
+
     if (loading) return <LoadingScreen message="Scanning Library" />;
     if (error) return <ErrorState error={error} onRetry={fetchData} title="Access Interrupted" buttonText="Try Refreshing" />;
 
@@ -240,153 +248,188 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                 </div>
             </div>
 
-            {/* Filter Section - Only for public events */}
-            {activeTab !== 'private_events' && (
-                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] transition-all duration-300 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
-                    <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-                        <div className="flex items-center gap-8 overflow-x-auto no-scrollbar">
-                            {/* Static "All" Tab */}
+            {/* Section Tab Switcher: Near for you | Global */}
+            {activeTab === 'public_events' && (
+                <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 transition-colors duration-300">
+                    <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 overflow-x-auto no-scrollbar">
+                        {SECTION_TABS.map((tab) => (
                             <button
+                                key={tab}
                                 onClick={() => {
-                                    setEventFilters(prev => ({ ...prev, tags: [] }));
+                                    setActiveSection(tab);
                                     setIsMoreFiltersOpen(false);
                                 }}
-                                className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${eventFilters.tags.length === 0
-                                    ? 'text-primary'
-                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeSection === tab
+                                        ? 'text-primary'
+                                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                                     }`}
                             >
-                                All
-                                {eventFilters.tags.length === 0 && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
+                                {tab}
+                                {activeSection === tab && (
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />
+                                )}
                             </button>
-
-                            {/* Progressive Dynamic Tags as Tabs */}
-                            {availableEventTags.slice(0, 4).map((tag, idx) => (
-                                <button
-                                    key={tag}
-                                    onClick={() => {
-                                        setEventFilters(prev => ({ ...prev, tags: [tag] }));
-                                        setIsMoreFiltersOpen(false);
-                                    }}
-                                    className={`py-4 text-sm font-bold transition-all relative whitespace-nowrap ${idx === 0 ? 'inline-block' :
-                                        idx === 1 ? 'hidden xs:inline-block' :
-                                            idx === 2 ? 'hidden sm:inline-block' :
-                                                'hidden md:inline-block'
-                                        } ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
-                                            ? 'text-primary'
-                                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                                        }`}
-                                >
-                                    {tag}
-                                    {eventFilters.tags.length === 1 && eventFilters.tags.includes(tag) && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* More Filters Integrated on the Right */}
-                        <div className="relative shrink-0 ml-8" ref={moreFiltersRef}>
-                            <button
-                                onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                className={`py-4 text-xs font-bold transition-all flex items-center gap-1 group whitespace-nowrap ${eventFilters.tags.length > 1 || (eventFilters.tags.length === 1 && !availableEventTags.slice(0, 4).includes(eventFilters.tags[0]))
-                                    ? 'text-primary'
-                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                                    }`}
-                            >
-                                <span className="hidden sm:inline">More </span><span>Filters</span>
-                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {isMoreFiltersOpen && (
-                                <div className="absolute top-full right-0 mt-0 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-b-xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
-                                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-2 text-left">
-                                        <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 tracking-widest uppercase">Categories</span>
-                                    </div>
-                                    <div className="max-h-64 overflow-y-auto scrollbar-hide px-2">
-                                        {availableEventTags.map(tag => (
-                                            <label
-                                                key={tag}
-                                                className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg cursor-pointer transition-colors group"
-                                            >
-                                                <div className="relative flex items-center justify-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="peer appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 checked:bg-primary checked:border-primary transition-all cursor-pointer"
-                                                        checked={eventFilters.tags.includes(tag)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setEventFilters(prev => ({ ...prev, tags: [...prev.tags, tag] }));
-                                                            } else {
-                                                                setEventFilters(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
-                                                            }
-                                                        }}
-                                                    />
-                                                    <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
-                                                </div>
-                                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors font-poppins">
-                                                    {tag}
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                    {eventFilters.tags.length > 0 && (
-                                        <div className="px-3 pt-3 mt-2 border-t border-gray-100 dark:border-gray-700">
-                                            <button
-                                                onClick={() => {
-                                                    setEventFilters(prev => ({ ...prev, tags: [] }));
-                                                }}
-                                                className="w-full py-1.5 text-[10px] font-bold text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 text-center transition-colors"
-                                            >
-                                                Clear selection
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        ))}
                     </div>
                 </div>
             )}
 
             <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-                {activeTab !== 'private_events' && (
-                    <div className="mb-6 mt-2">
-                        <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
-                            {selectedCity && selectedCity !== 'All' ? `Events in ${selectedCity}` : 'Trending Events'}
-                        </h2>
-                        <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">Popular right now</p>
-                    </div>
-                )}
 
                 {/* Content Rendering */}
 
                 {activeTab === 'public_events' && (
                     <>
-                        {/* Trending Row (All local filtered events) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                            {filteredEvents.length > 0 ? (
-                                filteredEvents.map((event, idx) => (
-                                    <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
-                                ))
-                            ) : <EmptyState onReset={resetFilters} />}
-                        </div>
-                        {/* Private Event Banner injected after the first row (or at the bottom if fewer than 3 trending events) */}
-                        <div className="my-16">
-                            <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
+                        {/* Category Filter Chips */}
+                        <div className="relative flex items-center justify-between gap-6 pb-4 mb-8 border-b border-gray-200 dark:border-gray-800">
+                            {/* Scrollable Chips */}
+                            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar flex-1 py-1">
+                                <button
+                                    onClick={() => {
+                                        setEventFilters(prev => ({ ...prev, tags: [] }));
+                                        setIsMoreFiltersOpen(false);
+                                    }}
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${eventFilters.tags.length === 0
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                                            : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                        }`}
+                                >
+                                    All
+                                </button>
+                                {activeSectionTags.slice(0, 4).map((tag) => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => {
+                                            setEventFilters(prev => ({ ...prev, tags: [tag] }));
+                                            setIsMoreFiltersOpen(false);
+                                        }}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
+                                                ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                                                : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                            }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* More filters */}
+                            {activeSectionTags.length > 4 && (
+                                <div className="relative shrink-0" ref={moreFiltersRef}>
+                                    <button
+                                        onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
+                                                ? 'bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+                                                : 'bg-white dark:bg-gray-850 text-gray-400 border-gray-200 dark:border-gray-800'
+                                            }`}
+                                    >
+                                        More Filters
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isMoreFiltersOpen && (
+                                        <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                            <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Categories</div>
+                                            <div className="max-h-52 overflow-y-auto px-2">
+                                                {activeSectionTags.map(tag => (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => {
+                                                            setEventFilters(prev => ({ ...prev, tags: [tag] }));
+                                                            setIsMoreFiltersOpen(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${eventFilters.tags.includes(tag)
+                                                                ? 'bg-primary/10 text-primary font-bold'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                            }`}
+                                                    >
+                                                        {tag}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        {/* All Global Events */}
-                        {!loadingGlobalEvents && filteredGlobalEvents.length > 0 && (
-                            <div className="mt-8">
-                                <h2 className="text-[24px] sm:text-[28px] font-display font-bold text-[#111827] dark:text-gray-100 tracking-tight mb-6 sm:mb-8">Events in Global</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                                    {filteredGlobalEvents.map((event, idx) => (
-                                        <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
-                                    ))}
+                        {/* ===== NEAR FOR YOU TAB ===== */}
+                        {activeSection === 'Near for you' && (
+                            <div>
+                                <div className="mb-8">
+                                    <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
+                                        {/* <MapPin className="w-4 h-4 text-primary shrink-0 animate-bounce" /> */}
+                                        {selectedCity && selectedCity !== 'All' ? `Events in ${selectedCity}` : 'Trending Events near you'}
+                                    </h2>
+                                    <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Popular right now</p>
                                 </div>
+
+                                {filteredEvents.length > 0 ? (
+                                    <>
+                                        {/* First 3 Events */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                                            {filteredEvents.slice(0, Cardslice).map((event, idx) => (
+                                                <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                            ))}
+                                        </div>
+
+                                        {/* Ad / Host Banner */}
+                                        <div className="my-16">
+                                            <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
+                                        </div>
+
+                                        {/* Remaining Events */}
+                                        {filteredEvents.length > Cardslice && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8">
+                                                {filteredEvents.slice(Cardslice).map((event, idx) => (
+                                                    <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <EmptyState onReset={resetFilters} />
+                                )}
                             </div>
                         )}
-                        {filteredEvents.length === 0 && filteredGlobalEvents.length === 0 && (
-                            <EmptyState onReset={resetFilters} />
+
+                        {/* ===== GLOBAL TAB ===== */}
+                        {activeSection === 'Global' && (
+                            <div>
+                                <div className="mb-8">
+                                    <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
+                                        {/* <Sparkles className="w-4 h-4 text-primary shrink-0 animate-pulse" /> */}
+                                        Global Events
+                                    </h2>
+                                    <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Explore all events listed globally</p>
+                                </div>
+
+                                {filteredGlobalEvents.length > 0 ? (
+                                    <>
+                                        {/* First 3 Global Events */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                                            {filteredGlobalEvents.slice(0, Cardslice).map((event, idx) => (
+                                                <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                            ))}
+                                        </div>
+
+                                        {/* Ad / Host Banner */}
+                                        <div className="my-16">
+                                            <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
+                                        </div>
+
+                                        {/* Remaining Global Events */}
+                                        {filteredGlobalEvents.length > Cardslice && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8">
+                                                {filteredGlobalEvents.slice(Cardslice).map((event, idx) => (
+                                                    <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <EmptyState onReset={resetFilters} />
+                                )}
+                            </div>
                         )}
                     </>
                 )}

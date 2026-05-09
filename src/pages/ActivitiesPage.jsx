@@ -334,7 +334,7 @@ const ActivitiesPage = () => {
                         </div>
 
                         {/* Search */}
-                        <div className="relative mb-8 max-w-md">
+                        {/* <div className="relative mb-8 max-w-md">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -343,7 +343,7 @@ const ActivitiesPage = () => {
                                 placeholder="Search turfs..."
                                 className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
                             />
-                        </div>
+                        </div> */}
 
                         <div className="mb-4">
                             <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
@@ -433,7 +433,7 @@ const ActivitiesPage = () => {
                         </div>
 
                         {/* Search */}
-                        <div className="relative mb-8 max-w-md">
+                        {/* <div className="relative mb-8 max-w-md">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -442,7 +442,7 @@ const ActivitiesPage = () => {
                                 placeholder="Search parks..."
                                 className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
                             />
-                        </div>
+                        </div> */}
 
                         <div className="mb-4">
                             <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">

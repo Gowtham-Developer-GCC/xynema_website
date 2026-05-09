@@ -4,7 +4,7 @@ import { optimizeImage } from '../utils/helpers';
 
 const StoreCard = memo(({ item }) => {
     return (
-        <div className="bg-white dark:bg-[#1a1c23] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
+        <div className="bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
             <Link to={``} className="block w-full">
                 <div className="relative aspect-square overflow-hidden bg-white">
                     <img

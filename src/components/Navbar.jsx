@@ -31,6 +31,39 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
     const [notifications, setNotifications] = useState([]);
     const [loadingNotifications, setLoadingNotifications] = useState(false);
 
+    const navContainerRef = useRef(null);
+    const [navIndicator, setNavIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+
+    useEffect(() => {
+        try {
+            const container = navContainerRef.current;
+            if (!container) return;
+
+            const updateIndicator = () => {
+                const activeEl = container.querySelector('.active-nav-tab');
+                if (activeEl) {
+                    setNavIndicator({
+                        left: activeEl.offsetLeft,
+                        width: activeEl.offsetWidth,
+                        opacity: 1
+                    });
+                } else {
+                    setNavIndicator(prev => ({ ...prev, opacity: 0 }));
+                }
+            };
+
+            // Use a microtask/raf to ensure elements are measured correctly after rendering
+            const handle = requestAnimationFrame(updateIndicator);
+            window.addEventListener('resize', updateIndicator);
+            return () => {
+                cancelAnimationFrame(handle);
+                window.removeEventListener('resize', updateIndicator);
+            };
+        } catch (err) {
+            console.error('Nav indicator calculation error:', err);
+        }
+    }, [location.pathname, t]);
+
     // Prevent body scroll when sidebar is open
     useEffect(() => {
         if (isSidebarOpen) {
@@ -217,23 +250,30 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         </div>
 
                         {/* Center Zone: Nav Links - Perfectly centered using the Three-Zone pattern */}
-                        <div className="hidden lg:flex flex-none items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 px-6">
-                            <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'text-primary' : 'hover:text-primary'}`}>
+                        <div ref={navContainerRef} className="relative hidden lg:flex flex-none items-center justify-center gap-6 xl:gap-10 text-[14px] xl:text-[15px] font-bold text-gray-800 dark:text-gray-100 px-6 py-1">
+                            <Link to="/" className={`relative py-1 transition-colors ${location.pathname === '/' ? 'active-nav-tab text-primary' : 'hover:text-primary'}`}>
                                 {t('for_you')}
-                                {location.pathname === '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
-                            <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'text-primary' : 'hover:text-primary'}`}>
+                            <Link to="/movies" className={`relative py-1 transition-colors ${location.pathname.startsWith('/movies') && location.pathname !== '/' ? 'active-nav-tab text-primary' : 'hover:text-primary'}`}>
                                 {t('movies')}
-                                {location.pathname.startsWith('/movies') && location.pathname !== '/' && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
-                            <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'text-primary' : 'hover:text-primary'}`}>
+                            <Link to="/events" className={`relative py-1 transition-colors ${location.pathname.startsWith('/events') ? 'active-nav-tab text-primary' : 'hover:text-primary'}`}>
                                 {t('events')}
-                                {location.pathname.startsWith('/events') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
-                            <Link to="/activities" className={`relative py-1 transition-colors ${location.pathname.startsWith('/activities') ? 'text-primary' : 'hover:text-primary'}`}>
+                            <Link to="/activities" className={`relative py-1 transition-colors ${location.pathname.startsWith('/activities') ? 'active-nav-tab text-primary' : 'hover:text-primary'}`}>
                                 {t('activities')}
-                                {location.pathname.startsWith('/activities') && <span className="absolute -bottom-1.5 left-0 w-full h-[2.5px] bg-primary rounded-full" />}
                             </Link>
+
+                            {/* Sliding Active Underline Indicator with premium bouncy elastic animation */}
+                            <span
+                                style={{
+                                    transform: `translateX(${navIndicator.left}px)`,
+                                    width: `${navIndicator.width}px`,
+                                    opacity: navIndicator.opacity,
+                                    transition: 'transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1), width 320ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease-out'
+                                }}
+                                className="absolute -bottom-0.5 left-0 h-[2.5px] bg-primary rounded-full pointer-events-none"
+                            />
                         </div>
 
                         {/* Right Zone: Search & Actions - Takes up 1/3 space */}
@@ -301,7 +341,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         />
                         <div 
                             ref={searchRef}
-                            className="absolute left-0 right-0 lg:left-auto lg:right-8 lg:top-3 lg:h-14 lg:w-[450px] bg-white dark:bg-gray-900 z-[65] border-b lg:border lg:border-white/20 lg:dark:border-gray-700 flex items-center px-4 gap-3 animate-in fade-in slide-in-from-top-2 lg:rounded-2xl lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all"
+                            className="absolute left-0 right-0 top-0 lg:left-auto lg:right-8 lg:top-3 lg:w-[460px] bg-white dark:bg-gray-900 z-[65] border-b border-gray-100 dark:border-gray-800 lg:border lg:border-white/10 lg:dark:border-gray-800/80 flex items-center px-4 py-3 lg:py-1.5 gap-3 animate-in fade-in slide-in-from-top-2 lg:rounded-2xl lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all"
                         >
                             <div className="flex-1 flex items-center gap-3">
                                 <UniversalSearch
@@ -311,9 +351,9 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                 />
                                 <button
                                     onClick={() => setIsMobileSearchOpen(false)}
-                                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                    className="p-2.5 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 shrink-0 transition-all active:scale-90"
                                 >
-                                    <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                    <X className="h-4.5 w-4.5" />
                                 </button>
                             </div>
                         </div>

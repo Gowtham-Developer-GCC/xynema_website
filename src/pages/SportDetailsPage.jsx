@@ -237,7 +237,7 @@ const SportDetailsPage = () => {
                                 </span>
                             </div>
 
-                            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
+                            <h1 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
                                 {sport.name}
                             </h1>
 
@@ -283,14 +283,14 @@ const SportDetailsPage = () => {
                             <div className="bg-white dark:bg-gray-900 rounded-[32px] p-8 md:p-10 border border-gray-100 dark:border-gray-800 shadow-2xl relative flex flex-col items-start text-left">
                                 <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-3">Starting from</p>
                                 <div className="flex items-baseline gap-1.5 mb-8">
-                                    <span className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
+                                    <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
                                     <span className="text-xs sm:text-sm font-bold text-gray-400">/ hour</span>
                                 </div>
                                 <button
                                     onClick={handleCheckout}
                                     className="w-full py-6 bg-primary hover:bg-[#ff3d5a] text-white text-base font-black rounded-3xl transition-all shadow-xl shadow-primary/20 active:scale-95 uppercase tracking-widest"
                                 >
-                                    Book Now
+                                    <span className='text-sm sm:text-md '>Book Now</span>
                                 </button>
                             </div>
                         </div>

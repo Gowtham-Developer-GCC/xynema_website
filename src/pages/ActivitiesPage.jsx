@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
     Search, Star, MapPin, ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles
@@ -10,6 +10,7 @@ import { useData } from '../context/DataContext';
 import SportCard from '../components/SportCard';
 import ParkCard from '../components/ParkCard';
 import { getVisitedParks, getAllParks } from '../services/parkService';
+import { getAvailableTurfs, TURF_PAGE_LIMIT } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
 
 // ─────────────── Main Tabs ───────────────
@@ -36,10 +37,21 @@ const ActivitiesPage = () => {
         const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
         return Array.isArray(cached) ? cached : [];
     });
+    const [allTurfs, setAllTurfs] = useState(() => {
+        const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
+        if (Array.isArray(cached)) return cached;
+        return cached?.turfs || [];
+    });
     const [error, setError] = useState(null);
     const [parksLoading, setParksLoading] = useState(() => {
         const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
         return !Array.isArray(cached) || cached.length === 0;
+    });
+    const [turfsLoading, setTurfsLoading] = useState(false);
+    const [turfsPagination, setTurfsPagination] = useState({
+        page: 1,
+        total: 0,
+        hasNextPage: true // Ensure it triggers initial scan safely
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
@@ -48,6 +60,89 @@ const ActivitiesPage = () => {
     const [isMoreParksFiltersOpen, setIsMoreParksFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
     const moreParksFiltersRef = useRef(null);
+    const prefetchedTurfs = useRef(null);   // { page, data } — pre-fetched next page
+    const isFetchingTurfs = useRef(false);  // fetchTurfs dedup guard
+    const isPrefetchingTurfs = useRef(false);  // prefetchNextTurfsPage dedup guard
+    const scrollTimerRef = useRef(null);   // debounce scroll events
+    const didInitCheck = useRef(false);  // ensures one viewport check on mount
+
+    // Silent background prefetch — never touches global loading state
+    const prefetchNextTurfsPage = useCallback(async (nextPage) => {
+        if (prefetchedTurfs.current?.page === nextPage) return; // already cached
+        if (isPrefetchingTurfs.current) return;                 // own ref, not shared
+
+        isPrefetchingTurfs.current = true; // lock prefetch slot
+
+        const cacheKey = `turfs_${selectedCity || 'all'}_p${nextPage}_s${searchQuery || ''}`;
+        try {
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAvailableTurfs({
+                    city: selectedCity,
+                    search: searchQuery,
+                    page: nextPage,
+                    limit: TURF_PAGE_LIMIT
+                }),
+                1800,
+                false
+            );
+            if (response?.turfs) {
+                prefetchedTurfs.current = { page: nextPage, data: response };
+            }
+        } catch (e) {
+            // Silent failure — fallback fetch will handle it on scroll
+            console.warn('[Prefetch] Silent fail for page', nextPage, e?.message);
+        } finally {
+            isPrefetchingTurfs.current = false; // always release lock
+        }
+    }, [selectedCity, searchQuery]);
+
+    const fetchTurfs = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingTurfs.current && page !== 1) return;
+        isFetchingTurfs.current = true;
+
+        try {
+            if (page === 1 && !append) setTurfsLoading(true);
+
+            const cacheKey = (page === 1 && !searchQuery)
+                ? `turfs_${selectedCity || 'all'}`
+                : `turfs_${selectedCity || 'all'}_p${page}_s${searchQuery || ''}`;
+
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAvailableTurfs({
+                    city: selectedCity,
+                    search: searchQuery,
+                    page,
+                    limit: TURF_PAGE_LIMIT
+                }),
+                1800,
+                force
+            );
+
+            if (response?.turfs) {
+                const newPagination = response.pagination || { page, total: 0, hasNextPage: false };
+
+                if (append) {
+                    setAllTurfs(prev => [...prev, ...response.turfs]);
+                } else {
+                    setAllTurfs(response.turfs);
+                    prefetchedTurfs.current = null;
+                }
+
+                setTurfsPagination(newPagination);
+
+                if (newPagination.hasNextPage) {
+                    prefetchNextTurfsPage(page + 1);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching turfs:', err);
+        } finally {
+            setTurfsLoading(false);
+            isFetchingTurfs.current = false;
+        }
+    }, [selectedCity, searchQuery, prefetchNextTurfsPage]);
 
     const fetchParks = useCallback(async () => {
         try {
@@ -75,25 +170,145 @@ const ActivitiesPage = () => {
         }
     }, [selectedCity, searchQuery]);
 
+    // Parks and turfs have independent lifecycles — keep them separate
+    // so a park fetch failure does not block turf reset and vice versa
     useEffect(() => {
         fetchParks();
     }, [fetchParks]);
+
+    useEffect(() => {
+        prefetchedTurfs.current = null;
+        isPrefetchingTurfs.current = false;
+        isFetchingTurfs.current = false;
+        fetchTurfs(1, false);
+    }, [fetchTurfs]);
+
+    const handleLoadMoreTurfs = useCallback(() => {
+        if (turfsLoading || isFetchingTurfs.current) return;
+        if (!turfsPagination?.hasNextPage) return;
+
+        const nextPage = (turfsPagination.page || 1) + 1;
+
+        if (prefetchedTurfs.current?.page === nextPage) {
+            // ✅ Data already ready from pre-cache — append instantly, user experiences zero lag
+            const { data } = prefetchedTurfs.current;
+            prefetchedTurfs.current = null;
+
+            setAllTurfs(prev => [...prev, ...data.turfs]);
+            setTurfsPagination(data.pagination || { page: nextPage, hasNextPage: false });
+
+            // Start caching next layer
+            if (data.pagination?.hasNextPage) {
+                prefetchNextTurfsPage(nextPage + 1);
+            }
+        } else {
+            // Fallback sync fetch — rarely hit due to intelligent pre-caching
+            fetchTurfs(nextPage, true);
+        }
+    }, [turfsLoading, turfsPagination, fetchTurfs, prefetchNextTurfsPage]);
+
+    // Stable ref so observer callback always calls latest handleLoadMoreTurfs
+    // without needing it in the dependency array (which caused reconnect on every append)
+    const appendHandlerRef = useRef(handleLoadMoreTurfs);
+    useEffect(() => {
+        appendHandlerRef.current = handleLoadMoreTurfs;
+    }, [handleLoadMoreTurfs]);
+
+    // ─── Scroll-based infinite trigger ───────────────────────────────
+    // More reliable than IntersectionObserver for hard refresh:
+    // IO silently skips elements already in viewport on mount.
+    // Scroll listener fires on every tick — no blindspot.
+    //
+    // Trigger point: when user has scrolled past 75% of total page height.
+    // 75% means there is still 25% of content visible — fires BEFORE footer.
+    // This matches how BookMyShow and District implement infinite scroll.
+    useEffect(() => {
+        // Only active on Turfs tab, no filter active
+        if (activeSection !== 'Turfs') return;
+        const isFiltering = searchQuery.trim().length > 0 || activeSportTag !== 'All';
+        if (isFiltering) return;
+        if (!turfsPagination?.hasNextPage) return;
+
+        const checkAndLoad = () => {
+            if (turfsLoading || isFetchingTurfs.current || isPrefetchingTurfs.current) return;
+            if (!turfsPagination?.hasNextPage) return;
+
+            const scrolled = window.scrollY;
+            const windowH = window.innerHeight;
+            const totalH = document.documentElement.scrollHeight;
+
+            // Fire when 75% of the page has been scrolled
+            // Equivalent to: sentinel placed 25% from the bottom
+            const threshold = totalH * 0.75;
+            const currentPos = scrolled + windowH;
+
+            if (currentPos >= threshold) {
+                appendHandlerRef.current?.();
+            }
+        };
+
+        // Debounced scroll handler — fires at most once per 150ms
+        const onScroll = () => {
+            if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+            scrollTimerRef.current = setTimeout(checkAndLoad, 150);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        // ── HARD REFRESH FIX ─────────────────────────────────────────
+        // On hard refresh with few cards, user hasn't scrolled yet,
+        // so the scroll event never fires.
+        // Solution: run checkAndLoad once after mount with a delay
+        // that lets React finish painting all cards first.
+        // This is the key fix that IO-based approaches kept missing.
+        if (!didInitCheck.current) {
+            didInitCheck.current = true;
+            const initTimer = setTimeout(() => {
+                checkAndLoad();
+            }, 500); // 500ms: page 1 painted + prefetch started
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(scrollTimerRef.current);
+                window.removeEventListener('scroll', onScroll);
+            };
+        }
+
+        return () => {
+            clearTimeout(scrollTimerRef.current);
+            window.removeEventListener('scroll', onScroll);
+        };
+
+    }, [
+        activeSection,
+        turfsPagination?.page,        // re-register after each page appended
+        turfsPagination?.hasNextPage, // unregister when list exhausted
+        activeSportTag,
+        searchQuery,
+        turfsLoading,                 // re-register when loading state changes
+    ]);
+
+    // Reset didInitCheck when city or search changes so the
+    // initial viewport check fires again on fresh data
+    useEffect(() => {
+        didInitCheck.current = false;
+    }, [selectedCity, searchQuery]);
 
     const handleRetry = () => {
         setError(null);
         refreshGlobalData(1);
         fetchParks();
+        fetchTurfs(1, false, true); // Force fresh revalidation on retry
     };
 
     // Dynamic tags from turf data
     const availableSportTags = useMemo(() => {
-        const dynamicTags = Array.from(new Set(turfs.flatMap(t => t.tags || []))).filter(Boolean);
+        const dynamicTags = Array.from(new Set(allTurfs.flatMap(t => t.tags || []))).filter(Boolean);
         return Array.from(new Set([...SPORT_TAGS, ...dynamicTags])).sort();
-    }, [turfs]);
+    }, [allTurfs]);
 
     // Filter turfs
     const filteredTurfs = useMemo(() => {
-        let list = turfs;
+        let list = allTurfs;
         if (searchQuery.trim()) {
             list = list.filter(e =>
                 (e.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,7 +319,7 @@ const ActivitiesPage = () => {
             list = list.filter(e => (e.tags || []).includes(activeSportTag));
         }
         return list;
-    }, [turfs, searchQuery, activeSportTag]);
+    }, [allTurfs, searchQuery, activeSportTag]);
 
     // Dynamic sport tag slices
     const mainSportTags = useMemo(() => {
@@ -198,8 +413,8 @@ const ActivitiesPage = () => {
                             key={tab}
                             onClick={() => handleSectionChange(tab)}
                             className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeSection === tab
-                                    ? 'text-primary'
-                                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                                ? 'text-primary'
+                                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                                 }`}
                         >
                             {tab}
@@ -277,8 +492,8 @@ const ActivitiesPage = () => {
                                 <button
                                     onClick={() => setActiveSportTag('All')}
                                     className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === 'All'
-                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                         }`}
                                 >
                                     All
@@ -288,8 +503,8 @@ const ActivitiesPage = () => {
                                         key={tag}
                                         onClick={() => setActiveSportTag(tag)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === tag
-                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                             }`}
                                     >
                                         {tag}
@@ -303,8 +518,8 @@ const ActivitiesPage = () => {
                                     <button
                                         onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
-                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
-                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
                                             }`}
                                     >
                                         More
@@ -319,8 +534,8 @@ const ActivitiesPage = () => {
                                                         key={tag}
                                                         onClick={() => { setActiveSportTag(tag); setIsMoreFiltersOpen(false); }}
                                                         className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeSportTag === tag
-                                                                ? 'bg-primary/10 text-primary'
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                            ? 'bg-primary/10 text-primary'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
                                                             }`}
                                                     >
                                                         {tag}
@@ -350,7 +565,11 @@ const ActivitiesPage = () => {
                                 {activeSportTag === 'All' ? 'All Turfs' : activeSportTag}
                             </h2>
                             <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">
-                                {filteredTurfs.length} {filteredTurfs.length === 1 ? 'venue' : 'venues'} available
+                                {(() => {
+                                    const total = turfsPagination?.total;
+                                    const count = (total && total < 9999) ? total : filteredTurfs.length;
+                                    return `${count} ${count === 1 ? 'venue' : 'venues'} available`;
+                                })()}
                             </p>
                         </div>
 
@@ -363,6 +582,15 @@ const ActivitiesPage = () => {
                                 <TurfEmptyState onReset={() => { setSearchQuery(''); setActiveSportTag('All'); }} />
                             )}
                         </div>
+
+
+
+                        {/* Fallback spinner — only when prefetch missed and on-demand fetch runs */}
+                        {turfsLoading && allTurfs.length > 0 && (
+                            <div className="mt-10 flex justify-center">
+                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -376,8 +604,8 @@ const ActivitiesPage = () => {
                                 <button
                                     onClick={() => setActiveParkType('All')}
                                     className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === 'All'
-                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                         }`}
                                 >
                                     All
@@ -387,8 +615,8 @@ const ActivitiesPage = () => {
                                         key={type}
                                         onClick={() => setActiveParkType(type)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === type
-                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                             }`}
                                     >
                                         {type}
@@ -402,8 +630,8 @@ const ActivitiesPage = () => {
                                     <button
                                         onClick={() => setIsMoreParksFiltersOpen(!isMoreParksFiltersOpen)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreParksFiltersOpen
-                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
-                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
                                             }`}
                                     >
                                         More
@@ -418,8 +646,8 @@ const ActivitiesPage = () => {
                                                         key={type}
                                                         onClick={() => { setActiveParkType(type); setIsMoreParksFiltersOpen(false); }}
                                                         className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeParkType === type
-                                                                ? 'bg-primary/10 text-primary'
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                            ? 'bg-primary/10 text-primary'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
                                                             }`}
                                                     >
                                                         {type}

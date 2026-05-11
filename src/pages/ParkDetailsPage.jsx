@@ -72,20 +72,20 @@ const ParkDetailsPage = () => {
             try {
                 const statePark = location.state?.park;
                 const hasMatchingStatePark = statePark && (statePark.slug === slug || statePark.id === slug || statePark._id === slug);
-                
+
                 if (!hasMatchingStatePark) {
                     setLoading(true);
                 }
 
-                const fetchParkTask = (!hasMatchingStatePark || !statePark.description) 
-                    ? apiCacheManager.getOrFetchParkDetails(slug, () => getParkBySlug(slug)) 
+                const fetchParkTask = (!hasMatchingStatePark || !statePark.description)
+                    ? apiCacheManager.getOrFetchParkDetails(slug, () => getParkBySlug(slug))
                     : Promise.resolve(statePark);
-                
+
                 const [data, parks] = await Promise.all([
                     fetchParkTask,
                     apiCacheManager.getOrFetchParks(selectedCity || 'Kochi', () => getAllParks({ city: selectedCity || 'Kochi' }))
                 ]);
-                
+
                 if (data) setPark(data);
                 if (parks) setAllParks(parks.filter(p => p.slug !== slug && p.id !== slug));
             } catch (err) {
@@ -171,7 +171,7 @@ const ParkDetailsPage = () => {
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-center md:items-end">
-                        
+
                         {/* Poster with Glow – now using 2000x3160 aspect ratio */}
                         <div className="relative group shrink-0">
                             <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />

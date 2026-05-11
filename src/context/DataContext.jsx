@@ -4,7 +4,7 @@ import { getFoodItems } from '../services/storeService';
 import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
 import { getUserProfile, updateUserProfile } from '../services/userService';
-import { getAvailableTurfs } from '../services/turfService';
+import { getAvailableTurfs, TURF_PAGE_LIMIT } from '../services/turfService';
 import { getAllParks } from '../services/parkService';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
@@ -36,8 +36,10 @@ export const DataProvider = ({ children, selectedCity }) => {
         return cached?.movies ? cached.movies.map(m => new Movie(m)) : [];
     });
     const [latestMovies, setLatestMovies] = useState(() => {
-        const cached = apiCacheManager.get('latest_movies');
-        return Array.isArray(cached) ? cached.map(m => new Movie(m)) : [];
+        const cached = apiCacheManager.get(`movies_${selectedCity}`);
+        // Pull latestMovies from movie cache or fallback to legacy latest_movies cache
+        const source = cached?.latestMovies || apiCacheManager.get('latest_movies');
+        return Array.isArray(source) ? source.map(m => new Movie(m)) : [];
     });
     const [upcomingMovies, setUpcomingMovies] = useState(() => {
         const cached = apiCacheManager.get('upcoming_movies_global');
@@ -61,7 +63,9 @@ export const DataProvider = ({ children, selectedCity }) => {
     });
     const [turfs, setTurfs] = useState(() => {
         const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
-        return Array.isArray(cached) ? cached : [];
+        // Handle both legacy array cache and new object cache
+        if (Array.isArray(cached)) return cached;
+        return cached?.turfs || [];
     });
     const [parks, setParks] = useState(() => {
         const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
@@ -81,7 +85,7 @@ export const DataProvider = ({ children, selectedCity }) => {
         const cached = apiCacheManager.get(`movies_${selectedCity}`);
         return cached?.pagination || { total: 0, page: 1, pages: 1 };
     });
-    
+
     // Track previous city to avoid redundant clears
     const prevCityRef = React.useRef(selectedCity);
 
@@ -92,13 +96,13 @@ export const DataProvider = ({ children, selectedCity }) => {
         // SWR: Only show loader if we have NO data at all
         const hasData = movies.length > 0;
         if (!hasData) setLoading(true);
-        
+
         setError(null);
         try {
             // SWR: Force a background revalidation for page 1
             const shouldRevalidate = page === 1;
 
-            const [movieData, foodData, upcomingData, latestData, eventData, highlightsData, turfData, parkData] = await Promise.all([
+            const [movieData, foodData, upcomingData, eventData, highlightsData, turfData, parkData] = await Promise.all([
                 // Now Showing (based on city)
                 (page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getNowShowingMovies(selectedCity, page),
@@ -118,12 +122,6 @@ export const DataProvider = ({ children, selectedCity }) => {
                     shouldRevalidate
                 ).catch(err => { console.error("Upcoming failed:", err); return []; }),
 
-                // Latest movies
-                apiCacheManager.getOrExecute('latest_movies',
-                    () => getNotNowMovies(selectedCity),
-                    1800,
-                    shouldRevalidate
-                ).catch(err => { console.error("Latest failed:", err); return []; }),
 
                 // Events
                 apiCacheManager.getOrFetchEvents(selectedCity,
@@ -140,9 +138,9 @@ export const DataProvider = ({ children, selectedCity }) => {
 
                 // Turfs
                 apiCacheManager.getOrFetchTurfs(selectedCity,
-                    () => getAvailableTurfs({ city: selectedCity }),
+                    () => getAvailableTurfs({ city: selectedCity, page: 1, limit: TURF_PAGE_LIMIT }),
                     shouldRevalidate
-                ).catch(err => { console.error("Turfs failed:", err); return []; }),
+                ).catch(err => { console.error("Turfs failed:", err); return { turfs: [], pagination: { total: 0, page: 1 } }; }),
 
                 // Parks
                 apiCacheManager.getOrFetchParks(selectedCity,
@@ -154,7 +152,8 @@ export const DataProvider = ({ children, selectedCity }) => {
             // Parse movie and theater data
             const moviesList = (movieData.movies || []).map(m => new Movie(m));
             const upcomingList = (Array.isArray(upcomingData) ? upcomingData : []).map(m => new Movie(m));
-            const latestList = (Array.isArray(latestData) ? latestData : []).map(m => new Movie(m));
+            // Derived from movieData to avoid redundant API call
+            const latestList = (movieData.latestMovies || []).map(m => new Movie(m));
             const highlightsList = (Array.isArray(highlightsData) ? highlightsData : []).map(m => new Movie(m));
             const theatersList = (movieData.theaters || []).map(t => new Theater(t));
             const foodList = Array.isArray(foodData) ? foodData : [];
@@ -166,7 +165,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setTheaters(theatersList);
             setEvents(eventData || []);
             setFoodItems(foodList);
-            setTurfs(turfData || []);
+            setTurfs(turfData?.turfs || []);
             setParks(parkData || []);
             setPagination(movieData.pagination || { total: 0, page: 1, pages: 1 });
             setLastUpdated(new Date());
@@ -336,7 +335,7 @@ export const DataProvider = ({ children, selectedCity }) => {
                 setParks([]);
                 setLoading(true);
             }
-            
+
             refreshData(1);
             prevCityRef.current = selectedCity;
         }

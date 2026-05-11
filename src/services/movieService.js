@@ -76,13 +76,21 @@ export const getNowShowingMovies = async (city, page = 1) => {
                     });
                 }
             }
+            // Extract latest/streaming movies if present, fallback to main data if not
+            const latestMoviesRaw = response.data.latestMovies || response.data.data || response.data.movies;
+            const latestMoviesParsed = [];
+            if (Array.isArray(latestMoviesRaw)) {
+                latestMoviesRaw.forEach(m => latestMoviesParsed.push(new Movie(m)));
+            }
+
             return {
                 movies: movies,
                 theaters: Array.from(uniqueTheatersMap.values()),
+                latestMovies: latestMoviesParsed,
                 pagination: response.data.pagination || {}
             };
         }
-        return { movies: [], theaters: [], pagination: {} };
+        return { movies: [], theaters: [], latestMovies: [], pagination: {} };
     });
 };
 

@@ -2,6 +2,9 @@ import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { Turf } from '../models/index.js';
 
+// Global Pagination Configuration for Turfs
+export const TURF_PAGE_LIMIT = 6;
+
 /**
  * Fetch list of available turfs based on city and other filters
  * @param {Object} params - Query parameters (city, search, tags)
@@ -12,8 +15,8 @@ export const getAvailableTurfs = async (params = {}) => {
 
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.TURFS.AVAILABLE, { 
-                params: { ...params, city: targetCity } 
+            const response = await api.get(ENDPOINTS.TURFS.AVAILABLE, {
+                params: { ...params, city: targetCity }
             });
             let body = response.data;
 
@@ -23,14 +26,41 @@ export const getAvailableTurfs = async (params = {}) => {
             }
 
             if (body.success && body.data) {
-                // Return data directly if it's already an array, else check for turfs field
-                const turfsData = Array.isArray(body.data) ? body.data : (body.data.turfs || []);
-                return Array.isArray(turfsData) ? turfsData.map(t => new Turf(t)) : [];
+                const isArray = Array.isArray(body.data);
+                const turfsRaw = isArray ? body.data : (body.data.turfs || []);
+                const turfs = Array.isArray(turfsRaw) ? turfsRaw.map(t => new Turf(t)) : [];
+
+                // Normalize pagination — harvest from root sibling (body.pagination) or nested (body.data.pagination)
+                const rawPagination = body.pagination || (!isArray && body.data?.pagination ? body.data.pagination : null);
+                
+                let pagination;
+                if (rawPagination) {
+                    const p = rawPagination;
+                    pagination = {
+                        page:       p.currentPage   ?? p.page  ?? 1,
+                        totalPages: p.totalPages     ?? 1,
+                        total:      p.totalItems     ?? p.total ?? turfs.length,
+                        limit:      p.itemsPerPage   ?? p.limit ?? TURF_PAGE_LIMIT,
+                        hasNextPage: p.hasNextPage   ?? false,
+                    };
+                } else {
+                    const limit = params.limit || TURF_PAGE_LIMIT;
+                    const hasNext = turfs.length >= limit;
+                    pagination = {
+                        page: params.page || 1,
+                        totalPages: hasNext ? 9999 : (params.page || 1),
+                        total: hasNext ? 9999 : (params.page || 1) * turfs.length,
+                        limit,
+                        hasNextPage: hasNext,
+                    };
+                }
+
+                return { turfs, pagination };
             }
-            return [];
+            return { turfs: [], pagination: { page: 1, total: 0, hasNextPage: false } };
         } catch (error) {
             console.error('Error fetching available turfs:', error);
-            return [];
+            return { turfs: [], pagination: { total: 0, page: 1 } };
         }
     });
 };
@@ -44,7 +74,7 @@ export const getTurfDetails = async (turfId) => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.TURFS.DETAILS(turfId));
         let body = response.data;
-        
+
         // Handle array response if backend wraps it
         if (Array.isArray(body)) {
             body = body[0] || {};
@@ -65,11 +95,11 @@ export const getTurfDetails = async (turfId) => {
  */
 export const getAvailableSlots = async (courtId, date) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.TURFS.SLOTS(courtId), { 
-            params: { date } 
+        const response = await api.get(ENDPOINTS.TURFS.SLOTS(courtId), {
+            params: { date }
         });
         const body = response.data;
-        
+
         if (body.success && body.data) {
             return body.data.slots || [];
         }
@@ -84,12 +114,12 @@ export const getAvailableSlots = async (courtId, date) => {
  */
 export const reserveSlots = async (slotIds, sport) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.TURFS.RESERVE, { 
-            slotIds, 
-            sport: sport.toLowerCase() 
+        const response = await api.post(ENDPOINTS.TURFS.RESERVE, {
+            slotIds,
+            sport: sport.toLowerCase()
         });
         const body = response.data;
-        
+
         if (body.success) {
             return body.data;
         }
@@ -133,8 +163,8 @@ export const createTurfOrder = async (slotIds) => {
  */
 export const cancelTurfReservation = async (slotIds) => {
     return safeApiCall(async () => {
-        const response = await api.delete(ENDPOINTS.TURFS.CANCEL, { 
-            data: { slotIds } 
+        const response = await api.delete(ENDPOINTS.TURFS.CANCEL, {
+            data: { slotIds }
         });
         if (response.data?.success) {
             return response.data;

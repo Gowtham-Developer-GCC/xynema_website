@@ -6,6 +6,10 @@ import api from './api';
 // You can find this in Firebase Console -> Project Settings -> Cloud Messaging -> Web configuration
 const VAPID_KEY = 'BNhLhAAujCphhZ-XlurxuJlIvG_lU86eiBd_uQx93Ytz6N5GQh2TOhEEu1UWF7t0gkeKuhUaDHSqvMitc0RAD_g';
 
+let inFlightRegistration = null;
+let lastRegistrationTime = 0;
+const REGISTRATION_THROTTLE_MS = 60 * 1000; // 1 minute cooldown
+
 /**
  * Register the device for push notifications
  * 1. Requests permission
@@ -14,7 +18,21 @@ const VAPID_KEY = 'BNhLhAAujCphhZ-XlurxuJlIvG_lU86eiBd_uQx93Ytz6N5GQh2TOhEEu1UWF
  * 4. Sends token to backend    
  */
 export async function registerNotificationToken() {
-    try {
+    // 1. Prevent concurrent duplicate registrations
+    if (inFlightRegistration) {
+        console.log('[FCM] Registration already in-flight, attaching to existing promise...');
+        return inFlightRegistration;
+    }
+
+    // 2. Throttling: Skip if recently registered successfully (prevents React StrictMode double hit)
+    const now = Date.now();
+    if (now - lastRegistrationTime < REGISTRATION_THROTTLE_MS) {
+        console.log('[FCM] Skipped duplicate registration (recently completed)');
+        return localStorage.getItem('fcmToken');
+    }
+
+    inFlightRegistration = (async () => {
+        try {
         // 1. Ask permission
         if (!("Notification" in window)) {
             console.warn("This browser does not support desktop notification");
@@ -78,14 +96,21 @@ export async function registerNotificationToken() {
 
             // 5. Save token locally for persistence/cleanup
             localStorage.setItem('fcmToken', token);
+            lastRegistrationTime = Date.now(); // Record success timestamp
             return token;
         } else {
             throw new Error('No token generated');
         }
-    } catch (err) {
-        console.error('[FCM] registerNotificationToken error:', err);
-        throw err; // Propagate to UI
-    }
+        } catch (err) {
+            console.error('[FCM] registerNotificationToken error:', err);
+            throw err; // Propagate to UI
+        } finally {
+            // Cleanup after completion/failure
+            inFlightRegistration = null;
+        }
+    })();
+
+    return inFlightRegistration;
 }
 
 /**

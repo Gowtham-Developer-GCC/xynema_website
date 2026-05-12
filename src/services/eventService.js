@@ -3,12 +3,14 @@ import { ENDPOINTS } from './endpoints';
 import { Event, EventBooking } from '../models/index.js';
 export const PAGE_LIMIT = 6;
 
-export const getEvents = async (city, page = 1, limit = PAGE_LIMIT) => {
+export const getEvents = async (city, page = 1, limit = PAGE_LIMIT, tag = null) => {
     const targetCity = city || localStorage.getItem('selected_city') || 'mumbai';
 
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params: { city: targetCity, page, limit } });
+            const params = { city: targetCity, page, limit };
+            if (tag) params.tag = tag;
+            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params });
             let body = response.data;
 
             if (Array.isArray(body)) {
@@ -32,10 +34,12 @@ export const getEvents = async (city, page = 1, limit = PAGE_LIMIT) => {
     });
 };
 
-export const getAllEventsList = async (page = 1, limit = PAGE_LIMIT) => {
+export const getAllEventsList = async (page = 1, limit = PAGE_LIMIT, tag = null) => {
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params: { page, limit } });
+            const params = { page, limit };
+            if (tag) params.tag = tag;
+            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params });
             let body = response.data;
 
             if (Array.isArray(body)) {

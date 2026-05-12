@@ -42,9 +42,11 @@ export const toggleInterest = async (movieId, interested) => {
 
 
 // Fetches Now Showing movies using the /upcomingmovies endpoint (Requires City)
-export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT) => {
+export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, genre = null) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city, page, limit } });
+        const params = { city, page, limit };
+        if (genre && genre !== 'All') params.genre = genre;
+        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
             const movies = [];
@@ -84,17 +86,20 @@ export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT) =>
                 movies: movies,
                 theaters: Array.from(uniqueTheatersMap.values()),
                 latestMovies: latestMoviesParsed,
-                pagination: response.data.pagination || { page, hasNextPage: movies.length >= limit }
+                pagination: response.data.pagination || { page, hasNextPage: movies.length >= limit },
+                filters: response.data.filters || { genres: [], languages: [] }
             };
         }
-        return { movies: [], theaters: [], latestMovies: [], pagination: { hasNextPage: false } };
+        return { movies: [], theaters: [], latestMovies: [], pagination: { hasNextPage: false }, filters: { genres: [], languages: [] } };
     });
 };
 
 // Fetches true Upcoming movies using the /latest-movies endpoint
-export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT) => {
+export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT, genre = null) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.MOVIES.LATEST, { params: { city, page, limit } });
+        const params = { city, page, limit };
+        if (genre && genre !== 'All') params.genre = genre;
+        const response = await api.get(ENDPOINTS.MOVIES.LATEST, { params });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
             const pagination = response.data.pagination || { page, hasNextPage: Array.isArray(resultData) && resultData.length >= limit };
@@ -102,11 +107,12 @@ export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT) => {
             if (Array.isArray(resultData)) {
                 return {
                     movies: resultData.map(m => new Movie(m)),
-                    pagination: pagination
+                    pagination: pagination,
+                    filters: response.data.filters || { genres: [], languages: [] }
                 };
             }
         }
-        return { movies: [], pagination: { hasNextPage: false } };
+        return { movies: [], pagination: { hasNextPage: false }, filters: { genres: [], languages: [] } };
     });
 };
 

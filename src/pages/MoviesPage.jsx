@@ -49,6 +49,10 @@ const MoviesPage = () => {
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
+    // ── State: Available Filters (Server Driven) ──────────────────────
+    const [availableGenres, setAvailableGenres] = useState(['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
+    const [availableLanguages, setAvailableLanguages] = useState(['Malayalam', 'Tamil', 'Hindi', 'English']);
+
     // ── Refs: Now Showing Scroll ────────────────────────────────────────────
     const prefetchedNowShowing = useRef(null);
     const isFetchingNowShowing = useRef(false);
@@ -88,11 +92,11 @@ const MoviesPage = () => {
         if (prefetchedNowShowing.current?.page === nextPage) return;
         if (isPrefetchingNowShowing.current) return;
         isPrefetchingNowShowing.current = true;
-        const cacheKey = `movies_now_${selectedCity || 'all'}_p${nextPage}`;
+        const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getNowShowingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT),
+                () => getNowShowingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, activeGenre),
                 1800, false
             );
             const dataList = response?.movies || [];
@@ -102,7 +106,7 @@ const MoviesPage = () => {
         } finally {
             isPrefetchingNowShowing.current = false;
         }
-    }, [selectedCity]);
+    }, [selectedCity, activeGenre]);
 
     const fetchNowShowing = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingNowShowing.current && page !== 1) return;
@@ -111,15 +115,23 @@ const MoviesPage = () => {
             if (page === 1 && !append) setNowShowingLoading(true);
             if (append) setIsAppendingNowShowing(true);
 
-            const cacheKey = `movies_now_${selectedCity || 'all'}_p${page}`;
+            const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getNowShowingMovies(selectedCity, page, MOVIE_PAGE_LIMIT),
+                () => getNowShowingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, activeGenre),
                 1800, force
             );
 
             const dataList = response?.movies || [];
             const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
+
+            // Set filters from server metadata
+            if (response?.filters?.genres?.length > 0) {
+                setAvailableGenres(prev => Array.from(new Set([...prev, ...response.filters.genres])).sort());
+            }
+            if (response?.filters?.languages?.length > 0) {
+                setAvailableLanguages(prev => Array.from(new Set([...prev, ...response.filters.languages])).sort());
+            }
 
             if (append) setNowShowingMovies(prev => [...prev, ...dataList]);
             else { setNowShowingMovies(dataList); prefetchedNowShowing.current = null; }
@@ -134,7 +146,7 @@ const MoviesPage = () => {
             setIsAppendingNowShowing(false);
             isFetchingNowShowing.current = false;
         }
-    }, [selectedCity, prefetchNextNowShowing]);
+    }, [selectedCity, activeGenre, prefetchNextNowShowing]);
 
     const handleLoadMoreNowShowing = useCallback(() => {
         if (nowShowingLoading || isFetchingNowShowing.current) return;
@@ -162,17 +174,18 @@ const MoviesPage = () => {
     useEffect(() => { nowShowingAppendRef.current = handleLoadMoreNowShowing; }, [handleLoadMoreNowShowing]);
 
     useEffect(() => {
+        if (activeSection !== 'Now Showing') return;
         prefetchedNowShowing.current = null;
         isPrefetchingNowShowing.current = false;
         isFetchingNowShowing.current = false;
         didNowShowingInitCheck.current = false;
         fetchNowShowing(1, false);
-    }, [fetchNowShowing]);
+    }, [fetchNowShowing, activeSection]);
 
     // Now Showing Scroll Trigger
     useEffect(() => {
         if (activeSection !== 'Now Showing') return;
-        const isFiltering = movieSearchQuery.trim().length > 0 || activeGenre !== 'All';
+        const isFiltering = movieSearchQuery.trim().length > 0;
         if (isFiltering) return;
         if (!nowShowingPagination?.hasNextPage) return;
 
@@ -217,11 +230,11 @@ const MoviesPage = () => {
         if (prefetchedUpcoming.current?.page === nextPage) return;
         if (isPrefetchingUpcoming.current) return;
         isPrefetchingUpcoming.current = true;
-        const cacheKey = `movies_upcoming_${selectedCity || 'global'}_p${nextPage}`;
+        const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getUpcomingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT),
+                () => getUpcomingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, activeGenre),
                 1800, false
             );
             const dataList = response?.movies || [];
@@ -231,7 +244,7 @@ const MoviesPage = () => {
         } finally {
             isPrefetchingUpcoming.current = false;
         }
-    }, [selectedCity]);
+    }, [selectedCity, activeGenre]);
 
     const fetchUpcoming = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingUpcoming.current && page !== 1) return;
@@ -240,15 +253,23 @@ const MoviesPage = () => {
             if (page === 1 && !append) setUpcomingLoading(true);
             if (append) setIsAppendingUpcoming(true);
 
-            const cacheKey = `movies_upcoming_${selectedCity || 'global'}_p${page}`;
+            const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getUpcomingMovies(selectedCity, page, MOVIE_PAGE_LIMIT),
+                () => getUpcomingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, activeGenre),
                 1800, force
             );
 
             const dataList = response?.movies || [];
             const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
+
+            // Set filters from server metadata
+            if (response?.filters?.genres?.length > 0) {
+                setAvailableGenres(prev => Array.from(new Set([...prev, ...response.filters.genres])).sort());
+            }
+            if (response?.filters?.languages?.length > 0) {
+                setAvailableLanguages(prev => Array.from(new Set([...prev, ...response.filters.languages])).sort());
+            }
 
             if (append) setUpcomingMoviesData(prev => [...prev, ...dataList]);
             else { setUpcomingMoviesData(dataList); prefetchedUpcoming.current = null; }
@@ -262,7 +283,7 @@ const MoviesPage = () => {
             setIsAppendingUpcoming(false);
             isFetchingUpcoming.current = false;
         }
-    }, [selectedCity, prefetchNextUpcoming]);
+    }, [selectedCity, activeGenre, prefetchNextUpcoming]);
 
     const handleLoadMoreUpcoming = useCallback(() => {
         if (upcomingLoading || isFetchingUpcoming.current) return;
@@ -290,17 +311,18 @@ const MoviesPage = () => {
     useEffect(() => { upcomingAppendRef.current = handleLoadMoreUpcoming; }, [handleLoadMoreUpcoming]);
 
     useEffect(() => {
+        if (activeSection !== 'Upcoming') return;
         prefetchedUpcoming.current = null;
         isPrefetchingUpcoming.current = false;
         isFetchingUpcoming.current = false;
         didUpcomingInitCheck.current = false;
         fetchUpcoming(1, false);
-    }, [fetchUpcoming]);
+    }, [fetchUpcoming, activeSection]);
 
     // Upcoming Scroll Trigger
     useEffect(() => {
         if (activeSection !== 'Upcoming') return;
-        const isFiltering = movieSearchQuery.trim().length > 0 || activeGenre !== 'All';
+        const isFiltering = movieSearchQuery.trim().length > 0;
         if (isFiltering) return;
         if (!upcomingPagination?.hasNextPage) return;
 
@@ -338,19 +360,7 @@ const MoviesPage = () => {
         };
     }, [activeSection, upcomingPagination, movieSearchQuery, activeGenre, upcomingLoading]);
 
-    // ─────────────────────────────────────────────────────────────────
-    // Filter Logic & Tag Extraction
-    // ─────────────────────────────────────────────────────────────────
-    const availableGenres = useMemo(() => {
-        const sourceData = activeSection === 'Now Showing' ? nowShowingMovies : upcomingMoviesData;
-        const genres = new Set();
-        sourceData.forEach(m => {
-            if (m.genre) {
-                m.genre.split(',').forEach(g => genres.add(g.trim()));
-            }
-        });
-        return Array.from(genres).sort();
-    }, [activeSection, nowShowingMovies, upcomingMoviesData]);
+
 
 
     useEffect(() => {
@@ -361,9 +371,7 @@ const MoviesPage = () => {
                     (m.title || "").toLowerCase().includes(movieSearchQuery.toLowerCase())
                 );
             }
-            if (activeGenre !== 'All') {
-                filtered = filtered.filter(m => m.genre && m.genre.includes(activeGenre));
-            }
+            // Note: backend handles activeGenre filtering automatically now
             return filtered;
         };
 

@@ -54,7 +54,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [filteredGlobalEvents, setFilteredGlobalEvents] = useState([]);
     const [eventSearchQuery, setEventSearchQuery] = useState('');
     const [eventFilters, setEventFilters] = useState({ city: 'All', status: 'All', date: 'All', tags: [] });
-    const [availableEventTags, setAvailableEventTags] = useState([]);
+    const [availableEventTags, setAvailableEventTags] = useState(['Art', 'Classic', 'Classical']);
     const [availableEventCities, setAvailableEventCities] = useState([]);
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
@@ -106,11 +106,12 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         if (prefetchedLocal.current?.page === nextPage) return;
         if (isPrefetchingLocal.current) return;
         isPrefetchingLocal.current = true;
-        const cacheKey = `events_local_${selectedCity || 'all'}_p${nextPage}`;
+        const activeTag = eventFilters.tags?.[0] || null;
+        const cacheKey = `events_local_${selectedCity || 'all'}_t${activeTag || 'all'}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getEvents(selectedCity, nextPage, EVENT_PAGE_LIMIT),
+                () => getEvents(selectedCity, nextPage, EVENT_PAGE_LIMIT, activeTag),
                 1800, false
             );
             const eventsData = Array.isArray(response) ? response : (response?.events || response?.data || []);
@@ -120,7 +121,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         } finally {
             isPrefetchingLocal.current = false;
         }
-    }, [selectedCity]);
+    }, [selectedCity, eventFilters.tags]);
 
     const fetchLocalEvents = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingLocal.current && page !== 1) return;
@@ -129,10 +130,11 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             if (page === 1 && !append) setLocalLoading(true);
             if (append) setIsAppendingLocal(true);
 
-            const cacheKey = `events_local_${selectedCity || 'all'}_p${page}`;
+            const activeTag = eventFilters.tags?.[0] || null;
+            const cacheKey = `events_local_${selectedCity || 'all'}_t${activeTag || 'all'}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getEvents(selectedCity, page, EVENT_PAGE_LIMIT),
+                () => getEvents(selectedCity, page, EVENT_PAGE_LIMIT, activeTag),
                 1800, force
             );
 
@@ -152,7 +154,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             setIsAppendingLocal(false);
             isFetchingLocal.current = false;
         }
-    }, [selectedCity, prefetchNextLocalPage]);
+    }, [selectedCity, eventFilters.tags, prefetchNextLocalPage]);
 
     const handleLoadMoreLocal = useCallback(() => {
         if (localLoading || isFetchingLocal.current) return;
@@ -180,17 +182,18 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     useEffect(() => { localAppendRef.current = handleLoadMoreLocal; }, [handleLoadMoreLocal]);
 
     useEffect(() => {
+        if (activeSection !== 'Near for you') return;
         prefetchedLocal.current = null;
         isPrefetchingLocal.current = false;
         isFetchingLocal.current = false;
         didLocalInitCheck.current = false;
         fetchLocalEvents(1, false);
-    }, [fetchLocalEvents]);
+    }, [fetchLocalEvents, activeSection]);
 
     // Local Scroll Trigger
     useEffect(() => {
         if (activeSection !== 'Near for you') return;
-        const isFiltering = eventSearchQuery.trim().length > 0 || eventFilters.tags.length > 0;
+        const isFiltering = eventSearchQuery.trim().length > 0;
         if (isFiltering) return;
         if (!localPagination?.hasNextPage) return;
 
@@ -235,11 +238,12 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         if (prefetchedGlobal.current?.page === nextPage) return;
         if (isPrefetchingGlobal.current) return;
         isPrefetchingGlobal.current = true;
-        const cacheKey = `events_global_p${nextPage}`;
+        const activeTag = eventFilters.tags?.[0] || null;
+        const cacheKey = `events_global_t${activeTag || 'all'}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAllEventsList(nextPage, EVENT_PAGE_LIMIT),
+                () => getAllEventsList(nextPage, EVENT_PAGE_LIMIT, activeTag),
                 1800, false
             );
             const eventsData = Array.isArray(response) ? response : (response?.events || response?.data || []);
@@ -249,7 +253,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         } finally {
             isPrefetchingGlobal.current = false;
         }
-    }, []);
+    }, [eventFilters.tags]);
 
     const fetchGlobalEvents = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingGlobal.current && page !== 1) return;
@@ -258,10 +262,11 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             if (page === 1 && !append) setGlobalLoading(true);
             if (append) setIsAppendingGlobal(true);
 
-            const cacheKey = `events_global_p${page}`;
+            const activeTag = eventFilters.tags?.[0] || null;
+            const cacheKey = `events_global_t${activeTag || 'all'}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAllEventsList(page, EVENT_PAGE_LIMIT),
+                () => getAllEventsList(page, EVENT_PAGE_LIMIT, activeTag),
                 1800, force
             );
 
@@ -280,7 +285,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             setIsAppendingGlobal(false);
             isFetchingGlobal.current = false;
         }
-    }, [prefetchNextGlobalPage]);
+    }, [eventFilters.tags, prefetchNextGlobalPage]);
 
     const handleLoadMoreGlobal = useCallback(() => {
         if (globalLoading || isFetchingGlobal.current) return;
@@ -308,17 +313,18 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     useEffect(() => { globalAppendRef.current = handleLoadMoreGlobal; }, [handleLoadMoreGlobal]);
 
     useEffect(() => {
+        if (activeSection !== 'Global') return;
         prefetchedGlobal.current = null;
         isPrefetchingGlobal.current = false;
         isFetchingGlobal.current = false;
         didGlobalInitCheck.current = false;
         fetchGlobalEvents(1, false);
-    }, [fetchGlobalEvents]);
+    }, [fetchGlobalEvents, activeSection]);
 
     // Global Scroll Trigger
     useEffect(() => {
         if (activeSection !== 'Global') return;
-        const isFiltering = eventSearchQuery.trim().length > 0 || eventFilters.tags.length > 0;
+        const isFiltering = eventSearchQuery.trim().length > 0;
         if (isFiltering) return;
         if (!globalPagination?.hasNextPage) return;
 
@@ -366,9 +372,12 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
     useEffect(() => {
         const allAvailableEvents = [...localEvents, ...globalEvents];
-        const tags = Array.from(new Set(allAvailableEvents.flatMap(e => e.tags || []).filter(Boolean))).sort();
+        const tags = Array.from(new Set(allAvailableEvents.flatMap(e => e.tags || []).filter(Boolean)));
         const cities = Array.from(new Set(allAvailableEvents.map(e => e.city).filter(Boolean))).sort();
-        setAvailableEventTags(tags);
+        
+        if (tags.length > 0) {
+            setAvailableEventTags(prev => Array.from(new Set([...prev, ...tags])).sort());
+        }
         setAvailableEventCities(cities);
     }, [localEvents, globalEvents]);
 
@@ -382,9 +391,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                 );
             }
             if (eventFilters.city !== 'All') filtered = filtered.filter(e => e.city === eventFilters.city);
-            if (eventFilters.tags.length > 0) {
-                filtered = filtered.filter(e => (e.tags || []).some(tag => eventFilters.tags.includes(tag)));
-            }
+            // Note: Backend handles tag filtering now automatically
             return filtered;
         };
 
@@ -397,10 +404,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         setEventSearchQuery('');
     };
 
-    const activeSectionTags = useMemo(() => {
-        const sourceEvents = activeSection === 'Near for you' ? localEvents : globalEvents;
-        return Array.from(new Set(sourceEvents.flatMap(e => e.tags || []).filter(Boolean))).sort();
-    }, [activeSection, localEvents, globalEvents]);
+    const activeSectionTags = availableEventTags;
 
 
     if (localLoading && localEvents.length === 0) return <LoadingScreen message="Scanning Library" />;

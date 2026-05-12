@@ -72,11 +72,12 @@ const ActivitiesPage = () => {
         if (prefetchedTurfs.current?.page === nextPage) return;
         if (isPrefetchingTurfs.current) return;
         isPrefetchingTurfs.current = true;
-        const cacheKey = `turfs_${selectedCity || 'all'}_p${nextPage}_s${searchQuery || ''}`;
+        const activeTag = activeSportTag !== 'All' ? activeSportTag : null;
+        const cacheKey = `turfs_${selectedCity || 'all'}_t${activeTag || 'all'}_p${nextPage}_s${searchQuery || ''}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page: nextPage, limit: TURF_PAGE_LIMIT }),
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page: nextPage, limit: TURF_PAGE_LIMIT, tags: activeTag }),
                 1800, false
             );
             if (response?.turfs) prefetchedTurfs.current = { page: nextPage, data: response };
@@ -85,7 +86,7 @@ const ActivitiesPage = () => {
         } finally {
             isPrefetchingTurfs.current = false;
         }
-    }, [selectedCity, searchQuery]);
+    }, [selectedCity, searchQuery, activeSportTag]);
 
     const fetchTurfs = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingTurfs.current && page !== 1) return;
@@ -93,12 +94,12 @@ const ActivitiesPage = () => {
         try {
             if (page === 1 && !append) setTurfsLoading(true);
             if (append) setIsAppendingTurfs(true);
-            const cacheKey = (page === 1 && !searchQuery)
-                ? `turfs_${selectedCity || 'all'}`
-                : `turfs_${selectedCity || 'all'}_p${page}_s${searchQuery || ''}`;
+            const activeTag = activeSportTag !== 'All' ? activeSportTag : null;
+            const cacheKey = `turfs_${selectedCity || 'all'}_t${activeTag || 'all'}_p${page}_s${searchQuery || ''}`;
+            
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page, limit: TURF_PAGE_LIMIT }),
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page, limit: TURF_PAGE_LIMIT, tags: activeTag }),
                 1800, force
             );
             if (response?.turfs) {
@@ -115,7 +116,7 @@ const ActivitiesPage = () => {
             setIsAppendingTurfs(false);
             isFetchingTurfs.current = false;
         }
-    }, [selectedCity, searchQuery, prefetchNextTurfsPage]);
+    }, [selectedCity, searchQuery, activeSportTag, prefetchNextTurfsPage]);
 
     const handleLoadMoreTurfs = useCallback(() => {
         if (turfsLoading || isFetchingTurfs.current) return;
@@ -147,17 +148,18 @@ const ActivitiesPage = () => {
 
     // Turfs useEffect — reset + load on city/search change
     useEffect(() => {
+        if (activeSection !== 'All' && activeSection !== 'Turfs') return;
         prefetchedTurfs.current    = null;
         isPrefetchingTurfs.current = false;
         isFetchingTurfs.current    = false;
         didInitCheck.current       = false;
         fetchTurfs(1, false);
-    }, [fetchTurfs]);
+    }, [fetchTurfs, activeSection]);
 
     // ─── Turf scroll trigger ──────────────────────────────────────────
     useEffect(() => {
         if (activeSection !== 'Turfs') return;
-        const isFiltering = searchQuery.trim().length > 0 || activeSportTag !== 'All';
+        const isFiltering = searchQuery.trim().length > 0;
         if (isFiltering) return;
         if (!turfsPagination?.hasNextPage) return;
 
@@ -207,11 +209,12 @@ const ActivitiesPage = () => {
         if (prefetchedParks.current?.page === nextPage) return;
         if (isPrefetchingParks.current) return;
         isPrefetchingParks.current = true;
-        const cacheKey = `parks_${selectedCity || 'all'}_p${nextPage}_s${searchQuery || ''}`;
+        const typeTag = activeParkType !== 'All' ? activeParkType : null;
+        const cacheKey = `parks_${selectedCity || 'all'}_t${typeTag || 'all'}_p${nextPage}_s${searchQuery || ''}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAllParks({ city: selectedCity, search: searchQuery, page: nextPage, limit: PARK_PAGE_LIMIT }),
+                () => getAllParks({ city: selectedCity, search: searchQuery, page: nextPage, limit: PARK_PAGE_LIMIT, parkType: typeTag }),
                 1800, false
             );
             const parks = Array.isArray(response) ? response : [];
@@ -221,7 +224,7 @@ const ActivitiesPage = () => {
         } finally {
             isPrefetchingParks.current = false;
         }
-    }, [selectedCity, searchQuery]);
+    }, [selectedCity, searchQuery, activeParkType]);
 
     const fetchParks = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingParks.current && page !== 1) return;
@@ -231,13 +234,12 @@ const ActivitiesPage = () => {
             if (append) setIsAppendingParks(true);
             
             // Fix 2: Separate page 1 from generic context cache key
-            const cacheKey = (page === 1 && !searchQuery)
-                ? `parks_${selectedCity || 'all'}_p1`
-                : `parks_${selectedCity || 'all'}_p${page}_s${searchQuery || ''}`;
+            const typeTag = activeParkType !== 'All' ? activeParkType : null;
+            const cacheKey = `parks_${selectedCity || 'all'}_t${typeTag || 'all'}_p${page}_s${searchQuery || ''}`;
             
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAllParks({ city: selectedCity, search: searchQuery, page, limit: PARK_PAGE_LIMIT }),
+                () => getAllParks({ city: selectedCity, search: searchQuery, page, limit: PARK_PAGE_LIMIT, parkType: typeTag }),
                 1800, force
             );
             
@@ -266,7 +268,7 @@ const ActivitiesPage = () => {
             setIsAppendingParks(false);
             isFetchingParks.current = false;
         }
-    }, [selectedCity, searchQuery, prefetchNextParksPage]);
+    }, [selectedCity, searchQuery, activeParkType, prefetchNextParksPage]);
 
     const handleLoadMoreParks = useCallback(() => {
         if (parksLoading || isFetchingParks.current) return;
@@ -306,12 +308,13 @@ const ActivitiesPage = () => {
 
     // Parks useEffect — reset + load on city/search change
     useEffect(() => {
+        if (activeSection !== 'All' && activeSection !== 'Parks') return;
         prefetchedParks.current    = null;
         isPrefetchingParks.current = false;
         isFetchingParks.current    = false;
         didParkInitCheck.current   = false;
         fetchParks(1, false);
-    }, [fetchParks]);
+    }, [fetchParks, activeSection]);
 
     // ─── Park scroll trigger — exact mirror of turf scroll ────────────
     useEffect(() => {
@@ -383,9 +386,9 @@ const ActivitiesPage = () => {
             (e.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (e.venue || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
-        if (activeSportTag !== 'All') list = list.filter(e => (e.tags || []).includes(activeSportTag));
+        // Note: Backend handles activeSportTag now
         return list;
-    }, [allTurfs, searchQuery, activeSportTag]);
+    }, [allTurfs, searchQuery]);
 
     const mainSportTags    = useMemo(() => availableSportTags.slice(0, 4), [availableSportTags]);
     const dropdownSportTags = useMemo(() => availableSportTags.slice(4), [availableSportTags]);
@@ -401,9 +404,9 @@ const ActivitiesPage = () => {
             (p.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
-        if (activeParkType !== 'All') list = list.filter(p => p.type === activeParkType);
+        // Note: Backend handles parkType filtration now
         return list;
-    }, [allParks, searchQuery, activeParkType]);
+    }, [allParks, searchQuery]);
 
     // ─────────────────────────────────────────────────────────────────
     // Tab + filter handlers

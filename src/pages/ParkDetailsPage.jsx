@@ -396,11 +396,11 @@ const ParkDetailsPage = () => {
                                 </Swiper>
 
                                 {/* Custom Navigation Arrows */}
-                                <button className="park-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
-                                    <ChevronRight className="w-6 h-6 rotate-180" />
+                                <button className="park-store-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                                 </button>
-                                <button className="park-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
-                                    <ChevronRight className="w-6 h-6" />
+                                <button className="park-store-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                                 </button>
                             </div>
                         </section>

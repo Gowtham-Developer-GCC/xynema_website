@@ -1,7 +1,6 @@
 import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { Movie, Theater } from '../models/index.js';
-
 export const getCities = async () => {
     return safeApiCall(async () => {
         const response = await api.get(ENDPOINTS.MOVIES.CITIES);
@@ -11,6 +10,7 @@ export const getCities = async () => {
         return [];
     });
 };
+export const PAGE_LIMIT = 5;
 
 export const getNotNowMovies = async (city) => {
     return safeApiCall(async () => {
@@ -40,11 +40,11 @@ export const toggleInterest = async (movieId, interested) => {
     });
 };
 
-// This actually fetches Now Showing movies (movies tied to theaters in a city)
-export const getNowShowingMovies = async (city, page = 1) => {
+
+// Fetches Now Showing movies using the /upcomingmovies endpoint (Requires City)
+export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT) => {
     return safeApiCall(async () => {
-        // Hits /movies/upcomingmovies which actually has Now Showing data with theaters
-        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city, page } });
+        const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params: { city, page, limit } });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
             const movies = [];
@@ -76,36 +76,37 @@ export const getNowShowingMovies = async (city, page = 1) => {
                     });
                 }
             }
-            // Extract latest/streaming movies if present, fallback to main data if not
+            
             const latestMoviesRaw = response.data.latestMovies || response.data.data || response.data.movies;
-            const latestMoviesParsed = [];
-            if (Array.isArray(latestMoviesRaw)) {
-                latestMoviesRaw.forEach(m => latestMoviesParsed.push(new Movie(m)));
-            }
+            const latestMoviesParsed = Array.isArray(latestMoviesRaw) ? latestMoviesRaw.map(m => new Movie(m)) : [];
 
             return {
                 movies: movies,
                 theaters: Array.from(uniqueTheatersMap.values()),
                 latestMovies: latestMoviesParsed,
-                pagination: response.data.pagination || {}
+                pagination: response.data.pagination || { page, hasNextPage: movies.length >= limit }
             };
         }
-        return { movies: [], theaters: [], latestMovies: [], pagination: {} };
+        return { movies: [], theaters: [], latestMovies: [], pagination: { hasNextPage: false } };
     });
 };
 
-// This fetches true Upcoming movies
-export const getUpcomingMovies = async () => {
+// Fetches true Upcoming movies using the /latest-movies endpoint
+export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT) => {
     return safeApiCall(async () => {
-        // Hits /movies/latest-movies which actually has Global Upcoming data
-        const response = await api.get(ENDPOINTS.MOVIES.LATEST);
+        const response = await api.get(ENDPOINTS.MOVIES.LATEST, { params: { city, page, limit } });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
+            const pagination = response.data.pagination || { page, hasNextPage: Array.isArray(resultData) && resultData.length >= limit };
+            
             if (Array.isArray(resultData)) {
-                return resultData.map(m => new Movie(m));
+                return {
+                    movies: resultData.map(m => new Movie(m)),
+                    pagination: pagination
+                };
             }
         }
-        return [];
+        return { movies: [], pagination: { hasNextPage: false } };
     });
 };
 

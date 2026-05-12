@@ -304,6 +304,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     >
                                         <img
                                             src={user.photoUrl || user.picture || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`;
+                                            }}
                                             className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover"
                                             alt=""
                                         />
@@ -393,7 +397,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                         <div className="relative px-6 pt-7 pb-6 shrink-0">
                             {/* Edit icon — top right */}
                             <Link
-                                to="/profile"
+                                to="/account-settings"
                                 onClick={() => setIsSidebarOpen(false)}
                                 className={`absolute top-6 right-5 z-20 p-2 rounded-full transition-all ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}
                             >
@@ -406,6 +410,10 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                     <div className="relative">
                                         <img
                                             src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&background=random`;
+                                            }}
                                             alt=""
                                             className="w-14 h-14 rounded-full object-cover"
                                             style={{

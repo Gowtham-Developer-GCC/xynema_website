@@ -1,13 +1,14 @@
 import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { Event, EventBooking } from '../models/index.js';
+export const PAGE_LIMIT = 6;
 
-export const getEvents = async (city) => {
+export const getEvents = async (city, page = 1, limit = PAGE_LIMIT) => {
     const targetCity = city || localStorage.getItem('selected_city') || 'mumbai';
 
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params: { city: targetCity } });
+            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params: { city: targetCity, page, limit } });
             let body = response.data;
 
             if (Array.isArray(body)) {
@@ -15,21 +16,26 @@ export const getEvents = async (city) => {
             }
 
             if (body.success && body.data) {
-                const eventsData = body.data.events || body.data;
-                return Array.isArray(eventsData) ? eventsData.map(e => new Event(e)) : [];
+                const eventsData = Array.isArray(body.data) ? body.data : (body.data.events || []);
+                const pagination = body.pagination || body.data.pagination || { hasNextPage: false };
+                
+                return {
+                    events: eventsData.map(e => new Event(e)),
+                    pagination: pagination
+                };
             }
-            return [];
+            return { events: [], pagination: { hasNextPage: false } };
         } catch (error) {
             console.error('Error fetching backend events:', error);
-            return [];
+            return { events: [], pagination: { hasNextPage: false } };
         }
     });
 };
 
-export const getAllEventsList = async () => {
+export const getAllEventsList = async (page = 1, limit = PAGE_LIMIT) => {
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.EVENTS.LIST);
+            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params: { page, limit } });
             let body = response.data;
 
             if (Array.isArray(body)) {
@@ -37,13 +43,18 @@ export const getAllEventsList = async () => {
             }
 
             if (body.success && body.data) {
-                const eventsData = body.data.events || body.data;
-                return Array.isArray(eventsData) ? eventsData.map(e => new Event(e)) : [];
+                const eventsData = Array.isArray(body.data) ? body.data : (body.data.events || []);
+                const pagination = body.pagination || body.data.pagination || { hasNextPage: false };
+                
+                return {
+                    events: eventsData.map(e => new Event(e)),
+                    pagination: pagination
+                };
             }
-            return [];
+            return { events: [], pagination: { hasNextPage: false } };
         } catch (error) {
             console.error('Error fetching global events:', error);
-            return [];
+            return { events: [], pagination: { hasNextPage: false } };
         }
     });
 };

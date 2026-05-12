@@ -2,9 +2,9 @@ import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { ActivityPark } from '../models/index.js';
 
-export const MOCK_PARKS = [
-    // ... (Keeping MOCK_PARKS for fallback or reference if needed, but functions will use API)
-];
+
+// Global Pagination Configuration for Parks
+export const PARK_PAGE_LIMIT = 6;
 
 /**
  * Fetch all activity parks with filters
@@ -45,7 +45,7 @@ export const getParkBySlug = async (slug) => {
             // If 404, the detail endpoint might not exist, try to find in list
             if (error.response?.status === 404) {
                 console.warn('Park detail API not found, falling back to search in list...');
-                const parks = await getAllParks({ limit: 100 }); // Try to get a large chunk
+                const parks = await getAllParks({ limit: PARK_PAGE_LIMIT }); // Try to get a large chunk
                 const found = parks.find(p => p.id === slug || p.slug === slug);
                 if (found) return found;
             }

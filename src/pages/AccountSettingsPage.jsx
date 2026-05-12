@@ -279,6 +279,10 @@ const AccountSettingsPage = () => {
                                             <div className="w-24 h-24 md:w-32 md:h-32 rounded-[32px] overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-xl group-hover:scale-105 transition-all duration-500">
                                                 <img 
                                                     src={user?.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.displayName || 'Gowtham'}&backgroundColor=b6e3f4`} 
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&background=random`;
+                                                    }}
                                                     alt="Avatar"
                                                     className="w-full h-full object-cover" 
                                                 />

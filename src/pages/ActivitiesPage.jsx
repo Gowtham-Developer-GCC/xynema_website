@@ -1,229 +1,161 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import {
-    Search, Star, MapPin, ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles
-} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles } from 'lucide-react';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
 import { useData } from '../context/DataContext';
 import SportCard from '../components/SportCard';
 import ParkCard from '../components/ParkCard';
-import { getVisitedParks, getAllParks } from '../services/parkService';
+import { getAllParks, PARK_PAGE_LIMIT } from '../services/parkService';
 import { getAvailableTurfs, TURF_PAGE_LIMIT } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
 
-// ─────────────── Main Tabs ───────────────
-const SECTION_TABS = ['All', 'Turfs', 'Parks'];
-
-// Sport filter tags shown inside Turfs tab
-const SPORT_TAGS = ['Cricket', 'Football', 'Tennis', 'Swimming', 'Badminton'];
+// ─────────────── Constants ───────────────
+const SECTION_TABS  = ['All', 'Turfs', 'Parks'];
+const SPORT_TAGS    = ['Cricket', 'Football', 'Tennis', 'Swimming', 'Badminton'];
 
 const ActivitiesPage = () => {
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { selectedCity, turfs, parks: contextParks, loading: dataLoading, refreshData: refreshGlobalData } = useData();
 
-    // Use context data but manage errors locally to be more resilient
-    const { selectedCity, turfs, loading: dataLoading, refreshData: refreshGlobalData } = useData();
-
-    // Read active section from URL param (default: All)
     const sectionFromUrl = searchParams.get('section') || 'All';
     const [activeSection, setActiveSection] = useState(
         SECTION_TABS.includes(sectionFromUrl) ? sectionFromUrl : 'All'
     );
 
-    const [visitedParks, setVisitedParks] = useState([]);
-    const [allParks, setAllParks] = useState(() => {
-        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
-        return Array.isArray(cached) ? cached : [];
-    });
+    // ── State ─────────────────────────────────────────────────────────
     const [allTurfs, setAllTurfs] = useState(() => {
         const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
         if (Array.isArray(cached)) return cached;
         return cached?.turfs || [];
     });
-    const [error, setError] = useState(null);
-    const [parksLoading, setParksLoading] = useState(() => {
-        const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
-        return !Array.isArray(cached) || cached.length === 0;
-    });
+    const [allParks, setAllParks] = useState([]);
+    const [error, setError]             = useState(null);
     const [turfsLoading, setTurfsLoading] = useState(false);
-    const [turfsPagination, setTurfsPagination] = useState({
-        page: 1,
-        total: 0,
-        hasNextPage: true // Ensure it triggers initial scan safely
-    });
-    const [searchQuery, setSearchQuery] = useState('');
+    const [parksLoading, setParksLoading] = useState(false);
+    const [isAppendingTurfs, setIsAppendingTurfs] = useState(false);
+    const [isAppendingParks, setIsAppendingParks] = useState(false);
+    const [turfsPagination, setTurfsPagination] = useState({ page: 1, total: 0, hasNextPage: false });
+    const [parksPagination, setParksPagination] = useState({ page: 1, total: 0, hasNextPage: false });
+    const [searchQuery, setSearchQuery]       = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
     const [activeParkType, setActiveParkType] = useState('All');
-    const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+    const [isMoreFiltersOpen, setIsMoreFiltersOpen]           = useState(false);
     const [isMoreParksFiltersOpen, setIsMoreParksFiltersOpen] = useState(false);
-    const moreFiltersRef = useRef(null);
+
+    // ── Refs ──────────────────────────────────────────────────────────
+    const moreFiltersRef      = useRef(null);
     const moreParksFiltersRef = useRef(null);
-    const prefetchedTurfs = useRef(null);   // { page, data } — pre-fetched next page
-    const isFetchingTurfs = useRef(false);  // fetchTurfs dedup guard
-    const isPrefetchingTurfs = useRef(false);  // prefetchNextTurfsPage dedup guard
-    const scrollTimerRef = useRef(null);   // debounce scroll events
-    const didInitCheck = useRef(false);  // ensures one viewport check on mount
 
-    // Silent background prefetch — never touches global loading state
+    // Turf scroll refs
+    const prefetchedTurfs    = useRef(null);
+    const isFetchingTurfs    = useRef(false);
+    const isPrefetchingTurfs = useRef(false);
+    const scrollTimerRef     = useRef(null);
+    const didInitCheck       = useRef(false);
+    const appendHandlerRef   = useRef(null);
+
+    // Park scroll refs
+    const prefetchedParks    = useRef(null);
+    const isFetchingParks    = useRef(false);
+    const isPrefetchingParks = useRef(false);
+    const parkScrollTimerRef = useRef(null);
+    const didParkInitCheck   = useRef(false);
+    const parkAppendRef      = useRef(null);
+
+    // ─────────────────────────────────────────────────────────────────
+    // TURFS — prefetch + fetch + load more
+    // ─────────────────────────────────────────────────────────────────
+
     const prefetchNextTurfsPage = useCallback(async (nextPage) => {
-        if (prefetchedTurfs.current?.page === nextPage) return; // already cached
-        if (isPrefetchingTurfs.current) return;                 // own ref, not shared
-
-        isPrefetchingTurfs.current = true; // lock prefetch slot
-
+        if (prefetchedTurfs.current?.page === nextPage) return;
+        if (isPrefetchingTurfs.current) return;
+        isPrefetchingTurfs.current = true;
         const cacheKey = `turfs_${selectedCity || 'all'}_p${nextPage}_s${searchQuery || ''}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({
-                    city: selectedCity,
-                    search: searchQuery,
-                    page: nextPage,
-                    limit: TURF_PAGE_LIMIT
-                }),
-                1800,
-                false
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page: nextPage, limit: TURF_PAGE_LIMIT }),
+                1800, false
             );
-            if (response?.turfs) {
-                prefetchedTurfs.current = { page: nextPage, data: response };
-            }
+            if (response?.turfs) prefetchedTurfs.current = { page: nextPage, data: response };
         } catch (e) {
-            // Silent failure — fallback fetch will handle it on scroll
-            console.warn('[Prefetch] Silent fail for page', nextPage, e?.message);
+            console.warn('[TurfPrefetch] Silent fail page', nextPage, e?.message);
         } finally {
-            isPrefetchingTurfs.current = false; // always release lock
+            isPrefetchingTurfs.current = false;
         }
     }, [selectedCity, searchQuery]);
 
     const fetchTurfs = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingTurfs.current && page !== 1) return;
         isFetchingTurfs.current = true;
-
         try {
             if (page === 1 && !append) setTurfsLoading(true);
-
+            if (append) setIsAppendingTurfs(true);
             const cacheKey = (page === 1 && !searchQuery)
                 ? `turfs_${selectedCity || 'all'}`
                 : `turfs_${selectedCity || 'all'}_p${page}_s${searchQuery || ''}`;
-
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({
-                    city: selectedCity,
-                    search: searchQuery,
-                    page,
-                    limit: TURF_PAGE_LIMIT
-                }),
-                1800,
-                force
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page, limit: TURF_PAGE_LIMIT }),
+                1800, force
             );
-
             if (response?.turfs) {
                 const newPagination = response.pagination || { page, total: 0, hasNextPage: false };
-
-                if (append) {
-                    setAllTurfs(prev => [...prev, ...response.turfs]);
-                } else {
-                    setAllTurfs(response.turfs);
-                    prefetchedTurfs.current = null;
-                }
-
+                if (append) setAllTurfs(prev => [...prev, ...response.turfs]);
+                else { setAllTurfs(response.turfs); prefetchedTurfs.current = null; }
                 setTurfsPagination(newPagination);
-
-                if (newPagination.hasNextPage) {
-                    prefetchNextTurfsPage(page + 1);
-                }
+                if (newPagination.hasNextPage) prefetchNextTurfsPage(page + 1);
             }
         } catch (err) {
             console.error('Error fetching turfs:', err);
         } finally {
             setTurfsLoading(false);
+            setIsAppendingTurfs(false);
             isFetchingTurfs.current = false;
         }
     }, [selectedCity, searchQuery, prefetchNextTurfsPage]);
 
-    const fetchParks = useCallback(async () => {
-        try {
-            setParksLoading(true);
-            setError(null);
-            const params = {
-                city: selectedCity,
-                search: searchQuery,
-                page: 1,
-                limit: 20
-            };
-            const [visited, all] = await Promise.all([
-                getVisitedParks(),
-                apiCacheManager.getOrFetchParks(selectedCity, () => getAllParks(params))
-            ]);
-            setVisitedParks(visited);
-            setAllParks(all || []);
-        } catch (err) {
-            console.error("Error fetching parks:", err);
-            if (allParks.length === 0) {
-                setError("Failed to load activity parks. Please try again.");
-            }
-        } finally {
-            setParksLoading(false);
-        }
-    }, [selectedCity, searchQuery]);
-
-    // Parks and turfs have independent lifecycles — keep them separate
-    // so a park fetch failure does not block turf reset and vice versa
-    useEffect(() => {
-        fetchParks();
-    }, [fetchParks]);
-
-    useEffect(() => {
-        prefetchedTurfs.current = null;
-        isPrefetchingTurfs.current = false;
-        isFetchingTurfs.current = false;
-        fetchTurfs(1, false);
-    }, [fetchTurfs]);
-
     const handleLoadMoreTurfs = useCallback(() => {
         if (turfsLoading || isFetchingTurfs.current) return;
         if (!turfsPagination?.hasNextPage) return;
-
         const nextPage = (turfsPagination.page || 1) + 1;
 
         if (prefetchedTurfs.current?.page === nextPage) {
-            // ✅ Data already ready from pre-cache — append instantly, user experiences zero lag
-            const { data } = prefetchedTurfs.current;
-            prefetchedTurfs.current = null;
-
-            setAllTurfs(prev => [...prev, ...data.turfs]);
-            setTurfsPagination(data.pagination || { page: nextPage, hasNextPage: false });
-
-            // Start caching next layer
-            if (data.pagination?.hasNextPage) {
-                prefetchNextTurfsPage(nextPage + 1);
-            }
+            // 1. Instantly show the skeletons
+            setIsAppendingTurfs(true);
+            
+            // 2. Deliberately allow visual duration for grounding
+            setTimeout(() => {
+                const { data } = prefetchedTurfs.current;
+                prefetchedTurfs.current = null;
+                setAllTurfs(prev => [...prev, ...data.turfs]);
+                setTurfsPagination(data.pagination || { page: nextPage, hasNextPage: false });
+                
+                // 3. Disperse skeletons smoothly
+                setIsAppendingTurfs(false);
+                if (data.pagination?.hasNextPage) prefetchNextTurfsPage(nextPage + 1);
+            }, 400);
         } else {
-            // Fallback sync fetch — rarely hit due to intelligent pre-caching
             fetchTurfs(nextPage, true);
         }
     }, [turfsLoading, turfsPagination, fetchTurfs, prefetchNextTurfsPage]);
 
-    // Stable ref so observer callback always calls latest handleLoadMoreTurfs
-    // without needing it in the dependency array (which caused reconnect on every append)
-    const appendHandlerRef = useRef(handleLoadMoreTurfs);
-    useEffect(() => {
-        appendHandlerRef.current = handleLoadMoreTurfs;
-    }, [handleLoadMoreTurfs]);
+    // Keep appendHandlerRef in sync
+    useEffect(() => { appendHandlerRef.current = handleLoadMoreTurfs; }, [handleLoadMoreTurfs]);
 
-    // ─── Scroll-based infinite trigger ───────────────────────────────
-    // More reliable than IntersectionObserver for hard refresh:
-    // IO silently skips elements already in viewport on mount.
-    // Scroll listener fires on every tick — no blindspot.
-    //
-    // Trigger point: when user has scrolled past 75% of total page height.
-    // 75% means there is still 25% of content visible — fires BEFORE footer.
-    // This matches how BookMyShow and District implement infinite scroll.
+    // Turfs useEffect — reset + load on city/search change
     useEffect(() => {
-        // Only active on Turfs tab, no filter active
+        prefetchedTurfs.current    = null;
+        isPrefetchingTurfs.current = false;
+        isFetchingTurfs.current    = false;
+        didInitCheck.current       = false;
+        fetchTurfs(1, false);
+    }, [fetchTurfs]);
+
+    // ─── Turf scroll trigger ──────────────────────────────────────────
+    useEffect(() => {
         if (activeSection !== 'Turfs') return;
         const isFiltering = searchQuery.trim().length > 0 || activeSportTag !== 'All';
         if (isFiltering) return;
@@ -232,22 +164,15 @@ const ActivitiesPage = () => {
         const checkAndLoad = () => {
             if (turfsLoading || isFetchingTurfs.current || isPrefetchingTurfs.current) return;
             if (!turfsPagination?.hasNextPage) return;
-
-            const scrolled = window.scrollY;
-            const windowH = window.innerHeight;
-            const totalH = document.documentElement.scrollHeight;
-
-            // Fire when 75% of the page has been scrolled
-            // Equivalent to: sentinel placed 25% from the bottom
-            const threshold = totalH * 0.75;
-            const currentPos = scrolled + windowH;
-
-            if (currentPos >= threshold) {
-                appendHandlerRef.current?.();
-            }
+            const currentPos = window.scrollY + window.innerHeight;
+            
+            // Responsive threshold: Triggers 1.5 screens away from bottom, minimum 1000px buffer
+            const scrollBuffer = Math.max(window.innerHeight * 2.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) appendHandlerRef.current?.();
         };
 
-        // Debounced scroll handler — fires at most once per 150ms
         const onScroll = () => {
             if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
             scrollTimerRef.current = setTimeout(checkAndLoad, 150);
@@ -255,17 +180,9 @@ const ActivitiesPage = () => {
 
         window.addEventListener('scroll', onScroll, { passive: true });
 
-        // ── HARD REFRESH FIX ─────────────────────────────────────────
-        // On hard refresh with few cards, user hasn't scrolled yet,
-        // so the scroll event never fires.
-        // Solution: run checkAndLoad once after mount with a delay
-        // that lets React finish painting all cards first.
-        // This is the key fix that IO-based approaches kept missing.
         if (!didInitCheck.current) {
             didInitCheck.current = true;
-            const initTimer = setTimeout(() => {
-                checkAndLoad();
-            }, 500); // 500ms: page 1 painted + prefetch started
+            const initTimer = setTimeout(checkAndLoad, 500);
             return () => {
                 clearTimeout(initTimer);
                 clearTimeout(scrollTimerRef.current);
@@ -277,107 +194,236 @@ const ActivitiesPage = () => {
             clearTimeout(scrollTimerRef.current);
             window.removeEventListener('scroll', onScroll);
         };
+    }, [activeSection, turfsPagination?.page, turfsPagination?.hasNextPage, activeSportTag, searchQuery, turfsLoading]);
 
-    }, [
-        activeSection,
-        turfsPagination?.page,        // re-register after each page appended
-        turfsPagination?.hasNextPage, // unregister when list exhausted
-        activeSportTag,
-        searchQuery,
-        turfsLoading,                 // re-register when loading state changes
-    ]);
+    // Reset turf init check on city/search change
+    useEffect(() => { didInitCheck.current = false; }, [selectedCity, searchQuery]);
 
-    // Reset didInitCheck when city or search changes so the
-    // initial viewport check fires again on fresh data
-    useEffect(() => {
-        didInitCheck.current = false;
+    // ─────────────────────────────────────────────────────────────────
+    // PARKS — exact same pattern as turfs
+    // ─────────────────────────────────────────────────────────────────
+
+    const prefetchNextParksPage = useCallback(async (nextPage) => {
+        if (prefetchedParks.current?.page === nextPage) return;
+        if (isPrefetchingParks.current) return;
+        isPrefetchingParks.current = true;
+        const cacheKey = `parks_${selectedCity || 'all'}_p${nextPage}_s${searchQuery || ''}`;
+        try {
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAllParks({ city: selectedCity, search: searchQuery, page: nextPage, limit: PARK_PAGE_LIMIT }),
+                1800, false
+            );
+            const parks = Array.isArray(response) ? response : [];
+            if (parks.length > 0) prefetchedParks.current = { page: nextPage, data: parks };
+        } catch (e) {
+            console.warn('[ParkPrefetch] Silent fail page', nextPage, e?.message);
+        } finally {
+            isPrefetchingParks.current = false;
+        }
     }, [selectedCity, searchQuery]);
 
+    const fetchParks = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingParks.current && page !== 1) return;
+        isFetchingParks.current = true;
+        try {
+            if (page === 1 && !append) setParksLoading(true);
+            if (append) setIsAppendingParks(true);
+            
+            // Fix 2: Separate page 1 from generic context cache key
+            const cacheKey = (page === 1 && !searchQuery)
+                ? `parks_${selectedCity || 'all'}_p1`
+                : `parks_${selectedCity || 'all'}_p${page}_s${searchQuery || ''}`;
+            
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAllParks({ city: selectedCity, search: searchQuery, page, limit: PARK_PAGE_LIMIT }),
+                1800, force
+            );
+            
+            const rawParks = Array.isArray(response) ? response : [];
+            
+            // Fix 4: Defensive slicing in case backend ignores limit
+            const slicedParks = rawParks.slice(0, PARK_PAGE_LIMIT);
+            const hasNextPage = rawParks.length >= PARK_PAGE_LIMIT; 
+
+            const newPagination = {
+                page,
+                total: hasNextPage ? 9999 : (page - 1) * PARK_PAGE_LIMIT + slicedParks.length,
+                hasNextPage,
+            };
+
+            if (append) setAllParks(prev => [...prev, ...slicedParks]);
+            else { setAllParks(slicedParks); prefetchedParks.current = null; }
+            
+            setParksPagination(newPagination);
+            if (hasNextPage) prefetchNextParksPage(page + 1);
+        } catch (err) {
+            console.error('Error fetching parks:', err);
+            if (!append) setError('Failed to load parks. Please try again.');
+        } finally {
+            setParksLoading(false);
+            setIsAppendingParks(false);
+            isFetchingParks.current = false;
+        }
+    }, [selectedCity, searchQuery, prefetchNextParksPage]);
+
+    const handleLoadMoreParks = useCallback(() => {
+        if (parksLoading || isFetchingParks.current) return;
+        if (!parksPagination?.hasNextPage) return;
+        const nextPage = (parksPagination.page || 1) + 1;
+
+        if (prefetchedParks.current?.page === nextPage) {
+            // 1. Instantly show the skeletons
+            setIsAppendingParks(true);
+            
+            // 2. Deliberately allow visual duration for grounding
+            setTimeout(() => {
+                const { data } = prefetchedParks.current;
+                prefetchedParks.current = null;
+                
+                const sliced = data.slice(0, PARK_PAGE_LIMIT);
+                setAllParks(prev => [...prev, ...sliced]);
+                
+                const hasNextPage = data.length >= PARK_PAGE_LIMIT;
+                setParksPagination({
+                    page: nextPage,
+                    total: hasNextPage ? 9999 : (nextPage - 1) * PARK_PAGE_LIMIT + sliced.length,
+                    hasNextPage,
+                });
+                
+                // 3. Disperse skeletons smoothly
+                setIsAppendingParks(false);
+                if (hasNextPage) prefetchNextParksPage(nextPage + 1);
+            }, 400);
+        } else {
+            fetchParks(nextPage, true);
+        }
+    }, [parksLoading, parksPagination, fetchParks, prefetchNextParksPage]);
+
+    // Keep parkAppendRef in sync
+    useEffect(() => { parkAppendRef.current = handleLoadMoreParks; }, [handleLoadMoreParks]);
+
+    // Parks useEffect — reset + load on city/search change
+    useEffect(() => {
+        prefetchedParks.current    = null;
+        isPrefetchingParks.current = false;
+        isFetchingParks.current    = false;
+        didParkInitCheck.current   = false;
+        fetchParks(1, false);
+    }, [fetchParks]);
+
+    // ─── Park scroll trigger — exact mirror of turf scroll ────────────
+    useEffect(() => {
+        if (activeSection !== 'Parks') return;
+        const isFiltering = searchQuery.trim().length > 0 || activeParkType !== 'All';
+        if (isFiltering) return;
+        if (!parksPagination?.hasNextPage) return;
+
+        const checkAndLoadParks = () => {
+            if (parksLoading || isFetchingParks.current || isPrefetchingParks.current) return;
+            if (!parksPagination?.hasNextPage) return;
+            const currentPos = window.scrollY + window.innerHeight;
+            
+            // Responsive threshold: Triggers 1.5 screens away from bottom, minimum 1000px buffer
+            const scrollBuffer = Math.max(window.innerHeight * 1.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) parkAppendRef.current?.();
+        };
+
+        const onParkScroll = () => {
+            if (parkScrollTimerRef.current) clearTimeout(parkScrollTimerRef.current);
+            parkScrollTimerRef.current = setTimeout(checkAndLoadParks, 150);
+        };
+
+        window.addEventListener('scroll', onParkScroll, { passive: true });
+
+        if (!didParkInitCheck.current) {
+            didParkInitCheck.current = true;
+            const initTimer = setTimeout(checkAndLoadParks, 500);
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(parkScrollTimerRef.current);
+                window.removeEventListener('scroll', onParkScroll);
+            };
+        }
+
+        return () => {
+            clearTimeout(parkScrollTimerRef.current);
+            window.removeEventListener('scroll', onParkScroll);
+        };
+    }, [activeSection, parksPagination?.page, parksPagination?.hasNextPage, activeParkType, searchQuery, parksLoading]);
+
+    // Reset park init check on city/search change
+    useEffect(() => { didParkInitCheck.current = false; }, [selectedCity, searchQuery]);
+
+    // ─────────────────────────────────────────────────────────────────
+    // Retry
+    // ─────────────────────────────────────────────────────────────────
     const handleRetry = () => {
         setError(null);
         refreshGlobalData(1);
-        fetchParks();
-        fetchTurfs(1, false, true); // Force fresh revalidation on retry
+        fetchParks(1, false, true);
+        fetchTurfs(1, false, true);
     };
 
-    // Dynamic tags from turf data
+    // ─────────────────────────────────────────────────────────────────
+    // Derived / filtered data
+    // ─────────────────────────────────────────────────────────────────
+
     const availableSportTags = useMemo(() => {
         const dynamicTags = Array.from(new Set(allTurfs.flatMap(t => t.tags || []))).filter(Boolean);
         return Array.from(new Set([...SPORT_TAGS, ...dynamicTags])).sort();
     }, [allTurfs]);
 
-    // Filter turfs
     const filteredTurfs = useMemo(() => {
         let list = allTurfs;
-        if (searchQuery.trim()) {
-            list = list.filter(e =>
-                (e.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (e.venue || '').toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-        if (activeSportTag !== 'All') {
-            list = list.filter(e => (e.tags || []).includes(activeSportTag));
-        }
+        if (searchQuery.trim()) list = list.filter(e =>
+            (e.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (e.venue || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        if (activeSportTag !== 'All') list = list.filter(e => (e.tags || []).includes(activeSportTag));
         return list;
     }, [allTurfs, searchQuery, activeSportTag]);
 
-    // Dynamic sport tag slices
-    const mainSportTags = useMemo(() => {
-        return availableSportTags.slice(0, 4);
-    }, [availableSportTags]);
+    const mainSportTags    = useMemo(() => availableSportTags.slice(0, 4), [availableSportTags]);
+    const dropdownSportTags = useMemo(() => availableSportTags.slice(4), [availableSportTags]);
 
-    const dropdownSportTags = useMemo(() => {
-        return availableSportTags.slice(4);
-    }, [availableSportTags]);
+    const parkTypesOnly  = useMemo(() => Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort(), [allParks]);
+    const mainParkTypes  = useMemo(() => parkTypesOnly.slice(0, 4), [parkTypesOnly]);
+    const dropdownParkTypes = useMemo(() => parkTypesOnly.slice(4), [parkTypesOnly]);
 
-    // Dynamic types from park data
-    const parkTypesOnly = useMemo(() => {
-        return Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort();
-    }, [allParks]);
-
-    const mainParkTypes = useMemo(() => {
-        return parkTypesOnly.slice(0, 4);
-    }, [parkTypesOnly]);
-
-    const dropdownParkTypes = useMemo(() => {
-        return parkTypesOnly.slice(4);
-    }, [parkTypesOnly]);
-
-    // Filter parks
     const filteredParks = useMemo(() => {
         let list = allParks;
-        if (searchQuery.trim()) {
-            list = list.filter(p =>
-                (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (p.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-        if (activeParkType !== 'All') {
-            list = list.filter(p => p.type === activeParkType);
-        }
+        if (searchQuery.trim()) list = list.filter(p =>
+            (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        if (activeParkType !== 'All') list = list.filter(p => p.type === activeParkType);
         return list;
     }, [allParks, searchQuery, activeParkType]);
 
-    // Handle section change — update URL param
+    // ─────────────────────────────────────────────────────────────────
+    // Tab + filter handlers
+    // ─────────────────────────────────────────────────────────────────
+
     const handleSectionChange = (section) => {
         setActiveSection(section);
         setSearchParams({ section });
-        // Reset filters when switching tabs
         setSearchQuery('');
         setActiveSportTag('All');
         setActiveParkType('All');
     };
 
-    // Close More Filters on outside click
+    // Close dropdowns on outside click
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (moreFiltersRef.current && !moreFiltersRef.current.contains(e.target)) {
+            if (moreFiltersRef.current && !moreFiltersRef.current.contains(e.target))
                 setIsMoreFiltersOpen(false);
-            }
-            if (moreParksFiltersRef.current && !moreParksFiltersRef.current.contains(e.target)) {
+            if (moreParksFiltersRef.current && !moreParksFiltersRef.current.contains(e.target))
                 setIsMoreParksFiltersOpen(false);
-            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -386,6 +432,9 @@ const ActivitiesPage = () => {
     if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding activities near you" />;
     if (error) return <ErrorState error={error} onRetry={handleRetry} title="Connection Issue" />;
 
+    // ─────────────────────────────────────────────────────────────────
+    // JSX
+    // ─────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
             <SEO
@@ -405,17 +454,18 @@ const ActivitiesPage = () => {
                 </div>
             </div>
 
-            {/* ── Section Tabs: All | Turfs | Parks ── */}
+            {/* ── Section Tabs ── */}
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 sticky top-[64px] md:top-[80px] z-30">
                 <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 overflow-x-auto no-scrollbar">
                     {SECTION_TABS.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => handleSectionChange(tab)}
-                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeSection === tab
-                                ? 'text-primary'
-                                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                                }`}
+                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${
+                                activeSection === tab
+                                    ? 'text-primary'
+                                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                            }`}
                         >
                             {tab}
                             {activeSection === tab && (
@@ -426,56 +476,37 @@ const ActivitiesPage = () => {
                 </div>
             </div>
 
-            {/* ── Content Area ── */}
+            {/* ── Content ── */}
             <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
                 {/* ===== ALL TAB ===== */}
-                {(activeSection === 'All') && (
+                {activeSection === 'All' && (
                     <div className="space-y-12">
-
-                        {/* ── Turfs Near You ── */}
                         <section>
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">
-                                    Turfs near you
-                                </h2>
-                                <button
-                                    onClick={() => handleSectionChange('Turfs')}
-                                    className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all"
-                                >
+                                <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">Turfs near you</h2>
+                                <button onClick={() => handleSectionChange('Turfs')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all">
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
-
                             {turfs.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {turfs.slice(0, 3).map((turf) => (
-                                        <SportCard key={turf.id || turf._id} event={turf} />
-                                    ))}
+                                    {turfs.slice(0, 3).map((turf) => <SportCard key={turf.id || turf._id} event={turf} />)}
                                 </div>
-                            ) : (
-                                <TurfEmptyState />
-                            )}
+                            ) : <TurfEmptyState />}
                         </section>
 
-                        {/* ── Parks / Amusement Parks ── */}
                         <section>
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">
-                                    Amusement parks
-                                </h2>
-                                <button
-                                    onClick={() => handleSectionChange('Parks')}
-                                    className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all"
-                                >
+                                <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">Amusement parks</h2>
+                                <button onClick={() => handleSectionChange('Parks')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all">
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
-                            {allParks.length > 0 ? (
+                            {/* Fix 5: Utilize contextParks from DataContext to ensure immediate preview rendering */}
+                            {contextParks && contextParks.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {allParks.slice(0, 3).map((park) => (
-                                        <ParkCard key={park.id} park={park} />
-                                    ))}
+                                    {contextParks.slice(0, 3).map((park) => <ParkCard key={park.id} park={park} />)}
                                 </div>
                             ) : <ParksComingSoon compact />}
                         </section>
@@ -487,40 +518,36 @@ const ActivitiesPage = () => {
                     <div>
                         {/* Sport filter chips */}
                         <div className="relative flex items-center justify-between gap-6 pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
-                            {/* Scrollable Chips */}
                             <div className="flex items-center gap-6 overflow-x-auto no-scrollbar flex-1">
                                 <button
                                     onClick={() => setActiveSportTag('All')}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === 'All'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                        }`}
-                                >
-                                    All
-                                </button>
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                        activeSportTag === 'All'
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                    }`}
+                                >All</button>
                                 {mainSportTags.map((tag) => (
                                     <button
                                         key={tag}
                                         onClick={() => setActiveSportTag(tag)}
-                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeSportTag === tag
-                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                            }`}
-                                    >
-                                        {tag}
-                                    </button>
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                            activeSportTag === tag
+                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                        }`}
+                                    >{tag}</button>
                                 ))}
                             </div>
-
-                            {/* More filters */}
                             {dropdownSportTags.length > 0 && (
                                 <div className="relative shrink-0" ref={moreFiltersRef}>
                                     <button
                                         onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
-                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
-                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
-                                            }`}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
+                                            isMoreFiltersOpen
+                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                        }`}
                                     >
                                         More
                                         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
@@ -533,13 +560,12 @@ const ActivitiesPage = () => {
                                                     <button
                                                         key={tag}
                                                         onClick={() => { setActiveSportTag(tag); setIsMoreFiltersOpen(false); }}
-                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeSportTag === tag
-                                                            ? 'bg-primary/10 text-primary'
-                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
-                                                            }`}
-                                                    >
-                                                        {tag}
-                                                    </button>
+                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${
+                                                            activeSportTag === tag
+                                                                ? 'bg-primary/10 text-primary'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                        }`}
+                                                    >{tag}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -547,18 +573,6 @@ const ActivitiesPage = () => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Search */}
-                        {/* <div className="relative mb-8 max-w-md">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search turfs..."
-                                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-                            />
-                        </div> */}
 
                         <div className="mb-4">
                             <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
@@ -574,65 +588,60 @@ const ActivitiesPage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[40vh]">
-                            {filteredTurfs.length > 0 ? (
-                                filteredTurfs.map((turf) => (
-                                    <SportCard key={turf.id || turf._id} event={turf} />
-                                ))
-                            ) : (
-                                <TurfEmptyState onReset={() => { setSearchQuery(''); setActiveSportTag('All'); }} />
+                            {filteredTurfs.length > 0
+                                ? filteredTurfs.map((turf) => <SportCard key={turf.id || turf._id} event={turf} />)
+                                : turfsLoading 
+                                    ? Array.from({ length: 6 }).map((_, i) => <SportCardSkeleton key={i} />)
+                                    : <TurfEmptyState onReset={() => { setSearchQuery(''); setActiveSportTag('All'); }} />
+                            }
+                            
+                            {/* Inline loader for seamless layout integration */}
+                            {isAppendingTurfs && (
+                                <>
+                                    <SportCardSkeleton />
+                                    <SportCardSkeleton />
+                                    <SportCardSkeleton />
+                                </>
                             )}
                         </div>
-
-
-
-                        {/* Fallback spinner — only when prefetch missed and on-demand fetch runs */}
-                        {turfsLoading && allTurfs.length > 0 && (
-                            <div className="mt-10 flex justify-center">
-                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        )}
                     </div>
                 )}
 
                 {/* ===== PARKS TAB ===== */}
                 {activeSection === 'Parks' && (
                     <div>
-                        {/* Park Type filter chips */}
+                        {/* Park type filter chips */}
                         <div className="relative flex items-center justify-between gap-6 pb-4 mb-6 border-b border-gray-200 dark:border-gray-800">
-                            {/* Scrollable Chips */}
                             <div className="flex items-center gap-6 overflow-x-auto no-scrollbar flex-1">
                                 <button
                                     onClick={() => setActiveParkType('All')}
-                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === 'All'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                        }`}
-                                >
-                                    All
-                                </button>
+                                    className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                        activeParkType === 'All'
+                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                    }`}
+                                >All</button>
                                 {mainParkTypes.map((type) => (
                                     <button
                                         key={type}
                                         onClick={() => setActiveParkType(type)}
-                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeParkType === type
-                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
-                                            }`}
-                                    >
-                                        {type}
-                                    </button>
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                            activeParkType === type
+                                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
+                                        }`}
+                                    >{type}</button>
                                 ))}
                             </div>
-
-                            {/* More filters */}
                             {dropdownParkTypes.length > 0 && (
                                 <div className="relative shrink-0" ref={moreParksFiltersRef}>
                                     <button
                                         onClick={() => setIsMoreParksFiltersOpen(!isMoreParksFiltersOpen)}
-                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreParksFiltersOpen
-                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
-                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
-                                            }`}
+                                        className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
+                                            isMoreParksFiltersOpen
+                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700'
+                                        }`}
                                     >
                                         More
                                         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreParksFiltersOpen ? 'rotate-180' : ''}`} />
@@ -645,13 +654,12 @@ const ActivitiesPage = () => {
                                                     <button
                                                         key={type}
                                                         onClick={() => { setActiveParkType(type); setIsMoreParksFiltersOpen(false); }}
-                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${activeParkType === type
-                                                            ? 'bg-primary/10 text-primary'
-                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
-                                                            }`}
-                                                    >
-                                                        {type}
-                                                    </button>
+                                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${
+                                                            activeParkType === type
+                                                                ? 'bg-primary/10 text-primary'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                        }`}
+                                                    >{type}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -660,42 +668,44 @@ const ActivitiesPage = () => {
                             )}
                         </div>
 
-                        {/* Search */}
-                        {/* <div className="relative mb-8 max-w-md">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search parks..."
-                                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-                            />
-                        </div> */}
-
                         <div className="mb-4">
                             <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
-                                {activeParkType === 'All' ? 'All near by parks' : activeParkType}
+                                {activeParkType === 'All' ? 'All nearby parks' : activeParkType}
                             </h2>
                             <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">
-                                {filteredParks.length} {filteredParks.length === 1 ? 'park' : 'parks'} available
+                                {(() => {
+                                    const total = parksPagination?.total;
+                                    const count = (total && total < 9999) ? total : filteredParks.length;
+                                    return `${count} ${count === 1 ? 'park' : 'parks'} available`;
+                                })()}
                             </p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[40vh]">
-                            {filteredParks.length > 0 ? (
-                                filteredParks.map((park) => (
-                                    <ParkCard key={park.id} park={park} />
-                                ))
-                            ) : (
-                                <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
-                                    <p className="text-lg font-bold mb-2">No parks found</p>
-                                    <button
-                                        onClick={() => { setSearchQuery(''); setActiveParkType('All'); }}
-                                        className="text-xs text-primary font-bold uppercase tracking-wider hover:underline"
-                                    >
-                                        Clear Filters
-                                    </button>
-                                </div>
+                            {filteredParks.length > 0
+                                ? filteredParks.map((park) => <ParkCard key={park.id} park={park} />)
+                                : parksLoading 
+                                    ? Array.from({ length: 6 }).map((_, i) => <ParkCardSkeleton key={i} />)
+                                    : (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+                                        <p className="text-lg font-bold mb-2">No parks found</p>
+                                        <button
+                                            onClick={() => { setSearchQuery(''); setActiveParkType('All'); }}
+                                            className="text-xs text-primary font-bold uppercase tracking-wider hover:underline"
+                                        >
+                                            Clear Filters
+                                        </button>
+                                    </div>
+                                )
+                            }
+
+                            {/* Inline loader for seamless layout integration */}
+                            {isAppendingParks && (
+                                <>
+                                    <ParkCardSkeleton />
+                                    <ParkCardSkeleton />
+                                    <ParkCardSkeleton />
+                                </>
                             )}
                         </div>
                     </div>
@@ -726,14 +736,9 @@ const TurfEmptyState = ({ onReset }) => (
 );
 
 const ParksComingSoon = ({ compact = false }) => (
-    <div
-        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/40 dark:to-teal-900/30 border border-emerald-200/60 dark:border-emerald-800/30 ${compact ? 'py-16' : 'py-32'
-            } text-center`}
-    >
-        {/* Decorative blobs */}
+    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/40 dark:to-teal-900/30 border border-emerald-200/60 dark:border-emerald-800/30 ${compact ? 'py-16' : 'py-32'} text-center`}>
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-emerald-200/30 dark:bg-emerald-700/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-teal-200/30 dark:bg-teal-700/20 blur-3xl pointer-events-none" />
-
         <div className="relative z-10">
             <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200/40 dark:shadow-emerald-900/30">
                 <TreePine className="w-10 h-10 text-emerald-500" />
@@ -742,12 +747,57 @@ const ParksComingSoon = ({ compact = false }) => (
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Coming Soon</span>
             </div>
-            <h3 className="text-2xl font-black tracking-tight text-gray-800 dark:text-gray-100 mb-2">
-                Parks & Amusement
-            </h3>
+            <h3 className="text-2xl font-black tracking-tight text-gray-800 dark:text-gray-100 mb-2">Parks & Amusement</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium max-w-xs mx-auto">
                 Exciting parks and amusement venues will be available here very soon!
             </p>
+        </div>
+    </div>
+);
+
+const SportCardSkeleton = () => (
+    <div className="bg-white dark:bg-[#1a1c23] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col h-full animate-pulse">
+        <div className="aspect-[16/10] bg-gray-200/60 dark:bg-gray-800/60" />
+        <div className="p-4 sm:p-5 flex flex-col flex-grow">
+            <div className="flex items-center gap-2 mb-3">
+                <div className="h-3.5 w-16 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                <div className="h-3.5 w-16 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+            </div>
+            <div className="h-5 w-3/4 bg-gray-200/60 dark:bg-gray-800/60 rounded-md mb-3" />
+            <div className="flex items-center gap-2 mb-5">
+                <div className="w-4 h-4 bg-gray-200/60 dark:bg-gray-800/60 rounded-full shrink-0" />
+                <div className="h-4 w-1/2 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+            </div>
+            <div className="mt-auto flex items-end justify-between gap-2 border-t border-gray-100 dark:border-gray-800 pt-4">
+                <div className="flex flex-col gap-2">
+                    <div className="h-3 w-16 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                    <div className="h-5 w-20 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                </div>
+                <div className="h-8 w-20 bg-gray-200/60 dark:bg-gray-800/60 rounded-lg" />
+            </div>
+        </div>
+    </div>
+);
+
+const ParkCardSkeleton = () => (
+    <div className="bg-white dark:bg-[#1a1c23] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col h-full animate-pulse">
+        <div className="aspect-[4/3] bg-gray-200/60 dark:bg-gray-800/60" />
+        <div className="p-4 flex flex-col flex-grow">
+            <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="h-6 w-3/4 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                <div className="h-5 w-16 bg-gray-200/60 dark:bg-gray-800/60 rounded-lg" />
+            </div>
+            <div className="flex items-center gap-1 mb-4">
+                <div className="w-3.5 h-3.5 bg-gray-200/60 dark:bg-gray-800/60 rounded-full shrink-0" />
+                <div className="h-4 w-1/2 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+            </div>
+            <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="flex flex-col gap-2">
+                    <div className="h-3 w-12 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                    <div className="h-6 w-20 bg-gray-200/60 dark:bg-gray-800/60 rounded-md" />
+                </div>
+                <div className="h-8 w-20 bg-gray-200/60 dark:bg-gray-800/60 rounded-lg" />
+            </div>
         </div>
     </div>
 );

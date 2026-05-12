@@ -5,7 +5,7 @@ import { getUserBookings, getBookingDetails } from '../services/bookingService';
 import { getEventBookings, getEvents } from '../services/eventService';
 import { getUserProfile, updateUserProfile } from '../services/userService';
 import { getAvailableTurfs, TURF_PAGE_LIMIT } from '../services/turfService';
-import { getAllParks } from '../services/parkService';
+import { getAllParks, PARK_PAGE_LIMIT } from '../services/parkService';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
 import { errorHandler } from '../utils/helpers';
@@ -117,8 +117,8 @@ export const DataProvider = ({ children, selectedCity }) => {
                 ).catch(err => { console.error("Food failed:", err); return []; }),
 
                 // Upcoming movies
-                apiCacheManager.getOrFetchUpcomingMovies(null,
-                    () => getUpcomingMovies(),
+                apiCacheManager.getOrFetchUpcomingMovies(selectedCity,
+                    () => getUpcomingMovies(selectedCity),
                     shouldRevalidate
                 ).catch(err => { console.error("Upcoming failed:", err); return []; }),
 
@@ -144,14 +144,16 @@ export const DataProvider = ({ children, selectedCity }) => {
 
                 // Parks
                 apiCacheManager.getOrFetchParks(selectedCity,
-                    () => getAllParks({ city: selectedCity, limit: 100 }),
+                    () => getAllParks({ city: selectedCity, page: 1, limit: PARK_PAGE_LIMIT }),
                     shouldRevalidate
                 ).catch(err => { console.error("Parks failed:", err); return []; }),
             ]);
 
             // Parse movie and theater data
             const moviesList = (movieData.movies || []).map(m => new Movie(m));
-            const upcomingList = (Array.isArray(upcomingData) ? upcomingData : []).map(m => new Movie(m));
+            // Check if the response is the new object format or the old array format
+            const upcomingListRaw = upcomingData?.movies || upcomingData;
+            const upcomingList = (Array.isArray(upcomingListRaw) ? upcomingListRaw : []).map(m => new Movie(m));
             // Derived from movieData to avoid redundant API call
             const latestList = (movieData.latestMovies || []).map(m => new Movie(m));
             const highlightsList = (Array.isArray(highlightsData) ? highlightsData : []).map(m => new Movie(m));
@@ -163,7 +165,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setLatestMovies(latestList);
             setHighlightsMovies(highlightsList);
             setTheaters(theatersList);
-            setEvents(eventData || []);
+            setEvents(eventData?.events || (Array.isArray(eventData) ? eventData : []));
             setFoodItems(foodList);
             setTurfs(turfData?.turfs || []);
             setParks(parkData || []);

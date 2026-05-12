@@ -111,6 +111,20 @@ const SportDetailsPage = () => {
             window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sport.address)}`, '_blank');
         }
     };
+     const handleShare = (e) => {
+        e?.preventDefault();
+        if (navigator.share) {
+            navigator.share({
+                title: sport.name,
+                text: `Check out this event: ${sport.name}`,
+                url: window.location.href,
+            }).catch(err => console.error('[Share Error]', err));
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Event link copied to clipboard!');
+        }
+    };
+
 
     const handleCheckout = () => {
         if (!user) {
@@ -181,7 +195,11 @@ const SportDetailsPage = () => {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <h1 className="text-sm font-bold truncate max-w-[200px] uppercase tracking-tight">{sport.name}</h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                    <button
+                        onClick={handleShare}
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                        title="Share Event"
+                    >
                         <Share2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -194,14 +212,18 @@ const SportDetailsPage = () => {
                 </button>
 
                 <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
-                    <button
+                    {/* <button
                         onClick={handleFavoriteClick}
                         disabled={isFavoriteLoading}
                         className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md group/fav"
                     >
                         <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-primary text-primary' : 'text-white group-hover/fav:text-primary'}`} />
-                    </button>
-                    <button className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md">
+                    </button> */}
+                    <button
+                        onClick={handleShare}
+                        className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md"
+                        title="Share Sport"
+                    >
                         <Share2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -379,11 +401,11 @@ const SportDetailsPage = () => {
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="sport-store-prev absolute -left-4 top-[40%] -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:-translate-x-full">
-                            <ChevronRight className="w-6 h-6 rotate-180" />
+                        <button className="sport-store-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                         </button>
-                        <button className="sport-store-next absolute -right-4 top-[40%] -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 xl:translate-x-full">
-                            <ChevronRight className="w-6 h-6" />
+                        <button className="sport-store-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
                 </section>
@@ -444,11 +466,11 @@ const SportDetailsPage = () => {
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="sport-rec-prev absolute left-2 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary transition-all cursor-pointer opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 hidden md:flex">
-                            <ChevronRight className="w-6 h-6 rotate-180" />
+                        <button className="sport-rec-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/recommended:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                         </button>
-                        <button className="sport-rec-next absolute right-2 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-[#1E2532] dark:text-gray-300 hover:text-primary transition-all cursor-pointer opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 hidden md:flex">
-                            <ChevronRight className="w-6 h-6" />
+                        <button className="sport-rec-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/recommended:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
                 </section>

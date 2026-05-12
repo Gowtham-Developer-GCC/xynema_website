@@ -263,6 +263,15 @@ const MovieDetailsPage = () => {
 
             {/* Hero Section with Sophisticated Banner */}
             <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[50vh] md:min-h-[70vh] flex items-center pt-20 pb-12 md:pt-24 md:pb-16">
+                
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="absolute top-24 left-6 md:left-8 lg:left-12 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md active:scale-95"
+                    title="Go Back"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
                 {/* Background Image/Video with Multi-layered Masking */}
                 <div className="absolute inset-0 overflow-hidden">
                     {isPlayingTrailer && getYouTubeId(movie.trailerUrl) ? (
@@ -882,11 +891,11 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                         </Swiper>
 
                         {/* Custom Navigation Arrows */}
-                        <button className="merch-prev absolute -left-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
-                            <ChevronRight className="w-6 h-6 rotate-180" />
+                        <button className="merch-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                         </button>
-                        <button className="merch-next absolute -right-6 top-[40%] -translate-y-1/2 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 items-center justify-center text-gray-800 dark:text-gray-200 hover:text-xynemaRose dark:hover:text-primary hover:scale-110 transition-all hidden lg:flex disabled:opacity-0">
-                            <ChevronRight className="w-6 h-6" />
+                        <button className="merch-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
                 </section>

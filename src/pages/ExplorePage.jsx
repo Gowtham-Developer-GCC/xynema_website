@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link, useLocation } from 'react-router-dom';
 import { Search, Filter, Sliders, Star, Loader, X, ArrowLeft, TrendingUp, MapPin, Calendar, Clock, Ticket, ChevronRight, ChevronDown, PartyPopper, Shield, Send, Users, Info, Check, ArrowRight, Sparkles, Building, Heart } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -13,7 +13,11 @@ import { errorHandler, optimizeImage } from '../utils/helpers';
 import { memo } from 'react';
 import apiCacheManager from '../services/apiCacheManager';
 import EventCard from '../components/EventCard';
+import {PAGE_LIMIT} from '../services/eventService'
+
 const Cardslice = 6;
+const EVENT_PAGE_LIMIT = PAGE_LIMIT;
+const SECTION_TABS = ['Near for you', 'Global'];
 
 const ExplorePage = ({ initialTab = 'public_events' }) => {
     const navigate = useNavigate();
@@ -22,190 +26,385 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { selectedCity } = useData();
     
-    // Get tab from URL query parameter, default to initialTab or 'public_events'
     const tabFromUrl = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState(tabFromUrl || initialTab);
-    const SECTION_TABS = ['Near for you', 'Global'];
     const [activeSection, setActiveSection] = useState('Near for you');
-    const [events, setEvents] = useState(() => {
-        const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
-        return Array.isArray(cached) ? cached : [];
+    const [error, setError] = useState(null);
+
+    // ── State: Local Events (Near for you) ────────────────────────────
+    const [localEvents, setLocalEvents] = useState(() => {
+        const cached = apiCacheManager.get(`events_local_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : (cached?.events || []);
     });
+    const [localLoading, setLocalLoading] = useState(!localEvents.length);
+    const [isAppendingLocal, setIsAppendingLocal] = useState(false);
+    const [localPagination, setLocalPagination] = useState({ page: 1, total: 0, hasNextPage: false });
 
+    // ── State: Global Events ──────────────────────────────────────────
+    const [globalEvents, setGlobalEvents] = useState(() => {
+        const cached = apiCacheManager.get('events_global');
+        return Array.isArray(cached) ? cached : (cached?.events || []);
+    });
+    const [globalLoading, setGlobalLoading] = useState(!globalEvents.length);
+    const [isAppendingGlobal, setIsAppendingGlobal] = useState(false);
+    const [globalPagination, setGlobalPagination] = useState({ page: 1, total: 0, hasNextPage: false });
 
-    // Events State
+    // ── State: Filters & Derived Data ─────────────────────────────────
     const [filteredEvents, setFilteredEvents] = useState([]);
+    const [filteredGlobalEvents, setFilteredGlobalEvents] = useState([]);
     const [eventSearchQuery, setEventSearchQuery] = useState('');
-    const [eventFilters, setEventFilters] = useState({
-        city: 'All',
-        status: 'All',
-        date: 'All',
-        tags: []
-    });
+    const [eventFilters, setEventFilters] = useState({ city: 'All', status: 'All', date: 'All', tags: [] });
     const [availableEventTags, setAvailableEventTags] = useState([]);
     const [availableEventCities, setAvailableEventCities] = useState([]);
-
-    const [allGlobalEvents, setAllGlobalEvents] = useState(() => {
-        const cached = apiCacheManager.get('events_all');
-        return Array.isArray(cached) ? cached : [];
-    });
-    const [filteredGlobalEvents, setFilteredGlobalEvents] = useState([]);
-    const [loadingGlobalEvents, setLoadingGlobalEvents] = useState(() => {
-        const cached = apiCacheManager.get('events_all');
-        return !Array.isArray(cached) || cached.length === 0;
-    });
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
-    // Sync tab with URL parameter
+    // ── Refs: Local Scroll ────────────────────────────────────────────
+    const prefetchedLocal = useRef(null);
+    const isFetchingLocal = useRef(false);
+    const isPrefetchingLocal = useRef(false);
+    const localScrollTimerRef = useRef(null);
+    const didLocalInitCheck = useRef(false);
+    const localAppendRef = useRef(null);
+
+    // ── Refs: Global Scroll ───────────────────────────────────────────
+    const prefetchedGlobal = useRef(null);
+    const isFetchingGlobal = useRef(false);
+    const isPrefetchingGlobal = useRef(false);
+    const globalScrollTimerRef = useRef(null);
+    const didGlobalInitCheck = useRef(false);
+    const globalAppendRef = useRef(null);
+
+    // Sync tab with URL
     useEffect(() => {
         const tabFromUrl = searchParams.get('tab');
         if (tabFromUrl && (tabFromUrl === 'public_events' || tabFromUrl === 'private_events')) {
             setActiveTab(tabFromUrl);
         } else if (!tabFromUrl) {
-            // If no tab in URL, set to default
             setActiveTab(initialTab);
         }
     }, [searchParams, initialTab]);
 
-    // Update URL when tab changes
     const handleTabChange = (tabId) => {
-        try {
-            setActiveTab(tabId);
-            setShowFilters(false);
-            // Update URL with the new tab parameter
-            setSearchParams({ tab: tabId });
-        } catch (err) {
-            console.error('Tab change error:', err);
-        }
+        setActiveTab(tabId);
+        setSearchParams({ tab: tabId });
     };
 
-    // Handle clicks outside "More Filters" dropdown
+    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (moreFiltersRef.current && !moreFiltersRef.current.contains(event.target)) {
-                setIsMoreFiltersOpen(false);
-            }
+            if (moreFiltersRef.current && !moreFiltersRef.current.contains(event.target)) setIsMoreFiltersOpen(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const [loading, setLoading] = useState(() => {
-        const cached = apiCacheManager.get(`events_${selectedCity || 'all'}`);
-        return !Array.isArray(cached) || cached.length === 0;
-    });
-    const [error, setError] = useState(null);
-    const [showFilters, setShowFilters] = useState(false);
-
-    const fetchData = async () => {
+    // ─────────────────────────────────────────────────────────────────
+    // LOCAL EVENTS (Near for you)
+    // ─────────────────────────────────────────────────────────────────
+    const prefetchNextLocalPage = useCallback(async (nextPage) => {
+        if (prefetchedLocal.current?.page === nextPage) return;
+        if (isPrefetchingLocal.current) return;
+        isPrefetchingLocal.current = true;
+        const cacheKey = `events_local_${selectedCity || 'all'}_p${nextPage}`;
         try {
-            if (events.length === 0) {
-                setLoading(true);
-            }
-            setError(null);
-
-
-            const [eventData, globalEventData] = await Promise.all([
-                apiCacheManager.getOrFetchEvents(selectedCity, () => getEvents(selectedCity)).catch(err => {
-                    console.error('Events fetch error:', err);
-                    return [];
-                }),
-                apiCacheManager.getOrFetchEvents(null, () => getAllEventsList()).catch(err => {
-                    console.error('Global Events fetch error:', err);
-                    return [];
-                })
-            ]);
-
-            const allEvents = eventData || [];
-
-            setEvents(allEvents);
-            setFilteredEvents(allEvents);
-            setAllGlobalEvents(globalEventData || []);
-            setFilteredGlobalEvents(globalEventData || []);
-            setLoadingGlobalEvents(false);
-
-            // Extract available filters for events from both local and global sources
-            const allAvailableEvents = [...allEvents, ...(globalEventData || [])];
-            const tags = Array.from(new Set(allAvailableEvents.flatMap(e => e.tags || []).filter(t => t))).sort();
-            const cities = Array.from(new Set(allAvailableEvents.map(e => e.city).filter(c => c))).sort();
-            setAvailableEventTags(tags);
-            setAvailableEventCities(cities);
-
-        } catch (err) {
-            console.error('Explore page fetch failed:', err);
-            setError(err.message || 'Failed to load content library');
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getEvents(selectedCity, nextPage, EVENT_PAGE_LIMIT),
+                1800, false
+            );
+            const eventsData = Array.isArray(response) ? response : (response?.events || response?.data || []);
+            if (eventsData.length > 0) prefetchedLocal.current = { page: nextPage, data: response };
+        } catch (e) {
+            console.warn('[LocalPrefetch] Silent fail page', nextPage, e?.message);
         } finally {
-            setLoading(false);
+            isPrefetchingLocal.current = false;
         }
-    };
+    }, [selectedCity]);
 
-    useEffect(() => {
+    const fetchLocalEvents = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingLocal.current && page !== 1) return;
+        isFetchingLocal.current = true;
         try {
-            fetchData();
-            const category = searchParams.get('category');
-            if (category) {
-                setEventFilters(prev => ({
-                    ...prev,
-                    tags: [category]
-                }));
-            } else {
-                setEventFilters(prev => ({
-                    ...prev,
-                    tags: []
-                }));
-            }
+            if (page === 1 && !append) setLocalLoading(true);
+            if (append) setIsAppendingLocal(true);
+
+            const cacheKey = `events_local_${selectedCity || 'all'}_p${page}`;
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getEvents(selectedCity, page, EVENT_PAGE_LIMIT),
+                1800, force
+            );
+
+            const eventsList = Array.isArray(response) ? response : (response?.events || []);
+            const newPagination = response?.pagination || { page, total: eventsList.length, hasNextPage: eventsList.length >= EVENT_PAGE_LIMIT };
+
+            if (append) setLocalEvents(prev => [...prev, ...eventsList]);
+            else { setLocalEvents(eventsList); prefetchedLocal.current = null; }
+            
+            setLocalPagination(newPagination);
+            if (newPagination.hasNextPage) prefetchNextLocalPage(page + 1);
         } catch (err) {
-            console.error('Effect fetch error:', err);
+            console.error('Error fetching local events:', err);
+            if (!append) setError('Failed to load events. Please try again.');
+        } finally {
+            setLocalLoading(false);
+            setIsAppendingLocal(false);
+            isFetchingLocal.current = false;
         }
-    }, [searchParams, selectedCity]);
+    }, [selectedCity, prefetchNextLocalPage]);
 
+    const handleLoadMoreLocal = useCallback(() => {
+        if (localLoading || isFetchingLocal.current) return;
+        if (!localPagination?.hasNextPage) return;
+        const nextPage = (localPagination.currentPage || localPagination.page || 1) + 1;
 
-    // Filter Logic for Events
+        if (prefetchedLocal.current?.page === nextPage) {
+            setIsAppendingLocal(true);
+            setTimeout(() => {
+                const { data } = prefetchedLocal.current;
+                prefetchedLocal.current = null;
+                
+                const eventsList = Array.isArray(data) ? data : (data?.events || []);
+                setLocalEvents(prev => [...prev, ...eventsList]);
+                setLocalPagination(data.pagination || { page: nextPage, hasNextPage: false });
+                
+                setIsAppendingLocal(false);
+                if (data.pagination?.hasNextPage) prefetchNextLocalPage(nextPage + 1);
+            }, 400);
+        } else {
+            fetchLocalEvents(nextPage, true);
+        }
+    }, [localLoading, localPagination, fetchLocalEvents, prefetchNextLocalPage]);
+
+    useEffect(() => { localAppendRef.current = handleLoadMoreLocal; }, [handleLoadMoreLocal]);
+
     useEffect(() => {
-        try {
-            const filterData = (data) => {
-                let filtered = data;
-                if (eventSearchQuery.trim()) {
-                    filtered = filtered.filter(e =>
-                        (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
-                        (e.description || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
-                    );
-                }
-                if (eventFilters.city !== 'All') {
-                    filtered = filtered.filter(e => e.city === eventFilters.city);
-                }
-                if (eventFilters.tags.length > 0) {
-                    filtered = filtered.filter(e =>
-                        (e.tags || []).some(tag => eventFilters.tags.includes(tag))
-                    );
-                }
-                return filtered;
+        prefetchedLocal.current = null;
+        isPrefetchingLocal.current = false;
+        isFetchingLocal.current = false;
+        didLocalInitCheck.current = false;
+        fetchLocalEvents(1, false);
+    }, [fetchLocalEvents]);
+
+    // Local Scroll Trigger
+    useEffect(() => {
+        if (activeSection !== 'Near for you') return;
+        const isFiltering = eventSearchQuery.trim().length > 0 || eventFilters.tags.length > 0;
+        if (isFiltering) return;
+        if (!localPagination?.hasNextPage) return;
+
+        const checkAndLoadLocal = () => {
+            if (localLoading || isFetchingLocal.current || isPrefetchingLocal.current) return;
+            if (!localPagination?.hasNextPage) return;
+            
+            const currentPos = window.scrollY + window.innerHeight;
+            const scrollBuffer = Math.max(window.innerHeight * 2.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) localAppendRef.current?.();
+        };
+
+        const onScroll = () => {
+            if (localScrollTimerRef.current) clearTimeout(localScrollTimerRef.current);
+            localScrollTimerRef.current = setTimeout(checkAndLoadLocal, 100);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        if (!didLocalInitCheck.current) {
+            didLocalInitCheck.current = true;
+            const initTimer = setTimeout(checkAndLoadLocal, 500);
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(localScrollTimerRef.current);
+                window.removeEventListener('scroll', onScroll);
             };
-
-            setFilteredEvents(filterData(events));
-            setFilteredGlobalEvents(filterData(allGlobalEvents));
-        } catch (err) {
-            console.error('Event filter error:', err);
         }
-    }, [events, allGlobalEvents, eventSearchQuery, eventFilters]);
+
+        return () => {
+            clearTimeout(localScrollTimerRef.current);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [activeSection, localPagination, eventSearchQuery, eventFilters, localLoading]);
+
+    // ─────────────────────────────────────────────────────────────────
+    // GLOBAL EVENTS
+    // ─────────────────────────────────────────────────────────────────
+    const prefetchNextGlobalPage = useCallback(async (nextPage) => {
+        if (prefetchedGlobal.current?.page === nextPage) return;
+        if (isPrefetchingGlobal.current) return;
+        isPrefetchingGlobal.current = true;
+        const cacheKey = `events_global_p${nextPage}`;
+        try {
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAllEventsList(nextPage, EVENT_PAGE_LIMIT),
+                1800, false
+            );
+            const eventsData = Array.isArray(response) ? response : (response?.events || response?.data || []);
+            if (eventsData.length > 0) prefetchedGlobal.current = { page: nextPage, data: response };
+        } catch (e) {
+            console.warn('[GlobalPrefetch] Silent fail page', nextPage, e?.message);
+        } finally {
+            isPrefetchingGlobal.current = false;
+        }
+    }, []);
+
+    const fetchGlobalEvents = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingGlobal.current && page !== 1) return;
+        isFetchingGlobal.current = true;
+        try {
+            if (page === 1 && !append) setGlobalLoading(true);
+            if (append) setIsAppendingGlobal(true);
+
+            const cacheKey = `events_global_p${page}`;
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getAllEventsList(page, EVENT_PAGE_LIMIT),
+                1800, force
+            );
+
+            const eventsList = Array.isArray(response) ? response : (response?.events || []);
+            const newPagination = response?.pagination || { page, total: eventsList.length, hasNextPage: eventsList.length >= EVENT_PAGE_LIMIT };
+
+            if (append) setGlobalEvents(prev => [...prev, ...eventsList]);
+            else { setGlobalEvents(eventsList); prefetchedGlobal.current = null; }
+            
+            setGlobalPagination(newPagination);
+            if (newPagination.hasNextPage) prefetchNextGlobalPage(page + 1);
+        } catch (err) {
+            console.error('Error fetching global events:', err);
+        } finally {
+            setGlobalLoading(false);
+            setIsAppendingGlobal(false);
+            isFetchingGlobal.current = false;
+        }
+    }, [prefetchNextGlobalPage]);
+
+    const handleLoadMoreGlobal = useCallback(() => {
+        if (globalLoading || isFetchingGlobal.current) return;
+        if (!globalPagination?.hasNextPage) return;
+        const nextPage = (globalPagination.currentPage || globalPagination.page || 1) + 1;
+
+        if (prefetchedGlobal.current?.page === nextPage) {
+            setIsAppendingGlobal(true);
+            setTimeout(() => {
+                const { data } = prefetchedGlobal.current;
+                prefetchedGlobal.current = null;
+                
+                const eventsList = Array.isArray(data) ? data : (data?.events || []);
+                setGlobalEvents(prev => [...prev, ...eventsList]);
+                setGlobalPagination(data.pagination || { page: nextPage, hasNextPage: false });
+                
+                setIsAppendingGlobal(false);
+                if (data.pagination?.hasNextPage) prefetchNextGlobalPage(nextPage + 1);
+            }, 400);
+        } else {
+            fetchGlobalEvents(nextPage, true);
+        }
+    }, [globalLoading, globalPagination, fetchGlobalEvents, prefetchNextGlobalPage]);
+
+    useEffect(() => { globalAppendRef.current = handleLoadMoreGlobal; }, [handleLoadMoreGlobal]);
+
+    useEffect(() => {
+        prefetchedGlobal.current = null;
+        isPrefetchingGlobal.current = false;
+        isFetchingGlobal.current = false;
+        didGlobalInitCheck.current = false;
+        fetchGlobalEvents(1, false);
+    }, [fetchGlobalEvents]);
+
+    // Global Scroll Trigger
+    useEffect(() => {
+        if (activeSection !== 'Global') return;
+        const isFiltering = eventSearchQuery.trim().length > 0 || eventFilters.tags.length > 0;
+        if (isFiltering) return;
+        if (!globalPagination?.hasNextPage) return;
+
+        const checkAndLoadGlobal = () => {
+            if (globalLoading || isFetchingGlobal.current || isPrefetchingGlobal.current) return;
+            if (!globalPagination?.hasNextPage) return;
+            
+            const currentPos = window.scrollY + window.innerHeight;
+            const scrollBuffer = Math.max(window.innerHeight * 1.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) globalAppendRef.current?.();
+        };
+
+        const onScroll = () => {
+            if (globalScrollTimerRef.current) clearTimeout(globalScrollTimerRef.current);
+            globalScrollTimerRef.current = setTimeout(checkAndLoadGlobal, 100);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        if (!didGlobalInitCheck.current) {
+            didGlobalInitCheck.current = true;
+            const initTimer = setTimeout(checkAndLoadGlobal, 500);
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(globalScrollTimerRef.current);
+                window.removeEventListener('scroll', onScroll);
+            };
+        }
+
+        return () => {
+            clearTimeout(globalScrollTimerRef.current);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [activeSection, globalPagination, eventSearchQuery, eventFilters, globalLoading]);
+
+    // ─────────────────────────────────────────────────────────────────
+    // Filter Logic & Tag Extraction
+    // ─────────────────────────────────────────────────────────────────
+    useEffect(() => {
+        const category = searchParams.get('category');
+        if (category) setEventFilters(prev => ({ ...prev, tags: [category] }));
+    }, [searchParams]);
+
+    useEffect(() => {
+        const allAvailableEvents = [...localEvents, ...globalEvents];
+        const tags = Array.from(new Set(allAvailableEvents.flatMap(e => e.tags || []).filter(Boolean))).sort();
+        const cities = Array.from(new Set(allAvailableEvents.map(e => e.city).filter(Boolean))).sort();
+        setAvailableEventTags(tags);
+        setAvailableEventCities(cities);
+    }, [localEvents, globalEvents]);
+
+    useEffect(() => {
+        const filterData = (data) => {
+            let filtered = data;
+            if (eventSearchQuery.trim()) {
+                filtered = filtered.filter(e =>
+                    (e.name || "").toLowerCase().includes(eventSearchQuery.toLowerCase()) ||
+                    (e.description || "").toLowerCase().includes(eventSearchQuery.toLowerCase())
+                );
+            }
+            if (eventFilters.city !== 'All') filtered = filtered.filter(e => e.city === eventFilters.city);
+            if (eventFilters.tags.length > 0) {
+                filtered = filtered.filter(e => (e.tags || []).some(tag => eventFilters.tags.includes(tag)));
+            }
+            return filtered;
+        };
+
+        setFilteredEvents(filterData(localEvents));
+        setFilteredGlobalEvents(filterData(globalEvents));
+    }, [localEvents, globalEvents, eventSearchQuery, eventFilters]);
 
     const resetFilters = () => {
-        try {
-            setEventFilters({ city: 'All', tags: [] });
-            setEventSearchQuery('');
-        } catch (err) {
-            console.error('Reset filters error:', err);
-        }
+        setEventFilters({ city: 'All', status: 'All', date: 'All', tags: [] });
+        setEventSearchQuery('');
     };
 
     const activeSectionTags = useMemo(() => {
-        const sourceEvents = activeSection === 'Near for you' ? events : allGlobalEvents;
+        const sourceEvents = activeSection === 'Near for you' ? localEvents : globalEvents;
         return Array.from(new Set(sourceEvents.flatMap(e => e.tags || []).filter(Boolean))).sort();
-    }, [activeSection, events, allGlobalEvents]);
+    }, [activeSection, localEvents, globalEvents]);
 
-    if (loading) return <LoadingScreen message="Scanning Library" />;
-    if (error) return <ErrorState error={error} onRetry={fetchData} title="Access Interrupted" buttonText="Try Refreshing" />;
+
+    if (localLoading && localEvents.length === 0) return <LoadingScreen message="Scanning Library" />;
+    if (error) return <ErrorState error={error} onRetry={() => { fetchLocalEvents(1, false, true); fetchGlobalEvents(1, false, true); }} title="Access Interrupted" buttonText="Try Refreshing" />;
 
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
@@ -275,14 +474,10 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             )}
 
             <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-
-                {/* Content Rendering */}
-
                 {activeTab === 'public_events' && (
                     <>
                         {/* Category Filter Chips */}
                         <div className="relative flex items-center justify-between gap-6 pb-4 mb-8 border-b border-gray-200 dark:border-gray-800">
-                            {/* Scrollable Chips */}
                             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar flex-1 py-1">
                                 <button
                                     onClick={() => {
@@ -313,7 +508,6 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                 ))}
                             </div>
 
-                            {/* More filters */}
                             {activeSectionTags.length > 4 && (
                                 <div className="relative shrink-0" ref={moreFiltersRef}>
                                     <button
@@ -357,7 +551,6 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                             <div>
                                 <div className="mb-8">
                                     <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
-                                        {/* <MapPin className="w-4 h-4 text-primary shrink-0 animate-bounce" /> */}
                                         {selectedCity && selectedCity !== 'All' ? `Events in ${selectedCity}` : 'Trending Events near you'}
                                     </h2>
                                     <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Popular right now</p>
@@ -365,30 +558,38 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
                                 {filteredEvents.length > 0 ? (
                                     <>
-                                        {/* First 3 Events */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                             {filteredEvents.slice(0, Cardslice).map((event, idx) => (
                                                 <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                             ))}
                                         </div>
 
-                                        {/* Ad / Host Banner */}
                                         <div className="my-16">
                                             <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
                                         </div>
 
-                                        {/* Remaining Events */}
-                                        {filteredEvents.length > Cardslice && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8">
-                                                {filteredEvents.slice(Cardslice).map((event, idx) => (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 min-h-[10vh]">
+                                            {filteredEvents.length > Cardslice && (
+                                                filteredEvents.slice(Cardslice).map((event, idx) => (
                                                     <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
-                                                ))}
-                                            </div>
-                                        )}
+                                                ))
+                                            )}
+                                            
+                                            {/* Scroll Skeletons */}
+                                            {isAppendingLocal && (
+                                                <>
+                                                    <EventCardSkeleton />
+                                                    <EventCardSkeleton />
+                                                    <EventCardSkeleton />
+                                                </>
+                                            )}
+                                        </div>
                                     </>
-                                ) : (
-                                    <EmptyState onReset={resetFilters} />
-                                )}
+                                ) : localLoading ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                                        {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
+                                    </div>
+                                ) : <EmptyState onReset={resetFilters} />}
                             </div>
                         )}
 
@@ -397,7 +598,6 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                             <div>
                                 <div className="mb-8">
                                     <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
-                                        {/* <Sparkles className="w-4 h-4 text-primary shrink-0 animate-pulse" /> */}
                                         Global Events
                                     </h2>
                                     <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Explore all events listed globally</p>
@@ -405,30 +605,38 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
                                 {filteredGlobalEvents.length > 0 ? (
                                     <>
-                                        {/* First 3 Global Events */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                             {filteredGlobalEvents.slice(0, Cardslice).map((event, idx) => (
                                                 <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
                                             ))}
                                         </div>
 
-                                        {/* Ad / Host Banner */}
                                         <div className="my-16">
                                             <PrivateEventBanner onNavigate={() => handleTabChange('private_events')} />
                                         </div>
 
-                                        {/* Remaining Global Events */}
-                                        {filteredGlobalEvents.length > Cardslice && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8">
-                                                {filteredGlobalEvents.slice(Cardslice).map((event, idx) => (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 min-h-[10vh]">
+                                            {filteredGlobalEvents.length > Cardslice && (
+                                                filteredGlobalEvents.slice(Cardslice).map((event, idx) => (
                                                     <EventCard key={event.id || event._id} event={{ ...event, delayClass: `delay-${(idx % 3) * 100}` }} />
-                                                ))}
-                                            </div>
-                                        )}
+                                                ))
+                                            )}
+
+                                            {/* Scroll Skeletons */}
+                                            {isAppendingGlobal && (
+                                                <>
+                                                    <EventCardSkeleton />
+                                                    <EventCardSkeleton />
+                                                    <EventCardSkeleton />
+                                                </>
+                                            )}
+                                        </div>
                                     </>
-                                ) : (
-                                    <EmptyState onReset={resetFilters} />
-                                )}
+                                ) : globalLoading ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                                        {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
+                                    </div>
+                                ) : <EmptyState onReset={resetFilters} />}
                             </div>
                         )}
                     </>
@@ -444,10 +652,32 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
 
 // ============= COMPONENTS =============
 
+const EventCardSkeleton = () => (
+    <div className="bg-white dark:bg-[#1a1c23] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col h-full animate-pulse shadow-sm">
+        <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-800 relative">
+            <div className="absolute top-4 left-4 h-6 w-16 bg-white/40 dark:bg-black/20 rounded-md backdrop-blur-sm" />
+        </div>
+        <div className="p-5 flex flex-col flex-grow">
+            <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded-md mb-3" />
+            <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-800 rounded-full shrink-0" />
+                <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-800 rounded-md" />
+            </div>
+            <div className="flex items-center gap-2 mb-5">
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-800 rounded-full shrink-0" />
+                <div className="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded-md" />
+            </div>
+            <div className="mt-auto flex items-center gap-2">
+                <div className="h-6 w-20 bg-gray-100 dark:bg-gray-800/50 rounded-full" />
+                <div className="h-6 w-24 bg-gray-100 dark:bg-gray-800/50 rounded-full" />
+            </div>
+        </div>
+    </div>
+);
+
 const PrivateEventBanner = ({ onNavigate }) => {
     return (
         <div className="w-full bg-[#1E2532] dark:bg-[#1a1d24] border border-white/10 rounded-xl text-white p-6 sm:p-10 md:p-14 overflow-hidden relative shadow-2xl">
-            {/* Subtle background glow effect if desired */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
 
@@ -501,106 +731,8 @@ const PrivateEventBanner = ({ onNavigate }) => {
     );
 };
 
-const FilterChip = ({ label, onRemove }) => (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20 animate-in fade-in zoom-in duration-200 font-display">
-        <span className="tracking-wider">{label}</span>
-        <button onClick={onRemove} className="hover:bg-primary/20 rounded-full p-0.5">
-            <X className="w-3 h-3" />
-        </button>
-    </div>
-);
-
-const FilterPanel = ({ filters, availableTags, availableCities, onFilterChange, onReset }) => {
-
-    return (
-        <div className="bg-white dark:bg-[#1a1c23] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl mb-8 animate-in slide-in-from-top-4 duration-300 transition-colors">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Location</label>
-                    <select
-                        value={filters.city}
-                        onChange={(e) => onFilterChange({ ...filters, city: e.target.value })}
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-xynemaRose dark:focus:ring-blue-500 outline-none transition-all dark:text-gray-100"
-                    >
-                        <option value="All">All Cities</option>
-                        {availableCities.map(city => <option key={city} value={city}>{city}</option>)}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Status</label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {['All', 'Active', 'Sold Out', 'Upcoming'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => onFilterChange({ ...filters, status })}
-                                className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border font-display ${filters.status === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Timeframe</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
-                        {['All', 'Today', 'Tomorrow', 'Weekend'].map(date => (
-                            <button
-                                key={date}
-                                onClick={() => onFilterChange({ ...filters, date })}
-                                className={`px-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border font-display ${filters.date === date ? 'bg-primary text-white border-primary shadow-md' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'}`}
-                            >
-                                {date}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Categories</label>
-                    <div className="flex flex-wrap gap-1.5">
-                        {availableTags.slice(0, 6).map(tag => {
-                            const isSelected = filters.tags.includes(tag);
-                            return (
-                                <button
-                                    key={tag}
-                                    onClick={() => {
-                                        const nextTags = isSelected
-                                            ? filters.tags.filter(t => t !== tag)
-                                            : [...filters.tags, tag];
-                                        onFilterChange({ ...filters, tags: nextTags });
-                                    }}
-                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border font-display ${isSelected ? 'bg-primary/10 border-primary text-primary' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500'}`}
-                                >
-                                    {tag}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-            <div className="mt-8 pt-6 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center transition-colors">
-                <button onClick={onReset} className="text-[10px] font-black text-gray-300 dark:text-gray-600 tracking-widest hover:text-primary transition-colors font-display">Reset All</button>
-                <button
-                    onClick={() => onFilterChange(filters)}
-                    className="px-8 py-3 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 font-display"
-                >
-                    Apply Filters
-                </button>
-            </div>
-        </div>
-    );
-};
-
 const PrivateEventsSection = ({ onCancel }) => {
-    const [formData, setFormData] = useState({
-        fullName: '',
-        phone: '',
-        email: '',
-        eventType: '',
-        eventDescription: ''
-    });
+    const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
@@ -618,8 +750,6 @@ const PrivateEventsSection = ({ onCancel }) => {
             if (success) {
                 setStatusMessage({ type: 'success', text: 'Enquiry submitted! Our team will contact you shortly.' });
                 setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
-                // Optional: Navigate back after success
-                // setTimeout(() => onCancel(), 3000);
             }
         } catch (err) {
             setStatusMessage({ type: 'error', text: errorHandler.getUserMessage(err) });
@@ -630,7 +760,6 @@ const PrivateEventsSection = ({ onCancel }) => {
 
     return (
         <div className="animate-in fade-in duration-500 bg-[#F5F7F9] dark:bg-[#0f1115]">
-            {/* Dark Blue Hero Banner - No margins around it */}
             <div className="w-full bg-[#1E2532] dark:bg-[#1a1d24] text-white overflow-hidden relative border-b border-white/10">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
@@ -641,27 +770,18 @@ const PrivateEventsSection = ({ onCancel }) => {
                         <span className="text-white">PRIVATE EVENT HOSTING</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6">
-                        Host Your Private Event
-                    </h2>
-
+                    <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6">Host Your Private Event</h2>
                     <p className="text-lg text-gray-300 leading-relaxed font-sans">
                         Create unforgettable experiences with our premium venues and personalized event management. Fill out the form below and our team will craft the perfect event for you.
                     </p>
                 </div>
-
             </div>
 
-            {/* Form Section Floating on top */}
             <div id="enquiry-form" className="relative z-10 -mt-16 max-w-4xl mx-auto px-4">
                 <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-lg p-8 md:p-12 border border-white/40 dark:border-gray-700 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
                     <div className="mb-10 text-left border-b border-gray-100 dark:border-gray-700 pb-6">
-                        <h3 className="text-[28px] font-roboto font-black text-gray-900 dark:text-gray-100 ">
-                            Event Request Form
-                        </h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-sans">
-                            Please provide us with the details of your event and we'll get back to you shortly.
-                        </p>
+                        <h3 className="text-[28px] font-roboto font-black text-gray-900 dark:text-gray-100 ">Event Request Form</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-sans">Please provide us with the details of your event and we'll get back to you shortly.</p>
                     </div>
 
                     {statusMessage.text && (
@@ -675,128 +795,62 @@ const PrivateEventsSection = ({ onCancel }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span className="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    name="fullName"
-                                    value={formData.fullName}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
-                                    placeholder="Enter your full name"
-                                />
+                                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your full name" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number <span className="text-red-500">*</span></label>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
-                                    placeholder="Enter your phone number"
-                                />
+                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your phone number" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address <span className="text-red-500">*</span></label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans"
-                                    placeholder="Enter your email address"
-                                />
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your email address" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type <span className="text-red-500">*</span></label>
                                 <div className="relative">
-                                    <select
-                                        name="eventType"
-                                        value={formData.eventType}
-                                        onChange={handleChange}
-                                        required
-                                        className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none font-sans ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`}
-                                        style={{ colorScheme: 'dark' }}
-                                    >
+                                    <select name="eventType" value={formData.eventType} onChange={handleChange} required className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none font-sans ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`} style={{ colorScheme: 'dark' }}>
                                         <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">Select event type</option>
                                         <option value="public-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Public Event</option>
                                         <option value="private-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Private Event</option>
                                     </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                                        <ChevronDown className="w-4 h-4" />
-                                    </div>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400"><ChevronDown className="w-4 h-4" /></div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Description</label>
-                            <textarea
-                                name="eventDescription"
-                                value={formData.eventDescription}
-                                onChange={handleChange}
-                                required
-                                rows="4"
-                                className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-sans"
-                                placeholder="Tell us about your event, requirements, preferences, or special arrangements..."
-                            />
+                            <textarea name="eventDescription" value={formData.eventDescription} onChange={handleChange} required rows="4" className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-sans" placeholder="Tell us about your event, requirements, preferences, or special arrangements..." />
                         </div>
 
                         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20 dark:border-gray-700">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
-                                    if (onCancel) onCancel();
-                                }}
-                                className="w-full sm:w-auto px-8 py-3.5 bg-white/30 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 border border-white/40 dark:border-gray-700 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 font-medium transition-colors backdrop-blur-md"
-                            >
+                            <button type="button" onClick={() => { setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' }); if (onCancel) onCancel(); }} className="w-full sm:w-auto px-8 py-3.5 bg-white/30 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 border border-white/40 dark:border-gray-700 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 font-medium transition-colors backdrop-blur-md">
                                 Cancel
                             </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-lg font-black font-roboto tracking-widest hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <span>Submit Request</span>
-                                )}
+                            <button type="submit" disabled={loading} className="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-lg font-black font-roboto tracking-widest hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                                {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <span>Submit Request</span>}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            {/* Feature Cards Grid */}
             <div className="max-w-4xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 pb-24">
-                {/* 1 */}
                 <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
-                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
-                        <Clock className="w-6 h-6" />
-                    </div>
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><Clock className="w-6 h-6" /></div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Quick Response</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Our team will review your request and contact you within 24-48 hours.</p>
                 </div>
-                {/* 2 */}
                 <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
-                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
-                        <Building className="w-6 h-6" />
-                    </div>
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><Building className="w-6 h-6" /></div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Premium Venues</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Access to exclusive venues across multiple cities and locations.</p>
                 </div>
-                {/* 3 */}
                 <div className="bg-white dark:bg-[#1a1c23] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-md">
-                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
-                        <Sparkles className="w-6 h-6" />
-                    </div>
+                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><Sparkles className="w-6 h-6" /></div>
                     <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Custom Experience</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Fully customizable event packages tailored to your needs.</p>
                 </div>
@@ -805,7 +859,6 @@ const PrivateEventsSection = ({ onCancel }) => {
     );
 };
 
-
 const EmptyState = ({ onReset }) => (
     <div className="col-span-full py-24 text-center bg-white dark:bg-[#1a1c23] rounded-[40px] border border-dashed border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in duration-500 transition-colors">
         <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300 dark:text-gray-600">
@@ -813,28 +866,12 @@ const EmptyState = ({ onReset }) => (
         </div>
         <h3 className="text-2xl font-black tracking-tight dark:text-gray-100">Nothing Found</h3>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
-        <button
-            onClick={onReset}
-            className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-roboto"
-        >
+        <button onClick={onReset} className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-roboto">
             Reset Explore
         </button>
     </div>
 );
 
-// ErrorState removed - imported from components
 
-const LoadingState = () => (
-    <div className="min-h-screen bg-[#F5F5FA] flex flex-col items-center justify-center space-y-8 p-8">
-        <div className="relative w-20 h-20">
-            <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
-            <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: '#FD4960' }} />
-        </div>
-        <div className="text-center space-y-1">
-            <p className="text-xynemaRose font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Scanning Library</p>
-            <h2 className="text-3xl font-black text-gray-300 uppercase letter-spacing-tight">XYNEMA</h2>
-        </div>
-    </div>
-);
 
 export default ExplorePage;

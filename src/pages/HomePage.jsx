@@ -177,7 +177,7 @@ const HomePage = ({ selectedCity }) => {
                 </section> */}
 
                 {/* Recommended for you Section */}
-                {upcomingMovies.length > 0 && (
+                {latestMovies.length > 0 && (
                     <section id="recommended-section" className="relative mt-12 group/recommended">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 font-roboto">
@@ -218,10 +218,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="recommended-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 -ml-4">
+                            <button className="recommended-prev absolute left-2 md:left-0 md:-ml-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/recommended:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
-                            <button className="recommended-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/recommended:opacity-100 disabled:opacity-0 -mr-4">
+                            <button className="recommended-next absolute right-2 md:right-0 md:-mr-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/recommended:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
@@ -331,7 +331,7 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-6"
                             >
-                                {events.map((event, idx) => (
+                                {events.slice(0, 5).map((event, idx) => (
                                     <SwiperSlide key={`event-${event.id || idx}`}>
                                         <EventCard event={event} />
                                     </SwiperSlide>
@@ -339,10 +339,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="events-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0 -ml-4">
+                            <button className="events-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/events:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="events-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/events:opacity-100 disabled:opacity-0 -mr-4">
+                            <button className="events-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/events:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>
@@ -380,7 +380,7 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-6"
                             >
-                                {turfs.slice(0, 3).map((turf, idx) => (
+                                {turfs.slice(0, 5).map((turf, idx) => (
                                     <SwiperSlide key={`turf-${turf.id || turf._id || idx}`}>
                                         <SportCard event={turf} />
                                     </SwiperSlide>
@@ -388,10 +388,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="turfs-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/turfs:opacity-100 disabled:opacity-0 -ml-4">
+                            <button className="turfs-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/turfs:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="turfs-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/turfs:opacity-100 disabled:opacity-0 -mr-4">
+                            <button className="turfs-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/turfs:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>
@@ -429,7 +429,7 @@ const HomePage = ({ selectedCity }) => {
                                 }}
                                 className="!pb-6"
                             >
-                                {parks.slice(0, 3).map((park, idx) => (
+                                {parks.slice(0, 5).map((park, idx) => (
                                     <SwiperSlide key={`park-${park.id || park._id || idx}`}>
                                         <ParkCard park={park} />
                                     </SwiperSlide>
@@ -437,10 +437,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="parks-prev absolute left-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/parks:opacity-100 disabled:opacity-0 -ml-4">
+                            <button className="parks-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/parks:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="parks-next absolute right-0 top-[40%] -translate-y-1/2 z-20 w-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all hidden md:flex opacity-0 group-hover/parks:opacity-100 disabled:opacity-0 -mr-4">
+                            <button className="parks-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/parks:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>
@@ -487,10 +487,10 @@ const HomePage = ({ selectedCity }) => {
                             </Swiper>
 
                             {/* Custom Navigation Arrows */}
-                            <button className="store-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 md:h-14 md:w-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 -ml-4">
+                            <button className="store-prev absolute left-2 md:left-0 md:-ml-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                             </button>
-                            <button className="store-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 md:h-14 md:w-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all hidden md:flex opacity-0 group-hover/store:opacity-100 disabled:opacity-0 -mr-4">
+                            <button className="store-next absolute right-2 md:right-0 md:-mr-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-white hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
                                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
                         </div>

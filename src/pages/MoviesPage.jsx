@@ -1,324 +1,594 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { useData } from '../context/DataContext';
-import { Search, ChevronDown, ChevronRight, X, Building2, Ticket } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Film, ChevronDown, ArrowRight, Sparkles } from 'lucide-react';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
+import { useData } from '../context/DataContext';
+import { getNowShowingMovies, getUpcomingMovies } from '../services/movieService';
+import apiCacheManager from '../services/apiCacheManager';
 import MovieCard from '../components/MovieCard';
+import { PAGE_LIMIT } from '../services/movieService';
 
-// ─── Dropdown Filter Component ──────────────────────────────────────────────
-const DropdownFilter = ({ label, items, selected, onToggle, onClear, align = 'left' }) => {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
+const MOVIE_PAGE_LIMIT = PAGE_LIMIT;
+const SECTION_TABS = ['Now Showing', 'Upcoming'];
 
+const MoviesPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { selectedCity } = useData();
+    
+    const sectionFromUrl = searchParams.get('section') || 'Now Showing';
+    const [activeSection, setActiveSection] = useState(
+        SECTION_TABS.includes(sectionFromUrl) ? sectionFromUrl : 'Now Showing'
+    );
+    const [error, setError] = useState(null);
+
+    // ── State: Now Showing (Uses City) ────────────────────────────
+    const [nowShowingMovies, setNowShowingMovies] = useState(() => {
+        const cached = apiCacheManager.get(`movies_now_${selectedCity || 'all'}`);
+        return Array.isArray(cached) ? cached : (cached?.movies || []);
+    });
+    const [nowShowingLoading, setNowShowingLoading] = useState(!nowShowingMovies.length);
+    const [isAppendingNowShowing, setIsAppendingNowShowing] = useState(false);
+    const [nowShowingPagination, setNowShowingPagination] = useState({ page: 1, total: 0, hasNextPage: false });
+
+    // ── State: Upcoming (Global) ──────────────────────────────────────────
+    const [upcomingMoviesData, setUpcomingMoviesData] = useState(() => {
+        const cached = apiCacheManager.get(`movies_upcoming_${selectedCity || 'global'}`);
+        return Array.isArray(cached) ? cached : (cached?.movies || []);
+    });
+    const [upcomingLoading, setUpcomingLoading] = useState(!upcomingMoviesData.length);
+    const [isAppendingUpcoming, setIsAppendingUpcoming] = useState(false);
+    const [upcomingPagination, setUpcomingPagination] = useState({ page: 1, total: 0, hasNextPage: false });
+
+    // ── State: Filters & Derived Data ─────────────────────────────────
+    const [filteredNowShowing, setFilteredNowShowing] = useState([]);
+    const [filteredUpcoming, setFilteredUpcoming] = useState([]);
+    const [movieSearchQuery, setMovieSearchQuery] = useState('');
+    const [activeGenre, setActiveGenre] = useState('All');
+    const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+    const moreFiltersRef = useRef(null);
+
+    // ── Refs: Now Showing Scroll ────────────────────────────────────────────
+    const prefetchedNowShowing = useRef(null);
+    const isFetchingNowShowing = useRef(false);
+    const isPrefetchingNowShowing = useRef(false);
+    const nowShowingScrollTimerRef = useRef(null);
+    const didNowShowingInitCheck = useRef(false);
+    const nowShowingAppendRef = useRef(null);
+
+    // ── Refs: Upcoming Scroll ───────────────────────────────────────────
+    const prefetchedUpcoming = useRef(null);
+    const isFetchingUpcoming = useRef(false);
+    const isPrefetchingUpcoming = useRef(false);
+    const upcomingScrollTimerRef = useRef(null);
+    const didUpcomingInitCheck = useRef(false);
+    const upcomingAppendRef = useRef(null);
+
+    // Sync section with URL parameter
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+        setSearchParams({ section });
+        setIsMoreFiltersOpen(false);
+    };
+
+    // Close dropdowns on outside click
     useEffect(() => {
-        const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        const handleClickOutside = (event) => {
+            if (moreFiltersRef.current && !moreFiltersRef.current.contains(event.target)) setIsMoreFiltersOpen(false);
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const activeCount = selected.length;
+    // ─────────────────────────────────────────────────────────────────
+    // NOW SHOWING — prefetch + fetch + load more
+    // ─────────────────────────────────────────────────────────────────
+    const prefetchNextNowShowing = useCallback(async (nextPage) => {
+        if (prefetchedNowShowing.current?.page === nextPage) return;
+        if (isPrefetchingNowShowing.current) return;
+        isPrefetchingNowShowing.current = true;
+        const cacheKey = `movies_now_${selectedCity || 'all'}_p${nextPage}`;
+        try {
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getNowShowingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT),
+                1800, false
+            );
+            const dataList = response?.movies || [];
+            if (dataList.length > 0) prefetchedNowShowing.current = { page: nextPage, data: response };
+        } catch (e) {
+            console.warn('[NowShowingPrefetch] Silent fail page', nextPage, e?.message);
+        } finally {
+            isPrefetchingNowShowing.current = false;
+        }
+    }, [selectedCity]);
+
+    const fetchNowShowing = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingNowShowing.current && page !== 1) return;
+        isFetchingNowShowing.current = true;
+        try {
+            if (page === 1 && !append) setNowShowingLoading(true);
+            if (append) setIsAppendingNowShowing(true);
+
+            const cacheKey = `movies_now_${selectedCity || 'all'}_p${page}`;
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getNowShowingMovies(selectedCity, page, MOVIE_PAGE_LIMIT),
+                1800, force
+            );
+
+            const dataList = response?.movies || [];
+            const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
+
+            if (append) setNowShowingMovies(prev => [...prev, ...dataList]);
+            else { setNowShowingMovies(dataList); prefetchedNowShowing.current = null; }
+            
+            setNowShowingPagination(newPagination);
+            if (newPagination.hasNextPage) prefetchNextNowShowing(page + 1);
+        } catch (err) {
+            console.error('Error fetching now showing movies:', err);
+            if (!append) setError('Failed to load movies. Please try again.');
+        } finally {
+            setNowShowingLoading(false);
+            setIsAppendingNowShowing(false);
+            isFetchingNowShowing.current = false;
+        }
+    }, [selectedCity, prefetchNextNowShowing]);
+
+    const handleLoadMoreNowShowing = useCallback(() => {
+        if (nowShowingLoading || isFetchingNowShowing.current) return;
+        if (!nowShowingPagination?.hasNextPage) return;
+        const nextPage = (nowShowingPagination.currentPage || nowShowingPagination.page || 1) + 1;
+
+        if (prefetchedNowShowing.current?.page === nextPage) {
+            setIsAppendingNowShowing(true);
+            setTimeout(() => {
+                const { data } = prefetchedNowShowing.current;
+                prefetchedNowShowing.current = null;
+                
+                const dataList = data?.movies || [];
+                setNowShowingMovies(prev => [...prev, ...dataList]);
+                setNowShowingPagination(data.pagination || { page: nextPage, hasNextPage: false });
+                
+                setIsAppendingNowShowing(false);
+                if (data.pagination?.hasNextPage) prefetchNextNowShowing(nextPage + 1);
+            }, 400);
+        } else {
+            fetchNowShowing(nextPage, true);
+        }
+    }, [nowShowingLoading, nowShowingPagination, fetchNowShowing, prefetchNextNowShowing]);
+
+    useEffect(() => { nowShowingAppendRef.current = handleLoadMoreNowShowing; }, [handleLoadMoreNowShowing]);
+
+    useEffect(() => {
+        prefetchedNowShowing.current = null;
+        isPrefetchingNowShowing.current = false;
+        isFetchingNowShowing.current = false;
+        didNowShowingInitCheck.current = false;
+        fetchNowShowing(1, false);
+    }, [fetchNowShowing]);
+
+    // Now Showing Scroll Trigger
+    useEffect(() => {
+        if (activeSection !== 'Now Showing') return;
+        const isFiltering = movieSearchQuery.trim().length > 0 || activeGenre !== 'All';
+        if (isFiltering) return;
+        if (!nowShowingPagination?.hasNextPage) return;
+
+        const checkAndLoadNowShowing = () => {
+            if (nowShowingLoading || isFetchingNowShowing.current || isPrefetchingNowShowing.current) return;
+            if (!nowShowingPagination?.hasNextPage) return;
+            
+            const currentPos = window.scrollY + window.innerHeight;
+            const scrollBuffer = Math.max(window.innerHeight * 2.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) nowShowingAppendRef.current?.();
+        };
+
+        const onScroll = () => {
+            if (nowShowingScrollTimerRef.current) clearTimeout(nowShowingScrollTimerRef.current);
+            nowShowingScrollTimerRef.current = setTimeout(checkAndLoadNowShowing, 150);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        if (!didNowShowingInitCheck.current) {
+            didNowShowingInitCheck.current = true;
+            const initTimer = setTimeout(checkAndLoadNowShowing, 500);
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(nowShowingScrollTimerRef.current);
+                window.removeEventListener('scroll', onScroll);
+            };
+        }
+
+        return () => {
+            clearTimeout(nowShowingScrollTimerRef.current);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [activeSection, nowShowingPagination, movieSearchQuery, activeGenre, nowShowingLoading]);
+
+    // ─────────────────────────────────────────────────────────────────
+    // UPCOMING — prefetch + fetch + load more (Global)
+    // ─────────────────────────────────────────────────────────────────
+    const prefetchNextUpcoming = useCallback(async (nextPage) => {
+        if (prefetchedUpcoming.current?.page === nextPage) return;
+        if (isPrefetchingUpcoming.current) return;
+        isPrefetchingUpcoming.current = true;
+        const cacheKey = `movies_upcoming_${selectedCity || 'global'}_p${nextPage}`;
+        try {
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getUpcomingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT),
+                1800, false
+            );
+            const dataList = response?.movies || [];
+            if (dataList.length > 0) prefetchedUpcoming.current = { page: nextPage, data: response };
+        } catch (e) {
+            console.warn('[UpcomingPrefetch] Silent fail page', nextPage, e?.message);
+        } finally {
+            isPrefetchingUpcoming.current = false;
+        }
+    }, [selectedCity]);
+
+    const fetchUpcoming = useCallback(async (page = 1, append = false, force = false) => {
+        if (isFetchingUpcoming.current && page !== 1) return;
+        isFetchingUpcoming.current = true;
+        try {
+            if (page === 1 && !append) setUpcomingLoading(true);
+            if (append) setIsAppendingUpcoming(true);
+
+            const cacheKey = `movies_upcoming_${selectedCity || 'global'}_p${page}`;
+            const response = await apiCacheManager.getOrExecute(
+                cacheKey,
+                () => getUpcomingMovies(selectedCity, page, MOVIE_PAGE_LIMIT),
+                1800, force
+            );
+
+            const dataList = response?.movies || [];
+            const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
+
+            if (append) setUpcomingMoviesData(prev => [...prev, ...dataList]);
+            else { setUpcomingMoviesData(dataList); prefetchedUpcoming.current = null; }
+            
+            setUpcomingPagination(newPagination);
+            if (newPagination.hasNextPage) prefetchNextUpcoming(page + 1);
+        } catch (err) {
+            console.error('Error fetching upcoming movies:', err);
+        } finally {
+            setUpcomingLoading(false);
+            setIsAppendingUpcoming(false);
+            isFetchingUpcoming.current = false;
+        }
+    }, [selectedCity, prefetchNextUpcoming]);
+
+    const handleLoadMoreUpcoming = useCallback(() => {
+        if (upcomingLoading || isFetchingUpcoming.current) return;
+        if (!upcomingPagination?.hasNextPage) return;
+        const nextPage = (upcomingPagination.currentPage || upcomingPagination.page || 1) + 1;
+
+        if (prefetchedUpcoming.current?.page === nextPage) {
+            setIsAppendingUpcoming(true);
+            setTimeout(() => {
+                const { data } = prefetchedUpcoming.current;
+                prefetchedUpcoming.current = null;
+                
+                const dataList = data?.movies || [];
+                setUpcomingMoviesData(prev => [...prev, ...dataList]);
+                setUpcomingPagination(data.pagination || { page: nextPage, hasNextPage: false });
+                
+                setIsAppendingUpcoming(false);
+                if (data.pagination?.hasNextPage) prefetchNextUpcoming(nextPage + 1);
+            }, 400);
+        } else {
+            fetchUpcoming(nextPage, true);
+        }
+    }, [upcomingLoading, upcomingPagination, fetchUpcoming, prefetchNextUpcoming]);
+
+    useEffect(() => { upcomingAppendRef.current = handleLoadMoreUpcoming; }, [handleLoadMoreUpcoming]);
+
+    useEffect(() => {
+        prefetchedUpcoming.current = null;
+        isPrefetchingUpcoming.current = false;
+        isFetchingUpcoming.current = false;
+        didUpcomingInitCheck.current = false;
+        fetchUpcoming(1, false);
+    }, [fetchUpcoming]);
+
+    // Upcoming Scroll Trigger
+    useEffect(() => {
+        if (activeSection !== 'Upcoming') return;
+        const isFiltering = movieSearchQuery.trim().length > 0 || activeGenre !== 'All';
+        if (isFiltering) return;
+        if (!upcomingPagination?.hasNextPage) return;
+
+        const checkAndLoadUpcoming = () => {
+            if (upcomingLoading || isFetchingUpcoming.current || isPrefetchingUpcoming.current) return;
+            if (!upcomingPagination?.hasNextPage) return;
+            
+            const currentPos = window.scrollY + window.innerHeight;
+            const scrollBuffer = Math.max(window.innerHeight * 1.5, 1000);
+            const threshold = document.documentElement.scrollHeight - scrollBuffer;
+            
+            if (currentPos >= threshold) upcomingAppendRef.current?.();
+        };
+
+        const onScroll = () => {
+            if (upcomingScrollTimerRef.current) clearTimeout(upcomingScrollTimerRef.current);
+            upcomingScrollTimerRef.current = setTimeout(checkAndLoadUpcoming, 150);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        if (!didUpcomingInitCheck.current) {
+            didUpcomingInitCheck.current = true;
+            const initTimer = setTimeout(checkAndLoadUpcoming, 500);
+            return () => {
+                clearTimeout(initTimer);
+                clearTimeout(upcomingScrollTimerRef.current);
+                window.removeEventListener('scroll', onScroll);
+            };
+        }
+
+        return () => {
+            clearTimeout(upcomingScrollTimerRef.current);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [activeSection, upcomingPagination, movieSearchQuery, activeGenre, upcomingLoading]);
+
+    // ─────────────────────────────────────────────────────────────────
+    // Filter Logic & Tag Extraction
+    // ─────────────────────────────────────────────────────────────────
+    const availableGenres = useMemo(() => {
+        const sourceData = activeSection === 'Now Showing' ? nowShowingMovies : upcomingMoviesData;
+        const genres = new Set();
+        sourceData.forEach(m => {
+            if (m.genre) {
+                m.genre.split(',').forEach(g => genres.add(g.trim()));
+            }
+        });
+        return Array.from(genres).sort();
+    }, [activeSection, nowShowingMovies, upcomingMoviesData]);
+
+
+    useEffect(() => {
+        const filterData = (data) => {
+            let filtered = data;
+            if (movieSearchQuery.trim()) {
+                filtered = filtered.filter(m =>
+                    (m.title || "").toLowerCase().includes(movieSearchQuery.toLowerCase())
+                );
+            }
+            if (activeGenre !== 'All') {
+                filtered = filtered.filter(m => m.genre && m.genre.includes(activeGenre));
+            }
+            return filtered;
+        };
+
+        setFilteredNowShowing(filterData(nowShowingMovies));
+        setFilteredUpcoming(filterData(upcomingMoviesData));
+    }, [nowShowingMovies, upcomingMoviesData, movieSearchQuery, activeGenre]);
+
+    const resetFilters = () => {
+        setActiveGenre('All');
+        setMovieSearchQuery('');
+    };
+
+    const handleRetry = () => {
+        setError(null);
+        fetchNowShowing(1, false, true);
+        fetchUpcoming(1, false, true);
+    };
+
+    if (nowShowingLoading && nowShowingMovies.length === 0) return <LoadingScreen message="Loading Movies" />;
+    if (error) return <ErrorState error={error} onRetry={handleRetry} title="Connection Issue" buttonText="Try Refreshing" />;
 
     return (
-        <div ref={ref} className="relative">
-            <button
-                onClick={() => setOpen(o => !o)}
-                className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 rounded-lg border text-xs sm:text-sm font-bold transition-all select-none font-roboto w-full ${activeCount > 0
-                    ? 'border-primary text-primary bg-primary/5 dark:bg-primary/20'
-                    : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1a1d24] hover:border-gray-300 dark:hover:border-gray-700'
-                    }`}
-            >
-                <span className="truncate">{activeCount > 0 ? `${label} (${activeCount})` : label}</span>
-                <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-            </button>
+        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] transition-colors duration-300">
+            <SEO title="Movies - XYNEMA" description="Discover movies playing near you and upcoming releases." />
 
-            {open && (
-                <div className={`absolute top-full mt-2 z-30 bg-white dark:bg-[#1a1d24] border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl p-3 w-56 max-h-64 overflow-y-auto transition-colors duration-300 ${align === 'right' ? 'right-0' : 'left-0'}`}>
-                    {activeCount > 0 && (
+            {/* Header */}
+            <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
+                <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                    <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#111827] dark:text-gray-100 mb-2 tracking-tight">
+                        Movies
+                    </h1>
+                    <p className="text-[#6B7280] dark:text-gray-400 text-sm md:text-base font-sans">
+                        Discover blockbuster hits and exclusive releases.
+                    </p>
+                </div>
+            </div>
+
+            {/* Section Tab Switcher */}
+            <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 transition-colors duration-300">
+                <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 overflow-x-auto no-scrollbar">
+                    {SECTION_TABS.map((tab) => (
                         <button
-                            onClick={() => { onClear(); }}
-                            className="w-full text-left text-xs text-red-500 hover:text-red-700 font-medium mb-2 px-1"
+                            key={tab}
+                            onClick={() => handleSectionChange(tab)}
+                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${
+                                activeSection === tab
+                                    ? 'text-primary'
+                                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                                }`}
                         >
-                            Clear selection
+                            {tab}
+                            {activeSection === tab && (
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />
+                            )}
                         </button>
-                    )}
-                    <div className="flex flex-col gap-1">
-                        {items.map(item => (
+                    ))}
+                </div>
+            </div>
+
+            <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                
+                {/* Filters Row */}
+                <div className="relative flex flex-wrap items-center gap-4 pb-4 mb-8 border-b border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-4 overflow-x-auto no-scrollbar flex-1 py-1">
+                        <button
+                            onClick={() => { setActiveGenre('All'); setIsMoreFiltersOpen(false); }}
+                            className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                activeGenre === 'All'
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                                    : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                }`}
+                        >
+                            All
+                        </button>
+                        {availableGenres.slice(0, 4).map((genre) => (
                             <button
-                                key={item}
-                                onClick={() => onToggle(item)}
-                                className={`text-left px-3 py-1.5 rounded-lg text-sm font-bold transition-colors font-roboto ${selected.includes(item)
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                key={genre}
+                                onClick={() => { setActiveGenre(genre); setIsMoreFiltersOpen(false); }}
+                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                    activeGenre === genre
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                                        : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
                                     }`}
                             >
-                                {item}
+                                {genre}
                             </button>
                         ))}
                     </div>
-                </div>
-            )}
-        </div>
-    );
-};
 
-// ─── Main MoviesPage ─────────────────────────────────────────────────────────
-const MoviesPage = ({ selectedCity }) => {
-    const {
-        movies,
-        latestMovies,
-        upcomingMovies,
-        loading,
-        error,
-        refreshData,
-        pagination,
-        nextPage,
-        prevPage,
-        goToPage,
-    } = useData();
-
-    const location = useLocation();
-
-    // Tab state: 'now-showing' | 'upcoming' | 're-releases'
-    const [activeTab, setActiveTab] = useState('now-showing');
-
-    // Sync tab from query parameter
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const tab = params.get('tab');
-        if (tab && ['now-showing', 'upcoming', 're-releases'].includes(tab)) {
-            setActiveTab(tab);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }, [location.search]);
-
-    // Filter States
-    const [selectedLanguages, setSelectedLanguages] = useState([]);
-    const [selectedGenres, setSelectedGenres] = useState([]);
-    const [selectedFormats, setSelectedFormats] = useState([]);
-
-    // Source list based on active tab
-    const sourceMovies = useMemo(() => {
-        if (activeTab === 'upcoming') return upcomingMovies || [];
-        // 're-releases' could be a filtered sub-set — for now use same list
-        if (activeTab === 're-releases') return (movies || []).filter(m => m.genre?.toLowerCase?.()?.includes('classic') || m.isReleased);
-        return movies || [];
-    }, [activeTab, movies, upcomingMovies]);
-
-    // Derived filter options from source
-    const { languages, genres, formats } = useMemo(() => {
-        const langs = new Set(), gens = new Set(), fmts = new Set();
-        sourceMovies.forEach(m => {
-            if (m.language) m.language.split(',').map(s => s.trim()).forEach(l => l && langs.add(l));
-            const gList = Array.isArray(m.genre) ? m.genre : (m.genre || '').split(',').map(s => s.trim());
-            gList.forEach(g => g && gens.add(g));
-            if (Array.isArray(m.format)) m.format.forEach(f => fmts.add(f));
-        });
-        return { languages: [...langs].sort(), genres: [...gens].sort(), formats: [...fmts].sort() };
-    }, [sourceMovies]);
-
-    // Filtering Logic
-    const filteredMovies = useMemo(() => {
-        return sourceMovies.filter(m => {
-            if (selectedLanguages.length > 0) {
-                const ml = (m.language || '').split(',').map(s => s.trim());
-                if (!ml.some(l => selectedLanguages.includes(l))) return false;
-            }
-            if (selectedGenres.length > 0) {
-                const mg = Array.isArray(m.genre) ? m.genre : (m.genre || '').split(',').map(s => s.trim());
-                if (!mg.some(g => selectedGenres.includes(g))) return false;
-            }
-            if (selectedFormats.length > 0) {
-                const mf = Array.isArray(m.format) ? m.format : [];
-                if (mf.length > 0 && !mf.some(f => selectedFormats.includes(f))) return false;
-            }
-            return true;
-        });
-    }, [sourceMovies, selectedLanguages, selectedGenres, selectedFormats]);
-
-    const toggleFilter = (set, item) => set(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
-
-    const clearAllFilters = () => {
-        setSelectedLanguages([]);
-        setSelectedGenres([]);
-        setSelectedFormats([]);
-    };
-
-    const hasActiveFilters = selectedLanguages.length > 0 || selectedGenres.length > 0 || selectedFormats.length > 0;
-
-    const TABS = [
-        { id: 'now-showing', label: 'Now Showing' },
-        { id: 'upcoming', label: 'Upcoming' },
-
-    ];
-
-    if (loading && !movies?.length) return <LoadingScreen message="Loading Movies..." />;
-    if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Something went wrong" />;
-
-    return (
-        <div className="min-h-screen bg-[#F5F5FA] dark:bg-[#0f1115] font-sans transition-colors duration-300">
-            <SEO
-                title={`Movies in ${selectedCity} - XYNEMA`}
-                description={`Browse movies in ${selectedCity}. Filter by language, genre, and format.`}
-            />
-
-            {/* ── Hero Header ───────────────────────────────── */}
-            <div className="bg-white dark:bg-[#0f1115] border-b border-gray-100 dark:border-gray-800">
-                <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 font-roboto">Movies</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">Discover and book tickets for the latest blockbusters</p>
-                </div>
-            </div>
-
-            {/* ── Tabs + Filters Bar ────────────────────────── */}
-            <div className="bg-white dark:bg-[#0f1115]/90 dark:backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800 sticky top-16 md:top-20 z-40 shadow-sm transition-all duration-300">
-                <div className="w-[95%] sm:w-[80%] mx-auto px-1 sm:px-4">
-                    <div className="flex flex-col py-1">
-                        {/* Top Row: Tabs + Cinemas */}
-                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/50">
-                            <div className="flex items-center gap-0 overflow-x-auto no-scrollbar">
-                                {TABS.map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => { setActiveTab(tab.id); clearAllFilters(); }}
-                                        className={`px-4 sm:px-6 py-4 text-[13px] sm:text-sm font-bold border-b-2 transition-colors whitespace-nowrap font-roboto ${activeTab === tab.id
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-                                            }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <Link
-                                to="/cinemas"
-                                className="flex-shrink-0 inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-primary hover:brightness-110 text-white text-[11px] sm:text-sm font-bold font-roboto transition-colors shadow-lg shadow-primary/20"
+                    {availableGenres.length > 4 && (
+                        <div className="relative shrink-0" ref={moreFiltersRef}>
+                            <button
+                                onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
+                                    isMoreFiltersOpen
+                                        ? 'bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+                                        : 'bg-white dark:bg-gray-850 text-gray-400 border-gray-200 dark:border-gray-800'
+                                    }`}
                             >
-                                <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                <span className="hidden xs:inline">Browse Cinemas</span>
-                                <span className="xs:hidden">Cinemas</span>
-                            </Link>
-                        </div>
-
-                        {/* Bottom Row: Filters (Full Width Grid) */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 py-3">
-                            <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
-                                {languages.length > 0 && (
-                                    <DropdownFilter
-                                        label="Languages"
-                                        items={languages}
-                                        selected={selectedLanguages}
-                                        onToggle={item => toggleFilter(setSelectedLanguages, item)}
-                                        onClear={() => setSelectedLanguages([])}
-                                    />
-                                )}
-                                {genres.length > 0 && (
-                                    <DropdownFilter
-                                        label="Genres"
-                                        items={genres}
-                                        selected={selectedGenres}
-                                        onToggle={item => toggleFilter(setSelectedGenres, item)}
-                                        onClear={() => setSelectedGenres([])}
-                                    />
-                                )}
-                                {formats.length > 0 && (
-                                    <DropdownFilter
-                                        label="Formats"
-                                        items={formats}
-                                        selected={selectedFormats}
-                                        onToggle={item => toggleFilter(setSelectedFormats, item)}
-                                        onClear={() => setSelectedFormats([])}
-                                        align="right"
-                                    />
-                                )}
-                            </div>
-
-                            {hasActiveFilters && (
-                                <button
-                                    onClick={clearAllFilters}
-                                    className="inline-flex items-center justify-center lg:justify-start gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest"
-                                >
-                                    <X className="w-3.5 h-3.5" /> Clear All Filters
-                                </button>
+                                More Genres
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isMoreFiltersOpen && (
+                                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
+                                    <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Genres</div>
+                                    <div className="max-h-52 overflow-y-auto px-2">
+                                        {availableGenres.map(genre => (
+                                            <button
+                                                key={genre}
+                                                onClick={() => { setActiveGenre(genre); setIsMoreFiltersOpen(false); }}
+                                                className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${
+                                                    activeGenre === genre
+                                                        ? 'bg-primary/10 text-primary font-bold'
+                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                                                    }`}
+                                            >
+                                                {genre}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Main Content ──────────────────────────────── */}
-            <div className="w-[90%] sm:w-[80%] mx-auto px-4 py-8">
-
-                {/* Result count */}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-                    {filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'}
-                    {activeTab !== 'upcoming' ? (
-                        <> in <span className="text-gray-800 dark:text-gray-200 font-semibold">{selectedCity}</span></>
-                    ) : (
-                        <> coming soon</>
                     )}
-                </p>
+                </div>
 
-                {/* Movies Grid */}
-                {filteredMovies.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                        {filteredMovies.map((movie, idx) => (
-                            <MovieCard
-                                key={movie.id}
-                                movie={{ ...movie, delayClass: '' }}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-24">
-                        <Search className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400">No Movies Found</h3>
-                        <p className="text-sm text-gray-400 dark:text-gray-600 mt-1">Try adjusting or clearing your filters</p>
+                {/* ===== NOW SHOWING TAB ===== */}
+                {activeSection === 'Now Showing' && (
+                    <div>
+                        <div className="mb-8">
+                            <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
+                                {selectedCity && selectedCity !== 'All' ? `Playing in ${selectedCity}` : 'Movies Now Showing'}
+                            </h2>
+                            <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Book your tickets now</p>
+                        </div>
+
+                        {filteredNowShowing.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 min-h-[40vh]">
+                                {filteredNowShowing.map((movie, idx) => (
+                                    <MovieCard key={movie.id || movie._id} movie={{ ...movie, delayClass: `delay-${(idx % 5) * 100}` }} />
+                                ))}
+                                
+                                {/* Scroll Skeletons */}
+                                {isAppendingNowShowing && (
+                                    <>
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                    </>
+                                )}
+                            </div>
+                        ) : nowShowingLoading ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                                {Array.from({ length: 10 }).map((_, i) => <MovieCardSkeleton key={i} />)}
+                            </div>
+                        ) : <EmptyState onReset={resetFilters} />}
                     </div>
                 )}
 
-                {/* Pagination */}
-                {pagination && pagination.pages > 1 && (
-                    <div className="flex justify-center items-center gap-3 mt-12 mb-4">
-                        <button
-                            onClick={prevPage}
-                            disabled={pagination.page <= 1}
-                            className="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            aria-label="Previous Page"
-                        >
-                            <ChevronRight className="w-5 h-5 rotate-180" />
-                        </button>
-                        <div className="flex items-center gap-1.5">
-                            {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(p => (
-                                <button
-                                    key={p}
-                                    onClick={() => goToPage(p)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-roboto transition-all ${pagination.page === p
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
+                {/* ===== UPCOMING TAB ===== */}
+                {activeSection === 'Upcoming' && (
+                    <div>
+                        <div className="mb-8">
+                            <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight flex items-center gap-2">
+                                Upcoming Releases
+                            </h2>
+                            <p className="text-[#6B7280] dark:text-gray-400 text-xs mt-1">Global upcoming blockbusters</p>
                         </div>
-                        <button
-                            onClick={nextPage}
-                            disabled={pagination.page >= pagination.pages}
-                            className="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            aria-label="Next Page"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
+
+                        {filteredUpcoming.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 min-h-[40vh]">
+                                {filteredUpcoming.map((movie, idx) => (
+                                    <MovieCard key={movie.id || movie._id} movie={{ ...movie, delayClass: `delay-${(idx % 5) * 100}` }} />
+                                ))}
+
+                                {/* Scroll Skeletons */}
+                                {isAppendingUpcoming && (
+                                    <>
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                        <MovieCardSkeleton />
+                                    </>
+                                )}
+                            </div>
+                        ) : upcomingLoading ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                                {Array.from({ length: 10 }).map((_, i) => <MovieCardSkeleton key={i} />)}
+                            </div>
+                        ) : <EmptyState onReset={resetFilters} />}
                     </div>
                 )}
             </div>
         </div>
     );
 };
+
+// ============= COMPONENTS =============
+
+const MovieCardSkeleton = () => (
+    <div className="flex flex-col h-full animate-pulse">
+        {/* Movie Poster Placeholder - Portrait Aspect Ratio */}
+        <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-2xl mb-3 shadow-sm" />
+        {/* Content Details */}
+        <div className="flex flex-col gap-2 mt-1">
+            <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-800 rounded-md" />
+            <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-800 rounded-md" />
+        </div>
+    </div>
+);
+
+const EmptyState = ({ onReset }) => (
+    <div className="col-span-full py-24 text-center bg-white dark:bg-[#1a1c23] rounded-[40px] border border-dashed border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in duration-500 transition-colors">
+        <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300 dark:text-gray-600">
+            <Film className="w-10 h-10" />
+        </div>
+        <h3 className="text-2xl font-black tracking-tight dark:text-gray-100">Nothing Found</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 font-medium">Try adjusting your search or filters to see more.</p>
+        <button onClick={onReset} className="mt-8 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 font-roboto">
+            Reset Filters
+        </button>
+    </div>
+);
 
 export default MoviesPage;

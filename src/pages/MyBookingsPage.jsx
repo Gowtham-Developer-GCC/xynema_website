@@ -479,7 +479,13 @@ const MyBookingsPage = () => {
                 {/* ━━━ Explore Button ━━━ */}
                 <div className="flex justify-center mt-14 mb-4">
                     <button
-                        onClick={() => navigate(bookingType === 'events' ? '/events' : '/activities')}
+                        onClick={() => {
+                            if (bookingType === 'movies') navigate('/movies');
+                            else if (bookingType === 'events') navigate('/events');
+                            else if (bookingType === 'sports') navigate('/activities?section=Turfs');
+                            else if (bookingType === 'parks') navigate('/activities?section=Parks');
+                            else navigate('/activities');
+                        }}
                         className="flex items-center justify-center gap-3 w-full max-w-xl px-8 py-4 bg-primary/90 dark:bg-primary/80 text-white text-[15px] font-semibold rounded-xl hover:bg-primary transition-colors shadow-sm"
                     >
                         {bookingType === 'movies' ? 'Explore movies' : bookingType === 'events' ? 'Explore events' : bookingType === 'parks' ? 'Explore parks' : 'Discover sports'}

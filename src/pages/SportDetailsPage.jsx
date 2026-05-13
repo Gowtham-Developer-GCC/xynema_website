@@ -237,7 +237,7 @@ const SportDetailsPage = () => {
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
                     style={{
                         backgroundImage: `url(${images[0]})`,
-                        filter: isMobile ? 'blur(4px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
+                        filter: isMobile ? 'blur(0px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
                         imageRendering: '-webkit-optimize-contrast',
                     }}
                 />

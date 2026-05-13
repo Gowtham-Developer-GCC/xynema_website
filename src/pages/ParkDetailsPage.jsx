@@ -26,15 +26,14 @@ const ParkDetailsPage = () => {
         const directDetails = apiCacheManager.get(`park_details_${slug}`);
         if (directDetails) return directDetails;
         const cachedParks = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
-        if (Array.isArray(cachedParks)) {
-            const found = cachedParks.find(p => p.slug === slug || p.id === slug || p._id === slug);
-            if (found) return found;
-        }
+        const list = cachedParks?.parks || (Array.isArray(cachedParks) ? cachedParks : []);
+        const found = list.find(p => p.slug === slug || p.id === slug || p._id === slug);
+        if (found) return found;
         return null;
     });
     const [allParks, setAllParks] = useState(() => {
         const cached = apiCacheManager.get(`parks_${selectedCity || 'all'}`);
-        return Array.isArray(cached) ? cached : [];
+        return cached?.parks || (Array.isArray(cached) ? cached : []);
     });
     const [loading, setLoading] = useState(!park);
 
@@ -87,7 +86,10 @@ const ParkDetailsPage = () => {
                 ]);
 
                 if (data) setPark(data);
-                if (parks) setAllParks(parks.filter(p => p.slug !== slug && p.id !== slug));
+                if (parks) {
+                    const parksList = parks.parks || (Array.isArray(parks) ? parks : []);
+                    setAllParks(parksList.filter(p => p.slug !== slug && p.id !== slug));
+                }
             } catch (err) {
                 console.error("Error fetching park details:", err);
             } finally {

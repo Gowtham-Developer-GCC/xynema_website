@@ -75,6 +75,8 @@ export const translations = {
         company: 'Company',
         care_email: 'care@xynema.in',
         support_call: '0484-4531182',
+        turfs: 'Turfs',
+        parks: 'Parks',
 
         // HomePage
         recommended_for_you: 'Recommended for you',
@@ -164,6 +166,8 @@ export const translations = {
         company: 'കമ്പനി',
         care_email: 'care@xynema.in',
         support_call: '0484-4531182',
+        turfs: 'ടർഫുകൾ',
+        parks: 'പാർക്കുകൾ',
 
         // HomePage
         recommended_for_you: 'നിങ്ങൾക്കായി ശുപാർശ ചെയ്യുന്നത്',

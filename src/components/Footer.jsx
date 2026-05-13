@@ -14,7 +14,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 
                     {/* Brand Column */}
-                    <div className="col-span-1 lg:col-span-4 flex flex-col items-center lg:items-start text-center lg:text-left pr-0 lg:pr-12">
+                    <div className="col-span-1 lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left pr-0 lg:pr-12">
                         {/* Logo Area */}
                         <div className="flex items-center mb-6">
                             <Link to="/" className="flex items-center gap-3 hover:scale-105 transition-transform duration-300 transform-gpu">
@@ -32,7 +32,7 @@ const Footer = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-stretch lg:items-center gap-4 sm:gap-6 md:gap-10">
-                            <a href="tel:+04844531182" className="flex items-center gap-4 text-gray-400 hover:text-primary transition-all group shrink-0">
+                            <a href="tel:04844531182" className="flex items-center gap-4 text-gray-400 hover:text-primary transition-all group shrink-0">
                                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
                                     <Phone className="w-5 h-5 text-primary/80 group-hover:scale-110 transition-transform" />
                                 </div>
@@ -42,7 +42,7 @@ const Footer = () => {
                                 </div>
                             </a>
                             
-                            <a href="mailto:care@xynema.in" className="flex items-center gap-4 text-gray-400 hover:text-primary transition-all group shrink-0">
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=care@xynema.in" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 text-gray-400 hover:text-primary transition-all group shrink-0">
                                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
                                     <Mail className="w-5 h-5 text-primary/80 group-hover:scale-110 transition-transform" />
                                 </div>
@@ -53,18 +53,23 @@ const Footer = () => {
                             </a>
                         </div>
                         
-                        <div className="flex flex-col gap-3 mt-6 pl-1 animate-in fade-in slide-in-from-left duration-700">
-                            <div className="flex items-center gap-4 group">
+                        <a 
+                            href="https://maps.app.goo.gl/N2m4kyprUxhcsn8p8" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex flex-col gap-3 mt-6 pl-1 animate-in fade-in slide-in-from-left duration-700 group w-fit"
+                        >
+                            <div className="flex items-center gap-4">
                                 <div className="w-5 flex justify-center">
                                     <MapPin className="w-4 h-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
                                 </div>
                                 <span className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors">Cochin, Kerala, India</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     {/* Links Columns */}
-                    <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8 md:pl-10">
+                    <div className="col-span-1 lg:col-span-9 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:pl-10">
                         <div>
                             <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('movies')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
@@ -78,6 +83,14 @@ const Footer = () => {
                             <ul className="space-y-4 font-sans text-sm">
                                 <li><Link to="/events" className="text-gray-500 hover:text-primary transition-colors">{t('public_events')}</Link></li>
                                 <li><Link to="/private-events" className="text-gray-500 hover:text-primary transition-colors">{t('private_hosting')}</Link></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('activities')}</h4>
+                            <ul className="space-y-4 font-sans text-sm">
+                                <li><Link to="/activities?section=Turfs" className="text-gray-500 hover:text-primary transition-colors">{t('turfs')}</Link></li>
+                                <li><Link to="/activities?section=Parks" className="text-gray-500 hover:text-primary transition-colors">{t('parks')}</Link></li>
                             </ul>
                         </div>
 
@@ -152,7 +165,12 @@ const Footer = () => {
                                 className="h-8 md:h-9 w-auto"
                             />
                         </a>
-                        <a href="#" className="transition-all hover:scale-105 active:scale-95 duration-200 shadow-lg rounded-md overflow-hidden border border-white/5 shrink-0">
+                        <a 
+                            href="https://play.google.com/store/apps/details?id=com.xynema.app" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="transition-all hover:scale-105 active:scale-95 duration-200 shadow-lg rounded-md overflow-hidden border border-white/5 shrink-0"
+                        >
                             <img
                                 src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                                 alt="Get it on Google Play"

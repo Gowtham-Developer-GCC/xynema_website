@@ -8,14 +8,14 @@ import SEO from '../components/SEO';
 const AllReviewsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { movies, latestMovies, loading: contextLoading } = useData();
+    const { movies, latestMovies, upcomingMovies, loading: contextLoading, refreshData } = useData();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         if (!contextLoading) {
-            const allAvailableMovies = [...(movies || []), ...(latestMovies || [])];
+            const allAvailableMovies = [...(movies || []), ...(latestMovies || []), ...(upcomingMovies || [])];
             const foundMovie = allAvailableMovies.find(m =>
                 String(m.id) === String(id) || String(m._id) === String(id)
             );
@@ -24,11 +24,17 @@ const AllReviewsPage = () => {
                 setMovie(foundMovie);
                 setLoading(false);
             } else {
-                setError('Movie not found');
-                setLoading(false);
+                // If the lists are empty, lazily invoke the global context load!
+                const isEmpty = (movies?.length === 0) && (latestMovies?.length === 0);
+                if (isEmpty) {
+                    refreshData(1);
+                } else {
+                    setError('Movie not found');
+                    setLoading(false);
+                }
             }
         }
-    }, [id, movies, latestMovies, contextLoading]);
+    }, [id, movies, latestMovies, upcomingMovies, contextLoading, refreshData]);
 
     if (loading) return <LoadingScreen message="Fetching reviews..." />;
     if (error) return (

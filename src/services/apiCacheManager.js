@@ -499,8 +499,20 @@ class ApiCacheManager {
     /**
      * Helper: Get or fetch turf bookings
      */
-    async getOrFetchTurfBookings(fetchFn, force = false) {
-        return this.getOrExecute('bookings_turfs', fetchFn, ApiCacheManager.BOOKINGS_TTL, force);
+    async getOrFetchTurfBookings(pageOrFn, maybeFn, force = false) {
+        let page = 1;
+        let fetchFn = maybeFn;
+        let finalForce = force;
+
+        if (typeof pageOrFn === 'function') {
+            fetchFn = pageOrFn;
+            finalForce = maybeFn || false;
+            page = 1;
+        } else {
+            page = pageOrFn;
+        }
+
+        return this.getOrExecute(`bookings_turfs_${page}`, fetchFn, ApiCacheManager.BOOKINGS_TTL, finalForce);
     }
     /**
      * Helper: Get or fetch available turfs
@@ -513,6 +525,24 @@ class ApiCacheManager {
      */
     async getOrFetchSimilarTurfs(turfId, fetchFn) {
         return this.getOrExecute(`similar_turfs_${turfId}`, fetchFn, ApiCacheManager.TURFS_TTL);
+    }
+    /**
+     * Helper: Get or fetch park bookings
+     */
+    async getOrFetchParkBookings(pageOrFn, maybeFn, force = false) {
+        let page = 1;
+        let fetchFn = maybeFn;
+        let finalForce = force;
+
+        if (typeof pageOrFn === 'function') {
+            fetchFn = pageOrFn;
+            finalForce = maybeFn || false;
+            page = 1;
+        } else {
+            page = pageOrFn;
+        }
+
+        return this.getOrExecute(`bookings_parks_${page}`, fetchFn, ApiCacheManager.BOOKINGS_TTL, finalForce);
     }
     /**
      * Helper: Get or fetch available parks

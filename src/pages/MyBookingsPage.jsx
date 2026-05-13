@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, QrCode, Loader, MapPin, Clock } from 'lucide-react';
-import { getUserBookings } from '../services/bookingService';
+import { getUserBookings, ticketLimit } from '../services/bookingService';
 import { getEventBookings } from '../services/eventService';
 import { getMyTurfBookings } from '../services/turfService';
 import { getMyParkBookings } from '../services/parkService';
@@ -15,6 +15,8 @@ const MyBookingsPage = () => {
     const location = useLocation();
     const [moviePage, setMoviePage] = useState(1);
     const [eventPage, setEventPage] = useState(1);
+    const [turfPage, setTurfPage] = useState(1);
+    const [parkPage, setParkPage] = useState(1);
     const [bookings, setBookings] = useState(() => {
         const cached = apiCacheManager.get(`bookings_movies_1`);
         return cached?.bookings ? cached.bookings : [];
@@ -24,23 +26,35 @@ const MyBookingsPage = () => {
         return cached?.bookings ? cached.bookings : [];
     });
     const [turfBookings, setTurfBookings] = useState(() => {
-        const cached = apiCacheManager.get(`bookings_turfs`);
+        const cached = apiCacheManager.get(`bookings_turfs_1`);
         if (!cached) return [];
         return Array.isArray(cached) ? cached : (cached.bookings || []);
     });
     const [loading, setLoading] = useState(!bookings?.length);
     const [eventLoading, setEventLoading] = useState(!eventBookings?.length);
     const [turfLoading, setTurfLoading] = useState(!turfBookings?.length);
-    const [parkBookings, setParkBookings] = useState([]);
-    const [parkLoading, setParkLoading] = useState(true);
+    const [parkBookings, setParkBookings] = useState(() => {
+        const cached = apiCacheManager.get(`bookings_parks_1`);
+        if (!cached) return [];
+        return Array.isArray(cached) ? cached : (cached.bookings || []);
+    });
+    const [parkLoading, setParkLoading] = useState(!parkBookings?.length);
     const [pageLoading, setPageLoading] = useState(false);
     const [bookingType, setBookingType] = useState(location.state?.activeTab || 'movies');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterOpen, setFilterOpen] = useState(false);
     const [movieTotalPages, setMovieTotalPages] = useState(1);
     const [eventTotalPages, setEventTotalPages] = useState(1);
+    const [turfTotalPages, setTurfTotalPages] = useState(1);
+    const [parkTotalPages, setParkTotalPages] = useState(1);
     const filterRef = useRef(null);
     const hasFetched = useRef(false);
+    const initializedSections = useRef({
+        movies: false,
+        events: false,
+        sports: false,
+        parks: false
+    });
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -65,7 +79,7 @@ const MyBookingsPage = () => {
 
             const response = await apiCacheManager.getOrFetchMovieBookings(
                 targetPage,
-                () => getUserBookings(targetPage),
+                () => getUserBookings(targetPage, ticketLimit),
                 force
             );
 
@@ -92,7 +106,7 @@ const MyBookingsPage = () => {
 
             const response = await apiCacheManager.getOrFetchEventBookings(
                 targetPage,
-                () => getEventBookings(targetPage),
+                () => getEventBookings(targetPage, ticketLimit),
                 force
             );
 
@@ -108,17 +122,25 @@ const MyBookingsPage = () => {
         }
     };
 
-    const fetchTurfBookings = async (force = false) => {
+    const fetchTurfBookings = async (targetPage = 1, force = false) => {
         try {
-            if (turfBookings.length > 0) setPageLoading(true);
-            else setTurfLoading(true);
+            const isFreshPage = targetPage !== turfPage || turfBookings.length === 0;
+            
+            if (isFreshPage || force) {
+                if (turfBookings.length > 0) setPageLoading(true);
+                else setTurfLoading(true);
+            }
 
             const response = await apiCacheManager.getOrFetchTurfBookings(
-                () => getMyTurfBookings(),
+                targetPage,
+                () => getMyTurfBookings(targetPage, ticketLimit),
                 force
             );
-            const bookingsArray = Array.isArray(response) ? response : (response?.data?.bookings || response?.data || response?.bookings || []);
-            setTurfBookings(bookingsArray);
+            
+            const { bookings: newBookings, totalPages: total, currentPage } = response.bookings ? response : { bookings: response.data || [], ...response };
+            setTurfBookings(newBookings || []);
+            setTurfTotalPages(total || 1);
+            setTurfPage(currentPage || 1);
         } catch (err) {
             console.error('Failed to fetch turf bookings:', err);
         } finally {
@@ -127,14 +149,25 @@ const MyBookingsPage = () => {
         }
     };
 
-    const fetchParkBookings = async (force = false) => {
+    const fetchParkBookings = async (targetPage = 1, force = false) => {
         try {
-            if (parkBookings.length > 0) setPageLoading(true);
-            else setParkLoading(true);
+            const isFreshPage = targetPage !== parkPage || parkBookings.length === 0;
+            
+            if (isFreshPage || force) {
+                if (parkBookings.length > 0) setPageLoading(true);
+                else setParkLoading(true);
+            }
 
-            const result = await getMyParkBookings();
-            const bookingsArray = result.data?.bookings || result.data || result || [];
-            setParkBookings(Array.isArray(bookingsArray) ? bookingsArray : []);
+            const response = await apiCacheManager.getOrFetchParkBookings(
+                targetPage,
+                () => getMyParkBookings(targetPage, ticketLimit),
+                force
+            );
+            
+            const { bookings: newBookings, totalPages: total, currentPage } = response.bookings ? response : { bookings: response.data || [], ...response };
+            setParkBookings(newBookings || []);
+            setParkTotalPages(total || 1);
+            setParkPage(currentPage || 1);
         } catch (err) {
             console.error('Failed to fetch park bookings:', err);
         } finally {
@@ -150,17 +183,20 @@ const MyBookingsPage = () => {
     }, [location.state]);
 
     useEffect(() => {
-        // Initial check: if cache is expired, refresh in background
-        if (hasFetched.current) return;
-        hasFetched.current = true;
+        // Lazy fetch bookings only for the active section when visited for the first time
+        if (initializedSections.current[bookingType]) return;
+        initializedSections.current[bookingType] = true;
 
-        // Respect TTL (force=false) by default on navigation
-        // This avoids hitting API every time if accessed within 3 minutes
-        fetchMovieBookings(1, false);
-        fetchEventBookings(1, false);
-        fetchTurfBookings(false);
-        fetchParkBookings(false);
-    }, []);
+        if (bookingType === 'movies') {
+            fetchMovieBookings(1, false);
+        } else if (bookingType === 'events') {
+            fetchEventBookings(1, false);
+        } else if (bookingType === 'sports') {
+            fetchTurfBookings(1, false);
+        } else if (bookingType === 'parks') {
+            fetchParkBookings(1, false);
+        }
+    }, [bookingType]);
 
     const handlePageChange = (newPage) => {
         if (bookingType === 'movies') {
@@ -171,6 +207,16 @@ const MyBookingsPage = () => {
         } else if (bookingType === 'events') {
             if (newPage >= 1 && newPage <= eventTotalPages && newPage !== eventPage) {
                 fetchEventBookings(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } else if (bookingType === 'sports') {
+            if (newPage >= 1 && newPage <= turfTotalPages && newPage !== turfPage) {
+                fetchTurfBookings(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } else if (bookingType === 'parks') {
+            if (newPage >= 1 && newPage <= parkTotalPages && newPage !== parkPage) {
+                fetchParkBookings(newPage);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
@@ -290,7 +336,13 @@ const MyBookingsPage = () => {
     const parkGroups = useMemo(() => groupByMonth(filteredParks, 'parks'), [filteredParks]);
 
     // ─── Initial Load ───
-    if (loading && bookings.length === 0) return <LoadingScreen message="Loading Tickets" />;
+    const isInitialLoading = 
+        (bookingType === 'movies' && loading && bookings.length === 0) ||
+        (bookingType === 'events' && eventLoading && eventBookings.length === 0) ||
+        (bookingType === 'sports' && turfLoading && turfBookings.length === 0) ||
+        (bookingType === 'parks' && parkLoading && parkBookings.length === 0);
+
+    if (isInitialLoading) return <LoadingScreen message="Loading Tickets" />;
 
     const tabs = [
         { key: 'movies', label: 'Movies' },
@@ -430,7 +482,7 @@ const MyBookingsPage = () => {
                         onClick={() => navigate(bookingType === 'events' ? '/events' : '/activities')}
                         className="flex items-center justify-center gap-3 w-full max-w-xl px-8 py-4 bg-primary/90 dark:bg-primary/80 text-white text-[15px] font-semibold rounded-xl hover:bg-primary transition-colors shadow-sm"
                     >
-                        {bookingType === 'movies' ? 'Explore movies' : bookingType === 'events' ? 'Explore events' : 'Discover sports'}
+                        {bookingType === 'movies' ? 'Explore movies' : bookingType === 'events' ? 'Explore events' : bookingType === 'parks' ? 'Explore parks' : 'Discover sports'}
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
@@ -443,6 +495,14 @@ const MyBookingsPage = () => {
                 ) : bookingType === 'events' ? (
                     eventTotalPages >= 1 && (
                         <Pagination page={eventPage} totalPages={eventTotalPages} onPageChange={handlePageChange} />
+                    )
+                ) : bookingType === 'sports' ? (
+                    turfTotalPages >= 1 && (
+                        <Pagination page={turfPage} totalPages={turfTotalPages} onPageChange={handlePageChange} />
+                    )
+                ) : bookingType === 'parks' ? (
+                    parkTotalPages >= 1 && (
+                        <Pagination page={parkPage} totalPages={parkTotalPages} onPageChange={handlePageChange} />
                     )
                 ) : null}
             </div>

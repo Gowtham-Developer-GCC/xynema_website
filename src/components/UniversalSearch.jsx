@@ -8,7 +8,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
     const [query, setQuery] = useState("");
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState({ movies: [], theaters: [], events: [], activities: [] });
-    const { movies, latestMovies, upcomingMovies, theaters, events, turfs, parks } = useData();
+    const { movies, latestMovies, upcomingMovies, theaters, events, turfs, parks, refreshData, loading } = useData();
     const navigate = useNavigate();
     const searchRef = useRef(null);
 
@@ -28,6 +28,12 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
         if (query.length < 2) {
             setResults({ movies: [], theaters: [], events: [], activities: [] });
             return;
+        }
+
+        // Lazily load datasets in background if user types and datasets are still completely empty
+        const isEmpty = (movies?.length === 0) && (latestMovies?.length === 0) && (upcomingMovies?.length === 0);
+        if (isEmpty && !loading) {
+            refreshData(1);
         }
 
         const lowerQuery = query.toLowerCase();

@@ -46,12 +46,33 @@ const MoviesPage = () => {
     const [filteredUpcoming, setFilteredUpcoming] = useState([]);
     const [movieSearchQuery, setMovieSearchQuery] = useState('');
     const [activeGenre, setActiveGenre] = useState('All');
+    const [activeLanguage, setActiveLanguage] = useState('All');
+    const [activeFormat, setActiveFormat] = useState('All');
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
 
     // ── State: Available Filters (Server Driven) ──────────────────────
-    const [availableGenres, setAvailableGenres] = useState(['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
-    const [availableLanguages, setAvailableLanguages] = useState(['Malayalam', 'Tamil', 'Hindi', 'English']);
+    const [availableGenres, setAvailableGenres] = useState(() => {
+        const prefix = sectionFromUrl === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
+        const defaultCity = sectionFromUrl === 'Upcoming' ? 'global' : 'all';
+        const cacheKey = `${prefix}_${selectedCity || defaultCity}_gAll_lAll_fAll_p1`;
+        const cached = apiCacheManager.get(cacheKey) || apiCacheManager.get(`${prefix}_${selectedCity || defaultCity}`);
+        return cached?.availableGenres || (sectionFromUrl === 'Upcoming' ? [] : ['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
+    });
+    const [availableLanguages, setAvailableLanguages] = useState(() => {
+        const prefix = sectionFromUrl === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
+        const defaultCity = sectionFromUrl === 'Upcoming' ? 'global' : 'all';
+        const cacheKey = `${prefix}_${selectedCity || defaultCity}_gAll_lAll_fAll_p1`;
+        const cached = apiCacheManager.get(cacheKey) || apiCacheManager.get(`${prefix}_${selectedCity || defaultCity}`);
+        return cached?.availableLanguages || (sectionFromUrl === 'Upcoming' ? [] : ['Malayalam', 'Tamil', 'Hindi', 'English']);
+    });
+    const [availableFormats, setAvailableFormats] = useState(() => {
+        const prefix = sectionFromUrl === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
+        const defaultCity = sectionFromUrl === 'Upcoming' ? 'global' : 'all';
+        const cacheKey = `${prefix}_${selectedCity || defaultCity}_gAll_lAll_fAll_p1`;
+        const cached = apiCacheManager.get(cacheKey) || apiCacheManager.get(`${prefix}_${selectedCity || defaultCity}`);
+        return cached?.availableFormats || [];
+    });
 
     // ── Refs: Now Showing Scroll ────────────────────────────────────────────
     const prefetchedNowShowing = useRef(null);
@@ -74,6 +95,28 @@ const MoviesPage = () => {
         setActiveSection(section);
         setSearchParams({ section });
         setIsMoreFiltersOpen(false);
+        
+        // Clear active queries to prevent invalid cross-tab states
+        setActiveGenre('All');
+        setActiveLanguage('All');
+        setActiveFormat('All');
+
+        // Swap context filter items instantly using existing cache to present accurate options
+        const prefix = section === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
+        const defaultCity = section === 'Upcoming' ? 'global' : 'all';
+        const cacheKey = `${prefix}_${selectedCity || defaultCity}_gAll_lAll_fAll_p1`;
+        const cached = apiCacheManager.get(cacheKey) || apiCacheManager.get(`${prefix}_${selectedCity || defaultCity}`);
+
+        if (cached) {
+            setAvailableGenres(cached.availableGenres || []);
+            setAvailableLanguages(cached.availableLanguages || []);
+            setAvailableFormats(cached.availableFormats || []);
+        } else {
+            // Clean fallbacks while we await new network stream
+            setAvailableGenres(section === 'Upcoming' ? [] : ['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
+            setAvailableLanguages(section === 'Upcoming' ? [] : ['Malayalam', 'Tamil', 'Hindi', 'English']);
+            setAvailableFormats([]);
+        }
     };
 
     // Close dropdowns on outside click
@@ -92,11 +135,11 @@ const MoviesPage = () => {
         if (prefetchedNowShowing.current?.page === nextPage) return;
         if (isPrefetchingNowShowing.current) return;
         isPrefetchingNowShowing.current = true;
-        const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_p${nextPage}`;
+        const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_l${activeLanguage}_f${activeFormat}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getNowShowingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, activeGenre),
+                () => getNowShowingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, { genre: activeGenre, language: activeLanguage, format: activeFormat }),
                 1800, false
             );
             const dataList = response?.movies || [];
@@ -106,7 +149,7 @@ const MoviesPage = () => {
         } finally {
             isPrefetchingNowShowing.current = false;
         }
-    }, [selectedCity, activeGenre]);
+    }, [selectedCity, activeGenre, activeLanguage, activeFormat]);
 
     const fetchNowShowing = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingNowShowing.current && page !== 1) return;
@@ -115,10 +158,10 @@ const MoviesPage = () => {
             if (page === 1 && !append) setNowShowingLoading(true);
             if (append) setIsAppendingNowShowing(true);
 
-            const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_p${page}`;
+            const cacheKey = `movies_now_${selectedCity || 'all'}_g${activeGenre}_l${activeLanguage}_f${activeFormat}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getNowShowingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, activeGenre),
+                () => getNowShowingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, { genre: activeGenre, language: activeLanguage, format: activeFormat }),
                 1800, force
             );
 
@@ -126,11 +169,14 @@ const MoviesPage = () => {
             const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
 
             // Set filters from server metadata
-            if (response?.filters?.genres?.length > 0) {
-                setAvailableGenres(prev => Array.from(new Set([...prev, ...response.filters.genres])).sort());
+            if (response?.availableGenres && response.availableGenres.length > 0) {
+                setAvailableGenres(response.availableGenres);
             }
-            if (response?.filters?.languages?.length > 0) {
-                setAvailableLanguages(prev => Array.from(new Set([...prev, ...response.filters.languages])).sort());
+            if (response?.availableLanguages && response.availableLanguages.length > 0) {
+                setAvailableLanguages(response.availableLanguages);
+            }
+            if (response?.availableFormats && response.availableFormats.length > 0) {
+                setAvailableFormats(response.availableFormats);
             }
 
             if (append) setNowShowingMovies(prev => [...prev, ...dataList]);
@@ -146,7 +192,7 @@ const MoviesPage = () => {
             setIsAppendingNowShowing(false);
             isFetchingNowShowing.current = false;
         }
-    }, [selectedCity, activeGenre, prefetchNextNowShowing]);
+    }, [selectedCity, activeGenre, activeLanguage, activeFormat, prefetchNextNowShowing]);
 
     const handleLoadMoreNowShowing = useCallback(() => {
         if (nowShowingLoading || isFetchingNowShowing.current) return;
@@ -230,11 +276,11 @@ const MoviesPage = () => {
         if (prefetchedUpcoming.current?.page === nextPage) return;
         if (isPrefetchingUpcoming.current) return;
         isPrefetchingUpcoming.current = true;
-        const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_p${nextPage}`;
+        const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_l${activeLanguage}_f${activeFormat}_p${nextPage}`;
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getUpcomingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, activeGenre),
+                () => getUpcomingMovies(selectedCity, nextPage, MOVIE_PAGE_LIMIT, { genre: activeGenre, language: activeLanguage, format: activeFormat }),
                 1800, false
             );
             const dataList = response?.movies || [];
@@ -244,7 +290,7 @@ const MoviesPage = () => {
         } finally {
             isPrefetchingUpcoming.current = false;
         }
-    }, [selectedCity, activeGenre]);
+    }, [selectedCity, activeGenre, activeLanguage, activeFormat]);
 
     const fetchUpcoming = useCallback(async (page = 1, append = false, force = false) => {
         if (isFetchingUpcoming.current && page !== 1) return;
@@ -253,10 +299,10 @@ const MoviesPage = () => {
             if (page === 1 && !append) setUpcomingLoading(true);
             if (append) setIsAppendingUpcoming(true);
 
-            const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_p${page}`;
+            const cacheKey = `movies_upcoming_${selectedCity || 'global'}_g${activeGenre}_l${activeLanguage}_f${activeFormat}_p${page}`;
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getUpcomingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, activeGenre),
+                () => getUpcomingMovies(selectedCity, page, MOVIE_PAGE_LIMIT, { genre: activeGenre, language: activeLanguage, format: activeFormat }),
                 1800, force
             );
 
@@ -264,11 +310,14 @@ const MoviesPage = () => {
             const newPagination = response?.pagination || { page, total: dataList.length, hasNextPage: dataList.length >= MOVIE_PAGE_LIMIT };
 
             // Set filters from server metadata
-            if (response?.filters?.genres?.length > 0) {
-                setAvailableGenres(prev => Array.from(new Set([...prev, ...response.filters.genres])).sort());
+            if (response?.availableGenres && response.availableGenres.length > 0) {
+                setAvailableGenres(response.availableGenres);
             }
-            if (response?.filters?.languages?.length > 0) {
-                setAvailableLanguages(prev => Array.from(new Set([...prev, ...response.filters.languages])).sort());
+            if (response?.availableLanguages && response.availableLanguages.length > 0) {
+                setAvailableLanguages(response.availableLanguages);
+            }
+            if (response?.availableFormats && response.availableFormats.length > 0) {
+                setAvailableFormats(response.availableFormats);
             }
 
             if (append) setUpcomingMoviesData(prev => [...prev, ...dataList]);
@@ -283,7 +332,7 @@ const MoviesPage = () => {
             setIsAppendingUpcoming(false);
             isFetchingUpcoming.current = false;
         }
-    }, [selectedCity, activeGenre, prefetchNextUpcoming]);
+    }, [selectedCity, activeGenre, activeLanguage, activeFormat, prefetchNextUpcoming]);
 
     const handleLoadMoreUpcoming = useCallback(() => {
         if (upcomingLoading || isFetchingUpcoming.current) return;
@@ -381,6 +430,8 @@ const MoviesPage = () => {
 
     const resetFilters = () => {
         setActiveGenre('All');
+        setActiveLanguage('All');
+        setActiveFormat('All');
         setMovieSearchQuery('');
     };
 
@@ -390,7 +441,12 @@ const MoviesPage = () => {
         fetchUpcoming(1, false, true);
     };
 
-    if (nowShowingLoading && nowShowingMovies.length === 0) return <LoadingScreen message="Loading Movies" />;
+    // Dynamic load gatekeeper: evaluate conditions matching the currently visible section
+    const isInitialMoviesLoading = 
+        (activeSection === 'Now Showing' && nowShowingLoading && nowShowingMovies.length === 0) ||
+        (activeSection === 'Upcoming' && upcomingLoading && upcomingMoviesData.length === 0);
+
+    if (isInitialMoviesLoading) return <LoadingScreen message="Loading Movies" />;
     if (error) return <ErrorState error={error} onRetry={handleRetry} title="Connection Issue" buttonText="Try Refreshing" />;
 
     return (
@@ -441,7 +497,7 @@ const MoviesPage = () => {
                             className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                                 activeGenre === 'All'
                                     ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                                    : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
                                 }`}
                         >
                             All
@@ -453,7 +509,7 @@ const MoviesPage = () => {
                                 className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                                     activeGenre === genre
                                         ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                                        : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
                                     }`}
                             >
                                 {genre}
@@ -461,41 +517,108 @@ const MoviesPage = () => {
                         ))}
                     </div>
 
-                    {availableGenres.length > 4 && (
-                        <div className="relative shrink-0" ref={moreFiltersRef}>
-                            <button
-                                onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-                                className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
-                                    isMoreFiltersOpen
-                                        ? 'bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
-                                        : 'bg-white dark:bg-gray-850 text-gray-400 border-gray-200 dark:border-gray-800'
-                                    }`}
-                            >
-                                More Genres
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {isMoreFiltersOpen && (
-                                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-3 z-[100] animate-in fade-in slide-in-from-top-2">
-                                    <div className="px-4 pb-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">All Genres</div>
-                                    <div className="max-h-52 overflow-y-auto px-2">
-                                        {availableGenres.map(genre => (
-                                            <button
-                                                key={genre}
-                                                onClick={() => { setActiveGenre(genre); setIsMoreFiltersOpen(false); }}
-                                                className={`w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wide transition-colors mb-1 ${
-                                                    activeGenre === genre
-                                                        ? 'bg-primary/10 text-primary font-bold'
-                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                    <div className="relative shrink-0" ref={moreFiltersRef}>
+                        <button
+                            onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+                            className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${
+                                isMoreFiltersOpen
+                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+                                    : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-800'
+                                } ${
+                                    (activeLanguage !== 'All' || activeFormat !== 'All' || (!availableGenres.slice(0, 4).includes(activeGenre) && activeGenre !== 'All'))
+                                        ? 'ring-2 ring-primary/30 border-primary text-primary font-black shadow-sm'
+                                        : ''
+                                }`}
+                        >
+                            More Filters
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isMoreFiltersOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isMoreFiltersOpen && (
+                            <div className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-2xl p-5 z-[100] animate-in fade-in slide-in-from-top-2 max-h-[80vh] overflow-y-auto no-scrollbar">
+                                
+                                {/* Section: Languages */}
+                                {availableLanguages.length > 0 && (
+                                    <div className="mb-5">
+                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                                            Languages
+                                            {activeLanguage !== 'All' && (
+                                                <button onClick={() => setActiveLanguage('All')} className="text-primary text-[9px] font-black tracking-widest uppercase hover:underline">Clear</button>
+                                            )}
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableLanguages.map(lang => (
+                                                <button
+                                                    key={lang}
+                                                    onClick={() => setActiveLanguage(activeLanguage === lang ? 'All' : lang)}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                                        activeLanguage === lang
+                                                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
                                                     }`}
-                                            >
-                                                {genre}
-                                            </button>
-                                        ))}
+                                                >
+                                                    {lang}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                )}
+
+                                {/* Section: Formats */}
+                                {availableFormats.length > 0 && (
+                                    <div className="mb-5 border-t border-gray-100 dark:border-gray-800 pt-4">
+                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                                            Formats
+                                            {activeFormat !== 'All' && (
+                                                <button onClick={() => setActiveFormat('All')} className="text-primary text-[9px] font-black tracking-widest uppercase hover:underline">Clear</button>
+                                            )}
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableFormats.map(fmt => (
+                                                <button
+                                                    key={fmt}
+                                                    onClick={() => setActiveFormat(activeFormat === fmt ? 'All' : fmt)}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                                        activeFormat === fmt
+                                                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
+                                                    }`}
+                                                >
+                                                    {fmt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Section: Genres */}
+                                {availableGenres.length > 0 && (
+                                    <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                                            Genres
+                                            {(!availableGenres.slice(0, 4).includes(activeGenre) && activeGenre !== 'All') && (
+                                                <button onClick={() => setActiveGenre('All')} className="text-primary text-[9px] font-black tracking-widest uppercase hover:underline">Clear</button>
+                                            )}
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableGenres.map(genre => (
+                                                <button
+                                                    key={genre}
+                                                    onClick={() => setActiveGenre(activeGenre === genre ? 'All' : genre)}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                                        activeGenre === genre
+                                                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
+                                                    }`}
+                                                >
+                                                    {genre}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* ===== NOW SHOWING TAB ===== */}

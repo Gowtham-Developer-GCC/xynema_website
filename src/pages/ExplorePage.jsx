@@ -55,6 +55,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
     const [eventSearchQuery, setEventSearchQuery] = useState('');
     const [eventFilters, setEventFilters] = useState({ city: 'All', status: 'All', date: 'All', tags: [] });
     const [availableEventTags, setAvailableEventTags] = useState(['Art', 'Classic', 'Classical']);
+    const [backendEventCategories, setBackendEventCategories] = useState([]);
     const [availableEventCities, setAvailableEventCities] = useState([]);
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const moreFiltersRef = useRef(null);
@@ -146,6 +147,10 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             
             setLocalPagination(newPagination);
             if (newPagination.hasNextPage) prefetchNextLocalPage(page + 1);
+
+            if (response?.availableEventCategories && response.availableEventCategories.length > 0) {
+                setBackendEventCategories(response.availableEventCategories);
+            }
         } catch (err) {
             console.error('Error fetching local events:', err);
             if (!append) setError('Failed to load events. Please try again.');
@@ -278,6 +283,10 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
             
             setGlobalPagination(newPagination);
             if (newPagination.hasNextPage) prefetchNextGlobalPage(page + 1);
+
+            if (response?.availableEventCategories && response.availableEventCategories.length > 0) {
+                setBackendEventCategories(response.availableEventCategories);
+            }
         } catch (err) {
             console.error('Error fetching global events:', err);
         } finally {
@@ -404,7 +413,10 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
         setEventSearchQuery('');
     };
 
-    const activeSectionTags = availableEventTags;
+    const activeSectionTags = useMemo(() => {
+        if (backendEventCategories.length > 0) return backendEventCategories;
+        return availableEventTags;
+    }, [backendEventCategories, availableEventTags]);
 
 
     if (localLoading && localEvents.length === 0) return <LoadingScreen message="Scanning Library" />;
@@ -490,7 +502,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     }}
                                     className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${eventFilters.tags.length === 0
                                             ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                                            : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
                                         }`}
                                 >
                                     All
@@ -504,7 +516,7 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                         }}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${eventFilters.tags.length === 1 && eventFilters.tags.includes(tag)
                                                 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                                                : 'bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-800'
                                             }`}
                                     >
                                         {tag}
@@ -517,8 +529,8 @@ const ExplorePage = ({ initialTab = 'public_events' }) => {
                                     <button
                                         onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
                                         className={`py-2 px-4 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap transition-all border ${isMoreFiltersOpen
-                                                ? 'bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
-                                                : 'bg-white dark:bg-gray-850 text-gray-400 border-gray-200 dark:border-gray-800'
+                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-800'
                                             }`}
                                     >
                                         More Filters

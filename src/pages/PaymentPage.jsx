@@ -322,7 +322,7 @@ const PaymentPage = () => {
                                         maxLength={10}
                                         name="mobile"
                                         autoComplete="tel"
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
                                     />
                                     <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Tickets will be sent to this number via SMS</p>
                                 </div>
@@ -337,7 +337,7 @@ const PaymentPage = () => {
                                         placeholder="Enter email for ticket confirmation"
                                         name="email"
                                         autoComplete="email"
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
                                     />
                                 </div>
                             </div>
@@ -348,7 +348,7 @@ const PaymentPage = () => {
                             <h2 className="text-[16px] md:text-[18px] font-black text-gray-900 dark:text-white mb-6 md:mb-8 font-roboto uppercase tracking-wider">Choose Payment Method</h2>
 
                             {/* UPI Quick Pay Box */}
-                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-6 bg-[#fafafa] dark:bg-gray-850/50 relative mb-8 md:mb-10 transition-colors duration-300">
+                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-6 bg-[#fafafa] dark:bg-gray-800/50 relative mb-8 md:mb-10 transition-colors duration-300">
                                 <div className="absolute top-0 right-4 md:right-6 -translate-y-1/2 bg-[#dcfce7] dark:bg-green-950 text-[#166534] dark:text-green-400 text-[9px] md:text-[10px] font-black px-3 py-1 rounded-full border border-[#bbf7d0]/30 dark:border-green-800/20 uppercase tracking-widest">
                                     Recommended
                                 </div>

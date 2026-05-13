@@ -109,9 +109,9 @@ const EventBookingSummaryPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const isFormValid = attendees.every(a => 
-        a.name.trim() !== "" && 
-        a.email.trim() !== "" && 
+    const isFormValid = attendees.every(a =>
+        a.name.trim() !== "" &&
+        a.email.trim() !== "" &&
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email) &&
         /^\d{10}$/.test(a.phone)
     );
@@ -160,8 +160,8 @@ const EventBookingSummaryPage = () => {
                                                 <span className="bg-primary/10 text-primary text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">MANDATORY</span>
                                             )}
                                         </div>
- 
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 md:gap-6">
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 md:gap-6">
                                             <div className="md:col-span-2 space-y-1 md:space-y-2">
                                                 <label className="block text-[11px] md:text-[13px] text-gray-600 dark:text-gray-400 mb-1">Full Name</label>
                                                 <div className="relative group">
@@ -173,7 +173,7 @@ const EventBookingSummaryPage = () => {
                                                         autoComplete="name"
                                                         value={attendee.name}
                                                         onChange={(e) => updateAttendee(index, 'name', e.target.value)}
-                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans ${errors[`${index}-name`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans ${errors[`${index}-name`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                                                     />
                                                 </div>
                                             </div>
@@ -189,7 +189,7 @@ const EventBookingSummaryPage = () => {
                                                         autoComplete="email"
                                                         value={attendee.email}
                                                         onChange={(e) => updateAttendee(index, 'email', e.target.value)}
-                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans ${errors[`${index}-email`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans ${errors[`${index}-email`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                                                     />
                                                 </div>
                                             </div>
@@ -206,7 +206,7 @@ const EventBookingSummaryPage = () => {
                                                         autoComplete="tel"
                                                         value={attendee.phone}
                                                         onChange={(e) => updateAttendee(index, 'phone', e.target.value.replace(/\D/g, ''))}
-                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans ${errors[`${index}-phone`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                                                        className={`w-full pl-10 md:pl-12 pr-4 py-2.5 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans ${errors[`${index}-phone`] ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                                                     />
                                                 </div>
                                             </div>
@@ -221,7 +221,7 @@ const EventBookingSummaryPage = () => {
                             <h2 className="text-[14px] md:text-lg font-black text-gray-900 dark:text-white mb-4 md:mb-6 font-roboto uppercase tracking-wider">Choose Payment Method</h2>
 
                             {/* UPI Quick Pay Box */}
-                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-6 bg-[#fafafa] dark:bg-gray-850/50 relative mb-8 md:mb-10 transition-colors duration-300">
+                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-6 bg-[#fafafa] dark:bg-gray-800/50 relative mb-8 md:mb-10 transition-colors duration-300">
                                 <div className="absolute top-0 right-4 md:right-6 -translate-y-1/2 bg-[#dcfce7] dark:bg-green-950 text-[#166534] dark:text-green-400 text-[9px] md:text-[10px] font-black px-3 py-1 rounded-full border border-[#bbf7d0]/30 dark:border-green-800/20 uppercase tracking-widest">
                                     Recommended
                                 </div>
@@ -246,7 +246,7 @@ const EventBookingSummaryPage = () => {
                                         </div>
                                         <span className="text-[9px] md:text-[11px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest truncate w-full text-center">G Pay</span>
                                     </button>
- 
+
                                     {/* PhonePe */}
                                     <button
                                         onClick={() => setSelectedMethod('upi')}
@@ -257,7 +257,7 @@ const EventBookingSummaryPage = () => {
                                         </div>
                                         <span className="text-[9px] md:text-[11px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest truncate w-full text-center">PhonePe</span>
                                     </button>
- 
+
                                     {/* Paytm */}
                                     <button
                                         onClick={() => setSelectedMethod('upi')}
@@ -375,7 +375,7 @@ const EventBookingSummaryPage = () => {
                                             <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                         </div>
                                     </div>
- 
+
                                     <PaymentButton
                                         amount={totalAmount}
                                         bookingData={{
@@ -432,7 +432,7 @@ const EventBookingSummaryPage = () => {
                     </aside>
                 </div>
             </main>
- 
+
             {/* Mobile Fixed Bottom Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 px-4 py-3 pb-safe z-[60] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] transition-colors duration-300">
                 <div className="flex items-center justify-between gap-4">
@@ -475,7 +475,7 @@ const EventBookingSummaryPage = () => {
                     </PaymentButton>
                 </div>
             </div>
- 
+
             {/* Spacer for mobile bottom bar */}
             <div className="h-20 lg:hidden"></div>
         </div>

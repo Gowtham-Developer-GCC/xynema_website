@@ -70,7 +70,7 @@ const MovieDetailsPage = () => {
     }
     const navigate = useNavigate();
     const { user, isAuthenticated, openLogin } = useAuth();
-    const { movies, latestMovies, upcomingMovies, loading: contextLoading, getMovieById, toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { movies, latestMovies, upcomingMovies, loading: contextLoading, getMovieById, toggleInterestOptimistic, getInterestOffset, interestedMovieIds, refreshData } = useData();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -151,11 +151,17 @@ const MovieDetailsPage = () => {
                 setMovie(foundMovie);
                 setLoading(false);
             } else {
-                setError(new Error('Movie not found'));
-                setLoading(false);
+                // If lists are entirely empty, lazily invoke the global pull since eager loads are disabled!
+                const isEmpty = movies.length === 0 && latestMovies.length === 0 && upcomingMovies.length === 0;
+                if (isEmpty) {
+                    refreshData(1);
+                } else {
+                    setError(new Error('Movie not found'));
+                    setLoading(false);
+                }
             }
         }
-    }, [idOrSlug, movies, latestMovies, contextLoading]);
+    }, [idOrSlug, movies, latestMovies, upcomingMovies, contextLoading, getMovieById, refreshData]);
 
     const toggleFavorite = () => {
         setFavorites(prev => {

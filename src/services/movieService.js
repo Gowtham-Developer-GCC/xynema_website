@@ -42,10 +42,21 @@ export const toggleInterest = async (movieId, interested) => {
 
 
 // Fetches Now Showing movies using the /upcomingmovies endpoint (Requires City)
-export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, genre = null) => {
+export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, genreOrFilters = null) => {
     return safeApiCall(async () => {
         const params = { city, page, limit };
-        if (genre && genre !== 'All') params.genre = genre;
+        
+        if (genreOrFilters) {
+            if (typeof genreOrFilters === 'string' && genreOrFilters !== 'All') {
+                params.genre = genreOrFilters;
+            } else if (typeof genreOrFilters === 'object') {
+                const { genre, language, format } = genreOrFilters;
+                if (genre && genre !== 'All') params.genre = genre;
+                if (language && language !== 'All') params.movieLanguage = language;
+                if (format && format !== 'All') params.format = format;
+            }
+        }
+
         const response = await api.get(ENDPOINTS.MOVIES.UPCOMING, { params });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
@@ -87,32 +98,45 @@ export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, ge
                 theaters: Array.from(uniqueTheatersMap.values()),
                 latestMovies: latestMoviesParsed,
                 pagination: response.data.pagination || { page, hasNextPage: movies.length >= limit },
-                filters: response.data.filters || { genres: [], languages: [] }
+                availableGenres: response.data.availableGenres || response.data.filters?.genres || [],
+                availableLanguages: response.data.availableLanguages || response.data.filters?.languages || [],
+                availableFormats: response.data.availableFormats || []
             };
         }
-        return { movies: [], theaters: [], latestMovies: [], pagination: { hasNextPage: false }, filters: { genres: [], languages: [] } };
+        return { movies: [], theaters: [], latestMovies: [], pagination: { hasNextPage: false }, availableGenres: [], availableLanguages: [], availableFormats: [] };
     });
 };
 
-// Fetches true Upcoming movies using the /latest-movies endpoint
-export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT, genre = null) => {
+export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT, genreOrFilters = null) => {
     return safeApiCall(async () => {
         const params = { city, page, limit };
-        if (genre && genre !== 'All') params.genre = genre;
+        
+        if (genreOrFilters) {
+            if (typeof genreOrFilters === 'string' && genreOrFilters !== 'All') {
+                params.genre = genreOrFilters;
+            } else if (typeof genreOrFilters === 'object') {
+                const { genre, language, format } = genreOrFilters;
+                if (genre && genre !== 'All') params.genre = genre;
+                if (language && language !== 'All') params.movieLanguage = language;
+                if (format && format !== 'All') params.format = format;
+            }
+        }
+
         const response = await api.get(ENDPOINTS.MOVIES.LATEST, { params });
         if (response.data.success) {
             const resultData = response.data.data || response.data.movies;
             const pagination = response.data.pagination || { page, hasNextPage: Array.isArray(resultData) && resultData.length >= limit };
+            const movies = Array.isArray(resultData) ? resultData.map(m => new Movie(m)) : [];
             
-            if (Array.isArray(resultData)) {
-                return {
-                    movies: resultData.map(m => new Movie(m)),
-                    pagination: pagination,
-                    filters: response.data.filters || { genres: [], languages: [] }
-                };
-            }
+            return {
+                movies: movies,
+                pagination: pagination,
+                availableGenres: response.data.availableGenres || response.data.filters?.genres || [],
+                availableLanguages: response.data.availableLanguages || response.data.filters?.languages || [],
+                availableFormats: response.data.availableFormats || []
+            };
         }
-        return { movies: [], pagination: { hasNextPage: false }, filters: { genres: [], languages: [] } };
+        return { movies: [], pagination: { hasNextPage: false }, availableGenres: [], availableLanguages: [], availableFormats: [] };
     });
 };
 

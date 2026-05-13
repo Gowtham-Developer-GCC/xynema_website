@@ -2,6 +2,7 @@ import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { Event, EventBooking } from '../models/index.js';
 export const PAGE_LIMIT = 6;
+import {ticketLimit} from './bookingService.js';
 
 export const getEvents = async (city, page = 1, limit = PAGE_LIMIT, tag = null) => {
     const targetCity = city || localStorage.getItem('selected_city') || 'mumbai';
@@ -9,8 +10,11 @@ export const getEvents = async (city, page = 1, limit = PAGE_LIMIT, tag = null) 
     return safeApiCall(async () => {
         try {
             const params = { city: targetCity, page, limit };
-            if (tag) params.tag = tag;
-            const response = await api.get(ENDPOINTS.EVENTS.LIST, { params });
+            if (tag) params.eventCategory = tag;
+            const response = await api.get(ENDPOINTS.EVENTS.LIST, { 
+                params,
+                timeout: 8000 // Fail fast if backend is deadlock-blocked to prevent lock chaining
+            });
             let body = response.data;
 
             if (Array.isArray(body)) {
@@ -20,25 +24,27 @@ export const getEvents = async (city, page = 1, limit = PAGE_LIMIT, tag = null) 
             if (body.success && body.data) {
                 const eventsData = Array.isArray(body.data) ? body.data : (body.data.events || []);
                 const pagination = body.pagination || body.data.pagination || { hasNextPage: false };
+                const availableEventCategories = body.availableEventCategories || body.data?.availableEventCategories || [];
                 
                 return {
                     events: eventsData.map(e => new Event(e)),
-                    pagination: pagination
+                    pagination: pagination,
+                    availableEventCategories
                 };
             }
-            return { events: [], pagination: { hasNextPage: false } };
+            return { events: [], pagination: { hasNextPage: false }, availableEventCategories: [] };
         } catch (error) {
             console.error('Error fetching backend events:', error);
-            return { events: [], pagination: { hasNextPage: false } };
+            return { events: [], pagination: { hasNextPage: false }, availableEventCategories: [] };
         }
-    });
+    }, 0);
 };
 
 export const getAllEventsList = async (page = 1, limit = PAGE_LIMIT, tag = null) => {
     return safeApiCall(async () => {
         try {
             const params = { page, limit };
-            if (tag) params.tag = tag;
+            if (tag) params.eventCategory = tag;
             const response = await api.get(ENDPOINTS.EVENTS.LIST, { params });
             let body = response.data;
 
@@ -49,16 +55,18 @@ export const getAllEventsList = async (page = 1, limit = PAGE_LIMIT, tag = null)
             if (body.success && body.data) {
                 const eventsData = Array.isArray(body.data) ? body.data : (body.data.events || []);
                 const pagination = body.pagination || body.data.pagination || { hasNextPage: false };
+                const availableEventCategories = body.availableEventCategories || body.data?.availableEventCategories || [];
                 
                 return {
                     events: eventsData.map(e => new Event(e)),
-                    pagination: pagination
+                    pagination: pagination,
+                    availableEventCategories
                 };
             }
-            return { events: [], pagination: { hasNextPage: false } };
+            return { events: [], pagination: { hasNextPage: false }, availableEventCategories: [] };
         } catch (error) {
             console.error('Error fetching global events:', error);
-            return { events: [], pagination: { hasNextPage: false } };
+            return { events: [], pagination: { hasNextPage: false }, availableEventCategories: [] };
         }
     });
 };
@@ -84,9 +92,9 @@ export const getSimilarEvents = async (eventId) => {
     });
 };
 
-export const getEventBookings = async (page = 1) => {
+export const getEventBookings = async (page = 1, limit = ticketLimit) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST, { params: { page } });
+        const response = await api.get(ENDPOINTS.EVENT_BOOKING.LIST, { params: { page, limit } });
         let body = response.data;
         if (Array.isArray(body)) body = body[0] || {};
 

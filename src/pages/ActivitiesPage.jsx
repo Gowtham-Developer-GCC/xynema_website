@@ -15,9 +15,18 @@ import apiCacheManager from '../services/apiCacheManager';
 const SECTION_TABS  = ['All', 'Turfs', 'Parks'];
 const SPORT_TAGS    = ['Cricket', 'Football', 'Tennis', 'Swimming', 'Badminton'];
 
+const formatSportTagLabel = (tag, isTitleCase = false) => {
+    if (!tag || tag === 'All') return tag;
+    const spaced = tag.replace(/_/g, ' ');
+    if (isTitleCase) {
+        return spaced.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    return spaced;
+};
+
 const ActivitiesPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const { selectedCity, turfs, parks: contextParks, loading: dataLoading, refreshData: refreshGlobalData } = useData();
+    const { selectedCity, loading: dataLoading, refreshData: refreshGlobalData } = useData();
 
     const sectionFromUrl = searchParams.get('section') || 'All';
     const [activeSection, setActiveSection] = useState(
@@ -30,10 +39,24 @@ const ActivitiesPage = () => {
         if (Array.isArray(cached)) return cached;
         return cached?.turfs || [];
     });
-    const [allParks, setAllParks] = useState([]);
+    const [allParks, setAllParks] = useState(() => {
+        const cacheKey = `parks_${selectedCity || 'all'}_tall_p1_s`;
+        const cached = apiCacheManager.get(cacheKey);
+        if (Array.isArray(cached)) return cached;
+        return cached?.parks || [];
+    });
     const [error, setError]             = useState(null);
-    const [turfsLoading, setTurfsLoading] = useState(false);
-    const [parksLoading, setParksLoading] = useState(false);
+    const [turfsLoading, setTurfsLoading] = useState(() => {
+        const cached = apiCacheManager.get(`turfs_${selectedCity || 'all'}`);
+        const hasCache = Array.isArray(cached) ? cached.length > 0 : (cached?.turfs?.length > 0);
+        return !hasCache;
+    });
+    const [parksLoading, setParksLoading] = useState(() => {
+        const cacheKey = `parks_${selectedCity || 'all'}_tall_p1_s`;
+        const cached = apiCacheManager.get(cacheKey);
+        const hasCache = Array.isArray(cached) ? cached.length > 0 : (cached?.parks?.length > 0);
+        return !hasCache;
+    });
     const [isAppendingTurfs, setIsAppendingTurfs] = useState(false);
     const [isAppendingParks, setIsAppendingParks] = useState(false);
     const [turfsPagination, setTurfsPagination] = useState({ page: 1, total: 0, hasNextPage: false });
@@ -41,6 +64,8 @@ const ActivitiesPage = () => {
     const [searchQuery, setSearchQuery]       = useState('');
     const [activeSportTag, setActiveSportTag] = useState('All');
     const [activeParkType, setActiveParkType] = useState('All');
+    const [availableSportTypes, setAvailableSportTypes] = useState([]);
+    const [availableParkTypes, setAvailableParkTypes] = useState([]);
     const [isMoreFiltersOpen, setIsMoreFiltersOpen]           = useState(false);
     const [isMoreParksFiltersOpen, setIsMoreParksFiltersOpen] = useState(false);
 
@@ -77,7 +102,7 @@ const ActivitiesPage = () => {
         try {
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page: nextPage, limit: TURF_PAGE_LIMIT, tags: activeTag }),
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page: nextPage, limit: TURF_PAGE_LIMIT, sportType: activeTag }),
                 1800, false
             );
             if (response?.turfs) prefetchedTurfs.current = { page: nextPage, data: response };
@@ -99,7 +124,7 @@ const ActivitiesPage = () => {
             
             const response = await apiCacheManager.getOrExecute(
                 cacheKey,
-                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page, limit: TURF_PAGE_LIMIT, tags: activeTag }),
+                () => getAvailableTurfs({ city: selectedCity, search: searchQuery, page, limit: TURF_PAGE_LIMIT, sportType: activeTag }),
                 1800, force
             );
             if (response?.turfs) {
@@ -107,7 +132,11 @@ const ActivitiesPage = () => {
                 if (append) setAllTurfs(prev => [...prev, ...response.turfs]);
                 else { setAllTurfs(response.turfs); prefetchedTurfs.current = null; }
                 setTurfsPagination(newPagination);
-                if (newPagination.hasNextPage) prefetchNextTurfsPage(page + 1);
+                if (newPagination.hasNextPage && activeSection === 'Turfs') prefetchNextTurfsPage(page + 1);
+                
+                if (response.availableSportTypes && response.availableSportTypes.length > 0) {
+                    setAvailableSportTypes(response.availableSportTypes);
+                }
             }
         } catch (err) {
             console.error('Error fetching turfs:', err);
@@ -116,7 +145,7 @@ const ActivitiesPage = () => {
             setIsAppendingTurfs(false);
             isFetchingTurfs.current = false;
         }
-    }, [selectedCity, searchQuery, activeSportTag, prefetchNextTurfsPage]);
+    }, [selectedCity, searchQuery, activeSportTag, activeSection, prefetchNextTurfsPage]);
 
     const handleLoadMoreTurfs = useCallback(() => {
         if (turfsLoading || isFetchingTurfs.current) return;
@@ -217,8 +246,8 @@ const ActivitiesPage = () => {
                 () => getAllParks({ city: selectedCity, search: searchQuery, page: nextPage, limit: PARK_PAGE_LIMIT, parkType: typeTag }),
                 1800, false
             );
-            const parks = Array.isArray(response) ? response : [];
-            if (parks.length > 0) prefetchedParks.current = { page: nextPage, data: parks };
+            const parks = response.parks || (Array.isArray(response) ? response : []);
+            if (parks.length > 0) prefetchedParks.current = { page: nextPage, data: response };
         } catch (e) {
             console.warn('[ParkPrefetch] Silent fail page', nextPage, e?.message);
         } finally {
@@ -243,23 +272,26 @@ const ActivitiesPage = () => {
                 1800, force
             );
             
-            const rawParks = Array.isArray(response) ? response : [];
+            const parksArray = response.parks || (Array.isArray(response) ? response : []);
+            const rawPagination = response.pagination;
             
-            // Fix 4: Defensive slicing in case backend ignores limit
-            const slicedParks = rawParks.slice(0, PARK_PAGE_LIMIT);
-            const hasNextPage = rawParks.length >= PARK_PAGE_LIMIT; 
+            const hasNextPage = rawPagination ? rawPagination.hasNextPage : (parksArray.length >= PARK_PAGE_LIMIT); 
 
             const newPagination = {
                 page,
-                total: hasNextPage ? 9999 : (page - 1) * PARK_PAGE_LIMIT + slicedParks.length,
+                total: rawPagination ? rawPagination.total : (hasNextPage ? 9999 : (page - 1) * PARK_PAGE_LIMIT + parksArray.length),
                 hasNextPage,
             };
 
-            if (append) setAllParks(prev => [...prev, ...slicedParks]);
-            else { setAllParks(slicedParks); prefetchedParks.current = null; }
+            if (append) setAllParks(prev => [...prev, ...parksArray]);
+            else { setAllParks(parksArray); prefetchedParks.current = null; }
             
             setParksPagination(newPagination);
-            if (hasNextPage) prefetchNextParksPage(page + 1);
+            if (hasNextPage && activeSection === 'Parks') prefetchNextParksPage(page + 1);
+
+            if (response.availableParkTypes && response.availableParkTypes.length > 0) {
+                setAvailableParkTypes(response.availableParkTypes);
+            }
         } catch (err) {
             console.error('Error fetching parks:', err);
             if (!append) setError('Failed to load parks. Please try again.');
@@ -268,7 +300,7 @@ const ActivitiesPage = () => {
             setIsAppendingParks(false);
             isFetchingParks.current = false;
         }
-    }, [selectedCity, searchQuery, activeParkType, prefetchNextParksPage]);
+    }, [selectedCity, searchQuery, activeParkType, activeSection, prefetchNextParksPage]);
 
     const handleLoadMoreParks = useCallback(() => {
         if (parksLoading || isFetchingParks.current) return;
@@ -284,13 +316,14 @@ const ActivitiesPage = () => {
                 const { data } = prefetchedParks.current;
                 prefetchedParks.current = null;
                 
-                const sliced = data.slice(0, PARK_PAGE_LIMIT);
-                setAllParks(prev => [...prev, ...sliced]);
+                const parksArray = data.parks || (Array.isArray(data) ? data : []);
+                setAllParks(prev => [...prev, ...parksArray]);
                 
-                const hasNextPage = data.length >= PARK_PAGE_LIMIT;
+                const rawPagination = data.pagination;
+                const hasNextPage = rawPagination ? rawPagination.hasNextPage : (parksArray.length >= PARK_PAGE_LIMIT);
                 setParksPagination({
                     page: nextPage,
-                    total: hasNextPage ? 9999 : (nextPage - 1) * PARK_PAGE_LIMIT + sliced.length,
+                    total: rawPagination ? rawPagination.total : (hasNextPage ? 9999 : (nextPage - 1) * PARK_PAGE_LIMIT + parksArray.length),
                     hasNextPage,
                 });
                 
@@ -376,9 +409,12 @@ const ActivitiesPage = () => {
     // ─────────────────────────────────────────────────────────────────
 
     const availableSportTags = useMemo(() => {
+        if (availableSportTypes && availableSportTypes.length > 0) {
+            return availableSportTypes;
+        }
         const dynamicTags = Array.from(new Set(allTurfs.flatMap(t => t.tags || []))).filter(Boolean);
         return Array.from(new Set([...SPORT_TAGS, ...dynamicTags])).sort();
-    }, [allTurfs]);
+    }, [allTurfs, availableSportTypes]);
 
     const filteredTurfs = useMemo(() => {
         let list = allTurfs;
@@ -393,7 +429,12 @@ const ActivitiesPage = () => {
     const mainSportTags    = useMemo(() => availableSportTags.slice(0, 4), [availableSportTags]);
     const dropdownSportTags = useMemo(() => availableSportTags.slice(4), [availableSportTags]);
 
-    const parkTypesOnly  = useMemo(() => Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort(), [allParks]);
+    const parkTypesOnly = useMemo(() => {
+        if (availableParkTypes && availableParkTypes.length > 0) {
+            return availableParkTypes;
+        }
+        return Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort();
+    }, [allParks, availableParkTypes]);
     const mainParkTypes  = useMemo(() => parkTypesOnly.slice(0, 4), [parkTypesOnly]);
     const dropdownParkTypes = useMemo(() => parkTypesOnly.slice(4), [parkTypesOnly]);
 
@@ -432,7 +473,13 @@ const ActivitiesPage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding activities near you" />;
+    // Initial Load Check
+    const isInitialActivitiesLoading = 
+        (activeSection === 'All' && (turfsLoading || parksLoading) && allTurfs.length === 0 && allParks.length === 0) ||
+        (activeSection === 'Turfs' && turfsLoading && allTurfs.length === 0) ||
+        (activeSection === 'Parks' && parksLoading && allParks.length === 0);
+
+    if (isInitialActivitiesLoading) return <LoadingScreen message="Finding activities near you" />;
     if (error) return <ErrorState error={error} onRetry={handleRetry} title="Connection Issue" />;
 
     // ─────────────────────────────────────────────────────────────────
@@ -492,9 +539,9 @@ const ActivitiesPage = () => {
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
-                            {turfs.length > 0 ? (
+                            {allTurfs.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {turfs.slice(0, 3).map((turf) => <SportCard key={turf.id || turf._id} event={turf} />)}
+                                    {allTurfs.slice(0, 3).map((turf) => <SportCard key={turf.id || turf._id} event={turf} />)}
                                 </div>
                             ) : <TurfEmptyState />}
                         </section>
@@ -506,10 +553,10 @@ const ActivitiesPage = () => {
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
-                            {/* Fix 5: Utilize contextParks from DataContext to ensure immediate preview rendering */}
-                            {contextParks && contextParks.length > 0 ? (
+                            {/* Utilize local allParks collection to ensure immediate preview rendering */}
+                            {allParks && allParks.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {contextParks.slice(0, 3).map((park) => <ParkCard key={park.id} park={park} />)}
+                                    {allParks.slice(0, 3).map((park) => <ParkCard key={park.id} park={park} />)}
                                 </div>
                             ) : <ParksComingSoon compact />}
                         </section>
@@ -539,7 +586,7 @@ const ActivitiesPage = () => {
                                                 ? 'bg-primary text-white shadow-md shadow-primary/20'
                                                 : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700'
                                         }`}
-                                    >{tag}</button>
+                                    >{formatSportTagLabel(tag)}</button>
                                 ))}
                             </div>
                             {dropdownSportTags.length > 0 && (
@@ -568,7 +615,7 @@ const ActivitiesPage = () => {
                                                                 ? 'bg-primary/10 text-primary'
                                                                 : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
                                                         }`}
-                                                    >{tag}</button>
+                                                    >{formatSportTagLabel(tag)}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -579,7 +626,7 @@ const ActivitiesPage = () => {
 
                         <div className="mb-4">
                             <h2 className="text-2xl font-display font-medium text-[#111827] dark:text-gray-100 tracking-tight">
-                                {activeSportTag === 'All' ? 'All Turfs' : activeSportTag}
+                                {activeSportTag === 'All' ? 'All Turfs' : formatSportTagLabel(activeSportTag, true)}
                             </h2>
                             <p className="text-[#6B7280] dark:text-gray-400 text-sm mt-1">
                                 {(() => {

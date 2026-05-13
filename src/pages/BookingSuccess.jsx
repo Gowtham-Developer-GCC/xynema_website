@@ -197,7 +197,7 @@ const BookingSuccess = () => {
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button 
                         onClick={() => navigate('/')} 
-                        className="flex-grow flex-1 bg-white dark:bg-gray-900 text-slate-800 dark:text-white font-black text-[13px] uppercase tracking-[0.2em] py-5 rounded-2xl border border-gray-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-gray-850 active:scale-95 transition-all flex items-center justify-center gap-3"
+                        className="flex-grow flex-1 bg-white dark:bg-gray-900 text-slate-800 dark:text-white font-black text-[13px] uppercase tracking-[0.2em] py-5 rounded-2xl border border-gray-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-gray-800 active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
                         <Home className="w-4 h-4" /> Go to Home
                     </button>

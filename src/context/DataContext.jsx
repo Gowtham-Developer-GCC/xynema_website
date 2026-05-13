@@ -78,7 +78,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     const [userProfile, setUserProfile] = useState(null);
     const [interestedMovieIds, setInterestedMovieIds] = useState(new Set());
     const [initialInterestedMovieIds, setInitialInterestedMovieIds] = useState(new Set());
-    const [loading, setLoading] = useState(!movies.length); // Only show initial loading if no cache
+    const [loading, setLoading] = useState(false); // Only show initial loading if no cache
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [pagination, setPagination] = useState(() => {
@@ -92,7 +92,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     /**
      * Refresh all data from API with caching
      */
-    const refreshData = useCallback(async (page = 1) => {
+    const refreshData = useCallback(async (page = 1, includeUpcoming = true) => {
         // SWR: Only show loader if we have NO data at all
         const hasData = movies.length > 0;
         if (!hasData) setLoading(true);
@@ -102,7 +102,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             // SWR: Force a background revalidation for page 1
             const shouldRevalidate = page === 1;
 
-            const [movieData, foodData, upcomingData, eventData, highlightsData, turfData, parkData] = await Promise.all([
+            const [movieData, foodData, upcomingData, highlightsData] = await Promise.all([
                 // Now Showing (based on city)
                 (page === 1 ? apiCacheManager.getOrFetchMovies(selectedCity,
                     () => getNowShowingMovies(selectedCity, page),
@@ -117,17 +117,11 @@ export const DataProvider = ({ children, selectedCity }) => {
                 ).catch(err => { console.error("Food failed:", err); return []; }),
 
                 // Upcoming movies
-                apiCacheManager.getOrFetchUpcomingMovies(selectedCity,
+                includeUpcoming ? apiCacheManager.getOrFetchUpcomingMovies(selectedCity,
                     () => getUpcomingMovies(selectedCity),
                     shouldRevalidate
-                ).catch(err => { console.error("Upcoming failed:", err); return []; }),
+                ).catch(err => { console.error("Upcoming failed:", err); return []; }) : Promise.resolve([]),
 
-
-                // Events
-                apiCacheManager.getOrFetchEvents(selectedCity,
-                    () => getEvents(selectedCity),
-                    shouldRevalidate
-                ).catch(err => { console.error("Events failed:", err); return []; }),
 
                 // Highlights
                 apiCacheManager.getOrExecute('highlights_movies',
@@ -135,18 +129,6 @@ export const DataProvider = ({ children, selectedCity }) => {
                     1800,
                     shouldRevalidate
                 ).catch(err => { console.error("Highlights failed:", err); return []; }),
-
-                // Turfs
-                apiCacheManager.getOrFetchTurfs(selectedCity,
-                    () => getAvailableTurfs({ city: selectedCity, page: 1, limit: TURF_PAGE_LIMIT }),
-                    shouldRevalidate
-                ).catch(err => { console.error("Turfs failed:", err); return { turfs: [], pagination: { total: 0, page: 1 } }; }),
-
-                // Parks
-                apiCacheManager.getOrFetchParks(selectedCity,
-                    () => getAllParks({ city: selectedCity, page: 1, limit: PARK_PAGE_LIMIT }),
-                    shouldRevalidate
-                ).catch(err => { console.error("Parks failed:", err); return []; }),
             ]);
 
             // Parse movie and theater data
@@ -165,17 +147,48 @@ export const DataProvider = ({ children, selectedCity }) => {
             setLatestMovies(latestList);
             setHighlightsMovies(highlightsList);
             setTheaters(theatersList);
-            setEvents(eventData?.events || (Array.isArray(eventData) ? eventData : []));
             setFoodItems(foodList);
-            setTurfs(turfData?.turfs || []);
-            setParks(parkData || []);
             setPagination(movieData.pagination || { total: 0, page: 1, pages: 1 });
             setLastUpdated(new Date());
+            
+            // 🔥 CORE STAGE COMPLETE: Render essential dashboard instantly!
+            setLoading(false);
+
+            // 2. BACKGROUND STAGE: Lazily load widgets without stalling the primary render
+            apiCacheManager.getOrFetchEvents(selectedCity,
+                () => getEvents(selectedCity),
+                shouldRevalidate
+            ).then(data => {
+                setEvents(data?.events || (Array.isArray(data) ? data : []));
+            }).catch(err => {
+                console.error("Background Events load failed:", err);
+                setEvents([]);
+            });
+
+            apiCacheManager.getOrFetchTurfs(selectedCity,
+                () => getAvailableTurfs({ city: selectedCity, page: 1, limit: TURF_PAGE_LIMIT }),
+                shouldRevalidate
+            ).then(data => {
+                setTurfs(data?.turfs || []);
+            }).catch(err => {
+                console.error("Background Turfs load failed:", err);
+                setTurfs([]);
+            });
+
+            apiCacheManager.getOrFetchParks(selectedCity,
+                () => getAllParks({ city: selectedCity, page: 1, limit: PARK_PAGE_LIMIT }),
+                shouldRevalidate
+            ).then(data => {
+                setParks(data?.parks || (Array.isArray(data) ? data : []));
+            }).catch(err => {
+                console.error("Background Parks load failed:", err);
+                setParks([]);
+            });
+
         } catch (err) {
             const message = errorHandler.getUserMessage(err);
             setError(message);
             console.error('Data refresh error:', err);
-        } finally {
             setLoading(false);
         }
     }, [selectedCity]);
@@ -324,7 +337,7 @@ export const DataProvider = ({ children, selectedCity }) => {
     }, [pagination, refreshData]);
 
     /**
-     * Refresh data when city changes
+     * Handle state resetting when city changes
      */
     useEffect(() => {
         if (selectedCity) {
@@ -337,11 +350,10 @@ export const DataProvider = ({ children, selectedCity }) => {
                 setParks([]);
                 setLoading(true);
             }
-
-            refreshData(1);
+            
             prevCityRef.current = selectedCity;
         }
-    }, [selectedCity, refreshData]);
+    }, [selectedCity]);
 
     /**
      * Get movie by ID or Slug

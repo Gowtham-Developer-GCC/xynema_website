@@ -139,7 +139,7 @@ const TurfPaymentPage = () => {
                                         placeholder="Enter 10 digit mobile number"
                                         value={mobileNumber}
                                         onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
                                     />
                                     <p className="text-[10px] md:text-[11px] text-gray-400 dark:text-gray-500 mt-2 font-medium">Tickets will be sent to this number via SMS</p>
                                 </div>
@@ -150,7 +150,7 @@ const TurfPaymentPage = () => {
                                         placeholder="Enter email for ticket confirmation"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
                                     />
                                 </div>
                                 <div>
@@ -160,7 +160,7 @@ const TurfPaymentPage = () => {
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
                                         rows={3}
-                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans resize-none"
+                                        className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans resize-none"
                                     />
                                 </div>
                             </div>
@@ -176,7 +176,7 @@ const TurfPaymentPage = () => {
                                         placeholder="Enter coupon code"
                                         value={couponCode}
                                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                        className="flex-1 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-850 transition-colors font-sans"
+                                        className="flex-1 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
                                     />
                                     <button className="px-6 bg-primary text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-95 transition-all">Apply</button>
                                 </div>

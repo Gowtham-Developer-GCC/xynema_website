@@ -14,16 +14,51 @@ export const getAllParks = async (params = {}) => {
     return safeApiCall(async () => {
         try {
             const response = await api.get(ENDPOINTS.PARKS.LIST, { params });
-            const body = response.data;
+            let body = response.data;
+
+            // Handle potential array wrapper from backend
+            if (Array.isArray(body)) {
+                body = body[0] || {};
+            }
 
             if (body.success && body.data) {
-                const parksData = Array.isArray(body.data) ? body.data : (body.data.parks || []);
-                return parksData.map(p => new ActivityPark(p));
+                const isArray = Array.isArray(body.data);
+                const parksData = isArray ? body.data : (body.data.parks || []);
+                const parks = parksData.map(p => new ActivityPark(p));
+
+                // Normalize pagination
+                const rawPagination = body.pagination || (!isArray && body.data?.pagination ? body.data.pagination : null);
+                
+                let pagination;
+                if (rawPagination) {
+                    const p = rawPagination;
+                    pagination = {
+                        page:       p.currentPage   ?? p.page  ?? 1,
+                        totalPages: p.totalPages     ?? p.pages ?? 1,
+                        total:      p.totalItems     ?? p.total ?? parks.length,
+                        limit:      p.itemsPerPage   ?? p.limit ?? PARK_PAGE_LIMIT,
+                        hasNextPage: (p.currentPage < p.totalPages) ?? (p.page < p.pages) ?? (p.page < p.totalPages) ?? false,
+                    };
+                } else {
+                    const limit = params.limit || PARK_PAGE_LIMIT;
+                    const hasNext = parks.length >= limit;
+                    pagination = {
+                        page: params.page || 1,
+                        totalPages: hasNext ? 9999 : (params.page || 1),
+                        total: hasNext ? 9999 : (params.page || 1) * parks.length,
+                        limit,
+                        hasNextPage: hasNext,
+                    };
+                }
+
+                const availableParkTypes = body.availableParkTypes || (!isArray && body.data?.availableParkTypes ? body.data.availableParkTypes : []);
+                
+                return { parks, pagination, availableParkTypes };
             }
-            return [];
+            return { parks: [], pagination: { page: 1, total: 0, hasNextPage: false }, availableParkTypes: [] };
         } catch (error) {
             console.error('Error fetching activity parks:', error);
-            return [];
+            return { parks: [], pagination: { page: 1, total: 0, hasNextPage: false }, availableParkTypes: [] };
         }
     });
 };
@@ -45,7 +80,8 @@ export const getParkBySlug = async (slug) => {
             // If 404, the detail endpoint might not exist, try to find in list
             if (error.response?.status === 404) {
                 console.warn('Park detail API not found, falling back to search in list...');
-                const parks = await getAllParks({ limit: PARK_PAGE_LIMIT }); // Try to get a large chunk
+                const result = await getAllParks({ limit: PARK_PAGE_LIMIT }); // Try to get a large chunk
+                const parks = result.parks || (Array.isArray(result) ? result : []);
                 const found = parks.find(p => p.id === slug || p.slug === slug);
                 if (found) return found;
             }
@@ -181,17 +217,41 @@ export const getParkBookingDetails = async (bookingId) => {
     });
 };
 
+import { ticketLimit } from './bookingService.js';
+
 /**
  * Fetch all park bookings for the current user
  */
-export const getMyParkBookings = async () => {
+export const getMyParkBookings = async (page = 1, limit = ticketLimit) => {
     return safeApiCall(async () => {
         try {
-            const response = await api.get(ENDPOINTS.PARKS.MY_BOOKINGS);
-            return response.data;
+            const response = await api.get(ENDPOINTS.PARKS.MY_BOOKINGS, {
+                params: { page, limit }
+            });
+            let body = response.data;
+
+            // Handle potential array wrapper from backend
+            if (Array.isArray(body)) {
+                body = body[0] || {};
+            }
+
+            if (body?.success) {
+                const bookings = Array.isArray(body.data) ? body.data : (body.data?.bookings || []);
+                const totalPages = body.totalPages || body.pagination?.totalPages || body.data?.pagination?.totalPages || 1;
+                const currentPage = body.currentPage || body.pagination?.currentPage || body.data?.pagination?.currentPage || 1;
+                const total = body.totalCount || body.total || body.pagination?.totalItems || body.pagination?.total || 0;
+
+                return {
+                    bookings: Array.isArray(bookings) ? bookings : [],
+                    totalPages,
+                    currentPage,
+                    total
+                };
+            }
+            return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };
         } catch (error) {
             console.error('Error fetching my park bookings:', error);
-            throw error;
+            return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };
         }
     });
 };

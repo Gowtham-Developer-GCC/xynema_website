@@ -18,6 +18,13 @@ const SwimmingPage = () => {
         if (dataError) setError(dataError);
     }, [dataError]);
 
+    // Lazily load aggregated data if lists are currently empty (lazy application load fallback)
+    useEffect(() => {
+        if (turfs.length === 0 && !dataLoading) {
+            refreshData(1);
+        }
+    }, [turfs, dataLoading, refreshData]);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({
         poolType: 'All', // 'Indoor', 'Outdoor', 'Olympic'

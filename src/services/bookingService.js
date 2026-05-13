@@ -1,6 +1,7 @@
 import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { ShowLayoutResponse, Booking } from '../models/index.js';
+export const ticketLimit = 8;
 
 export const getShowSeats = async (showId) => {
     return safeApiCall(async () => {
@@ -73,9 +74,9 @@ export const confirmBooking = async (showId, bookingData) => {
     }
 };
 
-export const getUserBookings = async (page = 1) => {
+export const getUserBookings = async (page = 1, limit = ticketLimit) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.BOOKING.MY_BOOKINGS, { params: { page } });
+        const response = await api.get(ENDPOINTS.BOOKING.MY_BOOKINGS, { params: { page, limit } });
         let body = response.data;
         if (Array.isArray(body)) body = body[0] || {};
 

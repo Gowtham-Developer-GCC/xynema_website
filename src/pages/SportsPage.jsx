@@ -83,6 +83,13 @@ const SportsPage = () => {
         setSearchQuery('');
     };
 
+    // Lazily load aggregated data if lists are currently empty (lazy application load fallback)
+    useEffect(() => {
+        if (turfs.length === 0 && !dataLoading) {
+            refreshGlobalData(1);
+        }
+    }, [turfs, dataLoading, refreshGlobalData]);
+
     if (dataLoading && turfs.length === 0) return <LoadingScreen message="Finding Available Venues" />;
     if (error) return <ErrorState error={error} onRetry={() => refreshGlobalData(1)} title="Transmission Interrupted" />;
 

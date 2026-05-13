@@ -12,7 +12,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true',
     },
-    timeout: 15000, // Matching Flutter's 15s timeout
+    timeout: 30000, // Expanded from 15s to 30s to prevent network cold-start cancellations
 });
 
 /**

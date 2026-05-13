@@ -87,6 +87,8 @@ export async function registerNotificationToken() {
                 await api.post('/notifications/register-token', {
                     token,
                     platform: 'web',
+                }, {
+                    timeout: 8000 // Background activity should fail fast to prevent socket lockouts
                 });
                 console.log('[FCM] Backend registration successful.');
             } catch (apiErr) {
@@ -121,7 +123,9 @@ export async function removeNotificationToken() {
         const token = localStorage.getItem('fcmToken');
         if (!token) return;
 
-        await api.post('/notifications/remove-token', { token });
+        await api.post('/notifications/remove-token', { token }, {
+            timeout: 8000
+        });
         localStorage.removeItem('fcmToken');
     } catch (err) {
         console.error('Token removal failed:', err);

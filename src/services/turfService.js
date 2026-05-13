@@ -1,6 +1,7 @@
 import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { Turf } from '../models/index.js';
+import { ticketLimit } from './bookingService.js';
 
 // Global Pagination Configuration for Turfs
 export const TURF_PAGE_LIMIT = 6;
@@ -16,7 +17,8 @@ export const getAvailableTurfs = async (params = {}) => {
     return safeApiCall(async () => {
         try {
             const response = await api.get(ENDPOINTS.TURFS.AVAILABLE, {
-                params: { ...params, city: targetCity }
+                params: { ...params, city: targetCity },
+                timeout: 8000 // Fail fast if backend deadlocks, prevents socket clogging
             });
             let body = response.data;
 
@@ -55,14 +57,16 @@ export const getAvailableTurfs = async (params = {}) => {
                     };
                 }
 
-                return { turfs, pagination };
+                const availableSportTypes = body.availableSportTypes || (!isArray && body.data?.availableSportTypes ? body.data.availableSportTypes : []);
+                
+                return { turfs, pagination, availableSportTypes };
             }
-            return { turfs: [], pagination: { page: 1, total: 0, hasNextPage: false } };
+            return { turfs: [], pagination: { page: 1, total: 0, hasNextPage: false }, availableSportTypes: [] };
         } catch (error) {
             console.error('Error fetching available turfs:', error);
             return { turfs: [], pagination: { total: 0, page: 1 } };
         }
-    });
+    }, 0);
 };
 
 /**
@@ -177,13 +181,31 @@ export const cancelTurfReservation = async (slotIds) => {
  * Get the current user's turf bookings
  * @returns {Promise<Object[]>}
  */
-export const getMyTurfBookings = async () => {
+export const getMyTurfBookings = async (page = 1, limit = ticketLimit) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.TURFS.MY_BOOKINGS);
-        if (response.data?.success) {
-            return response.data.data || [];
+        const response = await api.get(ENDPOINTS.TURFS.MY_BOOKINGS, {
+            params: { page, limit }
+        });
+        let body = response.data;
+        
+        // Handle potential array wrapper from backend
+        if (Array.isArray(body)) {
+            body = body[0] || {};
         }
-        return [];
+        
+        if (body?.success) {
+            const dataObj = body.data || {};
+            const bookings = Array.isArray(dataObj) ? dataObj : (dataObj.bookings || []);
+            const p = body.pagination || dataObj.pagination || {};
+            
+            return {
+                bookings: Array.isArray(bookings) ? bookings : [],
+                totalPages: p.totalPages || 1,
+                currentPage: p.page || 1,
+                total: p.total || 0
+            };
+        }
+        return { bookings: [], totalPages: 1, currentPage: 1, total: 0 };
     });
 };
 

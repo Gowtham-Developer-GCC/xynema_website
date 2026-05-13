@@ -25,14 +25,21 @@ const HomePage = ({ selectedCity }) => {
     const { t } = useLanguage();
 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [initialMount, setInitialMount] = useState(true);
 
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
+        setInitialMount(false);
         // window.scrollTo(0, 0);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Lazily refresh the aggregate home screen data context when this page is visited
+    useEffect(() => {
+        refreshData(1, false); // Skip fetching upcoming movies on HomePage
+    }, [selectedCity, refreshData]);
 
     // Favorites State
     const [favorites, setFavorites] = useState(() => {
@@ -111,7 +118,7 @@ const HomePage = ({ selectedCity }) => {
     }, [upcomingMovies]);
 
     // Loading State -> Common Loading Animation
-    if (loading && !movies?.length) return <LoadingScreen message={t('loading_movies') || 'Finding the best movies for you...'} />;
+    if ((loading || initialMount) && !movies?.length) return <LoadingScreen message={t('loading_movies') || 'Finding the best movies for you...'} />;
 
     // Error State
     if (error && !movies?.length) return <ErrorState error={error} onRetry={refreshData} title="Connection Failed" />;

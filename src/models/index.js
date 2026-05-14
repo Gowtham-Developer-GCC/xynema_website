@@ -116,7 +116,10 @@ export class CastMember {
         this.id = data._id || data.id || '';
         this.name = data.name || '';
         this.role = data.role || '';
-        this.photoUrl = data.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Cast')}&background=random&color=fff&size=256`;
+        
+        const rawPhoto = data.photoUrl || data.imageUrl || data.image || '';
+        this.photoUrl = (typeof rawPhoto === 'object' && rawPhoto !== null ? (rawPhoto.url || rawPhoto.imageUrl || '') : rawPhoto) 
+            || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Cast')}&background=random&color=fff&size=256`;
     }
 }
 
@@ -125,7 +128,10 @@ export class CrewMember {
         this.id = data._id || data.id || '';
         this.name = data.name || '';
         this.role = data.role || '';
-        this.photoUrl = data.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Crew')}&background=random&color=fff&size=256`;
+        
+        const rawPhoto = data.photoUrl || data.imageUrl || data.image || '';
+        this.photoUrl = (typeof rawPhoto === 'object' && rawPhoto !== null ? (rawPhoto.url || rawPhoto.imageUrl || '') : rawPhoto)
+            || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Crew')}&background=random&color=fff&size=256`;
     }
 }
 

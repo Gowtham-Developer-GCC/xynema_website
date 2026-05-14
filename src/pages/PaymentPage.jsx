@@ -595,40 +595,42 @@ const PaymentPage = () => {
 
             {/* Mobile Fixed Bottom Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 pb-safe z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors duration-300">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
+                <div className="flex items-center justify-between gap-6">
+                    <div className="flex flex-col shrink-0">
                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Amount</span>
                         <span className="text-xl font-black text-gray-900 dark:text-white font-roboto">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                     </div>
-                    <PaymentButton
-                        amount={grandTotal}
-                        bookingData={{
-                            showId,
-                            seatIds: seats,
-                            sessionId,
-                            phone: mobileNumber,
-                            email: emailDetails,
-                            selectedMethod,
-                            isMovie: true,
-                            movieTitle: localDisplayTitle,
-                            posterUrl: localDisplayPoster,
-                            theaterName: localDisplayTheater,
-                            date: selectedDate,
-                            time: localDisplayTime,
-                            seats: seats
-                        }}
-                        onSuccess={handleBookingSuccess}
-                        onFailure={(err) => setError(err.message || "Payment failed")}
-                        disabled={!isFormValid}
-                        onClick={() => handleBeforePayment()}
-                        className={`flex-1 py-4 px-6 rounded-xl font-black text-[14px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-[0.15em]
-                            ${!isFormValid
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
-                                : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110'
-                            }`}
-                    >
-                        <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
-                    </PaymentButton>
+                    <div className="flex-1 flex justify-end">
+                        <PaymentButton
+                            amount={grandTotal}
+                            bookingData={{
+                                showId,
+                                seatIds: seats,
+                                sessionId,
+                                phone: mobileNumber,
+                                email: emailDetails,
+                                selectedMethod,
+                                isMovie: true,
+                                movieTitle: localDisplayTitle,
+                                posterUrl: localDisplayPoster,
+                                theaterName: localDisplayTheater,
+                                date: selectedDate,
+                                time: localDisplayTime,
+                                seats: seats
+                            }}
+                            onSuccess={handleBookingSuccess}
+                            onFailure={(err) => setError(err.message || "Payment failed")}
+                            disabled={!isFormValid}
+                            onClick={() => handleBeforePayment()}
+                            className={`w-full py-4 px-6 rounded-xl font-black text-[14px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-[0.15em]
+                                ${!isFormValid
+                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
+                                    : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110'
+                                }`}
+                        >
+                            <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
+                        </PaymentButton>
+                    </div>
                 </div>
             </div>
 

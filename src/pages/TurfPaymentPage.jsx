@@ -369,39 +369,41 @@ const TurfPaymentPage = () => {
 
             {/* Mobile Bottom Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 px-6 py-4 pb-safe z-50 flex items-center justify-between gap-6 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
-                <div className="flex flex-col">
+                <div className="flex flex-col shrink-0">
                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">To Pay</span>
                     <span className="text-2xl font-black text-primary font-roboto tracking-tight">₹{finalDisplayAmount}</span>
                 </div>
-                <PaymentButton
-                    amount={finalDisplayAmount}
-                    bookingData={{
-                        slotIds: reservation.slotIds,
-                        isAdvancePayment: isAdvancePayment,
-                        sport: sport,
-                        notes: notes,
-                        phone: mobileNumber,
-                        email: email,
-                        couponCode: couponCode,
-                        selectedMethod,
-                        isTurf: true,
-                        turfName: turf?.name || "Turf",
-                        turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
-                        courtName: court?.name || "",
-                        date: date,
-                        time: reservation?.time || ""
-                    }}
-                    onSuccess={(result) => {
-                        // Redirect is now handled by PaymentButton
-                    }}
-                    onFailure={(err) => toast.error(err.message || 'Payment failed')}
-                    disabled={!isFormValid}
-                    onClick={() => handleBeforePayment()}
-                    className={`flex-1 h-14 rounded-2xl font-black text-[14px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2
-                        ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
-                >
-                    <span>Pay Now</span> <ChevronRight className="w-5 h-5" />
-                </PaymentButton>
+                <div className="flex-1 flex justify-end">
+                    <PaymentButton
+                        amount={finalDisplayAmount}
+                        bookingData={{
+                            slotIds: reservation.slotIds,
+                            isAdvancePayment: isAdvancePayment,
+                            sport: sport,
+                            notes: notes,
+                            phone: mobileNumber,
+                            email: email,
+                            couponCode: couponCode,
+                            selectedMethod,
+                            isTurf: true,
+                            turfName: turf?.name || "Turf",
+                            turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+                            courtName: court?.name || "",
+                            date: date,
+                            time: reservation?.time || ""
+                        }}
+                        onSuccess={(result) => {
+                            // Redirect is now handled by PaymentButton
+                        }}
+                        onFailure={(err) => toast.error(err.message || 'Payment failed')}
+                        disabled={!isFormValid}
+                        onClick={() => handleBeforePayment()}
+                        className={`w-full h-14 rounded-2xl font-black text-[14px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2
+                            ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
+                    >
+                        <span>Pay Now</span> <ChevronRight className="w-5 h-5" />
+                    </PaymentButton>
+                </div>
             </div>
             <div className="lg:hidden h-24"></div>
         </div>

@@ -273,10 +273,19 @@ const MovieDetailsPage = () => {
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="absolute top-24 left-6 md:left-8 lg:left-12 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md active:scale-95"
+                    className="absolute top-12 left-6 md:left-8 lg:left-12 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md active:scale-95"
                     title="Go Back"
                 >
                     <ArrowLeft className="w-5 h-5" />
+                </button>
+
+                {/* Share Button */}
+                <button
+                    onClick={handleShare}
+                    className="absolute top-12 right-6 md:right-8 lg:right-12 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-md active:scale-95"
+                    title="Share Movie"
+                >
+                    <Share2 className="w-5 h-5" />
                 </button>
                 {/* Background Image/Video with Multi-layered Masking */}
                 <div className="absolute inset-0 overflow-hidden">
@@ -304,7 +313,7 @@ const MovieDetailsPage = () => {
                     )}
                 </div>
 
-                <div className="relative z-10 w-[95%] sm:w-[92%] lg:w-[85%] 2xl:w-[80%] mx-auto px-4 md:px-8 mt-4">
+                <div className="relative z-10 w-[95%] sm:w-[92%] lg:w-[85%] 2xl:w-[80%] mx-auto px-4 md:px-8 mt-10 md:mt-6">
                     {/* Immersive View Toggle - Eye Icon (Top Right of Glass/Hero area) */}
                     {isPlayingTrailer && !isGlassHidden && (
                         <button
@@ -516,8 +525,8 @@ const MovieDetailsPage = () => {
                                     </button>
                                 </div>
 
-                                <div className="flex items-center gap-3 justify-center sm:justify-start">
-                                    {!movie.isAvailable && (
+                                {!movie.isAvailable && (
+                                    <div className="flex items-center gap-3 justify-center sm:justify-start">
                                         <button
                                             onClick={handleInterest}
                                             className={`flex items-center gap-3 px-6 h-12 rounded-xl border transition-all active:scale-95 shadow-lg group ${hasInterested
@@ -531,15 +540,8 @@ const MovieDetailsPage = () => {
                                                 <span className="text-sm font-black uppercase tracking-tight">Interested?</span>
                                             </div>
                                         </button>
-                                    )}
-                                    <button
-                                        onClick={handleShare}
-                                        className="flex items-center justify-center w-12 h-12 rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 shadow-md"
-                                        title="Share movie"
-                                    >
-                                        <Share2 className="w-5 h-5" />
-                                    </button>
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -653,9 +655,13 @@ const CastCrewModal = ({ title, items, onClose }) => {
                                     <div className={`w-20 h-20 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shadow-inner ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
                                         {photoUrl && !photoUrl.includes('ui-avatars') ? (
                                             <img
-                                                src={optimizeImage(photoUrl, { width: 200, quality: 75 })}
+                                                src={photoUrl}
                                                 alt={name}
                                                 className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff&size=200`;
+                                                }}
                                             />
                                         ) : (
                                             <span className="text-xl font-black text-white tracking-tighter">
@@ -735,9 +741,13 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                             <div className={`w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-100 ${!photoUrl || photoUrl.includes('ui-avatars') ? getAvatarColor(name) : ''}`}>
                                                 {photoUrl && !photoUrl.includes('ui-avatars') ? (
                                                     <img
-                                                        src={optimizeImage(photoUrl, { width: 300, quality: 75 })}
+                                                        src={photoUrl}
                                                         alt={name}
                                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-1"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff&size=300`;
+                                                        }}
                                                     />
                                                 ) : (
                                                     <span className="text-4xl font-black text-white transition-colors tracking-tighter">
@@ -828,6 +838,10 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
                                                         src={photoUrl}
                                                         alt={name}
                                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-1"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff&size=300`;
+                                                        }}
                                                     />
                                                 ) : (
                                                     <span className="text-4xl font-black text-white transition-colors tracking-tighter">

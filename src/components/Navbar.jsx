@@ -641,7 +641,7 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
 
             {/* Mobile Bottom Navigation - Hidden on focused detail/booking pages */}
             {
-                !/\/movie\/[^/]+(\/theaters|\/[^/]+\/(seats|food|summary|payment))/.test(location.pathname) &&
+                !location.pathname.startsWith('/movie/') &&
                 !location.pathname.startsWith('/event/') &&
                 !location.pathname.startsWith('/activities/') &&
                 !location.pathname.startsWith('/park/') && (

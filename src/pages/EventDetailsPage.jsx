@@ -55,6 +55,7 @@ const EventDetailsPage = () => {
 
     // Multi-day selection state
     const [selectedShowTimeIndex, setSelectedShowTimeIndex] = useState(0);
+    const [isTagsExpanded, setIsTagsExpanded] = useState(false);
 
     const heroButtonRef = useRef(null);
     const [heroButtonVisible, setHeroButtonVisible] = useState(true);
@@ -64,7 +65,10 @@ const EventDetailsPage = () => {
             ([entry]) => {
                 setHeroButtonVisible(entry.isIntersecting);
             },
-            { threshold: 0 }
+            {
+                threshold: 0,
+                rootMargin: '-80px 0px 0px 0px' // Accounts for top navbar height
+            }
         );
 
         if (heroButtonRef.current) {
@@ -436,8 +440,8 @@ const EventDetailsPage = () => {
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
                     style={{
-                        backgroundImage: `url(${optimizeImage(images[activeImageIndex] || event.imageUrl, { width: isMobile ? 800 : 1920, quality: 95 })})`,
-                        filter: isMobile ? 'blur(4px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
+                        backgroundImage: `url(${optimizeImage(isMobile ? (event.portraitEventImage || images[activeImageIndex] || event.imageUrl) : (images[activeImageIndex] || event.imageUrl), { width: isMobile ? 800 : 1920, quality: 95 })})`,
+                        filter: isMobile ? 'blur(1px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
                         imageRendering: '-webkit-optimize-contrast'
                     }}
                 />
@@ -446,13 +450,13 @@ const EventDetailsPage = () => {
 
 
                 {/* Content Container */}
-                <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 pt-28 pb-16 md:py-24 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+                <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 pt-28 pb-16 md:py-24 flex flex-col md:flex-row items-center md:items-stretch gap-10 md:gap-16">
 
                     {/* Left: Event Poster */}
-                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[30%] shrink-0 mx-auto md:mx-0">
-                        <div className="aspect-[3/4] md:aspect-[2/3] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
+                    <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[30%] shrink-0 mx-auto md:mx-0 md:relative">
+                        <div className="aspect-video md:aspect-auto md:absolute md:inset-0 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
                             <img
-                                src={event.portraitEventImage || images[activeImageIndex] || event.imageUrl}
+                                src={isMobile ? (images[activeImageIndex] || event.imageUrl) : (event.portraitEventImage || images[activeImageIndex] || event.imageUrl)}
                                 alt={event.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1"
                                 style={{
@@ -467,7 +471,7 @@ const EventDetailsPage = () => {
 
                     {/* Right: Glass Card Details */}
                     <div className="w-full md:flex-1 max-w-2xl mx-auto md:mx-0">
-                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300">
+                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300 md:h-full">
                             {/* Glass reflection gradient */}
                             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-[32px] pointer-events-none" />
                             {/* Colorful ambient glow inside card based on image (simulated with standard modern colors) */}
@@ -475,7 +479,7 @@ const EventDetailsPage = () => {
 
                             <div className="relative z-10 space-y-6">
                                 {/* Top Labels */}
-                                <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                                     {event.eventCategory && (
                                         <span className="px-3 py-1 bg-primary/80 backdrop-blur-md text-white border border-primary/50 text-xs font-bold rounded-full shadow-sm">
                                             {event.eventCategory}
@@ -487,29 +491,29 @@ const EventDetailsPage = () => {
                                 </div>
 
                                 {/* Title */}
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight text-center md:text-left" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
                                     {event.name}
                                 </h1>
 
                                 {/* Meta Info (Date, Time, Location) */}
-                                <div className="space-y-4 pt-2">
-                                    <div className="flex items-center gap-4 text-gray-200">
+                                <div className="grid grid-cols-2 md:grid-cols-1 gap-4 pt-2">
+                                    <div className="flex items-center gap-2 sm:gap-4 text-gray-200">
                                         <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center shrink-0 border border-white/10">
                                             <Calendar className="w-5 h-5 text-white/90" />
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-white">{formattedDate}</p>
-                                            <p className="text-sm text-white/70">{event.startTime}</p>
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-white truncate text-sm sm:text-base">{formattedDate}</p>
+                                            <p className="text-sm text-white/70 truncate">{event.startTime}</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 text-gray-200">
+                                    <div className="flex items-center gap-2 sm:gap-4 text-gray-200">
                                         <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center shrink-0 border border-white/10">
                                             <MapPin className="w-5 h-5 text-white/90" />
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-white">{event.venue}</p>
-                                            <p className="text-sm text-white/70 truncate max-w-[280px] sm:max-w-md">{event.city}</p>
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-white truncate text-sm sm:text-base">{event.venue}</p>
+                                            <p className="text-sm text-white/70 truncate">{event.city}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -544,41 +548,41 @@ const EventDetailsPage = () => {
                 {/* Glass reflection highlight */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-white/20 dark:divide-white/5">
-                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300">
-                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
-                            <Clock className="w-5 h-5 text-primary" />
+                <div className="grid grid-cols-2 lg:grid-cols-4">
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300">
+                        <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Clock className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Duration</p>
-                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
+                            <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
                         </div>
                     </div>
-                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t sm:border-t-0 sm:border-l border-white/20 dark:border-white/5">
-                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
-                            <Globe className="w-5 h-5 text-primary" />
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5">
+                        <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Globe className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Language</p>
-                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.languages?.join(', ') || 'English'}</p>
+                            <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.languages?.join(', ') || 'English'}</p>
                         </div>
                     </div>
-                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
-                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
-                            <Info className="w-5 h-5 text-primary" />
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
+                        <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Info className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Age Limit</p>
-                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.ageGroup || 'All Ages'}</p>
+                            <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.ageGroup || 'All Ages'}</p>
                         </div>
                     </div>
-                    <div className="px-5 py-5 sm:px-6 sm:py-8 flex items-center gap-4 transition-transform hover:scale-[1.02] duration-300 border-t sm:border-t-0 sm:border-l lg:border-l border-white/20 dark:border-white/5">
-                        <div className="p-2.5 bg-white/10 dark:bg-white/5 rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
-                            <Ticket className="w-5 h-5 text-primary" />
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t border-l lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
+                        <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
+                            <Ticket className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-gray-500 dark:text-gray-400/80 uppercase tracking-widest mb-0.5">Entry Type</p>
-                            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">E-Ticket Only</p>
+                            <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">E-Ticket Only</p>
                         </div>
                     </div>
                 </div>
@@ -596,13 +600,24 @@ const EventDetailsPage = () => {
                                 {event.description}
                             </p>
 
-                            <div className="pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-2.5">
-                                {event.tags?.map(tag => (
-                                    <span key={tag} className="px-4 py-1.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary dark:hover:text-primary hover:border-primary/30 transition-all cursor-default">
-                                        #{tag.replace(/\s+/g, '')}
-                                    </span>
-                                ))}
-                            </div>
+                            {event.tags?.length > 0 && (
+                                <div className="pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-2.5">
+                                    {(isTagsExpanded ? event.tags : event.tags.slice(0, 3)).map((tag, idx) => (
+                                        <span key={`${tag}-${idx}`} className="px-4 py-1.5 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary dark:hover:text-primary hover:border-primary/30 transition-all cursor-default">
+                                            #{tag.replace(/\s+/g, '')}
+                                        </span>
+                                    ))}
+                                    {!isTagsExpanded && event.tags.length > 3 && (
+                                        <button
+                                            onClick={() => setIsTagsExpanded(true)}
+                                            className="px-4 py-1.5 bg-primary/5 border border-primary/20 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm cursor-pointer"
+                                            title="Show more tags"
+                                        >
+                                            +{event.tags.length - 3}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </section>
 
                         {/* Location Details */}
@@ -854,7 +869,7 @@ const EventDetailsPage = () => {
             </main >
 
             {/* Unified Sticky Bottom Bar - Responsive Visibility */}
-            {event && (isScrolled || !heroButtonVisible || totalTickets > 0) && (
+            {event && (!heroButtonVisible || totalTickets > 0) && (
                 <div className={`fixed bottom-0 left-0 right-0 z-[70] animate-in slide-in-from-bottom-full duration-500 pb-safe ${totalTickets > 0 ? 'block' : 'lg:hidden'}`}>
                     <div className="bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-2xl border-t border-gray-100 dark:border-gray-800 shadow-[0_-15px_50px_rgba(0,0,0,0.12)] transition-all duration-300">
                         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">

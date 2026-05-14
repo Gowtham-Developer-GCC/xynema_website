@@ -435,44 +435,46 @@ const EventBookingSummaryPage = () => {
 
             {/* Mobile Fixed Bottom Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 px-4 py-3 pb-safe z-[60] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] transition-colors duration-300">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
+                <div className="flex items-center justify-between gap-6">
+                    <div className="flex flex-col shrink-0">
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Final Amount</span>
                         <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{totalAmount.toLocaleString()}</span>
                     </div>
-                    <PaymentButton
-                        amount={totalAmount}
-                        bookingData={{
-                            eventId: event.id,
-                            reservationId: reservationId,
-                            attendees: attendees.map(a => ({
-                                name: a.name.trim(),
-                                email: a.email.trim(),
-                                phone: a.phone.trim(),
-                                ticketClassId: a.ticketClassId
-                            })),
-                            selectedMethod,
-                            isEvent: true,
-                            eventName: event?.name || "Event",
-                            eventImage: event?.imageUrl || "",
-                            venueName: event?.venue || event?.city || "",
-                            date: selectedDate,
-                            time: selectedTime
-                        }}
-                        onSuccess={(result) => {
-                            // Redirect is now handled by PaymentButton
-                        }}
-                        onFailure={(err) => alert(err.message || 'Payment failed')}
-                        disabled={!isFormValid}
-                        onClick={() => handleProceed()}
-                        className={`flex-1 h-11 rounded-xl font-black text-[13px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider
-                            ${!isFormValid
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                                : 'bg-primary text-white shadow-lg shadow-primary/25 hover:brightness-110'
-                            }`}
-                    >
-                        <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
-                    </PaymentButton>
+                    <div className="flex-1 flex justify-end">
+                        <PaymentButton
+                            amount={totalAmount}
+                            bookingData={{
+                                eventId: event.id,
+                                reservationId: reservationId,
+                                attendees: attendees.map(a => ({
+                                    name: a.name.trim(),
+                                    email: a.email.trim(),
+                                    phone: a.phone.trim(),
+                                    ticketClassId: a.ticketClassId
+                                })),
+                                selectedMethod,
+                                isEvent: true,
+                                eventName: event?.name || "Event",
+                                eventImage: event?.imageUrl || "",
+                                venueName: event?.venue || event?.city || "",
+                                date: selectedDate,
+                                time: selectedTime
+                            }}
+                            onSuccess={(result) => {
+                                // Redirect is now handled by PaymentButton
+                            }}
+                            onFailure={(err) => alert(err.message || 'Payment failed')}
+                            disabled={!isFormValid}
+                            onClick={() => handleProceed()}
+                            className={`w-full h-12 rounded-xl font-black text-[13px] transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider
+                                ${!isFormValid
+                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                    : 'bg-primary text-white shadow-lg shadow-primary/25 hover:brightness-110'
+                                }`}
+                        >
+                            <span>Pay Now</span> <ChevronRight className="w-4 h-4" />
+                        </PaymentButton>
+                    </div>
                 </div>
             </div>
 

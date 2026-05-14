@@ -360,44 +360,46 @@ const ParkPaymentPage = () => {
 
             {/* Mobile Bottom Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 pb-safe bg-white dark:bg-[#16181d] border-t border-gray-100 dark:border-gray-800 z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors duration-300">
-                <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
-                    <div>
+                <div className="flex items-center justify-between gap-6">
+                    <div className="shrink-0">
                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Payable</p>
                         <p className="text-lg sm:text-xl font-black text-primary leading-none">₹{finalAmount.toLocaleString()}</p>
                     </div>
-                    <PaymentButton
-                        amount={finalAmount}
-                        bookingData={{
-                            isPark: true,
-                            parkId: park.id || park._id,
-                            parkName: park.name || park.parkName,
-                            parkImage: park.images?.[0]?.url,
-                            parkCity: park.city,
-                            date: selectedDate.full,
-                            bookingDayId: bookingDayId,
-                            reservationId: reservationId,
-                            tickets: ticketTypes
-                                .filter(t => (counts[t.id] || 0) > 0)
-                                .map(t => ({
-                                    ticketId: t.id,
-                                    quantity: counts[t.id]
-                                })),
-                            phone: phone,
-                            email: email,
-                            selectedMethod
-                        }}
-                        onSuccess={() => {
-                            isPaymentComplete.current = true;
-                        }}
-                        disabled={isCancelling || !phone}
-                        className={`w-auto px-8 py-3.5 shrink-0 ml-auto text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${!phone || isCancelling
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
-                                : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95'
-                            }`}
-                    >
-                        <span>Pay now</span>
-                        <ChevronRight className="w-4 h-4" />
-                    </PaymentButton>
+                    <div className="flex-1 flex justify-end">
+                        <PaymentButton
+                            amount={finalAmount}
+                            bookingData={{
+                                isPark: true,
+                                parkId: park.id || park._id,
+                                parkName: park.name || park.parkName,
+                                parkImage: park.images?.[0]?.url,
+                                parkCity: park.city,
+                                date: selectedDate.full,
+                                bookingDayId: bookingDayId,
+                                reservationId: reservationId,
+                                tickets: ticketTypes
+                                    .filter(t => (counts[t.id] || 0) > 0)
+                                    .map(t => ({
+                                        ticketId: t.id,
+                                        quantity: counts[t.id]
+                                    })),
+                                phone: phone,
+                                email: email,
+                                selectedMethod
+                            }}
+                            onSuccess={() => {
+                                isPaymentComplete.current = true;
+                            }}
+                            disabled={isCancelling || !phone}
+                            className={`w-full py-4 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${!phone || isCancelling
+                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
+                                    : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95'
+                                }`}
+                        >
+                            <span>Pay now</span>
+                            <ChevronRight className="w-4 h-4" />
+                        </PaymentButton>
+                    </div>
                 </div>
             </div>
 

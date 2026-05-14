@@ -542,6 +542,8 @@ export class User {
         this.phoneNumber = userData.phoneNumber || userData.phone || '';
         this.token = data.token || data.accessToken || userData.token || userData.accessToken || '';
         this.loginMethod = userData.loginMethod || data.loginMethod || ''; // 'google' or 'phone'
+        this.region = userData.region || '';
+        this.fcmTokens = userData.fcmTokens || [];
         this.createdAt = userData.createdAt || new Date().toISOString();
     }
 
@@ -571,6 +573,8 @@ export class User {
             phoneNumber: this.phoneNumber,
             token: this.token,
             loginMethod: this.loginMethod,
+            region: this.region,
+            fcmTokens: this.fcmTokens
         };
     }
 }

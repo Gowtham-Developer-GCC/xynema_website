@@ -43,7 +43,7 @@ const TurfBookingDetailsPage = () => {
                     setBooking(data);
                 } else if (!hasInitialData) {
                     toast.error("Booking not found");
-                    navigate('/bookings');
+                    navigate('/bookings', { state: { activeTab: 'sports' } });
                 }
             } catch (error) {
                 console.error("Error fetching booking details:", error);
@@ -302,7 +302,7 @@ const TurfBookingDetailsPage = () => {
             <div className="bg-white dark:bg-[#1a1d24] border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
                 <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/bookings', { state: { activeTab: 'sports' } })}
                         className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                     >
                         <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />

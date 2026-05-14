@@ -189,7 +189,7 @@ const EventBookingDetailsPage = () => {
 
 
     if (loading) return <LoadingScreen message="Ticket Readying" />;
-    if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings')} title="Ticket Not Found" buttonText="Go Back" />;
+    if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings', { state: { activeTab: 'events' } })} title="Ticket Not Found" buttonText="Go Back" />;
 
     const getDisplayDate = (dateStr) => {
         if (!dateStr) return 'TBD';

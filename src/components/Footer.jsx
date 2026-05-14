@@ -73,8 +73,8 @@ const Footer = () => {
                         <div>
                             <h4 className="text-gray-100 font-bold mb-6 text-sm tracking-wider font-roboto">{t('movies')}</h4>
                             <ul className="space-y-4 font-sans text-sm">
-                                <li><Link to="/movies" className="text-gray-500 hover:text-primary transition-colors">{t('now_showing')}</Link></li>
-                                <li><Link to="/movies?tab=upcoming" className="text-gray-500 hover:text-primary transition-colors">{t('coming_soon')}</Link></li>
+                                <li><Link to="/movies?section=Now Showing" className="text-gray-500 hover:text-primary transition-colors">{t('now_showing')}</Link></li>
+                                <li><Link to="/movies?section=Upcoming" className="text-gray-500 hover:text-primary transition-colors">{t('Upcoming')}</Link></li>
                             </ul>
                         </div>
 

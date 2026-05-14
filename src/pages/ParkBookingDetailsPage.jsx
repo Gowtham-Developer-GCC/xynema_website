@@ -85,7 +85,7 @@ const ParkBookingDetailsPage = () => {
 
             {/* Simple Top Header */}
             <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
-                <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <button onClick={() => navigate('/bookings', { state: { activeTab: 'parks' } })} className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                     <ChevronLeft className="w-6 h-6" />
                 </button>
                 <div className="flex gap-4">
@@ -179,7 +179,7 @@ const ParkBookingDetailsPage = () => {
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
                     <button 
-                        onClick={() => navigate('/bookings')}
+                        onClick={() => navigate('/bookings', { state: { activeTab: 'parks' } })}
                         className="flex-1 py-4 bg-white dark:bg-gray-900 text-[#42526e] dark:text-gray-400 font-bold text-sm rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 transition-all"
                     >
                         View All Bookings

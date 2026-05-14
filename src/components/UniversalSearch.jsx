@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, MapPin, Ticket, Calendar, X, ChevronRight, Play, Trophy } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Ticket, Calendar, X, ChevronRight, Trophy, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { fetchGlobalSearch } from '../services/searchService';
 
 const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
     const isNavbar = variant === "navbar";
     const [query, setQuery] = useState("");
+    const [debouncedQuery, setDebouncedQuery] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState({ movies: [], theaters: [], events: [], activities: [] });
-    const { movies, latestMovies, upcomingMovies, theaters, events, turfs, parks, refreshData, loading } = useData();
+    
+    // We only need selectedCity now, no need to load all data arrays into memory!
+    const { selectedCity } = useData(); 
     const navigate = useNavigate();
     const searchRef = useRef(null);
 
@@ -23,78 +28,91 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Categorized search logic
+    // 1. Debounce Logic: Wait 400ms after user stops typing
     useEffect(() => {
-        if (query.length < 2) {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(query);
+        }, 2000);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [query]);
+
+    // 2. Fetch API when debounced query changes
+    useEffect(() => {
+        if (debouncedQuery.trim().length < 2) {
             setResults({ movies: [], theaters: [], events: [], activities: [] });
+            setShowResults(false);
+            setIsSearching(false);
             return;
         }
 
-        // Lazily load datasets in background if user types and datasets are still completely empty
-        const isEmpty = (movies?.length === 0) && (latestMovies?.length === 0) && (upcomingMovies?.length === 0);
-        if (isEmpty && !loading) {
-            refreshData(1);
-        }
-
-        const lowerQuery = query.toLowerCase();
-
-        // Helper to deduplicate by ID
-        const deduplicate = (items) => {
-            const seen = new Set();
-            return items.filter(item => {
-                const id = item.id || item._id || item.slug;
-                if (!id) return true; // Keep if no ID (shouldn't happen)
-                if (seen.has(id)) return false;
-                seen.add(id);
-                return true;
-            });
+        const performSearch = async () => {
+            setIsSearching(true);
+            try {
+                // Hit the single backend endpoint
+                const data = await fetchGlobalSearch(debouncedQuery, selectedCity);
+                
+                const searchResults = data?.results || [];
+                
+                // Group the unified results to match existing UI sections
+                setResults({
+                    movies: searchResults.filter(r => r._type === 'movie').map(r => ({
+                        id: r._id,
+                        _id: r._id,
+                        title: r.title,
+                        genre: r.meta || (Array.isArray(r.raw?.Genre) ? r.raw.Genre.join(', ') : r.raw?.genre) || '',
+                        posterUrl: r.image || r.raw?.posterUrl || r.raw?.image,
+                        slug: r.raw?.slug || r.raw?.id || r._id
+                    })),
+                    theaters: searchResults.filter(r => r._type === 'theater' || r._type === 'cinema').map(r => ({
+                        id: r._id,
+                        _id: r._id,
+                        name: r.title,
+                        city: r.subtitle || r.raw?.city || '',
+                        slug: r.raw?.slug || r.raw?.theaterId || r._id
+                    })),
+                    events: searchResults.filter(r => r._type === 'event').map(r => ({
+                        id: r._id,
+                        _id: r._id,
+                        name: r.title,
+                        city: r.subtitle || r.raw?.city || '',
+                        venue: r.raw?.location?.venue || r.raw?.venue || '',
+                        imageUrl: r.image || r.raw?.imageUrl || r.raw?.image,
+                        slug: r.raw?.slug || r._id
+                    })),
+                    activities: searchResults.filter(r => r._type === 'turf' || r._type === 'park').map(r => {
+                        const isTurf = r._type === 'turf';
+                        return {
+                            id: r._id,
+                            _id: r._id,
+                            searchType: isTurf ? 'turf' : 'park',
+                            name: r.title,
+                            imageUrl: r.image,
+                            images: [r.image],
+                            sport: r.raw?.sportTypes?.[0] || r.raw?.sport || 'Sports Turf',
+                            location: r.raw?.location?.landmark || r.raw?.landmark || r.subtitle || '',
+                            type: r.raw?.parkType || r.raw?.type || 'Theme Park',
+                            city: r.raw?.city || r.subtitle || '',
+                            slug: r.raw?.slug || r._id
+                        };
+                    })
+                });
+                setShowResults(true);
+            } catch (error) {
+                console.error("Search failed:", error);
+            } finally {
+                setIsSearching(false);
+            }
         };
 
-        // 1. Search Movies (including latest/upcoming) - Deduplicate combined list
-        const allMovies = deduplicate([...(movies || []), ...(latestMovies || []), ...(upcomingMovies || [])]);
-        const matchedMovies = allMovies.filter(m =>
-            (m.title || "").toLowerCase().includes(lowerQuery) ||
-            (m.genre || "").toLowerCase().includes(lowerQuery)
-        ).slice(0, 4);
-
-        // 2. Search Theaters
-        const matchedTheaters = deduplicate(theaters || []).filter(t =>
-            (t.name || "").toLowerCase().includes(lowerQuery) ||
-            (t.city || "").toLowerCase().includes(lowerQuery)
-        ).slice(0, 3);
-
-        // 3. Search Events
-        const matchedEvents = deduplicate(events || []).filter(e =>
-            (e.name || "").toLowerCase().includes(lowerQuery) ||
-            (e.tags || []).some(tag => tag.toLowerCase().includes(lowerQuery))
-        ).slice(0, 3);
-
-        // 4. Search Activities (Turfs and Parks)
-        const matchedTurfs = deduplicate(turfs || []).filter(t =>
-            (t.name || "").toLowerCase().includes(lowerQuery) ||
-            (t.sport || "").toLowerCase().includes(lowerQuery) ||
-            (t.location || "").toLowerCase().includes(lowerQuery)
-        ).map(t => ({ ...t, searchType: 'turf' }));
-
-        const matchedParks = deduplicate(parks || []).filter(p =>
-            (p.name || "").toLowerCase().includes(lowerQuery) ||
-            (p.city || "").toLowerCase().includes(lowerQuery) ||
-            (p.type || "").toLowerCase().includes(lowerQuery)
-        ).map(p => ({ ...p, searchType: 'park' }));
-
-        const matchedActivities = [...matchedTurfs, ...matchedParks].slice(0, 4);
-
-        setResults({
-            movies: matchedMovies,
-            theaters: matchedTheaters,
-            events: matchedEvents,
-            activities: matchedActivities
-        });
-        setShowResults(true);
-    }, [query, movies, latestMovies, theaters, events, turfs, parks]);
+        performSearch();
+    }, [debouncedQuery, selectedCity]);
 
     const handleSelect = (type, item) => {
         setQuery("");
+        setDebouncedQuery("");
         setShowResults(false);
         if (onSelect) onSelect();
 
@@ -111,32 +129,43 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
 
     return (
         <div ref={searchRef} className={`relative group ${className}`}>
-            <div className="relative">
-                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isNavbar ? 'w-4 h-4 text-gray-400 group-focus-within:text-primary' : 'w-5 h-5 text-gray-400 group-focus-within:text-primary'} transition-colors`} />
+            <div className="relative flex items-center">
+                <Search className={`absolute left-4 ${isNavbar ? 'w-4 h-4 text-gray-400 group-focus-within:text-primary' : 'w-5 h-5 text-gray-400 group-focus-within:text-primary'} transition-colors`} />
                 <input
                     type="text"
                     placeholder={isNavbar ? "Search Movies, Activities..." : "Search Movies, Theaters, Events, Activities..."}
                     name="global-search-input"
                     autoComplete="off"
+                    value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => query.length >= 2 && setShowResults(true)}
+                    onFocus={() => debouncedQuery.length >= 2 && setShowResults(true)}
                     className={`w-full transition-all font-semibold ${isNavbar
                         ? "pl-11 pr-10 py-3 bg-gray-50 hover:bg-gray-100/70 focus:bg-white dark:bg-gray-800/40 dark:hover:bg-gray-800/60 dark:focus:bg-gray-800 border border-gray-100 dark:border-gray-800/80 rounded-2xl text-sm focus:ring-2 focus:ring-primary/25 focus:border-primary text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-sm"
                         : "pl-14 pr-12 py-4.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white placeholder-white/50 focus:ring-2 focus:ring-white/30 shadow-2xl text-base"
                         } focus:outline-none`}
                 />
-                {query && (
-                    <button
-                        onClick={() => setQuery("")}
-                        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-all ${isNavbar ? 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-                    >
-                        <X className={isNavbar ? "w-3.5 h-3.5" : "w-4 h-4"} />
-                    </button>
-                )}
+                
+                {/* Loader or Clear Button */}
+                <div className="absolute right-3 flex items-center gap-2">
+                    {isSearching && (
+                        <Loader className={`animate-spin ${isNavbar ? "w-3.5 h-3.5 text-primary" : "w-4 h-4 text-white"}`} />
+                    )}
+                    {query && !isSearching && (
+                        <button
+                            onClick={() => {
+                                setQuery("");
+                                setDebouncedQuery("");
+                            }}
+                            className={`p-1 rounded-full transition-all ${isNavbar ? 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                        >
+                            <X className={isNavbar ? "w-3.5 h-3.5" : "w-4 h-4"} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Results Overlay */}
-            {showResults && query.length >= 2 && (
+            {showResults && debouncedQuery.length >= 2 && (
                 <div className={`absolute top-full left-0 right-0 ${isNavbar ? 'mt-3 lg:mt-2' : 'mt-4'} bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300 w-full`}>
                     <div className="max-h-[70vh] overflow-y-auto no-scrollbar py-2 flex flex-col">
                         {hasResults ? (
@@ -149,12 +178,12 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                                         </h3>
                                         {results.movies.map(movie => (
                                             <button
-                                                key={movie.id}
+                                                key={movie.id || movie._id}
                                                 onClick={() => handleSelect('movie', movie)}
                                                 className="w-full flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all group/item text-left"
                                             >
                                                 <div className="w-10 h-14 bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0 shadow-sm">
-                                                    <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
+                                                    <img src={movie.posterUrl || movie.poster} className="w-full h-full object-cover" alt="" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover/item:text-xynemaRose transition-colors truncate">{movie.title}</p>
@@ -174,16 +203,16 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                                         </h3>
                                         {results.events.map(event => (
                                             <button
-                                                key={event.id}
+                                                key={event.id || event._id}
                                                 onClick={() => handleSelect('event', event)}
                                                 className="w-full flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all group/item text-left"
                                             >
                                                 <div className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0 shadow-sm flex items-center justify-center text-xynemaRose font-black text-xs">
-                                                    {event.imageUrl ? <img src={event.imageUrl} className="w-full h-full object-cover" alt="" /> : "XY"}
+                                                    {event.imageUrl || event.image ? <img src={event.imageUrl || event.image} className="w-full h-full object-cover" alt="" /> : "XY"}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover/item:text-xynemaRose transition-colors truncate">{event.name}</p>
-                                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wide mt-0.5">{event.city} • {event.venue}</p>
+                                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wide mt-0.5">{event.city} {event.venue ? `• ${event.venue}` : ''}</p>
                                                 </div>
                                                 <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover/item:opacity-100 transition-all" />
                                             </button>
@@ -199,7 +228,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                                         </h3>
                                         {results.theaters.map(theater => (
                                             <button
-                                                key={theater.id}
+                                                key={theater.id || theater._id}
                                                 onClick={() => handleSelect('theater', theater)}
                                                 className="w-full flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all group/item text-left"
                                             >
@@ -248,7 +277,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                         ) : (
                             <div className="p-12 text-center">
                                 <Search className="w-10 h-10 text-gray-200 dark:text-gray-800 mx-auto mb-4" />
-                                <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">No matches found for "{query}"</p>
+                                <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">No matches found for "{debouncedQuery}"</p>
                                 <p className="text-gray-300 dark:text-gray-600 text-[10px] uppercase font-black tracking-widest mt-2">Try searching for movies, cities, events or activities</p>
                             </div>
                         )}

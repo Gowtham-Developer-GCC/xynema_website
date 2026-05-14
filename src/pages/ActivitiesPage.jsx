@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles } from 'lucide-react';
+import { ChevronDown, TreePine, Dumbbell, ArrowRight, Sparkles, ChevronRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
@@ -10,6 +10,10 @@ import ParkCard from '../components/ParkCard';
 import { getAllParks, PARK_PAGE_LIMIT } from '../services/parkService';
 import { getAvailableTurfs, TURF_PAGE_LIMIT } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 // ─────────────── Constants ───────────────
 const SECTION_TABS  = ['All', 'Turfs', 'Parks'];
@@ -453,12 +457,18 @@ const ActivitiesPage = () => {
     // Tab + filter handlers
     // ─────────────────────────────────────────────────────────────────
 
-    const handleSectionChange = (section) => {
-        setActiveSection(section);
-        setSearchParams({ section });
+    // Sync section with URL parameter changes (from tab clicks, manual URL changes, or footer Links)
+    useEffect(() => {
+        const targetSection = SECTION_TABS.includes(sectionFromUrl) ? sectionFromUrl : 'All';
+        
+        setActiveSection(targetSection);
         setSearchQuery('');
         setActiveSportTag('All');
         setActiveParkType('All');
+    }, [sectionFromUrl]);
+
+    const handleSectionChange = (section) => {
+        setSearchParams({ section });
     };
 
     // Close dropdowns on outside click
@@ -531,32 +541,94 @@ const ActivitiesPage = () => {
 
                 {/* ===== ALL TAB ===== */}
                 {activeSection === 'All' && (
-                    <div className="space-y-12">
-                        <section>
+                    <div className="space-y-16">
+                        <section className="relative group/all-turfs">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">Turfs near you</h2>
-                                <button onClick={() => handleSectionChange('Turfs')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all">
+                                <button onClick={() => handleSectionChange('Turfs')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all uppercase tracking-wider">
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                             {allTurfs.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {allTurfs.slice(0, 3).map((turf) => <SportCard key={turf.id || turf._id} event={turf} />)}
+                                <div className="relative">
+                                    <Swiper
+                                        modules={[Navigation]}
+                                        spaceBetween={24}
+                                        slidesPerView={1}
+                                        navigation={{
+                                            nextEl: '.all-turfs-next',
+                                            prevEl: '.all-turfs-prev',
+                                        }}
+                                        breakpoints={{
+                                            320: { slidesPerView: 1, spaceBetween: 16 },
+                                            480: { slidesPerView: 1, spaceBetween: 16 },
+                                            640: { slidesPerView: 2, spaceBetween: 20 },
+                                            768: { slidesPerView: 2, spaceBetween: 24 },
+                                            1024: { slidesPerView: 3, spaceBetween: 24 },
+                                            1280: { slidesPerView: 3, spaceBetween: 24 },
+                                        }}
+                                        className="!pb-6"
+                                    >
+                                        {allTurfs.slice(0, 10).map((turf) => (
+                                            <SwiperSlide key={turf.id || turf._id}>
+                                                <SportCard event={turf} />
+                                            </SwiperSlide>
+                                        ))}
+                                    </Swiper>
+
+                                    {/* Custom Navigation Arrows */}
+                                    <button className="all-turfs-prev absolute left-2 md:left-0 md:-ml-6 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/all-turfs:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                        <ChevronRight className="w-5 h-5 rotate-180" />
+                                    </button>
+                                    <button className="all-turfs-next absolute right-2 md:right-0 md:-mr-6 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/all-turfs:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
                                 </div>
                             ) : <TurfEmptyState />}
                         </section>
 
-                        <section>
+                        <section className="relative group/all-parks">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-display font-semibold text-[#111827] dark:text-gray-100 tracking-tight">Amusement parks</h2>
-                                <button onClick={() => handleSectionChange('Parks')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all">
+                                <button onClick={() => handleSectionChange('Parks')} className="text-xs font-bold text-primary flex items-center gap-1 hover:gap-2 transition-all uppercase tracking-wider">
                                     view all <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                             {/* Utilize local allParks collection to ensure immediate preview rendering */}
                             {allParks && allParks.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {allParks.slice(0, 3).map((park) => <ParkCard key={park.id} park={park} />)}
+                                <div className="relative">
+                                    <Swiper
+                                        modules={[Navigation]}
+                                        spaceBetween={24}
+                                        slidesPerView={1}
+                                        navigation={{
+                                            nextEl: '.all-parks-next',
+                                            prevEl: '.all-parks-prev',
+                                        }}
+                                        breakpoints={{
+                                            320: { slidesPerView: 1, spaceBetween: 16 },
+                                            480: { slidesPerView: 1, spaceBetween: 16 },
+                                            640: { slidesPerView: 2, spaceBetween: 20 },
+                                            768: { slidesPerView: 2, spaceBetween: 24 },
+                                            1024: { slidesPerView: 3, spaceBetween: 24 },
+                                            1280: { slidesPerView: 3, spaceBetween: 24 },
+                                        }}
+                                        className="!pb-6"
+                                    >
+                                        {allParks.slice(0, 10).map((park) => (
+                                            <SwiperSlide key={park.id}>
+                                                <ParkCard park={park} />
+                                            </SwiperSlide>
+                                        ))}
+                                    </Swiper>
+
+                                    {/* Custom Navigation Arrows */}
+                                    <button className="all-parks-prev absolute left-2 md:left-0 md:-ml-6 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/all-parks:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                        <ChevronRight className="w-5 h-5 rotate-180" />
+                                    </button>
+                                    <button className="all-parks-next absolute right-2 md:right-0 md:-mr-6 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/all-parks:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
                                 </div>
                             ) : <ParksComingSoon compact />}
                         </section>

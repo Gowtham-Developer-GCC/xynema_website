@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, Lock, Eye, EyeOff, Shield, Globe, Bell, Moon, Trash2, Camera, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, User, Mail, Phone, Lock, Eye, EyeOff, Shield, Globe, Bell, Moon, Trash2, Camera, Check, Monitor, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,7 @@ const AccountSettingsPage = () => {
     const { user, updateUser } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
+    const fileInputRef = useRef(null);
 
     const [activeTab, setActiveTab] = useState('profile');
     const [showPassword, setShowPassword] = useState(false);
@@ -26,9 +27,11 @@ const AccountSettingsPage = () => {
         email: user?.email || '',
         phone: user?.phoneNumber || '',
         language: language,
-        region: 'India',
-        pushNotifications: !!localStorage.getItem('fcmToken')
+        region: user?.region || 'India',
+        pushNotifications: !!localStorage.getItem('fcmToken'),
+        photoUrl: user?.photoUrl || ''
     });
+    const [errors, setErrors] = useState({});
 
     const [isLoading, setIsLoading] = useState(true);
 
@@ -43,6 +46,8 @@ const AccountSettingsPage = () => {
                         name: profile.displayName || '',
                         email: profile.email || '',
                         phone: profile.phoneNumber || '',
+                        region: profile.region || 'India',
+                        photoUrl: profile.photoUrl || ''
                     }));
                     // Update global user context if needed
                     updateUser(profile);
@@ -56,6 +61,8 @@ const AccountSettingsPage = () => {
                         name: user.displayName || '',
                         email: user.email || '',
                         phone: user.phoneNumber || '',
+                        region: user.region || 'India',
+                        photoUrl: user.photoUrl || ''
                     }));
                 }
             } finally {
@@ -87,7 +94,46 @@ const AccountSettingsPage = () => {
         }
     };
 
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.name?.trim()) {
+            newErrors.name = 'Name is required';
+        }
+        if (!formData.email?.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+        
+        const phoneDigits = (formData.phone || '').replace(/[^\d]/g, '');
+        if (phoneDigits && (phoneDigits.length < 8 || phoneDigits.length > 15)) {
+            newErrors.phone = 'Please enter a valid 8-15 digit phone number';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image size exceeds 5MB limit.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, photoUrl: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSave = async () => {
+        if (!validateForm()) {
+            toast.error('Please check the fields for errors.');
+            return;
+        }
         setIsSaving(true);
         try {
             // 1. Update language preference
@@ -95,11 +141,11 @@ const AccountSettingsPage = () => {
             
             // 2. Call Update Profile API
             const updatedProfile = await updateUserProfile({
-                displayName: formData.name,
-                // Usually email/phone might be read-only depending on backend, 
-                // but we send them if the endpoint supports it.
+                name: formData.name,
                 email: formData.email,
-                phoneNumber: formData.phone
+                phone: formData.phone,
+                region: formData.region,
+                picture: formData.photoUrl
             });
 
             if (updatedProfile) {
@@ -156,35 +202,6 @@ const AccountSettingsPage = () => {
         }
     };
 
-    const SectionHeader = ({ title, subtitle }) => (
-        <div className="mb-8 pl-1">
-            <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase leading-none mb-2">
-                {title}
-            </h2>
-            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
-                {subtitle}
-            </p>
-        </div>
-    );
-
-    const InputField = ({ label, icon: Icon, type = "text", value, onChange, placeholder, disabled = false }) => (
-        <div className="space-y-2">
-            <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">{label}</label>
-            <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
-                    <Icon className="w-4 h-4" />
-                </div>
-                <input 
-                    type={type}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    disabled={disabled}
-                    className="w-full bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all disabled:opacity-50"
-                    placeholder={placeholder}
-                />
-            </div>
-        </div>
-    );
 
     if (isLoading && !user) {
         return (
@@ -275,19 +292,33 @@ const AccountSettingsPage = () => {
                                     />
 
                                     <div className="flex flex-col sm:flex-row items-center gap-8 mb-10">
-                                        <div className="relative group">
-                                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[32px] overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-xl group-hover:scale-105 transition-all duration-500">
+                                        <input 
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleAvatarChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+                                        <div 
+                                            className="relative group cursor-pointer" 
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[32px] overflow-hidden bg-primary/10 border-4 border-white dark:border-gray-800 shadow-xl group-hover:scale-105 transition-all duration-500 relative">
                                                 <img 
-                                                    src={user?.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.displayName || 'Gowtham'}&backgroundColor=b6e3f4`} 
+                                                    src={formData.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name || 'Gowtham'}&backgroundColor=b6e3f4`} 
                                                     onError={(e) => {
                                                         e.target.onerror = null;
-                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'User')}&background=random`;
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || 'User')}&background=random`;
                                                     }}
                                                     alt="Avatar"
                                                     className="w-full h-full object-cover" 
                                                 />
+                                                {/* Hover Overlay overlay */}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                                    <Camera className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                                                </div>
                                             </div>
-                                            <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-4 border-white dark:border-gray-900">
+                                            <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-4 border-white dark:border-gray-900 pointer-events-none">
                                                 <Camera className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -302,22 +333,37 @@ const AccountSettingsPage = () => {
                                             label={t('full_name')} 
                                             icon={User} 
                                             value={formData.name} 
-                                            onChange={(val) => setFormData({...formData, name: val})}
+                                            onChange={(val) => {
+                                                setFormData({...formData, name: val});
+                                                if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+                                            }}
                                             placeholder="GOWTHAM MAYA LABS" 
+                                            error={errors.name}
                                         />
                                         <InputField 
                                             label={t('email_address')} 
                                             icon={Mail} 
                                             value={formData.email} 
-                                            onChange={(val) => setFormData({...formData, email: val})}
+                                            disabled={true}
+                                            onChange={(val) => {
+                                                setFormData({...formData, email: val});
+                                                if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                                            }}
                                             placeholder="name@example.com" 
+                                            error={errors.email}
                                         />
                                         <InputField 
                                             label={t('phone_number')} 
                                             icon={Phone} 
                                             value={formData.phone} 
-                                            onChange={(val) => setFormData({...formData, phone: val})}
+                                            onChange={(val) => {
+                                                // Allow only digits and '+' symbol
+                                                const cleaned = val.replace(/[^\d+]/g, '');
+                                                setFormData({...formData, phone: cleaned});
+                                                if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
+                                            }}
                                             placeholder="+91 00000 00000" 
+                                            error={errors.phone}
                                         />
                                         <div className="space-y-2">
                                             <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Region</label>
@@ -325,10 +371,15 @@ const AccountSettingsPage = () => {
                                                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                                                     <Globe className="w-4 h-4" />
                                                 </div>
-                                                <select className="w-full bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 appearance-none">
-                                                    <option>India</option>
-                                                    <option>United States</option>
-                                                    <option>United Kingdom</option>
+                                                <select 
+                                                    value={formData.region}
+                                                    onChange={(e) => setFormData({...formData, region: e.target.value})}
+                                                    disabled={true}
+                                                    className="w-full bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 appearance-none disabled:opacity-50 disabled:cursor-not-allowed cursor-default"
+                                                >
+                                                    <option value="India">India</option>
+                                                    <option value="United States">United States</option>
+                                                    <option value="United Kingdom">United Kingdom</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -380,6 +431,66 @@ const AccountSettingsPage = () => {
                                         <button className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-gray-800 text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-gray-700 transition-colors">
                                             {t('configure')}
                                         </button>
+                                    </div>
+
+                                    <div className="h-px bg-gray-100 dark:bg-white/5" />
+
+                                    <div className="space-y-6">
+                                        {/* <div className="flex flex-col pl-1">
+                                            <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest mb-1">Logined Devices</h4>
+                                            <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.15em]">Active notification sessions & sign-ins</p>
+                                        </div> */}
+                                        
+                                        {/* <div className="space-y-4">
+                                            {user?.fcmTokens && user.fcmTokens.length > 0 ? (
+                                                user.fcmTokens.map((device, idx) => {
+                                                    const isWeb = device.platform === 'web';
+                                                    const isCurrent = device.token === localStorage.getItem('fcmToken');
+                                                    const DeviceIcon = isWeb ? Monitor : Smartphone;
+                                                    
+                                                    return (
+                                                        <div key={device._id || idx} className="flex items-center justify-between p-5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 group hover:bg-gray-100/50 dark:hover:bg-white/[0.04] transition-all duration-300">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCurrent ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
+                                                                    <DeviceIcon className="w-5 h-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h5 className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest">
+                                                                            {isWeb ? 'Web Browser' : (device.platform || 'Unknown Device')}
+                                                                        </h5>
+                                                                        {isCurrent && (
+                                                                            <span className="bg-emerald-500/10 text-emerald-500 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md leading-none flex items-center">
+                                                                                Current
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="text-[8px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1 leading-none">
+                                                                        Registered: {new Date(device.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            {!isCurrent && (
+                                                                <button 
+                                                                    type="button"
+                                                                    className="w-8 h-8 rounded-lg bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-95 hover:scale-100 cursor-pointer shadow-sm"
+                                                                    title="Remove session"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-8 border border-dashed border-gray-200 dark:border-white/10 rounded-2xl">
+                                                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-2">
+                                                        <Monitor className="w-5 h-5" />
+                                                    </div>
+                                                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">No active session platforms found</p>
+                                                </div>
+                                            )}
+                                        </div> */}
                                     </div>
                                 </div>
                             )}
@@ -548,5 +659,40 @@ const AccountSettingsPage = () => {
         </div>
     );
 };
+
+const SectionHeader = ({ title, subtitle }) => (
+    <div className="mb-8 pl-1">
+        <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase leading-none mb-2">
+            {title}
+        </h2>
+        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+            {subtitle}
+        </p>
+    </div>
+);
+
+const InputField = ({ label, icon: Icon, type = "text", value = '', onChange = () => {}, placeholder, disabled = false, error }) => (
+    <div className="space-y-2">
+        <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">{label}</label>
+        <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+                <Icon className="w-4 h-4" />
+            </div>
+            <input 
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                className={`w-full bg-white dark:bg-gray-800/50 border ${error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500/30' : 'border-gray-100 dark:border-white/5 focus:ring-primary/20 focus:border-primary/30'} rounded-2xl pl-12 pr-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 transition-all disabled:opacity-50`}
+                placeholder={placeholder}
+            />
+        </div>
+        {error && (
+            <p className="text-[10px] font-bold text-red-500 tracking-wider ml-2 animate-in fade-in slide-in-from-top-1">
+                {error}
+            </p>
+        )}
+    </div>
+);
 
 export default AccountSettingsPage;

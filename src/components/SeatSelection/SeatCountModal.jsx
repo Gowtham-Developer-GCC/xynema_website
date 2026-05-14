@@ -47,12 +47,12 @@ const SeatCountModal = ({ isOpen, onClose, onSelect, pricing }) => {
 
             <div className="relative w-full max-w-[480px] bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_45px_110px_-25px_rgba(0,0,0,0.18)] dark:shadow-none border border-transparent dark:border-gray-800 overflow-hidden animate-in zoom-in-95 duration-500 max-h-[85vh] overflow-y-auto no-scrollbar font-sans">
                 {/* Close Button */}
-                <button
+                {/* <button
                     onClick={onClose}
                     className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-200 dark:text-gray-700 transition-colors z-40"
                 >
                     <X className="w-5 h-5" />
-                </button>
+                </button> */}
 
                 <div className="p-4 md:p-8 flex flex-col items-center">
                     {/* Ticket Stack Illustration */}

@@ -54,7 +54,7 @@ const BookingDetailsPage = () => {
     }, [id]);
 
     if (loading) return <LoadingScreen message="Ticket Readying" />;
-    if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings')} title="Ticket Missing" buttonText="My Bookings" />;
+    if (error) return <ErrorState error={error} onRetry={() => navigate('/bookings', { state: { activeTab: 'movies' } })} title="Ticket Missing" buttonText="My Bookings" />;
 
     const bookingDateRaw = booking.showDate || booking.date;
     const bookingDate = bookingDateRaw ? new Date(bookingDateRaw).toLocaleDateString('en-IN', {
@@ -290,7 +290,7 @@ const BookingDetailsPage = () => {
             <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 print:hidden transition-colors duration-300">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button
-                        onClick={() => navigate('/bookings')}
+                        onClick={() => navigate('/bookings', { state: { activeTab: 'movies' } })}
                         className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-primary transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />

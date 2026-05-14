@@ -90,10 +90,11 @@ const MoviesPage = () => {
     const didUpcomingInitCheck = useRef(false);
     const upcomingAppendRef = useRef(null);
 
-    // Sync section with URL parameter
-    const handleSectionChange = (section) => {
-        setActiveSection(section);
-        setSearchParams({ section });
+    // Sync section with URL parameter changes (from tab clicks, manual URL changes, or footer Links)
+    useEffect(() => {
+        const targetSection = SECTION_TABS.includes(sectionFromUrl) ? sectionFromUrl : 'Now Showing';
+        
+        setActiveSection(targetSection);
         setIsMoreFiltersOpen(false);
         
         // Clear active queries to prevent invalid cross-tab states
@@ -102,8 +103,8 @@ const MoviesPage = () => {
         setActiveFormat('All');
 
         // Swap context filter items instantly using existing cache to present accurate options
-        const prefix = section === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
-        const defaultCity = section === 'Upcoming' ? 'global' : 'all';
+        const prefix = targetSection === 'Upcoming' ? 'movies_upcoming' : 'movies_now';
+        const defaultCity = targetSection === 'Upcoming' ? 'global' : 'all';
         const cacheKey = `${prefix}_${selectedCity || defaultCity}_gAll_lAll_fAll_p1`;
         const cached = apiCacheManager.get(cacheKey) || apiCacheManager.get(`${prefix}_${selectedCity || defaultCity}`);
 
@@ -113,10 +114,14 @@ const MoviesPage = () => {
             setAvailableFormats(cached.availableFormats || []);
         } else {
             // Clean fallbacks while we await new network stream
-            setAvailableGenres(section === 'Upcoming' ? [] : ['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
-            setAvailableLanguages(section === 'Upcoming' ? [] : ['Malayalam', 'Tamil', 'Hindi', 'English']);
+            setAvailableGenres(targetSection === 'Upcoming' ? [] : ['Action', 'Comedy', 'Drama', 'Family', 'Thriller', 'Sci-Fi', 'Romance', 'Adventure']);
+            setAvailableLanguages(targetSection === 'Upcoming' ? [] : ['Malayalam', 'Tamil', 'Hindi', 'English']);
             setAvailableFormats([]);
         }
+    }, [sectionFromUrl, selectedCity]);
+
+    const handleSectionChange = (section) => {
+        setSearchParams({ section });
     };
 
     // Close dropdowns on outside click

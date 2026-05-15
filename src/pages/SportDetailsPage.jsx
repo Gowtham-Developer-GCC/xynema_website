@@ -33,7 +33,7 @@ const SportDetailsPage = () => {
     const [error, setError] = useState(null);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    const [fullScreenImage, setFullScreenImage] = useState(null);
+    const [activeGalleryIdx, setActiveGalleryIdx] = useState(null);
     const [similarSports, setSimilarSports] = useState([]);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -355,7 +355,7 @@ const SportDetailsPage = () => {
                             <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={1} navigation={{ nextEl: '.gallery-next', prevEl: '.gallery-prev' }}>
                                 {images.map((img, idx) => (
                                     <SwiperSlide key={idx}>
-                                        <div onClick={() => setFullScreenImage(img)} className="aspect-[4/3] rounded-[40px] overflow-hidden cursor-zoom-in">
+                                        <div onClick={() => setActiveGalleryIdx(idx)} className="aspect-[4/3] rounded-[40px] overflow-hidden cursor-zoom-in">
                                             <img src={img} alt="Venue" className="w-full h-full object-cover" />
                                         </div>
                                     </SwiperSlide>
@@ -484,10 +484,53 @@ const SportDetailsPage = () => {
                 <button onClick={handleCheckout} className="px-10 py-4 bg-primary text-white text-[12px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Book Now</button>
             </div>
 
-            {fullScreenImage && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
-                    <button onClick={() => setFullScreenImage(null)} className="absolute top-8 right-8 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 z-[110]"><X className="w-6 h-6" /></button>
-                    <img src={fullScreenImage} alt="Gallery" className="max-w-full max-h-full object-contain rounded-2xl animate-in zoom-in-95 duration-500 shadow-2xl" />
+            {/* ── FIGMA FULLSCREEN IMAGE LIGHTBOX OVERLAY ── */}
+            {activeGalleryIdx !== null && (
+                <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center select-none animate-in fade-in duration-300" onClick={() => setActiveGalleryIdx(null)}>
+                    
+                    {/* Top Controls */}
+                    <div className="absolute top-6 right-6 left-6 flex items-center justify-between text-white z-50">
+                        <span className="text-sm font-bold text-white/60 font-display tracking-wider">
+                            {activeGalleryIdx + 1} / {images.length}
+                        </span>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveGalleryIdx(null); }}
+                            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 hover:rotate-90 duration-300 shadow-md"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Left Navigation Button */}
+                    <button 
+                        onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setActiveGalleryIdx(prev => prev === 0 ? images.length - 1 : prev - 1); 
+                        }}
+                        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
+                    >
+                        <ChevronLeft className="w-8 h-8" />
+                    </button>
+
+                    {/* Right Navigation Button */}
+                    <button 
+                        onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setActiveGalleryIdx(prev => prev === images.length - 1 ? 0 : prev + 1); 
+                        }}
+                        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
+                    >
+                        <ChevronRight className="w-8 h-8" />
+                    </button>
+
+                    {/* The Full Screen Image Frame */}
+                    <div className="w-full max-w-5xl max-h-[85vh] p-4 flex items-center justify-center relative animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
+                        <img 
+                            src={images[activeGalleryIdx]} 
+                            alt={`Fullscreen visual view`}
+                            className="max-w-full max-h-[85vh] object-contain rounded-sm shadow-[0_24px_60px_rgba(0,0,0,0.7)] select-none border border-white/10"
+                        />
+                    </div>
                 </div>
             )}
         </div>

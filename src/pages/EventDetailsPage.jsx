@@ -454,7 +454,7 @@ const EventDetailsPage = () => {
 
                     {/* Left: Event Poster */}
                     <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[30%] shrink-0 mx-auto md:mx-0 md:relative">
-                        <div className="aspect-video md:aspect-auto md:absolute md:inset-0 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
+                        <div className="aspect-video md:aspect-auto md:absolute md:inset-0 rounded-md overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
                             <img
                                 src={isMobile ? (images[activeImageIndex] || event.imageUrl) : (event.portraitEventImage || images[activeImageIndex] || event.imageUrl)}
                                 alt={event.name}
@@ -471,9 +471,9 @@ const EventDetailsPage = () => {
 
                     {/* Right: Glass Card Details */}
                     <div className="w-full md:flex-1 max-w-2xl mx-auto md:mx-0">
-                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 hover:border-white/30 rounded-[32px] md:rounded-[40px] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300 md:h-full">
+                        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 hover:border-white/30 rounded-xl md:rounded-xl p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-300 md:h-full">
                             {/* Glass reflection gradient */}
-                            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-[32px] pointer-events-none" />
+                            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/10 to-transparent rounded-t-xl pointer-events-none" />
                             {/* Colorful ambient glow inside card based on image (simulated with standard modern colors) */}
                             <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
 
@@ -544,12 +544,12 @@ const EventDetailsPage = () => {
             </div>
 
             {/* Quick Info Bar - Liquid Glass Effect (Blur only on mobile) */}
-            <div className="relative z-20 bg-white/2 dark:bg-[#1a1c23]/30 backdrop-blur-md md:backdrop-blur-md border border-white/30 dark:border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] -mt-12 mx-4 sm:mx-8 md:mx-auto max-w-6xl rounded-[32px] overflow-hidden transition-all duration-500 hover:bg-white/20 dark:hover:bg-[#1a1c23]/40 hover:border-white/40 group">
+            <div className="relative z-20 bg-white/2 dark:bg-[#1a1c23]/30 backdrop-blur-md md:backdrop-blur-md border border-white/30 dark:border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] -mt-12 mx-4 sm:mx-8 md:mx-auto max-w-6xl rounded-full overflow-hidden transition-all duration-500 hover:bg-white/20 dark:hover:bg-[#1a1c23]/40 hover:border-white/40 group">
                 {/* Glass reflection highlight */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
 
-                <div className="grid grid-cols-2 lg:grid-cols-4">
-                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300">
+                <div className="grid grid-cols-2 lg:grid-cols-4 justify-center items-center pt-2">
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center justify-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300">
                         <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
                             <Clock className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
@@ -558,7 +558,7 @@ const EventDetailsPage = () => {
                             <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.duration ? `${event.duration} hrs` : 'TBA'}</p>
                         </div>
                     </div>
-                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5">
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center justify-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-l border-white/20 dark:border-white/5">
                         <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
                             <Globe className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
@@ -567,7 +567,7 @@ const EventDetailsPage = () => {
                             <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.languages?.join(', ') || 'English'}</p>
                         </div>
                     </div>
-                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center justify-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
                         <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
                             <Info className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>
@@ -576,7 +576,7 @@ const EventDetailsPage = () => {
                             <p className="text-[13px] sm:text-base font-black text-gray-900 dark:text-white leading-tight tracking-tight">{event.ageGroup || 'All Ages'}</p>
                         </div>
                     </div>
-                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t border-l lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
+                    <div className="px-4 py-4 sm:px-6 sm:py-8 flex items-center justify-center gap-3 sm:gap-4 transition-transform hover:scale-[1.02] duration-300 border-t border-l lg:border-t-0 lg:border-l border-white/20 dark:border-white/5">
                         <div className="p-2 sm:p-2.5 bg-white/10 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-white/20 backdrop-blur-md shrink-0">
                             <Ticket className="w-4 h-4 sm:w-5 h-5 text-primary" />
                         </div>

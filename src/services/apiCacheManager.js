@@ -26,7 +26,7 @@ class ApiCacheManager {
     accessOrder = [];
 
     // Persistence key
-    static PERSISTENCE_KEY = 'xynema_api_cache_v1';
+    static PERSISTENCE_KEY = 'xynema_api_cache_v2';
 
     constructor() {
         this.loadFromStorage();

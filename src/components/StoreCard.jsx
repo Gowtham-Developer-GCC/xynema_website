@@ -4,7 +4,7 @@ import { optimizeImage } from '../utils/helpers';
 
 const StoreCard = memo(({ item }) => {
     return (
-        <div className="bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
+        <div className="bg-white dark:bg-[#1a1c23] rounded-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full transition-all duration-300 group cursor-pointer">
             <Link to={``} className="block w-full">
                 <div className="relative aspect-square overflow-hidden bg-white">
                     <img
@@ -30,7 +30,7 @@ const StoreCard = memo(({ item }) => {
                             onwards
                         </span>
                     </div>
-                    <div className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm group-active:scale-95 transition-all duration-300">
+                    <div className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-md border border-gray-100 dark:border-gray-700 shadow-sm group-active:scale-95 transition-all duration-300">
                         <span className="text-[9px] sm:text-[12px] font-bold text-white group-hover:text-white font-roboto transition-colors duration-300 whitespace-nowrap">Buy Now</span>
                     </div>
                 </div>

@@ -69,7 +69,7 @@ const HeroCarousel = memo(({ movies, isMobile }) => {
 
                     return (
                         <SwiperSlide key={`${movie.id || index}-${index}`} className="!h-auto">
-                            <div className="w-full aspect-[5/2] md:aspect-[21/4] sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
+                            <div className="w-full aspect-[5/2] md:aspect-[21/4] sm:rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
                                 <a
                                     href={linkUrl}
                                     className="block w-full h-full cursor-pointer"

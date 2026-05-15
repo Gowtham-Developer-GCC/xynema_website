@@ -870,7 +870,12 @@ export class ActivityPark {
         const loc = data.location || {};
         this.city = data.city || loc.city || 'City TBD';
         this.location = data.fullAddress || loc.address || data.address || '';
-        this.mapUrl = data.mapUrl || '';
+        
+        // Generate map URL if coordinates exist and mapUrl is missing
+        const coords = loc.coordinates || [];
+        const lng = coords[0];
+        const lat = coords[1];
+        this.mapUrl = data.mapUrl || (lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : '');
 
         // Ratings
         this.rating = data.ratingSummary?.average || data.rating || 0;
@@ -890,12 +895,20 @@ export class ActivityPark {
             }
         }
 
-        this.openingHours = data.openingHours || '';
-        this.bestFor = data.bestFor || '';
-        this.topTime = data.topTime || '';
-        this.bestSeason = data.bestSeason || '';
+        // Dynamic fallback for schedule information and other missing fields
+        this.openingHours = data.openingHours || 
+            (data.scheduleInfo?.openingTime && data.scheduleInfo?.closingTime 
+                ? `${data.scheduleInfo.openingTime} - ${data.scheduleInfo.closingTime}` 
+                : 'All Day');
+        this.bestFor = data.bestFor || 'All Ages';
+        this.topTime = data.topTime || 'All Ages';
+        this.bestSeason = data.bestSeason || 'Year Round';
         this.description = data.description || '';
-        this.safetyText = data.safetyText || 'Standard safety rules apply';
+        
+        // Extract safety text from rules array if safetyText is missing
+        this.rules = data.rules || [];
+        this.safetyText = data.safetyText || 
+            (Array.isArray(data.rules) && data.rules.length > 0 ? data.rules[0] : 'Standard safety rules apply');
         this.facilities = data.facilities || [];
 
         // Image Handling

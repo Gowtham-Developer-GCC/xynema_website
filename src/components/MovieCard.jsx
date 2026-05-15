@@ -40,12 +40,29 @@ const MovieCard = memo(({ movie }) => {
                     </div>
                 ) : (
                     <div className="flex items-center justify-between w-full px-1">
-                        <div className="flex items-center gap-1.5 focus:outline-none">
-                            <Star className="w-4 h-4 text-primary fill-primary drop-shadow-md" />
-                            <span className="text-[15px] font-bold font-display drop-shadow-md">{movie.rating > 0 ? movie.rating.toFixed(1) : '0.0'}</span>
-                        </div>
-                        <span className="text-[11.5px] font-semibold text-white/90 dark:text-gray-200 drop-shadow-sm uppercase tracking-wider">
-                            {movie.voteCount > 1000 ? `${(movie.voteCount / 1000).toFixed(0)}k votes` : `${movie.voteCount || 0} votes`}
+                        <span className="text-[11.5px] font-bold text-white/95 drop-shadow-sm uppercase tracking-wider">
+                            {(() => {
+                                const fmtData = movie.format || movie.formats;
+                                const list = Array.isArray(fmtData)
+                                    ? fmtData
+                                    : typeof fmtData === 'string'
+                                        ? fmtData.split(',').map(f => f.trim())
+                                        : [];
+                                if (list.length === 0) return '2D';
+                                return list.length > 1 ? `${list[0]} +` : list[0];
+                            })()}
+                        </span>
+                        <span className="text-[11.5px] font-bold text-white/95 drop-shadow-sm uppercase tracking-wider">
+                            {(() => {
+                                const langData = movie.languages || movie.language;
+                                const list = Array.isArray(langData)
+                                    ? langData
+                                    : typeof langData === 'string'
+                                        ? langData.split(',').map(l => l.trim())
+                                        : [];
+                                if (list.length === 0) return 'Multi';
+                                return list.length > 1 ? `${list[0]} +` : list[0];
+                            })()}
                         </span>
                     </div>
                 )}

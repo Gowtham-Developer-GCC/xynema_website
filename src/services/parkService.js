@@ -1,6 +1,7 @@
 import api, { safeApiCall } from './api';
 import { ENDPOINTS } from './endpoints';
 import { ActivityPark } from '../models/index.js';
+import apiCacheManager, { ApiCacheManager } from './apiCacheManager';
 
 
 // Global Pagination Configuration for Parks
@@ -24,7 +25,17 @@ export const getAllParks = async (params = {}) => {
             if (body.success && body.data) {
                 const isArray = Array.isArray(body.data);
                 const parksData = isArray ? body.data : (body.data.parks || []);
-                const parks = parksData.map(p => new ActivityPark(p));
+                const parks = parksData.map(p => {
+                    const park = new ActivityPark(p);
+                    // Store details in cache manager so detail page can fetch immediately from cache
+                    if (park.slug) {
+                        apiCacheManager.set(`park_details_${park.slug}`, park, ApiCacheManager?.PARKS_TTL || 1800);
+                    }
+                    if (park.id && park.id !== park.slug) {
+                        apiCacheManager.set(`park_details_${park.id}`, park, ApiCacheManager?.PARKS_TTL || 1800);
+                    }
+                    return park;
+                });
 
                 // Normalize pagination
                 const rawPagination = body.pagination || (!isArray && body.data?.pagination ? body.data.pagination : null);
@@ -74,7 +85,9 @@ export const getParkBySlug = async (slug) => {
             const body = response.data;
 
             if (body.success && body.data) {
-                return new ActivityPark(body.data);
+                // Safely handle if details API returns an array
+                const parkData = Array.isArray(body.data) ? body.data[0] : body.data;
+                return new ActivityPark(parkData);
             }
         } catch (error) {
             // If 404, the detail endpoint might not exist, try to find in list

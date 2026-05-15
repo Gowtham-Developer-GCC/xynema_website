@@ -16,17 +16,18 @@ const SportCard = memo(({ event }) => {
     return (
         <div 
             onClick={handleNavigate}
-            className="group bg-white dark:bg-[#1a1c23] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex flex-col h-full cursor-pointer"
+            className="group bg-white dark:bg-[#1a1c23] rounded-md overflow-hidden border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-md flex flex-col h-full cursor-pointer p-1 select-none"
         >
-            <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-900/50">
+            {/* Image enclosed in board frame */}
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-sm">
                 <img
                     src={displayImage}
                     alt={event.name}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-1"
+                    className="w-full h-full object-cover"
                 />
             </div>
-            <div className="p-4 sm:p-5 flex flex-col flex-grow">
+            <div className="p-3 sm:p-3.5 flex flex-col flex-grow">
                 {event.tags && event.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                         {event.tags.slice(0, 2).map((tag, idx) => (
@@ -76,7 +77,7 @@ const SportCard = memo(({ event }) => {
                         </div>
                     </div>
                     <button
-                        className="flex-shrink-0 px-3 sm:px-5 py-2.5 bg-primary text-white text-[9px] sm:text-[10px] font-black rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-widest hover:brightness-110 active:scale-95 whitespace-nowrap uppercase"
+                        className="flex-shrink-0 px-3 sm:px-5 py-2.5 bg-primary text-white text-[9px] sm:text-[10px] font-black rounded-md shadow-lg shadow-primary/20 transition-all font-roboto tracking-widest hover:brightness-110 active:scale-95 whitespace-nowrap uppercase"
                     >
                         Book Now
                     </button>

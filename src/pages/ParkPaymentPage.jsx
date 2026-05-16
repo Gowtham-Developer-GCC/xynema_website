@@ -97,6 +97,13 @@ const ParkPaymentPage = () => {
     const [coupon, setCoupon] = useState('');
     const [isCouponOpen, setIsCouponOpen] = useState(true);
     const [selectedMethod, setSelectedMethod] = useState('upi');
+    const [errors, setErrors] = useState({ phone: '', email: '' });
+
+    const isFormValid = useMemo(() => {
+        const isPhoneValid = phone.length === 10;
+        const isEmailValid = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        return isPhoneValid && isEmailValid;
+    }, [phone, email]);
 
     if (!location.state) return null;
 
@@ -142,11 +149,23 @@ const ParkPaymentPage = () => {
                                     <input
                                         type="tel"
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            if (val.length <= 10) setPhone(val);
+                                        }}
                                         placeholder="Enter 10 digit mobile number"
-                                        className="w-full bg-[#F5F5FA] dark:bg-gray-800/50 border border-transparent focus:border-primary/30 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none text-sm font-medium dark:text-white transition-all"
+                                        className={`w-full bg-[#F5F5FA] dark:bg-gray-800/50 border rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none text-sm font-medium dark:text-white transition-all ${
+                                            phone && phone.length !== 10 
+                                            ? 'border-red-400 focus:border-red-500' 
+                                            : 'border-transparent focus:border-primary/30'
+                                        }`}
                                     />
-                                    <p className="text-[9px] font-bold text-gray-400 mt-2 sm:mt-3">* Optional for non-Indian numbers (+91)</p>
+                                    <div className="flex justify-between items-center mt-2 sm:mt-3">
+                                        <p className="text-[9px] font-bold text-gray-400">* Optional for non-Indian numbers (+91)</p>
+                                        {phone && phone.length !== 10 && (
+                                            <p className="text-[9px] font-bold text-red-500">Must be 10 digits</p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest block mb-2 sm:mb-3">Email Address (Optional)</label>
@@ -155,8 +174,15 @@ const ParkPaymentPage = () => {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="Enter email for ticket confirmation"
-                                        className="w-full bg-[#F5F5FA] dark:bg-gray-800/50 border border-transparent focus:border-primary/30 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none text-sm font-medium dark:text-white transition-all"
+                                        className={`w-full bg-[#F5F5FA] dark:bg-gray-800/50 border rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none text-sm font-medium dark:text-white transition-all ${
+                                            email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                                            ? 'border-red-400 focus:border-red-500' 
+                                            : 'border-transparent focus:border-primary/30'
+                                        }`}
                                     />
+                                    {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                                        <p className="text-[9px] font-bold text-red-500 mt-2">Please enter a valid email</p>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -212,17 +238,21 @@ const ParkPaymentPage = () => {
                                     <span className="self-start sm:self-auto text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 px-3 py-1 rounded-full">Recommended</span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                                    {['Google Pay', 'PhonePe', 'Paytm'].map(app => (
+                                    {[
+                                        { name: 'Google Pay', logo: 'https://png.pngtree.com/png-clipart/20230916/original/pngtree-google-pay-icon-vector-png-image_12256720.png' },
+                                        { name: 'PhonePe', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo4x8kSTmPUq4PFzl4HNT0gObFuEhivHOFYg&s' },
+                                        { name: 'Paytm', logo: 'https://images.icon-icons.com/730/PNG/512/paytm_icon-icons.com_62778.png' }
+                                    ].map(app => (
                                         <div
-                                            key={app}
+                                            key={app.name}
                                             onClick={() => setSelectedMethod('upi')}
                                             className={`bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border flex flex-col items-center justify-center gap-2 sm:gap-3 cursor-pointer transition-all group ${selectedMethod === 'upi' ? 'border-primary shadow-lg ring-1 ring-primary/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'
                                                 }`}
                                         >
-                                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-50 dark:bg-gray-700 rounded-lg sm:rounded-xl flex items-center justify-center transition-colors group-hover:bg-primary/10">
-                                                <Wallet className="w-4 h-4 sm:w-6 sm:h-6 text-gray-400 group-hover:text-primary" />
+                                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-gray-700 rounded-lg sm:rounded-xl flex items-center justify-center transition-colors group-hover:bg-primary/5 p-1.5 shadow-sm border border-gray-50 dark:border-gray-800">
+                                                <img src={app.logo} alt={app.name} className="w-full h-full object-contain" />
                                             </div>
-                                            <p className="text-[9px] sm:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight text-center">{app}</p>
+                                            <p className="text-[9px] sm:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight text-center">{app.name}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -328,8 +358,8 @@ const ParkPaymentPage = () => {
                                         onSuccess={() => {
                                             isPaymentComplete.current = true;
                                         }}
-                                        disabled={isCancelling || !phone}
-                                        className={`w-full py-5 text-white font-black tracking-widest uppercase rounded-2xl transition-all ${!phone || isCancelling
+                                        disabled={isCancelling || !isFormValid}
+                                        className={`w-full py-5 text-white font-black tracking-widest uppercase rounded-2xl transition-all ${!isFormValid || isCancelling
                                                 ? 'bg-gray-400 cursor-not-allowed shadow-none'
                                                 : 'bg-primary hover:bg-primary/90 active:scale-95 shadow-xl shadow-primary/20'
                                             }`}
@@ -390,8 +420,8 @@ const ParkPaymentPage = () => {
                             onSuccess={() => {
                                 isPaymentComplete.current = true;
                             }}
-                            disabled={isCancelling || !phone}
-                            className={`w-full py-4 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${!phone || isCancelling
+                            disabled={isCancelling || !isFormValid}
+                            className={`w-full py-4 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${!isFormValid || isCancelling
                                     ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none'
                                     : 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95'
                                 }`}

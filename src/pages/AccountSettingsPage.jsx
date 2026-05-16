@@ -106,8 +106,8 @@ const AccountSettingsPage = () => {
         }
         
         const phoneDigits = (formData.phone || '').replace(/[^\d]/g, '');
-        if (phoneDigits && (phoneDigits.length < 8 || phoneDigits.length > 15)) {
-            newErrors.phone = 'Please enter a valid 8-15 digit phone number';
+        if (phoneDigits && phoneDigits.length !== 10) {
+            newErrors.phone = 'Please enter a 10-digit phone number';
         }
 
         setErrors(newErrors);
@@ -357,12 +357,13 @@ const AccountSettingsPage = () => {
                                             icon={Phone} 
                                             value={formData.phone} 
                                             onChange={(val) => {
-                                                // Allow only digits and '+' symbol
-                                                const cleaned = val.replace(/[^\d+]/g, '');
+                                                // Allow only digits and limit to 10
+                                                const cleaned = val.replace(/[^\d]/g, '').slice(0, 10);
                                                 setFormData({...formData, phone: cleaned});
                                                 if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
                                             }}
-                                            placeholder="+91 00000 00000" 
+                                            placeholder="10 digit number" 
+                                            maxLength={10}
                                             error={errors.phone}
                                         />
                                         <div className="space-y-2">
@@ -671,7 +672,7 @@ const SectionHeader = ({ title, subtitle }) => (
     </div>
 );
 
-const InputField = ({ label, icon: Icon, type = "text", value = '', onChange = () => {}, placeholder, disabled = false, error }) => (
+const InputField = ({ label, icon: Icon, type = "text", value = '', onChange = () => {}, placeholder, disabled = false, error, ...props }) => (
     <div className="space-y-2">
         <label className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">{label}</label>
         <div className="relative group">
@@ -685,6 +686,7 @@ const InputField = ({ label, icon: Icon, type = "text", value = '', onChange = (
                 disabled={disabled}
                 className={`w-full bg-white dark:bg-gray-800/50 border ${error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500/30' : 'border-gray-100 dark:border-white/5 focus:ring-primary/20 focus:border-primary/30'} rounded-2xl pl-12 pr-5 py-4 text-sm font-bold tracking-widest text-slate-800 dark:text-white outline-none focus:ring-2 transition-all disabled:opacity-50`}
                 placeholder={placeholder}
+                {...props}
             />
         </div>
         {error && (

@@ -206,23 +206,23 @@ const TurfPaymentPage = () => {
 
                                 <div className="grid grid-cols-3 gap-2 md:gap-4">
                                     <button onClick={() => setSelectedMethod('upi')} className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === 'upi' ? 'border-primary ring-1 ring-primary/20 shadow-md scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm overflow-hidden border border-gray-50 p-1">
+                                         <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm overflow-hidden border border-gray-50 p-1">
                                             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/960px-Google_Pay_Logo.svg.png?_=20221017164555" alt="GPay" className="w-full h-full object-contain" />
-                                        </div>
-                                        <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">Google Pay</span>
-                                    </button>
-                                    <button onClick={() => setSelectedMethod('upi')} className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === 'upi' ? 'border-primary ring-1 ring-primary/20 shadow-md scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
+                                         </div>
+                                         <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">Google Pay</span>
+                                     </button>
+                                     <button onClick={() => setSelectedMethod('upi')} className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === 'upi' ? 'border-primary ring-1 ring-primary/20 shadow-md scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
                                         <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#5f259f] shadow-sm overflow-hidden p-1">
                                             <span className="text-white text-[10px] font-black italic">पे</span>
-                                        </div>
-                                        <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">PhonePe</span>
-                                    </button>
-                                    <button onClick={() => setSelectedMethod('upi')} className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === 'upi' ? 'border-primary ring-1 ring-primary/20 shadow-md scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
+                                         </div>
+                                         <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">PhonePe</span>
+                                     </button>
+                                     <button onClick={() => setSelectedMethod('upi')} className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all ${selectedMethod === 'upi' ? 'border-primary ring-1 ring-primary/20 shadow-md scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
                                         <div className="h-8 flex items-center justify-center px-1">
                                             <span className="text-[#002e6e] font-black text-[12px] tracking-tight">Pay</span><span className="text-[#00baf2] font-black text-[12px] tracking-tight">tm</span>
-                                        </div>
-                                        <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">Paytm</span>
-                                    </button>
+                                         </div>
+                                         <span className="text-[9px] md:text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-[0.1em]">Paytm</span>
+                                     </button>
                                 </div>
                             </div>
 

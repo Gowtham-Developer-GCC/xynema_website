@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, ChevronRight, Sun, Moon, Clock, Info, Check, Minus, Plus, ChevronLeft, Shield, MoonStar, MoonIcon, SunMoon } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -33,7 +33,10 @@ const BookingSlotPage = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [duration, setDuration] = useState(1);
-    const [peopleCount, setPeopleCount] = useState(2);
+    const [slotCount, setSlotCount] = useState(1);
+    const [peopleCount, setPeopleCount] = useState(1);
+    const [showWarningModal, setShowWarningModal] = useState(false);
+    const [warningMessage, setWarningMessage] = useState('');
     const [spotType, setSpotType] = useState('Outdoor');
     const [isAdvancePay, setIsAdvancePay] = useState(true);
     const [timeSlots, setTimeSlots] = useState({ morning: [], afternoon: [], evening: [] });
@@ -81,6 +84,34 @@ const BookingSlotPage = () => {
         fetchDetails();
     }, [turfId]);
 
+    const allAvailableSlots = useMemo(() => {
+        const flat = [...timeSlots.morning, ...timeSlots.afternoon, ...timeSlots.evening];
+        return flat.sort((a, b) => {
+            const timeToMinutes = (timeStr) => {
+                if (!timeStr) return 0;
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + (m || 0);
+            };
+            return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+        });
+    }, [timeSlots]);
+
+    const getConsecutiveSlots = (startSlot, count) => {
+        const startIndex = allAvailableSlots.findIndex(s => (s._id || s.id) === (startSlot._id || startSlot.id));
+        if (startIndex === -1) return { error: false, slots: [] };
+        
+        const selected = [allAvailableSlots[startIndex]];
+        for (let i = 1; i < count; i++) {
+            const nextSlot = allAvailableSlots[startIndex + i];
+            if (nextSlot && nextSlot.status === 'available' && !nextSlot.isPast) {
+                selected.push(nextSlot);
+            } else {
+                return { error: true, slots: selected };
+            }
+        }
+        return { error: false, slots: selected };
+    };
+
     useEffect(() => {
         if (selectedCourt && selectedDate) {
             setSelectedSlots([]);
@@ -113,12 +144,28 @@ const BookingSlotPage = () => {
 
     const handleSlotClick = (slotObj) => {
         if (slotObj.status !== 'available' || slotObj.isPast) return;
-        const isAlreadySelected = selectedSlots.some(s => (s._id || s.id) === (slotObj._id || slotObj.id));
-        if (isAlreadySelected) {
-            setSelectedSlots(selectedSlots.filter(s => (s._id || s.id) !== (slotObj._id || slotObj.id)));
-        } else {
-            setSelectedSlots([...selectedSlots, slotObj]);
+        
+        const { error, slots } = getConsecutiveSlots(slotObj, slotCount);
+        if (error) {
+            setWarningMessage("There is not slot after your selected time so please choose before slots");
+            setShowWarningModal(true);
         }
+        setSelectedSlots(slots);
+    };
+
+    const updateSlotCount = (delta) => {
+        const newCount = Math.max(1, slotCount + delta);
+        if (selectedSlots.length > 0) {
+            const startSlot = selectedSlots[0];
+            const { error, slots } = getConsecutiveSlots(startSlot, newCount);
+            if (error && delta > 0) {
+                setWarningMessage("There is not slot after your selected time so please choose before slots");
+                setShowWarningModal(true);
+                return;
+            }
+            setSelectedSlots(slots);
+        }
+        setSlotCount(newCount);
     };
 
     const handleBooking = async () => {
@@ -141,6 +188,7 @@ const BookingSlotPage = () => {
                         court: currentCourt,
                         sport: selectedSport,
                         date: selectedDate,
+                        slotCount,
                         peopleCount,
                         spotType
                     } 
@@ -156,9 +204,16 @@ const BookingSlotPage = () => {
     };
 
     const currentCourt = venue?.courts?.find(c => (c._id || c.id) === selectedCourt);
-    const turfFee = selectedSlots.reduce((sum, s) => sum + (s.priceOverride || s.pricePerHour || currentCourt?.pricePerHour || venue?.price || 0), 0) * (isSwimming ? peopleCount / 2 : 1);
+    // Pricing logic: slots * individual price, potentially multiplied by people for swimming
+    const baseTurfFee = selectedSlots.reduce((sum, s) => sum + (s.priceOverride || s.pricePerHour || currentCourt?.pricePerHour || venue?.price || 0), 0);
+    const turfFee = isSwimming ? (baseTurfFee * peopleCount) : baseTurfFee;
     const convenienceFee = selectedSlots.length > 0 ? (isSwimming ? 15 : Math.round((turfFee * (venue?.convenienceFeePercent || 0)) / 100)) : 0;
     const totalAmount = Math.max(0, Math.round(turfFee + convenienceFee));
+
+    const hasNoSlots = !fetchingSlots && 
+                      timeSlots.morning.length === 0 && 
+                      timeSlots.afternoon.length === 0 && 
+                      timeSlots.evening.length === 0;
 
     if (loading) return <LoadingScreen message="Initialising Booking..." />;
 
@@ -285,19 +340,19 @@ const BookingSlotPage = () => {
                                 </div> */}
                                 <div className="flex items-center gap-4 bg-white dark:bg-[#1a1c23] p-1.5 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <button 
-                                        onClick={() => setPeopleCount(Math.max(1, peopleCount - 1))}
+                                        onClick={() => updateSlotCount(-1)}
                                         className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        title="Decrease guests"
+                                        title="Decrease slots"
                                     >
                                         <Minus className="w-4 h-4 text-gray-400 dark:text-gray-300" />
                                     </button>
                                     <span className="text-base font-bold dark:text-white min-w-[75px] text-center">
-                                        {peopleCount} Guest{peopleCount !== 1 ? 's' : ''}
+                                        {slotCount} Slot{slotCount !== 1 ? 's' : ''}
                                     </span>
                                     <button 
-                                        onClick={() => setPeopleCount(peopleCount + 1)}
+                                        onClick={() => updateSlotCount(1)}
                                         className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white hover:brightness-110 transition-all"
-                                        title="Increase guests"
+                                        title="Increase slots"
                                     >
                                         <Plus className="w-4 h-4" />
                                     </button>
@@ -306,40 +361,58 @@ const BookingSlotPage = () => {
                         </div>
 
                         <div className="space-y-10">
-                            {['morning', 'afternoon', 'evening'].map(period => (
-                                timeSlots[period].length > 0 && (
-                                    <div key={period} className="space-y-4">
-                                        <div className="flex items-center gap-2 text-gray-400 font-bold text-[13px] uppercase tracking-widest">
-                                            {period === 'morning' ? <SunMoon className="w-4 h-4 text-yellow-400" /> : period === 'afternoon' ? <Sun className="w-4 h-4 text-orange-400" /> : <Moon className="w-4 h-4 text-blue-400" />}
-                                            {period}
-                                        </div>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {timeSlots[period].map(slot => {
-                                                const isSelected = selectedSlots.some(s => (s._id || s.id) === (slot._id || slot.id));
-                                                const isUnavailable = slot.status !== 'available' || slot.isPast;
-                                                const slotPrice = slot.priceOverride || slot.pricePerHour || currentCourt?.pricePerHour || venue?.price || 400;
-                                                return (
-                                                    <button
-                                                        key={slot._id || slot.id}
-                                                        disabled={isUnavailable}
-                                                        onClick={() => handleSlotClick(slot)}
-                                                        className={`py-3 px-4 rounded-xl font-bold text-sm transition-all border flex flex-col items-center justify-center gap-1.5 ${
-                                                            isSelected ? 'bg-primary border-primary text-white shadow-lg' :
-                                                            isUnavailable ? 'bg-gray-50 text-gray-300 dark:bg-gray-900 dark:text-gray-700 cursor-not-allowed border-gray-50' :
-                                                            'bg-white dark:bg-[#1a1c23] border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300'
-                                                        }`}
-                                                    >
-                                                        <span className="text-[13px] font-black">{slot.displayLabel}</span>
-                                                        <span className={`text-[11px] font-black ${isSelected ? 'text-white/90' : 'text-primary'}`}>
-                                                            ₹{slotPrice}
-                                                        </span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
+                            {fetchingSlots ? (
+                                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                    <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Finding Slots...</p>
+                                </div>
+                            ) : hasNoSlots ? (
+                                <div className="p-12 bg-white dark:bg-[#1a1c23] rounded-[32px] border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center text-center space-y-4">
+                                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                                        <Clock className="w-8 h-8 text-gray-300" />
                                     </div>
-                                )
-                            ))}
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-bold dark:text-white">No Slots Available</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-[280px] mx-auto leading-relaxed">
+                                            There is no available slot on <span className="text-primary font-black">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>. Please check the next date.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                ['morning', 'afternoon', 'evening'].map(period => (
+                                    timeSlots[period].length > 0 && (
+                                        <div key={period} className="space-y-4">
+                                            <div className="flex items-center gap-2 text-gray-400 font-bold text-[13px] uppercase tracking-widest">
+                                                {period === 'morning' ? <SunMoon className="w-4 h-4 text-yellow-400" /> : period === 'afternoon' ? <Sun className="w-4 h-4 text-orange-400" /> : <Moon className="w-4 h-4 text-blue-400" />}
+                                                {period}
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {timeSlots[period].map(slot => {
+                                                    const isSelected = selectedSlots.some(s => (s._id || s.id) === (slot._id || slot.id));
+                                                    const isUnavailable = slot.status !== 'available' || slot.isPast;
+                                                    const slotPrice = slot.priceOverride || slot.pricePerHour || currentCourt?.pricePerHour || venue?.price || 400;
+                                                    return (
+                                                        <button
+                                                            key={slot._id || slot.id}
+                                                            disabled={isUnavailable}
+                                                            onClick={() => handleSlotClick(slot)}
+                                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all border flex flex-col items-center justify-center gap-1.5 ${isSelected ? 'bg-primary border-primary text-white shadow-lg' :
+                                                                isUnavailable ? 'bg-gray-50 text-gray-300 dark:bg-gray-900 dark:text-gray-700 cursor-not-allowed border-gray-50' :
+                                                                    'bg-white dark:bg-[#1a1c23] border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300'
+                                                                }`}
+                                                        >
+                                                            <span className="text-[13px] font-black">{slot.displayLabel}</span>
+                                                            <span className={`text-[11px] font-black ${isSelected ? 'text-white/90' : 'text-primary'}`}>
+                                                                ₹{slotPrice}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )
+                                ))
+                            )}
                         </div>
                     </section>
                 </div>
@@ -363,7 +436,9 @@ const BookingSlotPage = () => {
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Base Price ({peopleCount} guests)</span>
+                                <span className="text-gray-500 font-medium">
+                                    Base Price ({slotCount} slot{slotCount !== 1 ? 's' : ''} {isSwimming ? `× ${peopleCount} guests` : ''})
+                                </span>
                                 <span className="font-bold dark:text-white">₹{turfFee}</span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -401,6 +476,27 @@ const BookingSlotPage = () => {
                     </div>
                 </aside>
             </main>
+
+            {/* Warning Modal */}
+            {showWarningModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-[#1a1c23] w-full max-w-sm rounded-[32px] p-8 shadow-2xl scale-in-center animate-in zoom-in duration-300 border border-gray-100 dark:border-gray-800">
+                        <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Info className="w-8 h-8 text-red-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-center dark:text-white mb-2">Slot Unavailable</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-center text-sm leading-relaxed mb-8">
+                            {warningMessage}
+                        </p>
+                        <button 
+                            onClick={() => setShowWarningModal(false)}
+                            className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all uppercase tracking-widest text-sm"
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

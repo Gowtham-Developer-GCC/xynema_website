@@ -32,7 +32,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedQuery(query);
-        }, 2000);
+        }, 1000);
 
         return () => {
             clearTimeout(handler);
@@ -121,7 +121,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
         if (type === 'movie') navigate(`/movie/${identifier}`);
         else if (type === 'theater') navigate(`/theater/${identifier}`);
         else if (type === 'event') navigate(`/event/${identifier}`);
-        else if (type === 'turf') navigate(`/activities/${identifier}`);
+        else if (type === 'turf') navigate(`/activities/${item._id || item.id}`);
         else if (type === 'park') navigate(`/park/${identifier}`);
     };
 

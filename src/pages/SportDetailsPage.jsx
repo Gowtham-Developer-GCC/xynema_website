@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check, Shield, Info, ArrowRight, Heart } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Ticket, Share2, Star, ChevronLeft, ChevronRight, ShoppingBag, ExternalLink, X, Check, Shield, Info, ArrowRight, Heart, Sparkles } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -95,13 +95,13 @@ const SportDetailsPage = () => {
             setSimilarSports([]);
             fetchTurfDetails(slug);
         }
-        
+
         window.scrollTo(0, 0);
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [slug]);
+    }, [slug, location.key, location.state]);
 
     const handleGetDirections = () => {
         if (sport?.coordinates && sport.coordinates.length === 2) {
@@ -111,7 +111,7 @@ const SportDetailsPage = () => {
             window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sport.address)}`, '_blank');
         }
     };
-     const handleShare = (e) => {
+    const handleShare = (e) => {
         e?.preventDefault();
         if (navigator.share) {
             navigator.share({
@@ -157,8 +157,8 @@ const SportDetailsPage = () => {
         }
     };
 
-    const isSwimming = sport?.tags?.some(tag => tag.toLowerCase().includes('swimming') || tag.toLowerCase().includes('pool')) || 
-                      sport?.name?.toLowerCase().includes('swimming') || sport?.name?.toLowerCase().includes('pool');
+    const isSwimming = sport?.tags?.some(tag => tag.toLowerCase().includes('swimming') || tag.toLowerCase().includes('pool')) ||
+        sport?.name?.toLowerCase().includes('swimming') || sport?.name?.toLowerCase().includes('pool');
 
     const storeItems = isSwimming ? [
         { id: "swim1", name: "Swimming Suit for Men", price: 599, sellers: 3, imageUrl: "https://image.made-in-china.com/202f0j00sJiowvFCdWqB/Men-s-Swim-Trunks-Men-s-Quick-Dry-Long-Sleeve-Sun-Protection-Swimming-Pants-Board-Shorts-Two-Piece-Set-Slim-Fit-Swimwear-Beach-Pants-.webp" },
@@ -179,7 +179,7 @@ const SportDetailsPage = () => {
     const images = (sport.allImages && sport.allImages.length > 0) ? sport.allImages : [sport.imageUrl || "https://images.unsplash.com/photo-1530541930197-ff16ac917b0e"];
 
     return (
-        <div className={`min-h-screen ${isSwimming ? 'bg-[#F5F5F5]' : 'bg-[#FDFDFD]'} dark:bg-[#0f1115] pb-24 transition-colors duration-300 overflow-x-hidden`}>
+        <div className={`min-h-screen ${isSwimming ? 'bg-[#F5F5F5]' : 'bg-[#FDFDFD]'} dark:bg-[#0f1115] pb-12 transition-colors duration-300 overflow-x-hidden`}>
             <SEO title={`${sport.name} - XYNEMA Sports`} description={sport.description} />
 
             <svg style={{ visibility: 'hidden', position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
@@ -227,7 +227,7 @@ const SportDetailsPage = () => {
                         <Share2 className="w-4 h-4" />
                     </button>
                 </div>
-                
+
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-full opacity-20 pointer-events-none">
                     <div className="absolute top-0 left-0 w-full h-[90px] bg-[#F5F5F5] dark:bg-[#0f1115]" />
                     <div className="absolute bottom-0 left-0 w-full h-[85px] bg-[#F5F5F5] dark:bg-[#0f1115] shadow-[inset_0px_15px_15px_5px_rgba(0,0,0,0.1)] rounded-full translate-y-1/2" />
@@ -248,18 +248,18 @@ const SportDetailsPage = () => {
             <div className="relative z-30 -mt-20 md:-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
                     <div className="flex-1 w-full space-y-6">
-                        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/40 dark:border-gray-800 p-8 md:p-10 rounded-[40px] shadow-2xl">
+                        <div className="bg-white/0 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-800 p-8 md:p-10 rounded-xl shadow-2xl">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="flex items-center gap-1 px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-full">
                                     <Star className="w-3 h-3 fill-white" />
                                     {sport.rating > 0 ? sport.rating.toFixed(1) : 'New'}
                                 </div>
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest">
                                     {sport.reviewCount > 0 ? `${sport.reviewCount.toLocaleString()} ratings` : 'Verified Venue'}
                                 </span>
                             </div>
 
-                            <h1 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
+                            <h1 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white dark:text-white leading-[0.9] tracking-tighter uppercase mb-6">
                                 {sport.name}
                             </h1>
 
@@ -269,7 +269,7 @@ const SportDetailsPage = () => {
                                         <MapPin className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Venue Location</p>
+                                        <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mb-1">Venue Location</p>
                                         <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{sport.venue}, {sport.city}</p>
                                     </div>
                                 </div>
@@ -278,7 +278,7 @@ const SportDetailsPage = () => {
                                         <Calendar className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Availability</p>
+                                        <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mb-1">Availability</p>
                                         <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{sport.startTime || 'Open 24/7'}</p>
                                     </div>
                                 </div>
@@ -292,7 +292,7 @@ const SportDetailsPage = () => {
                                 { label: 'Type', value: sport.tags?.slice(0, 1).join('') || 'Sport' },
                                 { label: 'Safety', value: 'High Standards' }
                             ].map((info, i) => (
-                                <div key={i} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md p-6 rounded-[32px] border border-white/20 dark:border-gray-700">
+                                <div key={i} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md p-6 rounded-md border border-white/20 dark:border-gray-700 flex flex-col items-center justify-center text-center">
                                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{info.label}</p>
                                     <p className="text-xs font-black dark:text-white uppercase truncate">{info.value}</p>
                                 </div>
@@ -302,17 +302,17 @@ const SportDetailsPage = () => {
 
                     <div className="w-full lg:w-[400px] shrink-0 sticky top-24">
                         <div className="relative group">
-                            <div className="bg-white dark:bg-gray-900 rounded-[32px] p-8 md:p-10 border border-gray-100 dark:border-gray-800 shadow-2xl relative flex flex-col items-start text-left">
-                                <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mb-3">Starting from</p>
+                            <div className="bg-white/0 lg:bg-white/0 dark:bg-gray-900/40 backdrop-blur-xl rounded-xl p-6 md:p-8 border border-white/40 lg:border-white/40 dark:border-gray-800 shadow-2xl relative flex flex-col items-start text-left">
+                                <p className="text-[11px] text-grey lg:text-white font-black uppercase tracking-widest mb-3">Starting from</p>
                                 <div className="flex items-baseline gap-1.5 mb-8">
-                                    <span className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-none">₹{sport.price.toLocaleString()}</span>
-                                    <span className="text-xs sm:text-sm font-bold text-gray-400">/ hour</span>
+                                    <span className="text-2xl sm:text-3xl font-black text-black lg:text-white  leading-none">₹{sport.price.toLocaleString()}</span>
+                                    <span className="text-xs sm:text-sm font-bold text-grey lg:text-white/90">/ hour</span>
                                 </div>
                                 <button
                                     onClick={handleCheckout}
-                                    className="w-full py-6 bg-primary hover:bg-[#ff3d5a] text-white text-base font-black rounded-3xl transition-all shadow-xl shadow-primary/20 active:scale-95 uppercase tracking-widest"
+                                    className="w-full py-6 bg-primary hover:bg-[#ff3d5a] text-white text-base font-black rounded-md transition-all shadow-xl shadow-primary/20 active:scale-95 uppercase tracking-widest"
                                 >
-                                    <span className='text-sm sm:text-md '>Book Now</span>
+                                    <span className='text-sm sm:text-md text-white'>Book Now</span>
                                 </button>
                             </div>
                         </div>
@@ -320,56 +320,117 @@ const SportDetailsPage = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16 space-y-10 md:space-y-16">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                    <section className="space-y-8">
-                        <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">The Experience</h2>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-lg leading-relaxed font-medium">{sport.description}</p>
-                        <div className="grid grid-cols-2 gap-6 pt-8">
-                            {[
-                                { key: 'isParkingAvailable', label: 'Spacious Parking' },
-                                { key: 'isWashroomAvailable', label: 'Clean Washrooms' },
-                                { key: 'isChangingRoomAvailable', label: 'Changing Rooms' },
-                                { key: 'isFoodAndBeveragesAvailable', label: 'Cafe & Drinks' }
-                            ].map((amenity) => (
-                                sport.amenities?.[amenity.key] !== false && (
-                                    <div key={amenity.key} className="flex items-center gap-4">
-                                        <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center shrink-0">
-                                            <Check className="w-3.5 h-3.5 text-green-600" />
-                                        </div>
-                                        <span className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-wide">{amenity.label}</span>
-                                    </div>
-                                )
-                            ))}
+                    <section className="space-y-12">
+                        <div className="space-y-8 pt-10 ">
+                            <h2 className="text-xl md:text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">The Experience</h2>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm md:text-justify leading-relaxed font-medium">{sport.description}</p>
                         </div>
-                    </section>
-                    <section className="space-y-8">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Gallery</h2>
-                            <div className="flex gap-2">
-                                <button className="gallery-prev w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronLeft className="w-6 h-6" /></button>
-                                <button className="gallery-next w-12 h-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center dark:text-white hover:bg-primary transition-all bg-white dark:bg-gray-900"><ChevronRight className="w-6 h-6" /></button>
+
+                        <div className="space-y-8 pt-10 border-t border-gray-100 dark:border-gray-800">
+                            <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Facilities</h2>
+                            <div className="grid grid-cols-2 gap-6">
+                                {[
+                                    { key: 'isParkingAvailable', label: 'Spacious Parking' },
+                                    { key: 'isWashroomAvailable', label: 'Clean Washrooms' },
+                                    { key: 'isChangingRoomAvailable', label: 'Changing Rooms' },
+                                    { key: 'isFoodAndBeveragesAvailable', label: 'Cafe & Drinks' }
+                                ].map((amenity) => (
+                                    sport.amenities?.[amenity.key] !== false && (
+                                        <div key={amenity.key} className="flex items-center gap-4">
+                                            <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center shrink-0">
+                                                <Check className="w-3.5 h-3.5 text-green-600" />
+                                            </div>
+                                            <span className="text-[12px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wide">{amenity.label}</span>
+                                        </div>
+                                    )
+                                ))}
                             </div>
                         </div>
-                        <div className="relative rounded-[40px] overflow-hidden">
-                            <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={1} navigation={{ nextEl: '.gallery-next', prevEl: '.gallery-prev' }}>
-                                {images.map((img, idx) => (
-                                    <SwiperSlide key={idx}>
-                                        <div onClick={() => setActiveGalleryIdx(idx)} className="aspect-[4/3] rounded-[40px] overflow-hidden cursor-zoom-in">
-                                            <img src={img} alt="Venue" className="w-full h-full object-cover" />
-                                        </div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
+                    </section>
+                    <section className="space-y-8 pt-10">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl md:text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Gallery</h2>
+                            {images.length > 4 && (
+                                <button
+                                    onClick={() => setActiveGalleryIdx(0)}
+                                    className="text-[10px] font-black text-primary uppercase tracking-widest hover:brightness-110 transition-all"
+                                >
+                                    View All ({images.length})
+                                </button>
+                            )}
                         </div>
+
+                        <div className="w-full aspect-[16/9] relative">
+                            {images.length > 2 ? (
+                                <div className="absolute inset-0 grid grid-cols-2 grid-rows-3 gap-2">
+                                    {/* Main Image (Spans 3 rows) */}
+                                    <div
+                                        onClick={() => setActiveGalleryIdx(0)}
+                                        className="col-span-1 row-span-3 relative group overflow-hidden rounded-md cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-lg"
+                                    >
+                                        <img src={images[0]} alt="Venue 1" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/0 transition-colors" />
+                                    </div>
+
+                                    {/* Top Secondary Image (Spans 2 rows) */}
+                                    <div
+                                        onClick={() => setActiveGalleryIdx(1)}
+                                        className="col-span-1 row-span-2 relative group overflow-hidden rounded-md cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-md"
+                                    >
+                                        <img src={images[1]} alt="Venue 2" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/0" />
+                                    </div>
+
+                                    {/* Bottom Secondary Image (Spans 1 row) */}
+                                    <div
+                                        onClick={() => setActiveGalleryIdx(2)}
+                                        className="col-span-1 row-span-1 relative group overflow-hidden rounded-md cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-md"
+                                    >
+                                        <img src={images[2]} alt="Venue 3" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/0 transition-colors flex items-center justify-center">
+                                            {images.length > 3 && (
+                                                <span className="text-white font-black text-lg drop-shadow-lg">+{images.length - 2}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : images.length === 2 ? (
+                                <div className="absolute inset-0 grid grid-cols-2 gap-2">
+                                    <div
+                                        onClick={() => setActiveGalleryIdx(0)}
+                                        className="relative group overflow-hidden rounded-md cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-md"
+                                    >
+                                        <img src={images[0]} alt="Venue 1" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/0" />
+                                    </div>
+                                    <div
+                                        onClick={() => setActiveGalleryIdx(1)}
+                                        className="relative group overflow-hidden rounded-md cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-md"
+                                    >
+                                        <img src={images[1]} alt="Venue 2" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/0" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() => setActiveGalleryIdx(0)}
+                                    className="aspect-[16/9] relative group overflow-hidden rounded-xl cursor-zoom-in border border-gray-100 dark:border-gray-800 shadow-2xl h-full"
+                                >
+                                    <img src={images[0]} alt="Venue" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/0 transition-colors" />
+                                </div>
+                            )}
+                        </div>
+
                     </section>
                 </div>
 
-                <section className="relative group/store pt-8 border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex flex-row justify-between items-end mb-8 gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <section className="relative group/store pt-10 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex flex-row justify-between items-end mb-4 gap-4 border-b border-gray-100 dark:border-gray-800 pb-2">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Exclusive Gear</p>
-                            <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Official Merchandise</h2>
+                            <h2 className="text-xl md:text-xl font-black uppercase text-gray-900 dark:text-gray-100">Official Merchandise</h2>
                         </div>
                         <Link to="/store" className="text-xs md:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-1.5 shrink-0 pb-1">
                             <ShoppingBag className="w-3.5 h-3.5" />
@@ -402,47 +463,48 @@ const SportDetailsPage = () => {
 
                         {/* Custom Navigation Arrows */}
                         <button className="sport-store-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
-                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                         </button>
                         <button className="sport-store-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
-                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
                 </section>
 
-                <section className="py-8 md:py-12 border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex flex-col lg:flex-row items-center gap-16">
-                        <div className="flex-1 space-y-6">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Venue Map</p>
-                                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Explore Location</h2>
+                <section className="animate-in fade-in duration-500 pt-8 border-t border-gray-100 dark:border-gray-800">
+                    <div className="border border-gray-100 dark:border-gray-800 rounded-md p-8 bg-[#fcfcfc] dark:bg-[#13151a] space-y-6 shadow-sm">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white tracking-tight uppercase">Location</h2>
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div className="flex items-start md:items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center shrink-0">
+                                    <MapPin className="w-5 h-5 text-primary" />
+                                </div>
+                                <p className="text-sm md:text-md font-bold text-gray-700 dark:text-gray-300">
+                                    {sport.address}
+                                </p>
                             </div>
-                            <div className="space-y-3">
-                                <h3 className="text-lg md:text-2xl font-black opacity-80 uppercase">{sport.venue}</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm md:text-lg font-medium leading-relaxed">{sport.address}</p>
-                            </div>
-                            <button onClick={handleGetDirections} className="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[11px] font-black uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all shadow-2xl">
-                                <MapPin className="w-4 h-4" /> Get Directions
+                            <button
+                                onClick={handleGetDirections}
+                                className="w-full md:w-auto px-10 py-4 bg-primary text-white text-[12px] font-black uppercase tracking-widest rounded-md hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20 text-center"
+                            >
+                                Get directions
                             </button>
-                        </div>
-                        <div className="w-full lg:w-[600px] h-[400px] rounded-[40px] overflow-hidden shadow-2xl bg-gray-100 dark:bg-gray-800 relative">
-                            <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1" alt="Map" className="w-full h-full object-cover grayscale opacity-50" />
-                            <div className="absolute inset-0 flex items-center justify-center"><MapPin className="w-12 h-12 text-primary animate-bounce" /></div>
                         </div>
                     </div>
                 </section>
+                
 
                 <section className="pb-8 relative group/recommended border-t border-gray-100 dark:border-gray-800 pt-8">
                     <div className="flex flex-row justify-between items-end mb-8 gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1.5">Recommended for you</p>
-                            <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Top Choices</h2>
+                            <p className="text-[10px] font-black uppercase tracking-[0.1em] text-primary mb-1.5">Recommended for you</p>
+                            <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-gray-900 dark:text-gray-100">Top Choices</h2>
                         </div>
-                        <Link to="/activities" className="text-xs md:text-sm font-black text-primary uppercase tracking-widest flex items-center gap-1.5 shrink-0 pb-1 group">
+                        <Link to="/activities" className="text-xs md:text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1.5 shrink-0 pb-1 group">
                             Explore More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
-                    
+
                     <div className="relative">
                         <Swiper
                             modules={[Navigation]}
@@ -481,19 +543,19 @@ const SportDetailsPage = () => {
                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Starting at</p>
                     <p className="text-2xl font-black text-gray-900 dark:text-white">₹{sport.price}</p>
                 </div>
-                <button onClick={handleCheckout} className="px-10 py-4 bg-primary text-white text-[12px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Book Now</button>
+                <button onClick={handleCheckout} className="px-20 py-4 bg-primary text-white text-[12px] font-black uppercase tracking-widest rounded-md shadow-xl shadow-primary/20">Book Now</button>
             </div>
 
             {/* ── FIGMA FULLSCREEN IMAGE LIGHTBOX OVERLAY ── */}
             {activeGalleryIdx !== null && (
                 <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center select-none animate-in fade-in duration-300" onClick={() => setActiveGalleryIdx(null)}>
-                    
+
                     {/* Top Controls */}
                     <div className="absolute top-6 right-6 left-6 flex items-center justify-between text-white z-50">
                         <span className="text-sm font-bold text-white/60 font-display tracking-wider">
                             {activeGalleryIdx + 1} / {images.length}
                         </span>
-                        <button 
+                        <button
                             onClick={(e) => { e.stopPropagation(); setActiveGalleryIdx(null); }}
                             className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 hover:rotate-90 duration-300 shadow-md"
                         >
@@ -502,10 +564,10 @@ const SportDetailsPage = () => {
                     </div>
 
                     {/* Left Navigation Button */}
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveGalleryIdx(prev => prev === 0 ? images.length - 1 : prev - 1); 
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveGalleryIdx(prev => prev === 0 ? images.length - 1 : prev - 1);
                         }}
                         className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
                     >
@@ -513,10 +575,10 @@ const SportDetailsPage = () => {
                     </button>
 
                     {/* Right Navigation Button */}
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveGalleryIdx(prev => prev === images.length - 1 ? 0 : prev + 1); 
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveGalleryIdx(prev => prev === images.length - 1 ? 0 : prev + 1);
                         }}
                         className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
                     >
@@ -525,8 +587,8 @@ const SportDetailsPage = () => {
 
                     {/* The Full Screen Image Frame */}
                     <div className="w-full max-w-5xl max-h-[85vh] p-4 flex items-center justify-center relative animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
-                        <img 
-                            src={images[activeGalleryIdx]} 
+                        <img
+                            src={images[activeGalleryIdx]}
                             alt={`Fullscreen visual view`}
                             className="max-w-full max-h-[85vh] object-contain rounded-sm shadow-[0_24px_60px_rgba(0,0,0,0.7)] select-none border border-white/10"
                         />

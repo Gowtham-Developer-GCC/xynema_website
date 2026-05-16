@@ -749,16 +749,52 @@ const PrivateEventBanner = ({ onNavigate }) => {
 
 const PrivateEventsSection = ({ onCancel }) => {
     const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+        
+        const phoneDigits = formData.phone.replace(/[^\d]/g, '');
+        if (!phoneDigits) {
+            newErrors.phone = 'Phone number is required';
+        } else if (phoneDigits.length !== 10) {
+            newErrors.phone = 'Please enter a 10-digit phone number';
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email address is required';
+        } else if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+
+        if (!formData.eventType) newErrors.eventType = 'Event type is required';
+        if (!formData.eventDescription.trim()) newErrors.eventDescription = 'Description is required';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'phone') {
+            const cleaned = value.replace(/[^\d]/g, '').slice(0, 10);
+            setFormData(prev => ({ ...prev, [name]: cleaned }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validateForm()) {
+            setStatusMessage({ type: 'error', text: 'Please fill all required fields correctly.' });
+            return;
+        }
         setLoading(true);
         setStatusMessage({ type: '', text: '' });
         try {
@@ -766,6 +802,7 @@ const PrivateEventsSection = ({ onCancel }) => {
             if (success) {
                 setStatusMessage({ type: 'success', text: 'Enquiry submitted! Our team will contact you shortly.' });
                 setFormData({ fullName: '', phone: '', email: '', eventType: '', eventDescription: '' });
+                setErrors({});
             }
         } catch (err) {
             setStatusMessage({ type: 'error', text: errorHandler.getUserMessage(err) });
@@ -807,39 +844,44 @@ const PrivateEventsSection = ({ onCancel }) => {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} noValidate className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span className="text-red-500">*</span></label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your full name" />
+                                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border ${errors.fullName ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans`} placeholder="Enter your full name" />
+                                {errors.fullName && <p className="text-[11px] font-bold text-red-500 mt-1 pl-1">{errors.fullName}</p>}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number <span className="text-red-500">*</span></label>
-                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your phone number" />
+                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} maxLength={10} className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border ${errors.phone ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans`} placeholder="10 digit number" />
+                                {errors.phone && <p className="text-[11px] font-bold text-red-500 mt-1 pl-1">{errors.phone}</p>}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address <span className="text-red-500">*</span></label>
-                                <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans" placeholder="Enter your email address" />
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border ${errors.email ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-sans`} placeholder="name@example.com" />
+                                {errors.email && <p className="text-[11px] font-bold text-red-500 mt-1 pl-1">{errors.email}</p>}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Type <span className="text-red-500">*</span></label>
                                 <div className="relative">
-                                    <select name="eventType" value={formData.eventType} onChange={handleChange} required className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none font-sans ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`} style={{ colorScheme: 'dark' }}>
+                                    <select name="eventType" value={formData.eventType} onChange={handleChange} className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border ${errors.eventType ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none font-sans ${formData.eventType ? 'text-gray-900 dark:text-gray-100' : 'text-[#9CA3AF] dark:text-gray-400'}`} style={{ colorScheme: 'dark' }}>
                                         <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">Select event type</option>
                                         <option value="public-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Public Event</option>
                                         <option value="private-event" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">Private Event</option>
                                     </select>
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400"><ChevronDown className="w-4 h-4" /></div>
                                 </div>
+                                {errors.eventType && <p className="text-[11px] font-bold text-red-500 mt-1 pl-1">{errors.eventType}</p>}
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Description</label>
-                            <textarea name="eventDescription" value={formData.eventDescription} onChange={handleChange} required rows="4" className="w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-sans" placeholder="Tell us about your event, requirements, preferences, or special arrangements..." />
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Description <span className="text-red-500">*</span></label>
+                            <textarea name="eventDescription" value={formData.eventDescription} onChange={handleChange} rows="4" className={`w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border ${errors.eventDescription ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y font-sans`} placeholder="Tell us about your event, requirements, preferences, or special arrangements..." />
+                            {errors.eventDescription && <p className="text-[11px] font-bold text-red-500 mt-1 pl-1">{errors.eventDescription}</p>}
                         </div>
 
                         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-4 border-t border-white/20 dark:border-gray-700">

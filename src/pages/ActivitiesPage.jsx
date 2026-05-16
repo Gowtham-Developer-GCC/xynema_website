@@ -430,8 +430,8 @@ const ActivitiesPage = () => {
         return list;
     }, [allTurfs, searchQuery]);
 
-    const mainSportTags    = useMemo(() => availableSportTags.slice(0, 4), [availableSportTags]);
-    const dropdownSportTags = useMemo(() => availableSportTags.slice(4), [availableSportTags]);
+    const mainSportTags    = useMemo(() => availableSportTags.slice(0, 6), [availableSportTags]);
+    const dropdownSportTags = useMemo(() => availableSportTags.slice(6), [availableSportTags]);
 
     const parkTypesOnly = useMemo(() => {
         if (availableParkTypes && availableParkTypes.length > 0) {
@@ -439,8 +439,8 @@ const ActivitiesPage = () => {
         }
         return Array.from(new Set(allParks.map(p => p.type))).filter(Boolean).sort();
     }, [allParks, availableParkTypes]);
-    const mainParkTypes  = useMemo(() => parkTypesOnly.slice(0, 4), [parkTypesOnly]);
-    const dropdownParkTypes = useMemo(() => parkTypesOnly.slice(4), [parkTypesOnly]);
+    const mainParkTypes  = useMemo(() => parkTypesOnly.slice(0, 6), [parkTypesOnly]);
+    const dropdownParkTypes = useMemo(() => parkTypesOnly.slice(6), [parkTypesOnly]);
 
     const filteredParks = useMemo(() => {
         let list = allParks;

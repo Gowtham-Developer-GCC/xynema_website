@@ -384,8 +384,8 @@ const ParkDetailsPage = () => {
 
                                 ];
                                 return (
-                                    <div 
-                                        key={idx} 
+                                    <div
+                                        key={idx}
                                         onClick={() => setActiveGalleryIdx(idx)}
                                         className={`relative group overflow-hidden rounded-md shadow-md bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 cursor-pointer ${spans[idx % spans.length]}`}
                                     >
@@ -511,13 +511,13 @@ const ParkDetailsPage = () => {
             {/* ── FIGMA FULLSCREEN IMAGE LIGHTBOX OVERLAY ── */}
             {activeGalleryIdx !== null && (
                 <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center select-none animate-in fade-in duration-300" onClick={() => setActiveGalleryIdx(null)}>
-                    
+
                     {/* Top Controls */}
                     <div className="absolute top-6 right-6 left-6 flex items-center justify-between text-white z-50">
                         <span className="text-sm font-bold text-white/60 font-display tracking-wider">
                             {activeGalleryIdx + 1} / {galleryToRender.slice(0, 4).length}
                         </span>
-                        <button 
+                        <button
                             onClick={(e) => { e.stopPropagation(); setActiveGalleryIdx(null); }}
                             className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 hover:rotate-90 duration-300 shadow-md"
                         >
@@ -526,10 +526,10 @@ const ParkDetailsPage = () => {
                     </div>
 
                     {/* Left Navigation Button */}
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveGalleryIdx(prev => prev === 0 ? galleryToRender.slice(0, 4).length - 1 : prev - 1); 
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveGalleryIdx(prev => prev === 0 ? galleryToRender.slice(0, 4).length - 1 : prev - 1);
                         }}
                         className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
                     >
@@ -537,10 +537,10 @@ const ParkDetailsPage = () => {
                     </button>
 
                     {/* Right Navigation Button */}
-                    <button 
-                        onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveGalleryIdx(prev => prev === galleryToRender.slice(0, 4).length - 1 ? 0 : prev + 1); 
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveGalleryIdx(prev => prev === galleryToRender.slice(0, 4).length - 1 ? 0 : prev + 1);
                         }}
                         className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl"
                     >
@@ -549,8 +549,8 @@ const ParkDetailsPage = () => {
 
                     {/* The Full Screen Image Frame */}
                     <div className="w-full max-w-5xl max-h-[85vh] p-4 flex items-center justify-center relative animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
-                        <img 
-                            src={galleryToRender.slice(0, 4)[activeGalleryIdx]} 
+                        <img
+                            src={galleryToRender.slice(0, 4)[activeGalleryIdx]}
                             alt={`Fullscreen visual view`}
                             className="max-w-full max-h-[85vh] object-contain rounded-sm shadow-[0_24px_60px_rgba(0,0,0,0.7)] select-none border border-white/10"
                         />

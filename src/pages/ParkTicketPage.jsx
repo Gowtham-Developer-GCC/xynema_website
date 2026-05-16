@@ -107,10 +107,24 @@ const ParkTicketPage = () => {
     }, [availableTickets]);
 
     const updateCount = (id, delta) => {
-        setCounts(prev => ({
-            ...prev,
-            [id]: Math.max(0, (prev[id] || 0) + delta)
-        }));
+        setCounts(prev => {
+            const currentCount = prev[id] || 0;
+            const newCount = currentCount + delta;
+            
+            // Limit to 10 tickets total across all types
+            const totalOtherTickets = Object.entries(prev)
+                .filter(([key]) => key !== id)
+                .reduce((acc, [_, count]) => acc + count, 0);
+            
+            if (delta > 0 && (totalOtherTickets + newCount) > 10) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                [id]: Math.max(0, newCount)
+            };
+        });
     };
 
     const totalPrice = useMemo(() => {
@@ -277,7 +291,8 @@ const ParkTicketPage = () => {
                                                         <span className="text-lg font-black text-gray-900 dark:text-white w-4 text-center">{counts[type.id]}</span>
                                                         <button 
                                                             onClick={() => updateCount(type.id, 1)}
-                                                            className="w-10 h-10 flex items-center justify-center bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all"
+                                                            disabled={totalTickets >= 10}
+                                                            className="w-10 h-10 flex items-center justify-center bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                                         >
                                                             <Plus className="w-5 h-5" />
                                                         </button>
@@ -285,7 +300,8 @@ const ParkTicketPage = () => {
                                                 ) : (
                                                     <button 
                                                         onClick={() => updateCount(type.id, 1)}
-                                                        className="px-10 py-3 bg-primary text-white text-[11px] font-black tracking-[0.2em] uppercase rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+                                                        disabled={totalTickets >= 10}
+                                                        className="px-10 py-3 bg-primary text-white text-[11px] font-black tracking-[0.2em] uppercase rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                                     >
                                                         Add
                                                     </button>

@@ -471,6 +471,7 @@ const BookingDetailsPage = () => {
 
                 {/* Review Section (Conditional) */}
                 {(() => {
+                    return null; // Temporarily disabled rating feature
                     if (!booking) return null;
                     const showDate = booking.showDate || booking.date;
                     const showTime = booking.showTime || booking.time;

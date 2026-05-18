@@ -44,7 +44,7 @@ const PaymentMethodsPage = () => {
     };
 
     const CardIcon = ({ type }) => {
-        if (type === 'visa') return <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-4 md:h-5 invert dark:invert-0 brightness-0 dark:brightness-200" alt="Visa" />;
+        if (type === 'visa') return <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Visa_Inc._logo_%282005%E2%80%932014%29.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" className="h-4 md:h-5 " alt="Visa" />;
         return <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-6 md:h-8" alt="Mastercard" />;
     };
 

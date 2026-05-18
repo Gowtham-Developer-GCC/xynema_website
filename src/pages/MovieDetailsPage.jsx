@@ -546,7 +546,7 @@ const MovieDetailsPage = () => {
                                     <div className="flex items-center gap-3 justify-center sm:justify-start">
                                         <button
                                             onClick={handleInterest}
-                                            className={`flex items-center gap-3 px-6 h-12 rounded-xl border transition-all active:scale-95 shadow-lg group ${hasInterested
+                                            className={`flex items-center gap-3 px-6 h-14 rounded-md border transition-all active:scale-95 shadow-lg group ${hasInterested
                                                 ? 'bg-white border-white text-primary shadow-white/10'
                                                 : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                                                 }`}

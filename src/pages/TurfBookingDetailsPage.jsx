@@ -74,10 +74,10 @@ const TurfBookingDetailsPage = () => {
     // Helper: Convert an image URL to base64 via our server proxy or direct fetch
     const fetchImageAsBase64 = async (url) => {
         if (!url || url.startsWith('data:')) return url;
-        
+
         // Determine if it's an external URL that needs proxying
         const isExternal = url.startsWith('http') && !url.includes(window.location.host);
-        
+
         try {
             if (isExternal) {
                 const proxyUrl = `/__image_proxy?url=${encodeURIComponent(url)}`;
@@ -124,9 +124,20 @@ const TurfBookingDetailsPage = () => {
 
             const element = ticketRef.current;
             const originalWidth = element.style.width;
+            const originalHeight = element.style.height;
+            const originalPosition = element.style.position;
+            const originalZIndex = element.style.zIndex;
+            const originalTop = element.style.top;
+            const originalLeft = element.style.left;
 
-            // Force a stable desktop-width viewport for the capture engine
-            element.style.width = '800px';
+            // Force absolute fixed rendering to ignore responsive parent overflows
+            element.classList.add('force-desktop');
+            element.style.position = 'fixed';
+            element.style.zIndex = '99999';
+            element.style.top = '0';
+            element.style.left = '0';
+            element.style.width = '760px';
+            element.style.height = '290px';
 
             // Step 1: Inline all images (CORS bypass via proxy)
             const images = [...element.getElementsByTagName('img')];
@@ -162,7 +173,7 @@ const TurfBookingDetailsPage = () => {
             // Step 2: Settle layout and assets
             await new Promise(resolve => setTimeout(resolve, 600));
 
-            // Record dimensions at 800px
+            // Record dimensions at forced 760px landscape state
             const captureWidth = element.offsetWidth;
             const captureHeight = element.offsetHeight;
 
@@ -187,14 +198,21 @@ const TurfBookingDetailsPage = () => {
                 canvas.style.display = '';
                 img.remove();
             }
+            element.classList.remove('force-desktop');
+            element.style.position = originalPosition;
+            element.style.zIndex = originalZIndex;
+            element.style.top = originalTop;
+            element.style.left = originalLeft;
             element.style.width = originalWidth;
+            element.style.height = originalHeight;
             for (const { img, src } of originalSrcs) {
                 img.src = src;
             }
 
             // Step 5: PDF construction
+            const orientation = captureWidth > captureHeight ? 'landscape' : 'portrait';
             const pdf = new jsPDF({
-                orientation: 'portrait',
+                orientation: orientation,
                 unit: 'px',
                 format: [captureWidth, captureHeight]
             });
@@ -258,6 +276,79 @@ const TurfBookingDetailsPage = () => {
     return (
         <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0f1115] transition-colors duration-300 pb-12">
             <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap');
+
+                .ticket-container {
+                    display: flex;
+                    flex-direction: row;
+                    width: 100%;
+                    max-width: 760px;
+                    margin: 0 auto;
+                    font-family: 'Montserrat', sans-serif;
+                    filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.08));
+                    transition: all 0.3s ease;
+                }
+
+                .ticket-stub {
+                    background: #ef5658;
+                    height: 290px;
+                    width: 260px;
+                    color: white;
+                    padding: 24px;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    box-sizing: border-box;
+                    z-index: 10;
+                }
+
+                .ticket-check {
+                    background: #ffffff;
+                    height: 290px;
+                    width: 500px;
+                    padding: 24px 32px;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    box-sizing: border-box;
+                    z-index: 10;
+                }
+
+                .dark .ticket-check {
+                    background: #1a1d24;
+                }
+
+                /* Default clip-paths (horizontal landscape layout) */
+                .ticket-stub {
+                    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%);
+                }
+                .ticket-check {
+                    clip-path: polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
+                }
+
+                @media (max-width: 767px) {
+                    .ticket-container:not(.force-desktop) {
+                        flex-direction: column;
+                        max-width: 360px;
+                        filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.12));
+                    }
+                    .ticket-container:not(.force-desktop) .ticket-stub {
+                        width: 100%;
+                        height: auto;
+                        min-height: 210px;
+                        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px));
+                        margin-bottom: -1px;
+                    }
+                    .ticket-container:not(.force-desktop) .ticket-check {
+                        width: 100%;
+                        height: auto;
+                        padding: 24px;
+                        clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%, 0 18px);
+                    }
+                }
+
                 @media print {
                     @page { margin: 0; size: auto; }
                     body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -280,17 +371,27 @@ const TurfBookingDetailsPage = () => {
                         padding: 20px !important;
                     }
 
-                    .rounded-3xl { 
-                        border-radius: 20px !important; 
-                        border: 1px solid #e5e7eb !important; 
-                        box-shadow: none !important; 
-                        margin: 0 auto !important;
-                        max-width: 650px !important;
-                        overflow: hidden !important;
-                        background: white !important;
+                    .ticket-container {
+                        filter: none !important;
+                        max-width: 700px !important;
                     }
 
-                    .opacity-80 { opacity: 1 !important; }
+                    .ticket-stub {
+                        clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%) !important;
+                        background: #ef5658 !important;
+                        color: white !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    .ticket-check {
+                        clip-path: polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px), 0 18px) !important;
+                        background: white !important;
+                        color: black !important;
+                        border: 1px solid #e5e7eb !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                 }
             `}</style>
             <SEO
@@ -299,8 +400,8 @@ const TurfBookingDetailsPage = () => {
             />
 
             {/* Top Navigation */}
-            <div className="bg-white dark:bg-[#1a1d24] border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
-                <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="bg-white dark:bg-[#1a1d24] border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30 print:hidden">
+                <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/bookings', { state: { activeTab: 'sports' } })}
                         className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
@@ -308,7 +409,7 @@ const TurfBookingDetailsPage = () => {
                         <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
                     </button>
                     <h1 className="text-lg font-bold text-gray-900 dark:text-white">Booking Details</h1>
-                    <button 
+                    <button
                         onClick={handleShare}
                         className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group"
                         title="Share Ticket"
@@ -318,10 +419,10 @@ const TurfBookingDetailsPage = () => {
                 </div>
             </div>
 
-            <main className="max-w-4xl mx-auto px-4 pt-8">
+            <main className="max-w-6xl mx-auto px-4 pt-8">
                 {/* Status Banner - Only show on success redirect */}
                 {location.state?.isNewBooking && (
-                    <div className="mb-8 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="mb-8 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-700 print:hidden">
                         <div className="w-16 h-16 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-500" />
                         </div>
@@ -330,127 +431,152 @@ const TurfBookingDetailsPage = () => {
                     </div>
                 )}
 
-                {/* Main Ticket Card (Mockup Style) */}
-                <div ref={ticketRef} className="bg-white dark:bg-[#1a1d24] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 overflow-hidden relative">
-                    {/* Decorative Top Accent */}
-                    <div className="h-2 bg-primary w-full" />
+                {/* Main Ticket Card (Dribbble Retro Shape Style) */}
+                <div ref={ticketRef} className="ticket-container max-w-6xl">
 
-                    <div className="p-6 md:p-10 space-y-8">
-                        {/* Info Section */}
-                        <div className="space-y-6">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-1.5 opacity-80">
-                                    Venue Information
-                                </p>
-                                <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
-                                    {turf.turfName}
-                                </h3>
-                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                                    <MapPin className="w-4 h-4 text-primary" />
-                                    <span className="text-sm md:text-base font-medium">
-                                        {turf.city ? `${turf.city}, India` : 'India'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-y-8 gap-x-4">
-                                <div className="space-y-1">
-                                    <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 dark:text-gray-500">Date</p>
-                                    <p className="text-base md:text-lg font-bold text-gray-800 dark:text-gray-200">
-                                        {formatDate(date)}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 dark:text-gray-500">Time Slot</p>
-                                    <p className="text-base md:text-lg font-bold text-gray-800 dark:text-gray-200">
-                                        {startTime && endTime ? `${startTime} - ${endTime}` : '-'}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 dark:text-gray-500">Pitch Type</p>
-                                    <p className="text-base md:text-lg font-bold text-gray-800 dark:text-gray-200">
-                                        {court.courtName || 'Standard'}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 dark:text-gray-500">Sport</p>
-                                    <p className="text-base md:text-lg font-bold text-gray-800 dark:text-gray-200">
-                                        {booking.sportType || turf.sportType || 'Football'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {booking.notes && (
-                                <div className="pt-4 border-t border-gray-100 dark:border-gray-800/50">
-                                    <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 dark:text-gray-500 mb-1">Notes</p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                        "{booking.notes}"
-                                    </p>
-                                </div>
-                            )}
+                    {/* 1. Left Stub Section */}
+                    <div className="ticket-stub">
+                        {/* Top Area */}
+                        <div className="flex items-center justify-between uppercase tracking-widest text-[9px] font-bold">
+                            <span className="text-white font-black">Admit</span>
+                            <span className="block bg-white/40 h-5 w-[2.5px] mx-3" />
+                            <span className="flex flex-col text-[8px] leading-tight text-white/90">
+                                Invitation
+                                <span className="text-[7.5px] font-bold font-mono text-black bg-white px-1.5 py-0.5 rounded mt-0.5 select-all">
+                                    {(booking.id || booking._id)?.slice(-8).toUpperCase()}
+                                </span>
+                            </span>
                         </div>
 
-                        {/* Bottom QR Section */}
-                        <div className="pt-6 border-t border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center">
-                            <div className="bg-pink-50 dark:bg-pink-500/5 rounded-2xl p-6 border border-dashed border-pink-200 dark:border-pink-500/10 flex flex-col md:flex-row items-center gap-6 w-full max-w-3xl">
-                                <div className="shrink-0">
-                                    <BookingQr booking={{ ...booking, qrcode: booking.qrcode || booking.qrCode || firstSlot.qrcode || firstSlot.qrCode }} size={190} />
-                                </div>
-                                <div className="flex-1 text-center md:text-center space-y-1">
-                                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                                        Scan for Entry Verification
-                                    </p>
-                                    <p className="text-[10px] text-gray-400 dark:text-gray-500 font-mono uppercase">
-                                        Booking ID: {booking.bookingId || (booking.id || booking._id)?.slice(-8).toUpperCase()}
-                                    </p>
-                                    <div className="mt-2 text-[9px] text-primary font-bold bg-primary/10 px-2 py-1 rounded inline-block">
-                                        VALID FOR {slots.length} SLOT{slots.length > 1 ? 'S' : ''}
+                        {/* Centered QR code container */}
+                        <div className="flex items-center justify-center py-2 select-none">
+                            <div className="p-0.5 bg-white rounded-md shadow-md flex items-center justify-center select-none">
+                                <BookingQr
+                                    booking={{ ...booking, qrcode: booking.qrcode || booking.qrCode || firstSlot.qrcode || firstSlot.qrCode }}
+                                    size={130}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Invite message */}
+                        <div className="flex flex-col items-start gap-1">
+                            <span className="block bg-white h-[3px] w-10 mb-0.5" />
+                            <span className="text-[11px] font-black uppercase tracking-widest text-black/95 select-none leading-none max-w-[215px] truncate" title={booking.notes}>
+                                Note: {booking.notes || 'Invite for you'}
+                            </span>
+                            <span className="text-[7.5px] font-bold text-white/90 uppercase tracking-widest leading-none mt-0.5 font-mono select-all">
+                                ID: {booking.bookingId || bookingId || (booking.id || booking._id)?.slice(-8).toUpperCase()}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 2. Right Check Section */}
+                    <div className="ticket-check border-l border-dashed border-gray-200 dark:border-gray-800 relative">
+                        <div className="flex justify-between items-start gap-4 h-full w-full">
+                            {/* Left Text / Info details */}
+                            <div className="flex-1 flex flex-col justify-between h-full">
+                                <div>
+                                    {/* Category / Slots Tag (static on mobile, absolute on desktop) */}
+                                    <div className="md:absolute md:top-6 md:right-8 text-[#ef5658] font-black text-sm md:text-3xl tracking-tight uppercase select-none z-20 mb-2 md:mb-0">
+                                        {slots.length || 1} <span className="text-[10px] md:text-lg">Slot{slots.length > 1 ? 's' : ''}</span>
                                     </div>
+
+                                    <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 dark:text-white leading-[1.05em] uppercase tracking-tighter select-none max-w-[280px]">
+                                        {(() => {
+                                            const rawName = turf.turfName || booking.turfName || 'Olympus Arena';
+                                            return turf.turfName || booking.turfName || 'Turf';
+                                        })()}
+                                    </h2>
+                                    {turf.city && (
+                                        <p className="text-xs md:text-sm font-black uppercase tracking-widest text-[#ef5658] mt-1 select-none">
+                                            {turf.city}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Dynamic Responsive Details Grid (2x2 on mobile, flex row on desktop) */}
+                                <div className="grid grid-cols-2 gap-y-4 gap-x-6 mt-4 md:flex md:gap-6">
+                                    <section className="flex flex-col">
+                                        <span className="block bg-[#ef5658] h-[3px] w-8 mb-1" />
+                                        <span className="text-[8.5px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</span>
+                                        <span className="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 uppercase mt-0.5 whitespace-nowrap">
+                                            {new Date(date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                                        </span>
+                                    </section>
+                                    <section className="flex flex-col">
+                                        <span className="block bg-[#ef5658] h-[3px] w-8 mb-1" />
+                                        <span className="text-[8.5px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">Time Slot</span>
+                                        <span className="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 uppercase mt-0.5 whitespace-nowrap">
+                                            {startTime && endTime ? `${startTime} - ${endTime}` : '-'}
+                                        </span>
+                                    </section>
+                                    <section className="flex flex-col">
+                                        <span className="block bg-[#ef5658] h-[3px] w-8 mb-1" />
+                                        <span className="text-[8.5px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">Pitch Type</span>
+                                        <span className="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 uppercase mt-0.5 whitespace-nowrap">
+                                            {court.courtName || 'Standard'}
+                                        </span>
+                                    </section>
+                                    <section className="flex flex-col">
+                                        <span className="block bg-[#ef5658] h-[3px] w-8 mb-1" />
+                                        <span className="text-[8.5px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">Sport</span>
+                                        <span className="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 uppercase mt-0.5 whitespace-nowrap">
+                                            {booking.sportType || turf.sportType || 'Football'}
+                                        </span>
+                                    </section>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Footer / Meta Section */}
-                    <div className="bg-gray-50 dark:bg-black/20 border-t border-gray-100 dark:border-gray-800/50 p-6 flex items-center justify-between gap-4">
-                        <div className="flex-1 flex flex-wrap items-center gap-y-4 gap-x-8">
-                            <div className="space-y-0.5">
-                                <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Amount Paid</p>
-                                <p className="font-black text-primary text-lg leading-none">₹{(payment.amountPaid !== undefined ? payment.amountPaid : (payment.amount || 0)).toLocaleString()}</p>
+                {/* Footer Details Wrapper */}
+                <div className="bg-white dark:bg-[#1a1d24] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800/80 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mt-6 print:hidden">
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-4 md:flex md:flex-wrap md:items-center md:gap-y-4 md:gap-x-8">
+                        <div className="space-y-0.5">
+                            <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Amount Paid</p>
+                            <p className="font-black text-[#ef5658] text-lg leading-none">₹{Math.round(payment.amountPaid !== undefined ? payment.amountPaid : (payment.amount || 0)).toLocaleString()}</p>
+                        </div>
+
+                        {payment.paymentStatus === 'partial' && payment.remainingAtVenue > 0 && (
+                            <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
+                                <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Remaining at Venue</p>
+                                <p className="font-black text-orange-500 text-lg leading-none">₹{Math.round(payment.remainingAtVenue).toLocaleString()}</p>
                             </div>
+                        )}
 
-                            {payment.paymentStatus === 'partial' && payment.remainingAtVenue > 0 && (
-                                <div className="space-y-0.5 border-l border-gray-200 dark:border-gray-800 pl-8">
-                                    <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Remaining at Venue</p>
-                                    <p className="font-black text-orange-500 text-lg leading-none">₹{payment.remainingAtVenue.toLocaleString()}</p>
-                                </div>
+                        <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
+                            <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Payment Mode</p>
+                            <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">{payment.paymentMethod || payment.method || 'Online'}</p>
+                        </div>
+                        <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
+                            <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Payment Status</p>
+                            <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">{payment.paymentStatus || 'Success'}</p>
+                        </div>
+                        <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
+                            <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Total Amount</p>
+                            <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">₹{payment.totalAmount || '0'}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex w-full md:w-auto print:hidden download-exclude">
+                        <button
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                            className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 md:px-5 md:py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm md:text-xs hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-70 disabled:cursor-wait"
+                        >
+                            {isDownloading ? (
+                                <>
+                                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-4 h-4" />
+                                    Download Pass
+                                </>
                             )}
-
-                            <div className="space-y-0.5 border-l border-gray-200 dark:border-gray-800 pl-8">
-                                <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Payment Mode</p>
-                                <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">{payment.paymentMethod || payment.method || 'Online'}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 print:hidden download-exclude">
-                            <button
-                                onClick={handleDownload}
-                                disabled={isDownloading}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-70 disabled:cursor-wait"
-                            >
-                                {isDownloading ? (
-                                    <>
-                                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Download className="w-4 h-4" />
-                                        Download Pass
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        </button>
                     </div>
                 </div>
 

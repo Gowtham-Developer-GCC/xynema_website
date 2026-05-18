@@ -9,6 +9,7 @@ import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
+import TicketListCard from '../components/TicketListCard';
 
 const MyBookingsPage = () => {
     const navigate = useNavigate();
@@ -361,7 +362,7 @@ const MyBookingsPage = () => {
     const isContentLoading = bookingType === 'movies' ? pageLoading : (bookingType === 'events' ? eventLoading : (bookingType === 'sports' ? turfLoading : parkLoading));
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300">
+        <div className="min-h-screen bg-primary/5 dark:bg-[#0f1115] transition-colors duration-300">
             <SEO title="My Tickets - XYNEMA" description="View your purchase history" />
 
             {/* ━━━ Header ━━━ */}
@@ -457,12 +458,12 @@ const MyBookingsPage = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {items.map((item, idx) =>
                                         bookingType === 'movies'
-                                            ? <MovieTicketCard key={`movie-${item.id}-${idx}`} booking={item} />
+                                            ? <TicketListCard.Movie key={`movie-${item.id}-${idx}`} booking={item} />
                                             : bookingType === 'events'
-                                                ? <EventTicketCard key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
+                                                ? <TicketListCard.Event key={`event-${item.bookingId || item.id}-${idx}`} booking={item} />
                                                 : bookingType === 'sports'
-                                                    ? <TurfTicketCard key={`turf-${item._id || item.id}-${idx}`} booking={item} />
-                                                    : <ParkTicketCard key={`park-${item.bookingRef || item.id}-${idx}`} booking={item} />
+                                                    ? <TicketListCard.Turf key={`turf-${item._id || item.id}-${idx}`} booking={item} />
+                                                    : <TicketListCard.Park key={`park-${item.bookingRef || item.id}-${idx}`} booking={item} />
                                     )}
                                 </div>
                             </div>
@@ -517,267 +518,7 @@ const MyBookingsPage = () => {
 };
 
 
-// ─────────────────────────────────────
-// Movie Ticket Card (Figma-style)
-// ─────────────────────────────────────
-const MovieTicketCard = ({ booking }) => {
-    const navigate = useNavigate();
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        } catch { return dateStr; }
-    };
-
-    const seatStr = booking.seats?.length > 0
-        ? booking.seats.map(s => typeof s === 'object' ? (s.seatLabel || `${s.row || ''}${s.seatNumber || s.number || ''}`) : s).join(', ')
-        : '';
-
-    return (
-        <div
-            onClick={() => navigate(`/bookings/${booking.id}`)}
-            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
-        >
-            {/* Poster */}
-            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800">
-                <img
-                    src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Movie'}
-                    alt={booking.movieTitle}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-            </div>
-
-            {/* Info */}
-            <div className="p-4 space-y-1">
-                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
-                    {booking.movieTitle}
-                </h3>
-                <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                    {formatDate(booking.date)}
-                    {booking.time ? ` • ${booking.time}` : ''}
-                    {seatStr ? ` • ${seatStr}` : ''}
-                </p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500 line-clamp-1">
-                    {booking.theaterName}
-                </p>
-                <p className="text-primary font-bold text-[15px] pt-1">
-                    ₹{booking.totalAmount?.toLocaleString() || '0'}
-                </p>
-            </div>
-        </div>
-    );
-};
-
-
-// ─────────────────────────────────────
-// Event Ticket Card (Figma-style)
-// ─────────────────────────────────────
-const EventTicketCard = ({ booking }) => {
-    const navigate = useNavigate();
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        } catch { return dateStr; }
-    };
-
-    const ticketCount = booking.tickets?.reduce((acc, t) => acc + (t.quantity || 0), 0) || booking.quantity || 0;
-    const ticketClass = booking.ticketClass || (booking.tickets?.[0]?.ticketClass) || 'Standard';
-
-    return (
-        <div
-            onClick={() => navigate(`/event-bookings/${booking.bookingId}`)}
-            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
-        >
-            {/* Poster */}
-            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800">
-                <img
-                    src={optimizeImage(booking.eventPoster || booking.posterUrl || booking.imageUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Event'}
-                    alt={booking.eventName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-            </div>
-
-            {/* Info */}
-            <div className="p-4 space-y-1">
-                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
-                    {booking.eventName}
-                </h3>
-                <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                    {formatDate(booking.showDate)}
-                    {booking.showTime ? ` • ${booking.showTime}` : ''}
-                    {ticketCount > 0 ? ` • ${ticketClass} x ${ticketCount}` : ''}
-                </p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500 line-clamp-1">
-                    {booking.venue?.name}{booking.venue?.city ? `, ${booking.venue.city}` : ''}
-                </p>
-                {booking.entryType === 'qr' ? (
-                    <div className="flex items-center gap-1.5 pt-1">
-                        <QrCode className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-primary text-[12px] font-semibold">QR Entry</span>
-                    </div>
-                ) : (
-                    <p className="text-primary font-bold text-[15px] pt-1">
-                        {booking.currency === 'INR' || !booking.currency ? '₹' : booking.currency}
-                        {booking.totalAmount?.toLocaleString() || '0'}
-                    </p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-
-// ─────────────────────────────────────
-// Turf Ticket Card (Sports)
-// ─────────────────────────────────────
-const TurfTicketCard = ({ booking }) => {
-    const navigate = useNavigate();
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        } catch { return dateStr; }
-    };
-
-    const firstSlot = booking.slots?.[0];
-    const bookingDate = booking.snapshot?.date || firstSlot?.date || booking.showDate || booking.date;
-    const startTime = booking.snapshot?.startTime || firstSlot?.startTime || booking.showTime;
-    const turfName = booking.turf?.turfName || booking.turfName || booking.eventName || 'Sports Arena';
-    const courtName = booking.court?.courtName || booking.courtName || booking.venue?.venueName || booking.venue?.name || 'Main Arena';
-    const city = booking.turf?.city || booking.venue?.city || '';
-    const amount = booking.payment?.amount || booking.totalPrice || booking.paidAmount || booking.pricing?.totalAmount || booking.totalAmount || 0;
-    const status = booking.payment?.status || booking.paymentStatus || booking.bookingStatus || booking.status || 'Confirmed';
-    const primaryImage = booking.turf?.primaryImage?.url || booking.turfImage || booking.courtImage || booking.eventPoster || booking.eventDetails?.eventImages?.[0]?.url || booking.posterUrl;
-
-    return (
-        <div
-            onClick={() => navigate(booking.turf ? `/activities/bookings/${booking.bookingId || booking._id || booking.id}` : `/event-bookings/${booking.bookingId || booking._id || booking.id}`)}
-            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
-        >
-            {/* Poster / Venue Image */}
-            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
-                <img
-                    src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
-                    alt={turfName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
-                    {booking.sportType || booking.eventDetails?.eventCategory || 'Sports'}
-                </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-4 space-y-1">
-                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
-                    {turfName}
-                </h3>
-                <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
-                    <CalendarIcon className="w-3.5 h-3.5" />
-                    <span>{formatDate(bookingDate)}</span>
-                    {startTime && (
-                        <>
-                            <span> • </span>
-                            <Clock className="w-3.5 h-3.5 ml-1" />
-                            <span>{startTime}</span>
-                        </>
-                    )}
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-gray-400 dark:text-gray-500">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span className="line-clamp-1">{courtName}{city ? `, ${city}` : ''}</span>
-                </div>
-                <div className="flex items-center justify-between pt-2">
-                    <p className="text-primary font-bold text-[15px]">
-                        ₹{amount.toLocaleString()}
-                    </p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                        (status === 'paid' || status === 'confirmed') ? 'bg-green-100/10 text-green-600' : 'bg-orange-100/10 text-orange-600'
-                    }`}>
-                        {status}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-// ─────────────────────────────────────
-// Park Ticket Card
-// ─────────────────────────────────────
-const ParkTicketCard = ({ booking }) => {
-    const navigate = useNavigate();
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        } catch { return dateStr; }
-    };
-
-    const parkName = booking.park?.parkName || booking.parkName || 'Amusement Park';
-    const city = booking.park?.city || booking.parkCity || '';
-    const bookingDate = booking.date || booking.bookingDay?.date || booking.bookingDate;
-    const amount = booking.pricing?.totalAmount || booking.amount || booking.totalPrice || booking.paidAmount || 0;
-    const status = booking.status || 'Confirmed';
-    const bookingRef = booking.bookingRef || booking.id || booking._id;
-
-    const primaryImage = booking.park?.parkImage?.url || booking.parkImage?.url || 'https://images.unsplash.com/photo-1513889959013-c2845acbaf3d?auto=format&fit=crop&q=80&w=600';
-
-    return (
-        <div
-            onClick={() => navigate(`/activities/park-bookings/${bookingRef}`)}
-            className="bg-white dark:bg-[#1a1d24] rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none hover:shadow-md dark:hover:border-gray-700 transition-all cursor-pointer overflow-hidden group"
-        >
-            <div className="aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
-                <img
-                    src={optimizeImage(primaryImage, { width: 600, quality: 75 })}
-                    alt={parkName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
-                    Park
-                </div>
-            </div>
-
-            <div className="p-4 space-y-1">
-                <h3 className="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-1">
-                    {parkName}
-                </h3>
-                <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
-                    <CalendarIcon className="w-3.5 h-3.5" />
-                    <span>{formatDate(bookingDate)}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-gray-400 dark:text-gray-500">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span className="line-clamp-1">{city}</span>
-                </div>
-                <div className="flex items-center justify-between pt-2">
-                    <p className="text-primary font-bold text-[15px]">
-                        ₹{amount.toLocaleString()}
-                    </p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                        (status === 'confirmed' || status === 'completed') ? 'bg-green-100/10 text-green-600' : 'bg-orange-100/10 text-orange-600'
-                    }`}>
-                        {status}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 
 // ─────────────────────────────────────

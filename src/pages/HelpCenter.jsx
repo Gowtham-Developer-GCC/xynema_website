@@ -288,7 +288,7 @@ const HelpCenter = () => {
                             </div>
                         ) : (
                             <div className="max-w-2xl mx-auto">
-                                <div className="bg-[#fff1f1] border border-[#ffe4e4] rounded-lg p-4 mb-8 flex items-start gap-4">
+                                <div className="bg-[#fff1f1] border border-[#ffe4e4] rounded-lg p-4 mb-8 flex items-start gap-4 dark:text-white dark:bg-[#16181d] dark:border-gray-800">
                                     <HelpCircle className="w-5 h-5 text-[#ff4d4d] shrink-0 mt-0.5" />
                                     <p className="text-[13px] md:text-sm text-[#c0392b] font-medium leading-relaxed">
                                         Report any issues, bugs, or inappropriate content. We take all reports seriously.

@@ -171,7 +171,7 @@ const ParkBookingDetailsPage = () => {
                 </div>
 
                 {/* Email Confirmation Message */}
-                <div className="bg-[#fff5f6] border border-primary/30 rounded-lg p-5 flex items-center justify-center gap-3">
+                <div className="bg-[#fff5f6] border border-primary/30 rounded-lg p-5 flex items-center justify-center gap-3 dark:text-white dark:bg-[#16181d]">
                     <Mail className="w-5 h-5 text-primary" />
                     <p className="text-sm font-medium text-primary">Booking confirmation has been sent to your email</p>
                 </div>

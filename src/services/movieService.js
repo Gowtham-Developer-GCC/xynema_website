@@ -246,6 +246,15 @@ export const getTheaterDetails = async (theaterId, date) => {
                 isFoodAndBeveragesAvailable: foodAvailable ?? theaterData.isFoodAndBeveragesAvailable ?? true
             }) : null;
         }
+    });
+};
+
+export const getMovieDetails = async (slug) => {
+    return safeApiCall(async () => {
+        const response = await api.get(ENDPOINTS.MOVIES.DETAILS(slug));
+        if (response.data.success) {
+            return response.data.data;
+        }
         return null;
     });
 };
@@ -261,4 +270,5 @@ export const movieService = {
     getSimilarMovies,
     getTheatersByCity,
     getTheaterDetails,
+    getMovieDetails,
 };

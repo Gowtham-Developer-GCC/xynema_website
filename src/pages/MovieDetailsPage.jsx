@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock, ThumbsDown, MapPin, Share2, Heart, AlertCircle, Loader, Sparkles, Play, User, TrendingUp, ChevronRight, ThumbsUp, Eye, EyeOff, Volume2, VolumeX, Maximize, ArrowRight, PiIcon, ShieldCloseIcon, SidebarCloseIcon, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toggleInterest, addMovieReview, getSimilarMovies } from '../services/movieService';
+import { toggleInterest, addMovieReview, getSimilarMovies, getMovieDetails } from '../services/movieService';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import NotFoundState from '../components/NotFoundState';
@@ -20,6 +20,7 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { ShoppingBag } from 'lucide-react';
+import { Movie } from '../models/index.js';
 
 const getInitials = (name) => {
     if (!name) return '?';
@@ -70,7 +71,7 @@ const MovieDetailsPage = () => {
     }
     const navigate = useNavigate();
     const { user, isAuthenticated, openLogin } = useAuth();
-    const { movies, latestMovies, upcomingMovies, loading: contextLoading, getMovieById, toggleInterestOptimistic, getInterestOffset, interestedMovieIds, refreshData } = useData();
+    const { toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -144,24 +145,45 @@ const MovieDetailsPage = () => {
     }, [movie]);
 
     useEffect(() => {
-        if (!contextLoading) {
-            const foundMovie = getMovieById(idOrSlug);
+        let isMounted = true;
 
-            if (foundMovie) {
-                setMovie(foundMovie);
-                setLoading(false);
-            } else {
-                // If lists are entirely empty, lazily invoke the global pull since eager loads are disabled!
-                const isEmpty = movies.length === 0 && latestMovies.length === 0 && upcomingMovies.length === 0;
-                if (isEmpty) {
-                    refreshData(1);
+        const fetchDetail = async () => {
+            if (!idOrSlug) return;
+            try {
+                if (isMounted) {
+                    setLoading(true);
+                    setError(null);
+                }
+
+                // Fetch details using the specific API via the Cache Manager
+                const movieData = await apiCacheManager.getOrFetchMovieDetails(idOrSlug, () => getMovieDetails(idOrSlug));
+
+                if (movieData) {
+                    if (isMounted) {
+                        setMovie(new Movie(movieData));
+                        setLoading(false);
+                    }
                 } else {
-                    setError(new Error('Movie not found'));
+                    if (isMounted) {
+                        setError(new Error('Movie not found'));
+                        setLoading(false);
+                    }
+                }
+            } catch (err) {
+                console.error('[MovieDetails] Fetch details failed:', err);
+                if (isMounted) {
+                    setError(err || new Error('Failed to fetch movie details'));
                     setLoading(false);
                 }
             }
-        }
-    }, [idOrSlug, movies, latestMovies, upcomingMovies, contextLoading, getMovieById, refreshData]);
+        };
+
+        fetchDetail();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [idOrSlug]);
 
     const toggleFavorite = () => {
         setFavorites(prev => {
@@ -269,7 +291,7 @@ const MovieDetailsPage = () => {
 
             {/* Hero Section with Sophisticated Banner */}
             <div ref={heroRef} className="relative w-full overflow-hidden bg-black min-h-[50vh] md:min-h-[70vh] flex items-center pt-20 pb-12 md:pt-24 md:pb-16">
-                
+
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
@@ -379,135 +401,135 @@ const MovieDetailsPage = () => {
                         <div className="flex-1 flex flex-col gap-5 md:gap-6 w-full">
                             {/* ── DETAILS GLASS CARD ── */}
                             <div className="flex flex-col text-white p-6 sm:p-8 lg:p-12 rounded-2xl md:rounded-xl bg-white/5 backdrop-blur-xl backdrop-contrast-150  backdrop-saturate-[1.2] border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.3)] relative overflow-hidden w-full">
-                            {/* Soft Highlight for Glass Edge */}
-                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40"></div>
-                            <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-40"></div>
+                                {/* Soft Highlight for Glass Edge */}
+                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40"></div>
+                                <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-40"></div>
 
-                            {/* Movie Details Content Area */}
-                            <div className="flex-1 flex flex-col gap-3 md:gap-5 text-center md:text-left pt-2 md:pt-4 w-full">
-                            {/* Title Area */}
-                            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-roboto font-black tracking-tight leading-tight text-white drop-shadow-2xl px-2 md:px-0">
-                                {movie.title}
-                            </h1>
+                                {/* Movie Details Content Area */}
+                                <div className="flex-1 flex flex-col gap-3 md:gap-5 text-center md:text-left pt-2 md:pt-4 w-full">
+                                    {/* Title Area */}
+                                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-roboto font-black tracking-tight leading-tight text-white drop-shadow-2xl px-2 md:px-0">
+                                        {movie.title}
+                                    </h1>
 
-                            {/* Metadata Line */}
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-[12px] md:text-base font-medium text-white/90">
-                                {movie.isAvailable ? (
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1  text-white font-bold font-roboto shrink-0">
-                                        {/* <Clock className="w-4 h-4 text-primary" /> */}
-                                        <span>
-                                            {(() => {
-                                                const rawDur = movie.Duration || movie.duration;
-                                                if (!rawDur) return '2h 30m'; 
-                                                
-                                                if (typeof rawDur === 'string') {
-                                                    // Handle HH:MM:SS formats (e.g. 02:30:00 -> 2h 30m)
-                                                    if (rawDur.includes(':')) {
-                                                        const parts = rawDur.split(':');
-                                                        const hrs = parseInt(parts[0], 10) || 0;
-                                                        const mins = parseInt(parts[1], 10) || 0;
+                                    {/* Metadata Line */}
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-[12px] md:text-base font-medium text-white/90">
+                                        {movie.isAvailable ? (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1  text-white font-bold font-roboto shrink-0">
+                                                {/* <Clock className="w-4 h-4 text-primary" /> */}
+                                                <span>
+                                                    {(() => {
+                                                        const rawDur = movie.Duration || movie.duration;
+                                                        if (!rawDur) return '2h 30m';
+
+                                                        if (typeof rawDur === 'string') {
+                                                            // Handle HH:MM:SS formats (e.g. 02:30:00 -> 2h 30m)
+                                                            if (rawDur.includes(':')) {
+                                                                const parts = rawDur.split(':');
+                                                                const hrs = parseInt(parts[0], 10) || 0;
+                                                                const mins = parseInt(parts[1], 10) || 0;
+                                                                return `${hrs}h ${mins > 0 ? mins + 'm' : ''}`.trim();
+                                                            }
+                                                            // Strip trailing seconds notations like "12s" or " 0s"
+                                                            return rawDur.replace(/\s*\d+s\b/gi, '').trim();
+                                                        }
+
+                                                        const hrs = Math.floor(rawDur / 60);
+                                                        const mins = rawDur % 60;
                                                         return `${hrs}h ${mins > 0 ? mins + 'm' : ''}`.trim();
-                                                    }
-                                                    // Strip trailing seconds notations like "12s" or " 0s"
-                                                    return rawDur.replace(/\s*\d+s\b/gi, '').trim();
-                                                }
-                                                
-                                                const hrs = Math.floor(rawDur / 60);
-                                                const mins = rawDur % 60;
-                                                return `${hrs}h ${mins > 0 ? mins + 'm' : ''}`.trim();
-                                            })()}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0 animate-in fade-in slide-in-from-left duration-500">
-                                        <ThumbsUp className="w-3.5 h-3.5 fill-primary text-primary" />
-                                        <span className="text-xs md:text-sm font-black tracking-tight">{displayInterestCount}</span>
-                                        <span className="text-[10px] md:text-xs font-medium text-white/70">Interested</span>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-3">
-                                    {movie.releaseDate && (
-                                        <span className="font-semibold">{new Date(movie.releaseDate).getFullYear()}</span>
-                                    )}
-                                    {movie.duration > 0 && (
-                                        <>
-                                            <span className="w-1 h-1 rounded-full bg-white/40" />
-                                            <span className="font-semibold">{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
-                                        </>
-                                    )}
-                                    {movie.certification && (
-                                        <>
-                                            <span className="w-1 h-1 rounded-full bg-white/40" />
-                                            <span className="bg-white/10 px-1.5 py-0.5 rounded border border-white/40 text-[10px] font-bold tracking-wider">{movie.certification}</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Genre Pills */}
-                            {movie.genre && (
-                                <div className="flex flex-wrap justify-center md:justify-start gap-1.5 mt-1 px-4 md:px-0">
-                                    {movie.genre.split(',').map((g, i) => (
-                                        <span key={i} className="px-3 py-1 rounded-full border border-white/20 text-[10px] md:text-xs font-semibold backdrop-blur-sm bg-black/20 text-white/90 whitespace-nowrap">
-                                            {g.trim()}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Format & Language */}
-                            <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-3 mt-6">
-                                {movie.format?.length > 0 && (
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
-                                        <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Format:</span>
-                                        <div className="flex flex-wrap gap-2">
-                                            {(showAllFormats ? movie.format : movie.format.slice(0, 3)).map((f, i) => (
-                                                <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
-                                                    {f.trim()}
+                                                    })()}
                                                 </span>
-                                            ))}
-                                            {!showAllFormats && movie.format.length > 3 && (
-                                                <button
-                                                    onClick={() => setShowAllFormats(true)}
-                                                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
-                                                >
-                                                    +{movie.format.length - 3}
-                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md text-white font-bold font-roboto shadow-lg border border-white/10 shrink-0 animate-in fade-in slide-in-from-left duration-500">
+                                                <ThumbsUp className="w-3.5 h-3.5 fill-primary text-primary" />
+                                                <span className="text-xs md:text-sm font-black tracking-tight">{displayInterestCount}</span>
+                                                <span className="text-[10px] md:text-xs font-medium text-white/70">Interested</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-3">
+                                            {movie.releaseDate && (
+                                                <span className="font-semibold">{new Date(movie.releaseDate).getFullYear()}</span>
+                                            )}
+                                            {movie.duration > 0 && (
+                                                <>
+                                                    <span className="w-1 h-1 rounded-full bg-white/40" />
+                                                    <span className="font-semibold">{Math.floor(movie.duration / 60)}h {movie.duration % 60}m</span>
+                                                </>
+                                            )}
+                                            {movie.certification && (
+                                                <>
+                                                    <span className="w-1 h-1 rounded-full bg-white/40" />
+                                                    <span className="bg-white/10 px-1.5 py-0.5 rounded border border-white/40 text-[10px] font-bold tracking-wider">{movie.certification}</span>
+                                                </>
                                             )}
                                         </div>
                                     </div>
-                                )}
-                                {movie.language && (
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
-                                        <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Language:</span>
-                                        <div className="flex flex-wrap gap-2">
-                                            {(() => {
-                                                const langs = movie.language.split(',').map(l => l.trim());
-                                                const displayed = showAllLanguages ? langs : langs.slice(0, 3);
-                                                return (
-                                                    <>
-                                                        {displayed.map((l, i) => (
-                                                            <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
-                                                                {l}
-                                                            </span>
-                                                        ))}
-                                                        {!showAllLanguages && langs.length > 3 && (
-                                                            <button
-                                                                onClick={() => setShowAllLanguages(true)}
-                                                                className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
-                                                            >
-                                                                +{langs.length - 3}
-                                                            </button>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
+
+                                    {/* Genre Pills */}
+                                    {movie.genre && (
+                                        <div className="flex flex-wrap justify-center md:justify-start gap-1.5 mt-1 px-4 md:px-0">
+                                            {movie.genre.split(',').map((g, i) => (
+                                                <span key={i} className="px-3 py-1 rounded-full border border-white/20 text-[10px] md:text-xs font-semibold backdrop-blur-sm bg-black/20 text-white/90 whitespace-nowrap">
+                                                    {g.trim()}
+                                                </span>
+                                            ))}
                                         </div>
+                                    )}
+
+                                    {/* Format & Language */}
+                                    <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-3 mt-6">
+                                        {movie.format?.length > 0 && (
+                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
+                                                <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Format:</span>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(showAllFormats ? movie.format : movie.format.slice(0, 3)).map((f, i) => (
+                                                        <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
+                                                            {f.trim()}
+                                                        </span>
+                                                    ))}
+                                                    {!showAllFormats && movie.format.length > 3 && (
+                                                        <button
+                                                            onClick={() => setShowAllFormats(true)}
+                                                            className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
+                                                        >
+                                                            +{movie.format.length - 3}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {movie.language && (
+                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-2">
+                                                <span className="text-white/60 font-semibold text-xs md:text-sm tracking-wide">Language:</span>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(() => {
+                                                        const langs = movie.language.split(',').map(l => l.trim());
+                                                        const displayed = showAllLanguages ? langs : langs.slice(0, 3);
+                                                        return (
+                                                            <>
+                                                                {displayed.map((l, i) => (
+                                                                    <span key={i} className="px-2.5 py-1 bg-white text-black text-[11px] md:text-xs font-black uppercase rounded shadow-sm">
+                                                                        {l}
+                                                                    </span>
+                                                                ))}
+                                                                {!showAllLanguages && langs.length > 3 && (
+                                                                    <button
+                                                                        onClick={() => setShowAllLanguages(true)}
+                                                                        className="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white text-[11px] md:text-xs font-black uppercase rounded shadow-sm transition-colors"
+                                                                    >
+                                                                        +{langs.length - 3}
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
                             {/* ── CTAs MOVED OUTSIDE GLASS CARD ── */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center md:justify-start gap-4 w-full pt-2">
@@ -939,10 +961,10 @@ const MovieContentSections = ({ movie, merchandise, merchLoading, onShowAllCast,
 
                         {/* Custom Navigation Arrows */}
                         <button className="merch-prev absolute left-2 md:left-0 md:-ml-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
-                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 rotate-180" />
                         </button>
                         <button className="merch-next absolute right-2 md:right-0 md:-mr-4 top-[40%] -translate-y-1/2 z-20 w-10 h-10 md:w-14 md:h-14 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 hover:text-primary transition-all opacity-100 md:opacity-0 md:group-hover/store:opacity-100 disabled:hidden [&.swiper-button-disabled]:hidden">
-                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
                 </section>
@@ -1035,13 +1057,12 @@ const SimilarMovies = ({ currentMovie }) => {
                 // ensure it shows the streaming/rating hover style.
                 if (data && data.length > 0) {
                     data = data.map(m => {
-                        const isNowShowing = movies.some(nm => nm.id === m.id || nm.slug === m.slug);
-                        const isUpcoming = upcomingMovies.some(um => um.id === m.id || um.slug === m.slug);
-
-                        return {
-                            ...m,
-                            isAvailable: isNowShowing || !isUpcoming
-                        };
+                        const parsed = new Movie(m);
+                        const isNowShowing = movies.some(nm => nm.id === parsed.id || nm.slug === parsed.slug);
+                        const isUpcoming = upcomingMovies.some(um => um.id === parsed.id || um.slug === parsed.slug);
+                        if (isNowShowing) parsed.isAvailable = true;
+                        if (isUpcoming) parsed.isAvailable = false;
+                        return parsed;
                     });
                 }
 

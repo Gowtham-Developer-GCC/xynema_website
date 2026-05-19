@@ -11,6 +11,7 @@ export const ENDPOINTS = {
         SIMILAR: (movieId) => `/movies/similar-movies/${movieId}`,
         BROWSE_CINEMAS: '/movies/browse-movies',
         THEATER_DETAILS: (theaterId) => `/movies/browse-movies/${theaterId}`,
+        DETAILS: (slug) => `/movies/movie/${slug}`,
     },
 
     // Events

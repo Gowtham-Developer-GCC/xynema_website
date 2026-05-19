@@ -9,10 +9,11 @@ import ErrorState from '../components/ErrorState';
 import NotFoundState from '../components/NotFoundState';
 import { designSystem } from '../config/design-system';
 import { cardStyles, animationStyles } from '../styles/components';
-import { getTheatersForMovie } from '../services/movieService';
+import { getTheatersForMovie, getMovieDetails } from '../services/movieService';
 import bookingSessionManager from '../utils/bookingSessionManager';
 import apiCacheManager from '../services/apiCacheManager';
 import { optimizeImage } from '../utils/helpers';
+import { Movie } from '../models/index.js';
 
 const timeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
@@ -132,37 +133,65 @@ const TheaterSelectionPage = () => {
 
     // Sync movie details and adjust initial date if needed
     useEffect(() => {
-        if ((movies || []).length > 0) {
-            const foundMovie = movies.find(m => {
+        let isMounted = true;
+
+        const resolveMovie = async () => {
+            if (isContextLoading) return;
+
+            // 1. Try context first
+            const foundMovie = (movies || []).find(m => {
                 const slugMatch = m.slug && m.slug.toLowerCase() === identifier?.toLowerCase();
                 const idMatch = String(m.id) === identifier || String(m._id) === identifier;
-                return slugMatch || idMatch;
+                const titleMatch = (m.title || m.MovieName) && (m.title || m.MovieName).toLowerCase() === identifier?.toLowerCase();
+                return slugMatch || idMatch || titleMatch;
             });
 
             if (foundMovie) {
-                setMovie(foundMovie);
-
-                // Ensure selectedDate is valid for this movie
-                if (foundMovie.releaseDate) {
-                    const releaseDateObj = new Date(foundMovie.releaseDate);
-                    releaseDateObj.setHours(0, 0, 0, 0);
-
-                    const currentSelectedObj = new Date(selectedDate);
-                    currentSelectedObj.setHours(0, 0, 0, 0);
-
-                    // If currently selected date is before release, jump to release date
-                    if (currentSelectedObj < releaseDateObj) {
-                        const dateStr = foundMovie.releaseDate.split('T')[0];
-                        setSelectedDate(dateStr);
-                    }
+                if (isMounted) {
+                    setMovie(foundMovie);
+                    syncDate(foundMovie);
                 }
-            } else if (!isContextLoading) {
-                // Movie not found and context is done loading
-                setLoading(false);
+                return;
             }
-        } else if (!isContextLoading) {
-            setLoading(false);
-        }
+
+            // 2. Try specific details API fallback
+            try {
+                const movieData = await apiCacheManager.getOrFetchMovieDetails(identifier, () => getMovieDetails(identifier));
+                if (movieData) {
+                    if (isMounted) {
+                        const parsedMovie = new Movie(movieData);
+                        setMovie(parsedMovie);
+                        syncDate(parsedMovie);
+                    }
+                } else {
+                    if (isMounted) setLoading(false);
+                }
+            } catch (err) {
+                console.error('[TheaterSelection] Fetch details failed:', err);
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        const syncDate = (m) => {
+            if (m.releaseDate) {
+                const releaseDateObj = new Date(m.releaseDate);
+                releaseDateObj.setHours(0, 0, 0, 0);
+
+                const currentSelectedObj = new Date(selectedDate);
+                currentSelectedObj.setHours(0, 0, 0, 0);
+
+                if (currentSelectedObj < releaseDateObj) {
+                    const dateStr = m.releaseDate.split('T')[0];
+                    setSelectedDate(dateStr);
+                }
+            }
+        };
+
+        resolveMovie();
+
+        return () => {
+            isMounted = false;
+        };
     }, [movies, identifier, selectedDate, isContextLoading]);
 
     const fetchData = useCallback(async (isStopped = { current: false }) => {
@@ -181,7 +210,7 @@ const TheaterSelectionPage = () => {
             setLoading(true);
             setError(null);
             const theatersRes = await apiCacheManager.getOrFetchTheatersForMovie(targetMovieId, selectedCity, selectedDate, () => getTheatersForMovie(targetMovieId, selectedCity, selectedDate));
-            
+
             if (!isStopped.current) {
                 if ((!theatersRes || theatersRes.length === 0) && !isAutoSkippingRef.current) {
                     setEmptyDates(prev => prev.includes(selectedDate) ? prev : [...prev, selectedDate]);
@@ -194,7 +223,7 @@ const TheaterSelectionPage = () => {
 
                     if (nextDate <= maxSelectableDate && (!maxEndDate || nextDate <= new Date(maxEndDate))) {
                         const nextDateStr = nextDate.toISOString().split('T')[0];
-                        
+
                         setSkipMessage(`No shows on ${currentDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}. Skipping to ${nextDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}...`);
                         isAutoSkippingRef.current = true;
                         setTimeout(() => {
@@ -390,7 +419,7 @@ const TheaterSelectionPage = () => {
                                 <h1 className="text-[20px] md:text-[28px] font-black text-gray-900 dark:text-white leading-tight tracking-tight font-roboto px-4 md:px-0">
                                     {movie?.title}
                                 </h1>
-                                
+
                                 <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
                                     {movie?.certification && (
                                         <span className="inline-flex items-center justify-center px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">

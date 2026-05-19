@@ -11,9 +11,9 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState({ movies: [], theaters: [], events: [], activities: [] });
-    
+
     // We only need selectedCity now, no need to load all data arrays into memory!
-    const { selectedCity } = useData(); 
+    const { selectedCity } = useData();
     const navigate = useNavigate();
     const searchRef = useRef(null);
 
@@ -53,9 +53,9 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
             try {
                 // Hit the single backend endpoint
                 const data = await fetchGlobalSearch(debouncedQuery, selectedCity);
-                
+
                 const searchResults = data?.results || [];
-                
+
                 // Group the unified results to match existing UI sections
                 setResults({
                     movies: searchResults.filter(r => r._type === 'movie').map(r => ({
@@ -144,7 +144,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                         : "pl-14 pr-12 py-4.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white placeholder-white/50 focus:ring-2 focus:ring-white/30 shadow-2xl text-base"
                         } focus:outline-none`}
                 />
-                
+
                 {/* Loader or Clear Button */}
                 <div className="absolute right-3 flex items-center gap-2">
                     {isSearching && (

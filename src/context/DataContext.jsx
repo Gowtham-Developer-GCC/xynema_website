@@ -150,7 +150,7 @@ export const DataProvider = ({ children, selectedCity }) => {
             setFoodItems(foodList);
             setPagination(movieData.pagination || { total: 0, page: 1, pages: 1 });
             setLastUpdated(new Date());
-            
+
             // 🔥 CORE STAGE COMPLETE: Render essential dashboard instantly!
             setLoading(false);
 
@@ -350,7 +350,7 @@ export const DataProvider = ({ children, selectedCity }) => {
                 setParks([]);
                 setLoading(true);
             }
-            
+
             prevCityRef.current = selectedCity;
         }
     }, [selectedCity]);

@@ -70,7 +70,8 @@ class ApiCacheManager {
                 key.startsWith('theater_details_') ||
                 key.startsWith('booking_details_') ||
                 key.startsWith('parks_') ||
-                key.startsWith('park_details_')
+                key.startsWith('park_details_') ||
+                key.startsWith('movie_details_')
             );
 
             keysToPersist.forEach(key => {
@@ -443,6 +444,13 @@ class ApiCacheManager {
      */
     async getOrFetchMovieMerchandise(movieId, fetchFn) {
         return this.getOrExecute(`merchandise_${movieId}`, fetchFn, ApiCacheManager.FOOD_TTL);
+    }
+
+    /**
+     * Helper: Get or fetch movie details
+     */
+    async getOrFetchMovieDetails(slug, fetchFn) {
+        return this.getOrExecute(`movie_details_${slug}`, fetchFn, ApiCacheManager.MOVIES_TTL);
     }
 
     /**

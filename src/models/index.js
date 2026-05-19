@@ -8,10 +8,10 @@ export class Movie {
         this.id = data._id || data.id || '';
         this.title = data.MovieName || data.movieName || data.title || '';
         
-        const rawPoster = data.portraitPosterUrl || data.posterUrl || data.PosterUrl || data.image || '';
+        const rawPoster = data.portraitPoster || data.portraitPosterUrl || data.posterUrl || data.PosterUrl || data.image || '';
         this.posterUrl = (typeof rawPoster === 'object' && rawPoster !== null ? (rawPoster.url || rawPoster.imageUrl || '') : rawPoster);
 
-        const rawBackdrop = data.landscapePosterUrl || data.backdropUrl || data.BackdropUrl || '';
+        const rawBackdrop = data.landscapePoster || data.landscapePosterUrl || data.backdropUrl || data.BackdropUrl || '';
         this.backdropUrl = (typeof rawBackdrop === 'object' && rawBackdrop !== null ? (rawBackdrop.url || rawBackdrop.imageUrl || '') : rawBackdrop);
 
         // Match sample response: "Genre": ["Action", "Adventure", "Drama"]
@@ -31,7 +31,7 @@ export class Movie {
             ? rawLang.join(', ')
             : (rawLang || '').replace ? (rawLang || '').replace(/,/g, ', ') : (rawLang || '');
         this.releaseDate = data.releaseDate || '';
-        this.slug = data.slug || '';
+        this.slug = data.slug || (this.title ? this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : '');
         this.isReleased = data.isReleased ?? false;
 
         this.rating = data.rating || 0;
@@ -75,8 +75,9 @@ export class Movie {
 
         // Availability flag for Upcoming logic - Handle boolean and string 'true'
         // Default to false (Upcoming) if missing or explicitly false
+        const isReleased = data.isReleased === true || data.isReleased === 'true' || data.status === 'now-showing' || data.status === 'released' || data.status === 'nowshowing';
         const availValue = data.availability?.isAvailable ?? data.isAvailable;
-        this.isAvailable = availValue === true || availValue === 'true';
+        this.isAvailable = availValue === true || availValue === 'true' || isReleased;
 
         // Also check if there are showtimes - if yes, it's definitely available
         const hasTheaters = (data.availability?.theatres?.length || 0) > 0 || (data.theaters?.length || 0) > 0;

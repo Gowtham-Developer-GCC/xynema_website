@@ -71,7 +71,7 @@ const MovieDetailsPage = () => {
     }
     const navigate = useNavigate();
     const { user, isAuthenticated, openLogin } = useAuth();
-    const { toggleInterestOptimistic, getInterestOffset, interestedMovieIds } = useData();
+    const { toggleInterestOptimistic, getInterestOffset, interestedMovieIds, selectedCity } = useData();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -156,7 +156,10 @@ const MovieDetailsPage = () => {
                 }
 
                 // Fetch details using the specific API via the Cache Manager
-                const movieData = await apiCacheManager.getOrFetchMovieDetails(idOrSlug, () => getMovieDetails(idOrSlug));
+                const movieData = await apiCacheManager.getOrFetchMovieDetails(
+                    `${idOrSlug}_${selectedCity || 'default'}`,
+                    () => getMovieDetails(idOrSlug, selectedCity)
+                );
 
                 if (movieData) {
                     if (isMounted) {
@@ -575,8 +578,8 @@ const MovieDetailsPage = () => {
                                         >
                                             <ThumbsUp className={`w-5 h-5 ${hasInterested ? 'fill-current' : 'animate-bounce-subtle'}`} />
                                             <div className="flex flex-col items-start leading-none">
-                                                <span className={`text-[9px] font-black uppercase tracking-widest ${hasInterested ? 'text-primary/70' : 'text-white/50'}`}>Are you</span>
-                                                <span className="text-sm font-black uppercase tracking-tight">Interested?</span>
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${hasInterested ? 'text-primary/70' : 'text-white/50'}`}>{!hasInterested ? `Are you` : ` `}</span>
+                                                <span className="text-sm font-black uppercase tracking-tight">Interested {hasInterested ? ` ` : `?`}</span>
                                             </div>
                                         </button>
                                     </div>

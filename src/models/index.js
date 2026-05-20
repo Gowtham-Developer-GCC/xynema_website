@@ -867,6 +867,7 @@ export class ActivityPark {
         this.shortName = data.shortName || this.name.split(' ')[0] || 'Park';
         this.slug = data.slug || this.id;
         this.type = data.parkType || data.type || 'Activity Park';
+        this.tag = data.tag || (Array.isArray(data.tags) ? data.tags[0] : data.tags) || '';
 
         const loc = data.location || {};
         this.city = data.city || loc.city || 'City TBD';

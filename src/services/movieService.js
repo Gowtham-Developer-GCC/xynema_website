@@ -10,7 +10,7 @@ export const getCities = async () => {
         return [];
     });
 };
-export const PAGE_LIMIT = 5;
+export const PAGE_LIMIT = 10;
 
 export const getNotNowMovies = async (city) => {
     return safeApiCall(async () => {
@@ -249,9 +249,11 @@ export const getTheaterDetails = async (theaterId, date) => {
     });
 };
 
-export const getMovieDetails = async (slug) => {
+export const getMovieDetails = async (slug, city) => {
     return safeApiCall(async () => {
-        const response = await api.get(ENDPOINTS.MOVIES.DETAILS(slug));
+        const params = {};
+        if (city) params.city = city;
+        const response = await api.get(ENDPOINTS.MOVIES.DETAILS(slug), { params });
         if (response.data.success) {
             return response.data.data;
         }

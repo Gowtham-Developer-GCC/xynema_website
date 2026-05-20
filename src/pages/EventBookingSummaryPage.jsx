@@ -10,7 +10,10 @@ import { useAuth } from '../context/AuthContext';
 const EventBookingSummaryPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { event, reservationId, selectedTickets, totalAmount, selectedDate, selectedTime } = location.state || {};
+    const { event, reservationId, selectedTickets, totalAmount, pricing, selectedDate, selectedTime } = location.state || {};
+
+    // Use API pricing.totalAmount if available, else fall back to locally calculated totalAmount
+    const finalAmount = pricing?.totalAmount ?? totalAmount;
 
     const [attendees, setAttendees] = useState([{
         name: '',
@@ -369,15 +372,34 @@ const EventBookingSummaryPage = () => {
 
                                 {/* Total & Pay Button */}
                                 <div>
+                                    {/* Pricing Breakdown */}
+                                    {pricing ? (
+                                        <div className="space-y-2 mb-4 md:mb-5">
+                                            <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
+                                                <span className="font-medium">Subtotal</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.subtotal?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
+                                                <span className="font-medium">Convenience Fee</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.convenienceFee?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
+                                                <span className="font-medium">Tax</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.tax?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="h-px bg-gray-100 dark:bg-gray-800 w-full my-1" />
+                                        </div>
+                                    ) : null}
+
                                     <div className="flex items-center justify-between mb-4 md:mb-6">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
-                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{finalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                         </div>
                                     </div>
 
                                     <PaymentButton
-                                        amount={totalAmount}
+                                        amount={finalAmount}
                                         bookingData={{
                                             eventId: event.id,
                                             reservationId: reservationId,
@@ -407,7 +429,7 @@ const EventBookingSummaryPage = () => {
                                                 : 'bg-primary hover:brightness-110 text-white'
                                             }`}
                                     >
-                                        <span>Pay ₹{totalAmount.toLocaleString()}</span>
+                                        <span>Pay ₹{finalAmount.toLocaleString()}</span>
                                     </PaymentButton>
 
                                     <div className="mt-4 text-center space-y-2">
@@ -438,11 +460,14 @@ const EventBookingSummaryPage = () => {
                 <div className="flex items-center justify-between gap-6">
                     <div className="flex flex-col shrink-0">
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Final Amount</span>
-                        <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{totalAmount.toLocaleString()}</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{finalAmount.toLocaleString()}</span>
+                        {pricing && (
+                            <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">incl. ₹{((pricing.convenienceFee ?? 0) + (pricing.tax ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fees & taxes</span>
+                        )}
                     </div>
                     <div className="flex-1 flex justify-end">
                         <PaymentButton
-                            amount={totalAmount}
+                            amount={finalAmount}
                             bookingData={{
                                 eventId: event.id,
                                 reservationId: reservationId,

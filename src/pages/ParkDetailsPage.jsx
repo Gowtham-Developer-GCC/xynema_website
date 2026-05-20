@@ -78,19 +78,24 @@ const ParkDetailsPage = () => {
                     setLoading(true);
                 }
 
-                const fetchParkTask = (!hasMatchingStatePark || !statePark.description)
-                    ? apiCacheManager.getOrFetchParkDetails(slug, () => getParkBySlug(slug))
-                    : Promise.resolve(statePark);
+                const data = (!hasMatchingStatePark || !statePark.description)
+                    ? await apiCacheManager.getOrFetchParkDetails(slug, () => getParkBySlug(slug))
+                    : statePark;
 
-                const [data, parks] = await Promise.all([
-                    fetchParkTask,
-                    apiCacheManager.getOrFetchParks(selectedCity || 'Kochi', () => getAllParks({ city: selectedCity || 'Kochi' }))
-                ]);
+                if (data) {
+                    setPark(data);
+                    
+                    const tagToQuery = data.tag || (Array.isArray(data.tags) ? data.tags[0] : data.tags) || data.type || '';
+                    const parks = await apiCacheManager.getOrExecute(`parks_similar_${slug}`, () => getAllParks({
+                        city: selectedCity || 'Kochi',
+                        limit: 4,
+                        tag: tagToQuery
+                    }), 1800);
 
-                if (data) setPark(data);
-                if (parks) {
-                    const parksList = parks.parks || (Array.isArray(parks) ? parks : []);
-                    setAllParks(parksList.filter(p => p.slug !== slug && p.id !== slug));
+                    if (parks) {
+                        const parksList = parks.parks || (Array.isArray(parks) ? parks : []);
+                        setAllParks(parksList.filter(p => p.slug !== slug && p.id !== slug));
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching park details:", err);

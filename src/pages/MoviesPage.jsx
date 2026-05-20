@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, Film, ChevronDown, ArrowRight, Sparkles } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Search, Film, ChevronDown, ArrowRight, Sparkles, Building2, Ticket } from 'lucide-react';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorState from '../components/ErrorState';
@@ -472,23 +472,35 @@ const MoviesPage = () => {
 
             {/* Section Tab Switcher */}
             <div className="bg-[#F5F5FA] dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 transition-colors duration-300">
-                <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 overflow-x-auto no-scrollbar">
-                    {SECTION_TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => handleSectionChange(tab)}
-                            className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${
-                                activeSection === tab
-                                    ? 'text-primary'
-                                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            {tab}
-                            {activeSection === tab && (
-                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />
-                            )}
-                        </button>
-                    ))}
+                <div className="w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] 2xl:w-[80%] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto no-scrollbar">
+                    {/* Tabs Left */}
+                    <div className="flex items-center gap-8">
+                        {SECTION_TABS.map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => handleSectionChange(tab)}
+                                className={`py-4 text-[11px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${
+                                    activeSection === tab
+                                        ? 'text-primary'
+                                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                                    }`}
+                            >
+                                {tab}
+                                {activeSection === tab && (
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in slide-in-from-left-2" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Cinemas Button Right */}
+                    <Link
+                        to="/cinemas"
+                        className="shrink-0 inline-flex items-center gap-1.5 py-3 px-4 rounded-full text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all bg-primary text-white shadow-md shadow-primary/20 hover:brightness-110 active:scale-95"
+                    >
+                        <Building2 className="w-3.5 h-3.5" />
+                        Cinemas
+                    </Link>
                 </div>
             </div>
 
@@ -521,6 +533,7 @@ const MoviesPage = () => {
                             </button>
                         ))}
                     </div>
+
 
                     <div className="relative shrink-0" ref={moreFiltersRef}>
                         <button

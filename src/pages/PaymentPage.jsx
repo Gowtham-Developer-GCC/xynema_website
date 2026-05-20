@@ -154,7 +154,7 @@ const PaymentPage = () => {
             try {
                 setLoading(true);
                 const [foodResponse] = await Promise.all([
-                    apiCacheManager.getOrFetchFood(() => getFoodAndBeverages(theaterId))
+                    apiCacheManager.getOrFetchFood(theaterId, () => getFoodAndBeverages(theaterId))
                 ]);
 
                 // Transform API response to match component expectations

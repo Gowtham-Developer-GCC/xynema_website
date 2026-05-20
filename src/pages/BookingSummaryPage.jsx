@@ -198,7 +198,8 @@ const BookingSummaryPage = () => {
             setTimeout(() => setShowCelebration(false), 5000);
         } catch (err) {
             console.error('Apply coupon error:', err);
-            setCouponError(err.message || 'Invalid coupon code');
+            const errMsg = err.response?.data?.message || err.message || 'Invalid coupon code';
+            setCouponError(errMsg);
             setDiscount(0);
             setAppliedCoupon(null);
         }

@@ -207,7 +207,7 @@ const BookingSlotPage = () => {
     // Pricing logic: slots * individual price, potentially multiplied by people for swimming
     const baseTurfFee = selectedSlots.reduce((sum, s) => sum + (s.priceOverride || s.pricePerHour || currentCourt?.pricePerHour || venue?.price || 0), 0);
     const turfFee = isSwimming ? (baseTurfFee * peopleCount) : baseTurfFee;
-    const convenienceFee = selectedSlots.length > 0 ? (isSwimming ? 15 : Math.round((turfFee * (venue?.convenienceFeePercent || 0)) / 100)) : 0;
+    const convenienceFee = selectedSlots.length > 0 ? Math.round((turfFee * (venue?.convenienceFeePercent || 0)) / 100) : 0;
     const totalAmount = Math.max(0, Math.round(turfFee + convenienceFee));
 
     const hasNoSlots = !fetchingSlots && 

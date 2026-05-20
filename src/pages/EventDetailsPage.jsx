@@ -240,7 +240,8 @@ const EventDetailsPage = () => {
                         event,
                         reservationId: result.reservationId,
                         selectedTickets: enrichedTickets,
-                        totalAmount: getTotalAmount(),
+                        totalAmount: result.pricing?.totalAmount ?? getTotalAmount(),
+                        pricing: result.pricing || null,
                         selectedDate: showDate,
                         selectedTime: showTime
                     }
@@ -774,7 +775,7 @@ const EventDetailsPage = () => {
                     {/* Right Column Area: Booking */}
                     <div className="lg:col-span-4 space-y-8" id="tickets-section">
                         <div className="sticky top-24 space-y-6">
-                            <div className="bg-white dark:bg-[#1a1c23] rounded-[32px] p-8 border border-gray-100 dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] relative overflow-hidden group/tickets transition-colors duration-300">
+                            <div className="bg-white dark:bg-[#1a1c23] rounded-md p-8 border border-gray-100 dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] relative overflow-hidden group/tickets transition-colors duration-300">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16 pointer-events-none" />
 
                                 <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 mb-6 md:mb-8 flex items-center gap-3">
@@ -793,41 +794,83 @@ const EventDetailsPage = () => {
                                         return (
                                             <div
                                                 key={ticket.id}
-                                                className={`p-5 rounded-2xl border transition-all duration-300 ${isSelected
-                                                    ? 'border-primary dark:border-primary bg-primary/[0.03] dark:bg-primary/[0.05] shadow-[0_10px_20px_rgba(66,124,174,0.08)]'
-                                                    : 'border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-md'
+                                                className={`relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 flex justify-between items-center group/card ${isSelected
+                                                    ? 'border-primary/40 dark:border-primary/50 bg-gradient-to-r from-primary/[0.04] to-primary/[0.01] dark:from-primary/[0.06] dark:to-primary/[0.02] shadow-[0_10px_30px_rgba(228,62,84,0.06)] scale-[1.01]'
+                                                    : 'border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30 hover:bg-white dark:hover:bg-gray-850 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-md hover:translate-y-[-1px]'
                                                     }`}
                                             >
-                                                <div className="flex justify-between items-center">
-                                                    <div className="space-y-0.5">
-                                                        <p className="font-bold text-gray-900 dark:text-gray-100 tracking-tight text-sm md:text-base">{ticket.className}</p>
-                                                        <p className="text-xl md:text-2xl font-black text-primary dark:text-primary tracking-tighter">
-                                                            ₹{ticket.price.toLocaleString()}
+                                                {/* Left glowing border accent for selected state */}
+                                                <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${isSelected ? 'bg-primary scale-y-100' : 'bg-transparent scale-y-0'
+                                                    }`} />
+
+                                                {/* Ticket Cutout Notches */}
+                                                <div className="absolute top-[-6px] right-[28%] w-3 h-3 bg-white dark:bg-[#1a1c23] rounded-full border border-gray-100 dark:border-gray-800 z-10" />
+                                                <div className="absolute bottom-[-6px] right-[28%] w-3 h-3 bg-white dark:bg-[#1a1c23] rounded-full border border-gray-100 dark:border-gray-800 z-10" />
+
+                                                {/* Left Section (Ticket Details) */}
+                                                <div className="flex-1 pr-4 flex flex-col justify-between">
+                                                    <div>
+                                                        {/* VIP, Gold, Platinum badges */}
+                                                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                            {/* <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${ticket.className.toLowerCase().includes('vip')
+                                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200/50'
+                                                                : ticket.className.toLowerCase().includes('gold')
+                                                                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200/50'
+                                                                    : ticket.className.toLowerCase().includes('silver')
+                                                                        ? 'bg-slate-150 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/50'
+                                                                        : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/20'
+                                                                }`}>
+                                                                {ticket.className.toLowerCase().includes('vip') ? '⭐ VIP' : ticket.className}
+                                                            </span> */}
+
+                                                            {ticket.availableSeats > 0 && ticket.availableSeats <= 10 && (
+                                                                <span className="text-[9px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded border border-orange-100 dark:border-orange-900/10 animate-pulse">
+                                                                    ⌛ Only {ticket.availableSeats} left!
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <p className="font-extrabold text-gray-900 dark:text-gray-100 tracking-tight text-sm md:text-base">
+                                                            {ticket.className}
                                                         </p>
                                                     </div>
 
+                                                    <div className="mt-2 flex items-baseline gap-1">
+                                                        <span className="text-xl md:text-2xl font-black text-primary dark:text-primary tracking-tighter">
+                                                            ₹{ticket.price.toLocaleString()}
+                                                        </span>
+                                                        <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider"></span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Vertical Dashed Stub Separator */}
+                                                <div className="h-12 border-l border-dashed border-gray-200 dark:border-gray-700 mx-2" />
+
+                                                {/* Right Section (Controls / Sold Out) */}
+                                                <div className="w-[26%] flex flex-col items-center justify-center pl-2">
                                                     {isSoldOut ? (
-                                                        <span className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-100 dark:border-red-900/30">
+                                                        <span className="px-2 py-1 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-[9px] font-black uppercase tracking-wider rounded-lg border border-red-100 dark:border-red-900/20">
                                                             Sold Out
                                                         </span>
                                                     ) : (
-                                                        <div className="flex items-center gap-3 md:gap-4 bg-white dark:bg-gray-900/80 p-1 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                                                        <div className={`flex items-center bg-white dark:bg-gray-950 p-0.5 rounded-xl border shadow-sm transition-all duration-350 ${isSelected ? 'border-primary/40 ring-1 ring-primary/10' : 'border-gray-100 dark:border-gray-800'
+                                                            }`}>
                                                             <button
                                                                 onClick={() => updateTicketQuantity(ticket.id, -1)}
                                                                 disabled={quantity === 0}
-                                                                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-90 border border-transparent hover:border-primary/10"
+                                                                className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-75"
                                                             >
-                                                                <span className="text-xl font-bold">−</span>
+                                                                <span className="text-lg font-black">−</span>
                                                             </button>
-                                                            <span className="text-sm md:text-base font-black text-gray-900 dark:text-gray-100 min-w-[20px] text-center tabular-nums">
+                                                            <span className="text-xs md:text-sm font-black text-gray-900 dark:text-gray-100 min-w-[16px] text-center tabular-nums mx-1 select-none">
                                                                 {quantity}
                                                             </span>
                                                             <button
                                                                 onClick={() => updateTicketQuantity(ticket.id, 1)}
                                                                 disabled={quantity >= 10}
-                                                                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-90 border border-transparent hover:border-primary/10"
+                                                                className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/20 rounded-lg disabled:opacity-20 transition-all active:scale-75"
                                                             >
-                                                                <span className="text-xl font-bold">+</span>
+                                                                <span className="text-lg font-black">+</span>
                                                             </button>
                                                         </div>
                                                     )}
@@ -845,7 +888,7 @@ const EventDetailsPage = () => {
                             </div>
 
                             {/* Organizer Section */}
-                            <div className="bg-white dark:bg-[#1a1c23] rounded-[24px] p-5 md:p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group/organizer hover:shadow-md transition-all duration-300">
+                            <div className="bg-white dark:bg-[#1a1c23] rounded-md p-5 md:p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group/organizer hover:shadow-md transition-all duration-300">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-lg font-black text-primary shadow-sm group-hover/organizer:scale-110 transition-transform duration-500">

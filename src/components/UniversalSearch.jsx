@@ -71,7 +71,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
                         _id: r._id,
                         name: r.title,
                         city: r.subtitle || r.raw?.city || '',
-                        slug: r.raw?.slug || r.raw?.theaterId || r._id
+                        slug: r._id  // Always use _id for theater API — slug causes 500 errors
                     })),
                     events: searchResults.filter(r => r._type === 'event').map(r => ({
                         id: r._id,
@@ -119,7 +119,7 @@ const UniversalSearch = ({ className = "", variant = "hero", onSelect }) => {
         const identifier = item.slug || item.id || item._id;
 
         if (type === 'movie') navigate(`/movie/${identifier}`);
-        else if (type === 'theater') navigate(`/theater/${identifier}`);
+        else if (type === 'theater') navigate(`/theater/${item._id || item.id}`); // Always use _id, not slug
         else if (type === 'event') navigate(`/event/${identifier}`);
         else if (type === 'turf') navigate(`/activities/${item._id || item.id}`);
         else if (type === 'park') navigate(`/park/${identifier}`);

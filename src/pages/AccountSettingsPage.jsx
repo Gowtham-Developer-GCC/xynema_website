@@ -6,12 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { registerNotificationToken, removeNotificationToken } from '../services/notificationService';
-import { getUserProfile, updateUserProfile } from '../services/userService';
+import { getUserProfile, updateUserProfile, deleteAccount } from '../services/userService';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 
 const AccountSettingsPage = () => {
     const navigate = useNavigate();
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, logoutUser } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const fileInputRef = useRef(null);
@@ -20,6 +21,7 @@ const AccountSettingsPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Form states with mock defaults
     const [formData, setFormData] = useState({
@@ -159,6 +161,19 @@ const AccountSettingsPage = () => {
             toast.error(err.message || 'Failed to update profile');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            const result = await deleteAccount();
+            if (result?.success) {
+                await logoutUser();
+                toast.success('Account deleted successfully');
+                navigate('/', { replace: true });
+            }
+        } catch (err) {
+            toast.error(err.message || 'Failed to delete account');
         }
     };
 
@@ -521,7 +536,10 @@ const AccountSettingsPage = () => {
                                                 <h4 className="text-[11px] font-black text-red-500 uppercase tracking-wider">{t('delete_account')}</h4>
                                                 <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">{t('remove_data')}</p>
                                             </div>
-                                            <button className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                            <button
+                                                onClick={() => setShowDeleteConfirm(true)}
+                                                className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                                            >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -657,6 +675,18 @@ const AccountSettingsPage = () => {
                     <span className="text-xs font-black uppercase tracking-[0.2em]">{t('profile_updated')}</span>
                 </div>
             </div>
+
+            {/* Delete Account Confirmation */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDeleteAccount}
+                title="Delete Account"
+                message="This will permanently remove your Xynema account and all associated data. This action cannot be undone."
+                confirmText="Delete My Account"
+                cancelText="Cancel"
+                type="danger"
+            />
         </div>
     );
 };

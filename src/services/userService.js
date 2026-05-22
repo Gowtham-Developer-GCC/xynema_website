@@ -1,6 +1,7 @@
 import api, { safeApiCall, storeUser, removeUser, getStoredUser } from './api';
 import { ENDPOINTS } from './endpoints';
 import { User } from '../models/index.js';
+import { getDeviceInfo } from '../utils/deviceInfo';
 
 export const getUserProfile = async () => {
     return safeApiCall(async () => {
@@ -30,7 +31,7 @@ export const updateUserProfile = async (profileData) => {
 
 export const loginWithGoogle = async (idToken) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.USER.GOOGLE_LOGIN, { idToken });
+        const response = await api.post(ENDPOINTS.USER.GOOGLE_LOGIN, { idToken, deviceInfo: getDeviceInfo() });
         if (response.data.success) {
             // Token may be at root level OR inside data — check both
             const token = response.data.token || response.data.data?.token || '';
@@ -66,14 +67,14 @@ export const loginWithGoogle = async (idToken) => {
 
 export const sendPhoneLogin = async (phone) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.USER.PHONE_LOGIN, { phone });
+        const response = await api.post(ENDPOINTS.USER.PHONE_LOGIN, { phone, deviceInfo: getDeviceInfo() });
         return response.data;
     });
 };
 
 export const verifyPhoneOtp = async (phone, otp) => {
     return safeApiCall(async () => {
-        const response = await api.post(ENDPOINTS.USER.VERIFY_OTP, { phone, otp });
+        const response = await api.post(ENDPOINTS.USER.VERIFY_OTP, { phone, otp, deviceInfo: getDeviceInfo() });
         if (response.data.success) {
             // Token may be at root level OR inside data — check both
             const token = response.data.token || response.data.data?.token || '';
@@ -111,7 +112,7 @@ export const logout = async () => {
     try {
         const user = getStoredUser();
         if (user && user.token) {
-            await api.post(ENDPOINTS.USER.LOGOUT);
+            await api.post(ENDPOINTS.USER.LOGOUT, { deviceModel: getDeviceInfo().deviceModel });
         }
     } catch (error) {
         console.error('Error logging out:', error);
@@ -127,6 +128,17 @@ export const getCoupons = async () => {
             return response.data.data.coupons;
         }
         return [];
+    });
+};
+
+export const deleteAccount = async () => {
+    return safeApiCall(async () => {
+        const response = await api.delete(ENDPOINTS.USER.DELETE_ACCOUNT);
+        if (response.data.success) {
+            removeUser();
+            return { success: true };
+        }
+        throw new Error(response.data.message || 'Failed to delete account');
     });
 };
 

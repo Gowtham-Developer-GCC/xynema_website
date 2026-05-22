@@ -56,6 +56,7 @@ export const ENDPOINTS = {
         VERIFY_OTP: '/user/verify-phone-otp',
         LOGOUT: '/user/logout',
         COUPONS: '/user/coupons',
+        DELETE_ACCOUNT: '/user/delete-account',
     },
 
     // Payment

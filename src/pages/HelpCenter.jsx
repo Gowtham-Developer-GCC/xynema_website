@@ -51,6 +51,10 @@ const HelpCenter = () => {
         {
             q: "How can I change my account details?",
             a: "Users can update their profile information by accessing the Account Settings section within the XYNEMA platform. If you encounter any issues while updating your account details, please contact customer support for assistance."
+        },
+        {
+            q: "How do I delete my XYNEMA account?",
+            a: "You can permanently delete your XYNEMA account by following the steps below.<br><br><strong>◆ ON WEBSITE:</strong><br><br><strong>Step 1:</strong> Go to <strong>Account Settings</strong> from your profile menu, then switch to the <strong>Privacy</strong> tab.<br><img src=\"https://tms-storage-images.s3.ap-south-1.amazonaws.com/delete_website.png\" alt=\"Website step 1\" style=\"max-width:100%;height:auto;margin:8px 0;border-radius:12px;border:1px solid #e5e7eb;\"><br><br><strong>Step 2:</strong> Click the <strong>Delete Account</strong> button (red trash icon), then confirm in the dialog.<br><img src=\"https://tms-storage-images.s3.ap-south-1.amazonaws.com/delete_acount2_website.png\" alt=\"Website step 2\" style=\"max-width:100%;height:auto;margin:8px 0;border-radius:12px;border:1px solid #e5e7eb;\"><br><br><strong>◆ ON APP:</strong><br><br><strong>Step 1:</strong> Open the XYNEMA app, tap your <strong>Profile</strong> icon, then go to <strong>Account Settings</strong> &gt; <strong>Privacy</strong>.<br><strong>Step 2:</strong> Tap <strong>Delete Account</strong> and confirm when prompted.<br><div style=\"display:flex;gap:12px;margin:8px 0;flex-wrap:wrap;\"><img src=\"https://tms-storage-images.s3.ap-south-1.amazonaws.com/delete_mobile.png\" alt=\"App step 1\" style=\"flex:1;min-width:200px;max-width:48%;height:auto;border-radius:12px;border:1px solid #e5e7eb;\"><img src=\"https://tms-storage-images.s3.ap-south-1.amazonaws.com/Delete_account.png\" alt=\"App step 2\" style=\"flex:1;min-width:200px;max-width:48%;height:auto;border-radius:12px;border:1px solid #e5e7eb;\"></div><br>⚠️ <strong>This action is irreversible.</strong> All your bookings, preferences, and personal data will be permanently deleted."
         }
     ];
 
@@ -181,10 +185,8 @@ const HelpCenter = () => {
                                         <span className="font-bold text-gray-900 dark:text-gray-100 leading-tight">{item.q}</span>
                                         <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${openFaq === index ? 'rotate-90' : ''}`} />
                                     </button>
-                                    <div className={`transition-all duration-300 ease-in-out ${openFaq === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
-                                        <div className="px-6 pb-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed border-t border-gray-50 dark:border-gray-800/50 pt-4">
-                                            {item.a}
-                                        </div>
+                                    <div className={`transition-all duration-300 ease-in-out ${openFaq === index ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+                                        <div className="px-6 pb-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed border-t border-gray-50 dark:border-gray-800/50 pt-4" dangerouslySetInnerHTML={{ __html: item.a }} />
                                     </div>
                                 </div>
                             ))}

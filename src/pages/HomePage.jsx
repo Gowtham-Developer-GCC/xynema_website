@@ -292,7 +292,7 @@ const HomePage = ({ selectedCity }) => {
                                 href={randomSectionBanner.linkUrl || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block w-full aspect-video md:aspect-[21/2] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
+                                className="block w-full aspect-[16/6] md:aspect-[21/2] lg:aspect-[21/2] relative overflow-hidden group/slide cursor-pointer"
                             >
                                 <img
                                     src={optimizeImage(isMobile ? (randomSectionBanner.mobileSectionImage?.url || randomSectionBanner.mobileSectionImage) : (randomSectionBanner.sectionImageUrl?.url || randomSectionBanner.sectionImageUrl), { width: 1920, quality: 100 })}

@@ -45,7 +45,7 @@ export const toggleInterest = async (movieId, interested) => {
 export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, genreOrFilters = null) => {
     return safeApiCall(async () => {
         const params = { city, page, limit };
-        
+
         if (genreOrFilters) {
             if (typeof genreOrFilters === 'string' && genreOrFilters !== 'All') {
                 params.genre = genreOrFilters;
@@ -89,7 +89,7 @@ export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, ge
                     });
                 }
             }
-            
+
             const latestMoviesRaw = response.data.latestMovies || response.data.data || response.data.movies;
             const latestMoviesParsed = Array.isArray(latestMoviesRaw) ? latestMoviesRaw.map(m => new Movie(m)) : [];
 
@@ -110,7 +110,7 @@ export const getNowShowingMovies = async (city, page = 1, limit = PAGE_LIMIT, ge
 export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT, genreOrFilters = null) => {
     return safeApiCall(async () => {
         const params = { city, page, limit };
-        
+
         if (genreOrFilters) {
             if (typeof genreOrFilters === 'string' && genreOrFilters !== 'All') {
                 params.genre = genreOrFilters;
@@ -127,7 +127,7 @@ export const getUpcomingMovies = async (city, page = 1, limit = PAGE_LIMIT, genr
             const resultData = response.data.data || response.data.movies;
             const pagination = response.data.pagination || { page, hasNextPage: Array.isArray(resultData) && resultData.length >= limit };
             const movies = Array.isArray(resultData) ? resultData.map(m => new Movie(m)) : [];
-            
+
             return {
                 movies: movies,
                 pagination: pagination,

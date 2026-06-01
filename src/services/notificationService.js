@@ -79,7 +79,7 @@ export async function registerNotificationToken() {
         });
 
         if (token) {
-            console.log('FCM Token:', token);
+            // console.log('FCM Token:', token);
 
             // 4. Send token to your backend
             try {

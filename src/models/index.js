@@ -7,7 +7,7 @@ export class Movie {
     constructor(data = {}) {
         this.id = data._id || data.id || '';
         this.title = data.MovieName || data.movieName || data.title || '';
-        
+
         const rawPoster = data.portraitPoster || data.portraitPosterUrl || data.posterUrl || data.PosterUrl || data.image || '';
         this.posterUrl = (typeof rawPoster === 'object' && rawPoster !== null ? (rawPoster.url || rawPoster.imageUrl || '') : rawPoster);
 
@@ -31,6 +31,33 @@ export class Movie {
             ? rawLang.join(', ')
             : (rawLang || '').replace ? (rawLang || '').replace(/,/g, ', ') : (rawLang || '');
         this.releaseDate = data.releaseDate || '';
+        const avail = data.theaterAvailability || data.availability || {};
+        
+        let minDate = data.showStartDate || avail.showStartDate || null;
+        let maxDate = data.showEndDate || avail.showEndDate || null;
+
+        if (!minDate || !maxDate) {
+            const tempTheaters = avail.theatres || avail.theaters || data.theaters || [];
+            let minTime = null;
+            let maxTime = null;
+            tempTheaters.forEach(t => {
+                (t.screens || []).forEach(s => {
+                    if (s.showStartDate) {
+                        const tStart = new Date(s.showStartDate).getTime();
+                        if (minTime === null || tStart < minTime) minTime = tStart;
+                    }
+                    if (s.showEndDate) {
+                        const tEnd = new Date(s.showEndDate).getTime();
+                        if (maxTime === null || tEnd > maxTime) maxTime = tEnd;
+                    }
+                });
+            });
+            if (minTime !== null && !minDate) minDate = new Date(minTime).toISOString();
+            if (maxTime !== null && !maxDate) maxDate = new Date(maxTime).toISOString();
+        }
+
+        this.showStartDate = minDate || '';
+        this.showEndDate = maxDate || '';
         this.slug = data.slug || (this.title ? this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : '');
         this.isReleased = data.isReleased ?? false;
 
@@ -57,7 +84,7 @@ export class Movie {
         this.crew = this._parseCastCrew(data.crew, 'crew') || [];
 
         this.format = Array.isArray(data.format) ? data.format.map(f => f.toString()) : [];
-        this.theaters = (data.availability?.theatres || data.availability?.theaters || []).map(t => new Theater(t));
+        this.theaters = (avail.theatres || avail.theaters || []).map(t => new Theater(t));
         this.interestCount = data.interestCount || data.InterestCount || 0;
 
         // Highlights / Banners
@@ -76,15 +103,15 @@ export class Movie {
         // Availability flag for Upcoming logic - Handle boolean and string 'true'
         // Default to false (Upcoming) if missing or explicitly false
         const isReleased = data.isReleased === true || data.isReleased === 'true' || data.status === 'now-showing' || data.status === 'released' || data.status === 'nowshowing';
-        const availValue = data.availability?.isAvailable ?? data.isAvailable;
+        const availValue = avail.isAvailable ?? data.isAvailable;
         this.isAvailable = availValue === true || availValue === 'true' || isReleased;
 
         // Also check if there are showtimes - if yes, it's definitely available
-        const hasTheaters = (data.availability?.theatres?.length || 0) > 0 || (data.theaters?.length || 0) > 0;
+        const hasTheaters = (avail.theatres?.length || 0) > 0 || (data.theaters?.length || 0) > 0;
         if (hasTheaters) {
             this.isAvailable = true;
         }
-        this.availability = data.availability || {};
+        this.availability = avail;
 
         // Collect all available images for carousels
         const imgs = Array.isArray(data.images) ? data.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean) : [];
@@ -117,9 +144,9 @@ export class CastMember {
         this.id = data._id || data.id || '';
         this.name = data.name || '';
         this.role = data.role || '';
-        
+
         const rawPhoto = data.photoUrl || data.imageUrl || data.image || '';
-        this.photoUrl = (typeof rawPhoto === 'object' && rawPhoto !== null ? (rawPhoto.url || rawPhoto.imageUrl || '') : rawPhoto) 
+        this.photoUrl = (typeof rawPhoto === 'object' && rawPhoto !== null ? (rawPhoto.url || rawPhoto.imageUrl || '') : rawPhoto)
             || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Cast')}&background=random&color=fff&size=256`;
     }
 }
@@ -129,7 +156,7 @@ export class CrewMember {
         this.id = data._id || data.id || '';
         this.name = data.name || '';
         this.role = data.role || '';
-        
+
         const rawPhoto = data.photoUrl || data.imageUrl || data.image || '';
         this.photoUrl = (typeof rawPhoto === 'object' && rawPhoto !== null ? (rawPhoto.url || rawPhoto.imageUrl || '') : rawPhoto)
             || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Crew')}&background=random&color=fff&size=256`;
@@ -153,7 +180,7 @@ export class Theater {
         this.basePrice = data.basePrice || 0;
         this.features = data.features || (data.amenities ? data.amenities.slice(0, 3) : []);
         this.isFoodAndBeveragesAvailable = data.isFoodAndBeveragesAvailable ?? true;
-        
+
         // Nested representation from browse-movies API
         this.movies = (data.movies || []).map(m => new TheaterMovie(m));
 
@@ -194,7 +221,7 @@ export class TheaterMovie {
         this.releaseDate = data.releaseDate || '';
         this.certification = data.certification || '';
         this.slug = data.slug || (data.movieName ? data.movieName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '');
-        
+
         // Handle new response structure: data has `shows` and `scheduleInfo`
         if (Array.isArray(data.shows)) {
             // Group shows into a single virtual schedule for the UI
@@ -251,8 +278,8 @@ export class Screen {
         this.facilities = data.facilities || [];
         this.shows = (data.shows || data.showTimes || []).map(s => {
             if (typeof s === 'string') {
-                return new Show({ 
-                    showTime: s, 
+                return new Show({
+                    showTime: s,
                     format: this.type,
                     screenId: this.id
                 });
@@ -290,7 +317,7 @@ export class Show {
         this.basePrice = (data.basePrice || data.price || pricingPrice || 0);
 
         this.date = data.showDate || data.date || new Date().toISOString().split('T')[0];
-        
+
         // Robust seat count handling
         this.availableSeats = data.availableSeats ?? 0;
         this.totalSeats = data.totalSeats || data.screen?.totalSeats || data.screen?.capacity || 0;
@@ -511,8 +538,8 @@ export class Booking {
             foodOrders: json.foodAndBeverages || {},
             duration: movieData.duration || movieData.Duration || json.duration || 0,
             language: (movieData.language || movieData.movieLanguage || json.language || (Array.isArray(movieData.languages) ? movieData.languages[0] : '') || '').toString(),
-            movieLanguage: Array.isArray(movieData.movieLanguage || json.movieLanguage) 
-                ? (movieData.movieLanguage || json.movieLanguage).join(', ') 
+            movieLanguage: Array.isArray(movieData.movieLanguage || json.movieLanguage)
+                ? (movieData.movieLanguage || json.movieLanguage).join(', ')
                 : (movieData.movieLanguage || json.movieLanguage || movieData.language || json.language || '').toString(),
             format: (json.format || movieData.format || screenData.screenType || '').toString(),
             certification: (movieData.certification || json.certification || '').toString(),
@@ -695,7 +722,7 @@ export class Event {
 
         this.imageUrl = primaryImg?.url || (allImages.length > 0 ? allImages[0] : 'https://placehold.co/800x400');
         this.allImages = allImages;
-        
+
         // Portrait Image
         this.portraitEventImage = data.portraitEventImage?.url || data.portraitEventImage || null;
 
@@ -737,16 +764,16 @@ export class Turf {
     constructor(data = {}) {
         this.id = data._id || data.id || '';
         this.name = data.turfName || data.name || 'Unnamed Turf';
-        
+
         const loc = data.location || {};
         this.city = data.city || loc.city || 'City TBD';
         this.landmark = data.landmark || loc.landmark || '';
         this.venue = data.venue || loc.venue || (loc.address ? loc.address.split(',')[0] : 'Venue TBD');
         this.address = data.fullAddress || loc.address || data.address || '';
-        
+
         // Extract price - prioritizing direct pricePerHour from courts if not at top level
         this.price = data.pricePerHour || data.basePrice || data.price || data.hourlyRate || 0;
-        
+
         if (!this.price && Array.isArray(data.courts) && data.courts.length > 0) {
             const prices = data.courts.map(c => c.pricePerHour || 0).filter(p => p > 0);
             if (prices.length > 0) {
@@ -759,10 +786,10 @@ export class Turf {
         this.reviewCount = data.ratingSummary?.count || data.reviewCount || 0;
 
         // Image Handling from objects {url, ...}
-        const imgs = Array.isArray(data.images) 
+        const imgs = Array.isArray(data.images)
             ? data.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean)
             : [];
-        
+
         this.primaryImage = data.primaryImage?.url || (data.images?.find(img => img.isPrimary)?.url) || data.imageUrl || imgs[0] || 'https://placehold.co/800x400';
         this.imageUrl = this.primaryImage;
         this.allImages = imgs.length > 0 ? imgs : [this.primaryImage];
@@ -776,14 +803,14 @@ export class Turf {
                 }
             });
         }
-        
-        this.tags = Array.from(new Set(rawTypes)).map(type => 
+
+        this.tags = Array.from(new Set(rawTypes)).map(type =>
             type.toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
         );
-        
+
         this.description = data.description || '';
         this.slug = data.slug || '';
-        
+
         // Additional metadata
         this.amenities = data.amenities || {};
         this.operatingHours = data.operatingHours || {};
@@ -872,7 +899,7 @@ export class ActivityPark {
         const loc = data.location || {};
         this.city = data.city || loc.city || 'City TBD';
         this.location = data.fullAddress || loc.address || data.address || '';
-        
+
         // Generate map URL if coordinates exist and mapUrl is missing
         const coords = loc.coordinates || [];
         const lng = coords[0];
@@ -898,18 +925,18 @@ export class ActivityPark {
         }
 
         // Dynamic fallback for schedule information and other missing fields
-        this.openingHours = data.openingHours || 
-            (data.scheduleInfo?.openingTime && data.scheduleInfo?.closingTime 
-                ? `${data.scheduleInfo.openingTime} - ${data.scheduleInfo.closingTime}` 
+        this.openingHours = data.openingHours ||
+            (data.scheduleInfo?.openingTime && data.scheduleInfo?.closingTime
+                ? `${data.scheduleInfo.openingTime} - ${data.scheduleInfo.closingTime}`
                 : 'All Day');
         this.bestFor = data.bestFor || 'All Ages';
         this.topTime = data.topTime || 'All Ages';
         this.bestSeason = data.bestSeason || 'Year Round';
         this.description = data.description || '';
-        
+
         // Extract safety text from rules array if safetyText is missing
         this.rules = data.rules || [];
-        this.safetyText = data.safetyText || 
+        this.safetyText = data.safetyText ||
             (Array.isArray(data.rules) && data.rules.length > 0 ? data.rules[0] : 'Standard safety rules apply');
         this.facilities = data.facilities || [];
 

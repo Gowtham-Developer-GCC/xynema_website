@@ -146,42 +146,47 @@ const TheaterSelectionPage = () => {
                 return slugMatch || idMatch || titleMatch;
             });
 
+            let resolvedMovie = null;
+
             if (foundMovie) {
-                if (isMounted) {
-                    setMovie(foundMovie);
-                    syncDate(foundMovie);
-                }
-                return;
+                resolvedMovie = foundMovie;
             }
 
-            // 2. Try specific details API fallback
-            try {
-                const movieData = await apiCacheManager.getOrFetchMovieDetails(identifier, () => getMovieDetails(identifier));
-                if (movieData) {
-                    if (isMounted) {
-                        const parsedMovie = new Movie(movieData);
-                        setMovie(parsedMovie);
-                        syncDate(parsedMovie);
+            // If we don't have the movie, or if it's missing the deep showStartDate, fetch details
+            if (!resolvedMovie || !resolvedMovie.showStartDate) {
+                try {
+                    const movieData = await apiCacheManager.getOrFetchMovieDetails(
+                        `${identifier}_${selectedCity || 'default'}`,
+                        () => getMovieDetails(identifier, selectedCity)
+                    );
+                    if (movieData) {
+                        resolvedMovie = new Movie(movieData);
                     }
-                } else {
-                    if (isMounted) setLoading(false);
+                } catch (err) {
+                    console.error('[TheaterSelection] Fetch details failed:', err);
                 }
-            } catch (err) {
-                console.error('[TheaterSelection] Fetch details failed:', err);
-                if (isMounted) setLoading(false);
+            }
+
+            if (isMounted) {
+                if (resolvedMovie) {
+                    setMovie(resolvedMovie);
+                    syncDate(resolvedMovie);
+                }
+                setLoading(false);
             }
         };
 
         const syncDate = (m) => {
-            if (m.releaseDate) {
-                const releaseDateObj = new Date(m.releaseDate);
+            const startStr = m.showStartDate || m.releaseDate;
+            if (startStr) {
+                const releaseDateObj = new Date(startStr);
                 releaseDateObj.setHours(0, 0, 0, 0);
 
                 const currentSelectedObj = new Date(selectedDate);
                 currentSelectedObj.setHours(0, 0, 0, 0);
 
                 if (currentSelectedObj < releaseDateObj) {
-                    const dateStr = m.releaseDate.split('T')[0];
+                    const dateStr = startStr.split('T')[0];
                     setSelectedDate(dateStr);
                 }
             }
@@ -459,8 +464,9 @@ const TheaterSelectionPage = () => {
                     <DateSelector
                         selectedDate={selectedDate}
                         onDateSelect={setSelectedDate}
+                        showStartDate={movie?.showStartDate}
                         releaseDate={movie?.releaseDate}
-                        maxEndDate={maxEndDate}
+                        maxEndDate={maxEndDate || movie?.showEndDate}
                         emptyDates={emptyDates}
                     />
 
@@ -588,8 +594,9 @@ const FilterDropdown = ({ label, icon: Icon, options, activeValue, onSelect }) =
     );
 };
 
-const DateSelector = ({ selectedDate, onDateSelect, releaseDate, maxEndDate, emptyDates = [] }) => {
-    let minDate = releaseDate ? new Date(releaseDate) : new Date();
+const DateSelector = ({ selectedDate, onDateSelect, showStartDate, releaseDate, maxEndDate, emptyDates = [] }) => {
+    const startStr = showStartDate || releaseDate;
+    let minDate = startStr ? new Date(startStr) : new Date();
     if (minDate < new Date().setHours(0, 0, 0, 0)) minDate = new Date();
 
     const dates = Array.from({ length: 7 }, (_, i) => {

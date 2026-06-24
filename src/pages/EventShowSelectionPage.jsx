@@ -20,6 +20,19 @@ const EventShowSelectionPage = () => {
     const [selectedShowTime, setSelectedShowTime] = useState(null);
     const [isReserving, setIsReserving] = useState(false);
 
+    // --- NEW HELPER: Get the valid date range (Today -> Next 7 Days) ---
+    const getValidDateRange = () => {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Calculate max date (Today + 6 days = 7 days total window)
+        const maxDate = new Date(today);
+        maxDate.setDate(today.getDate() + 6); 
+        const maxDateStr = maxDate.toISOString().split('T')[0];
+        
+        return { todayStr, maxDateStr };
+    };
+
     // Initialize date from event showtimes
     useEffect(() => {
         if (!event || event.eventType !== 'multi-day' || !(event.showTimes?.length > 0)) {
@@ -28,18 +41,38 @@ const EventShowSelectionPage = () => {
         }
 
         if (event.showTimes.length > 0 && !selectedDate) {
-            // Pick the first date available by default
-            const firstDateStr = new Date(event.showTimes[0].date).toISOString().split('T')[0];
-            setSelectedDate(firstDateStr);
+            const { todayStr, maxDateStr } = getValidDateRange();
+
+            // Find valid dates within the 7-day window
+            const validDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))]
+                .filter(dateStr => dateStr >= todayStr && dateStr <= maxDateStr)
+                .sort();
+
+            if (validDates.length > 0) {
+                // Pick the first date available in the upcoming 7 days
+                setSelectedDate(validDates[0]);
+            } else {
+                // Fallback: If no shows in the next 7 days, select the next future show available
+                const futureDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))]
+                    .filter(dateStr => dateStr >= todayStr)
+                    .sort();
+                
+                setSelectedDate(futureDates.length > 0 ? futureDates[0] : todayStr);
+            }
         }
     }, [event, navigate, slug, selectedDate]);
 
     if (!event) return <LoadingScreen message="Loading event details" />;
 
-    // Extract unique dates for the date strip
+    // --- UPDATED: Extract and filter unique dates for the date strip ---
     let uniqueDates = [];
     if (event.showTimes) {
-        uniqueDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))].sort();
+        const { todayStr, maxDateStr } = getValidDateRange();
+        
+        uniqueDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))]
+            // Only keep dates that are >= today AND <= 7 days from today
+            .filter(dateStr => dateStr >= todayStr && dateStr <= maxDateStr) 
+            .sort();
     }
 
     // Filter showtimes for the selected date
@@ -75,8 +108,7 @@ const EventShowSelectionPage = () => {
                         event,
                         reservationId: result.reservationId,
                         selectedTickets: location.state?.enrichedTickets || selectedTickets,
-                        totalAmount: result.pricing?.totalAmount ?? totalAmount,
-                        pricing: result.pricing || null,
+                        totalAmount,
                         selectedDate: showDate,
                         selectedTime: showTime
                     }
@@ -274,7 +306,7 @@ const EventShowSelectionPage = () => {
                             <Calendar className="w-8 h-8 text-gray-300" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Shows Available</h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">There are no showtimes scheduled for the selected date.</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">There are no showtimes scheduled for the selected date within the next 7 days.</p>
                     </div>
                 )}
             </div>

@@ -12,6 +12,14 @@ const EventBookingSummaryPage = () => {
     const location = useLocation();
     const { event, reservationId, selectedTickets, totalAmount, pricing, selectedDate, selectedTime } = location.state || {};
 
+    const derivedPricingTotal = pricing 
+        ? ((pricing.subtotal || 0) + (pricing.convenienceFee || 0) + (pricing.tax || 0))
+        : null;
+        // 1. Try API's totalAmount
+    // 2. Fallback to manually summed total (1000 + 100 + 18 = 1118)
+    // 3. Fallback to the original state totalAmount
+    const finalAmount = pricing?.totalAmount ?? derivedPricingTotal ?? totalAmount;
+
     // Local states to capture and store live API pricing response details
     const [apiPricing, setApiPricing] = useState(pricing || null);
     const [currentReservationId, setCurrentReservationId] = useState(reservationId || null);
@@ -432,7 +440,7 @@ const EventBookingSummaryPage = () => {
                                     <div className="flex items-center justify-between mb-4 md:mb-6">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
-                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{apiPricing.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{finalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                         </div>
                                     </div>
 

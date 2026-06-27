@@ -26,7 +26,7 @@ const EventBookingSummaryPage = () => {
     // 2. Fallback to manually summed total (1000 + 100 + 18 = 1118)
     // 3. Fallback to the original state totalAmount
     // Use API pricing.totalAmount if available, else fall back to locally calculated totalAmount
-     const finalAmount = pricing?.totalAmount ?? derivedPricingTotal ?? totalAmount;
+     const finalAmount = apiPricing?.totalAmount ?? totalAmount;
 
 
     const [attendees, setAttendees] = useState([{

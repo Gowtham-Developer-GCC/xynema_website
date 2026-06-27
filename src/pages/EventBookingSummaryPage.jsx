@@ -15,18 +15,19 @@ const EventBookingSummaryPage = () => {
     const derivedPricingTotal = pricing 
         ? ((pricing.subtotal || 0) + (pricing.convenienceFee || 0) + (pricing.tax || 0))
         : null;
-        // 1. Try API's totalAmount
-    // 2. Fallback to manually summed total (1000 + 100 + 18 = 1118)
-    // 3. Fallback to the original state totalAmount
-    const finalAmount = pricing?.totalAmount ?? derivedPricingTotal ?? totalAmount;
-
+        
+    
     // Local states to capture and store live API pricing response details
     const [apiPricing, setApiPricing] = useState(pricing || null);
     const [currentReservationId, setCurrentReservationId] = useState(reservationId || null);
     const [isLoadingPricing, setIsLoadingPricing] = useState(!pricing);
 
+    // 1. Try API's totalAmount
+    // 2. Fallback to manually summed total (1000 + 100 + 18 = 1118)
+    // 3. Fallback to the original state totalAmount
     // Use API pricing.totalAmount if available, else fall back to locally calculated totalAmount
-    const finalAmount = pricing?.totalAmount ?? totalAmount;
+     const finalAmount = pricing?.totalAmount ?? derivedPricingTotal ?? totalAmount;
+
 
     const [attendees, setAttendees] = useState([{
         name: '',

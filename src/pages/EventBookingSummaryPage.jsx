@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, CheckCircle, ChevronRight, Info, CreditCard, Coffee, Smartphone, Building, Wallet } from 'lucide-react';
-import { confirmEventBooking } from '../services/eventService';
+import { confirmEventBooking, reserveEventTickets } from '../services/eventService';
 import LoadingScreen from '../components/LoadingScreen';
 import PaymentButton from '../components/PaymentButton';
 import EmailPrompt from '../components/EmailPrompt';
@@ -11,6 +11,11 @@ const EventBookingSummaryPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { event, reservationId, selectedTickets, totalAmount, pricing, selectedDate, selectedTime } = location.state || {};
+
+    // Local states to capture and store live API pricing response details
+    const [apiPricing, setApiPricing] = useState(pricing || null);
+    const [currentReservationId, setCurrentReservationId] = useState(reservationId || null);
+    const [isLoadingPricing, setIsLoadingPricing] = useState(!pricing);
 
     // Use API pricing.totalAmount if available, else fall back to locally calculated totalAmount
     const finalAmount = pricing?.totalAmount ?? totalAmount;
@@ -45,6 +50,33 @@ const EventBookingSummaryPage = () => {
             navigate('/events');
         }
     }, [event, reservationId, navigate]);
+
+    // --- NEW LOGIC: Fetch breakdown and pricing dynamically from the reserve API ---
+    useEffect(() => {
+        const fetchLivePricingDetails = async () => {
+            if (!event?.id || !selectedTickets || selectedTickets.length === 0) return;
+
+            try {
+                setIsLoadingPricing(true);
+                const result = await reserveEventTickets(event.id, selectedTickets, selectedDate, selectedTime);
+                
+                if (result?.pricing) {
+                    setApiPricing(result.pricing);
+                }
+                if (result?.reservationId) {
+                    setCurrentReservationId(result.reservationId);
+                }
+            } catch (error) {
+                console.error("Failed to load reservation pricing details:", error);
+            } finally {
+                setIsLoadingPricing(false);
+            }
+        };
+
+        if (!apiPricing) {
+            fetchLivePricingDetails();
+        }
+    }, [event?.id, selectedTickets, selectedDate, selectedTime, apiPricing]);
 
     // Timer Countdown Logic
     useEffect(() => {
@@ -372,24 +404,30 @@ const EventBookingSummaryPage = () => {
 
                                 {/* Total & Pay Button */}
                                 <div>
-                                    {/* Pricing Breakdown */}
-                                    {pricing ? (
+                                    {/* Pricing Breakdown - Updated to read from dynamically fetched apiPricing */}
+                                    {apiPricing ? (
                                         <div className="space-y-2 mb-4 md:mb-5">
                                             <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
                                                 <span className="font-medium">Subtotal</span>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.subtotal?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{apiPricing.subtotal?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
                                                 <span className="font-medium">Convenience Fee</span>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.convenienceFee?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{apiPricing.convenienceFee?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-[12px] text-gray-500 dark:text-gray-400">
                                                 <span className="font-medium">Tax</span>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{pricing.tax?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">₹{apiPricing.tax?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                             <div className="h-px bg-gray-100 dark:bg-gray-800 w-full my-1" />
                                         </div>
-                                    ) : null}
+                                    ) : (
+                                        isLoadingPricing && (
+                                            <div className="text-xs text-gray-400 dark:text-gray-500 animate-pulse mb-4 tracking-wider uppercase font-black">
+                                                Calculating breakdown fees...
+                                            </div>
+                                        )
+                                    )}
 
                                     <div className="flex items-center justify-between mb-4 md:mb-6">
                                         <div className="flex flex-col">

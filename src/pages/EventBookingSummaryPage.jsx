@@ -432,7 +432,7 @@ const EventBookingSummaryPage = () => {
                                     <div className="flex items-center justify-between mb-4 md:mb-6">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Total Amount</span>
-                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{finalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                                            <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white font-roboto leading-none">₹{apiPricing.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                                         </div>
                                     </div>
 

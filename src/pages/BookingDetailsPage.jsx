@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock, CheckCircle2, X, AlertTriangle } from 'lucide-react';
 import { getBookingDetails } from '../services/bookingService';
+import { getCancellationPolicy, cancelBooking } from '../services/cancellationService';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
 import BookingQr from '../components/BookingQr';
@@ -22,6 +23,15 @@ const BookingDetailsPage = () => {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [justReviewed, setJustReviewed] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
+
+    // Cancellation States
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [policyData, setPolicyData] = useState(null);
+    const [isPolicyLoading, setIsPolicyLoading] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [cancelSuccess, setCancelSuccess] = useState(false);
+    const [refundData, setRefundData] = useState(null);
+
     const hasFetched = useRef(false);
     const ticketRef = useRef(null);
 
@@ -243,6 +253,46 @@ const BookingDetailsPage = () => {
         setShowReviewModal(false);
     };
 
+    // --- Cancellation Functions ---
+    const handleOpenCancelModal = async () => {
+        setShowCancelModal(true);
+        setIsPolicyLoading(true);
+        try {
+            const response = await getCancellationPolicy(booking.bookingId || booking.id);
+            if (response.success) {
+                setPolicyData(response.data);
+            } else {
+                alert('Failed to load cancellation policy.');
+                setShowCancelModal(false);
+            }
+        } catch (error) {
+            console.error("Policy fetch error:", error);
+            alert('Error loading cancellation policy.');
+            setShowCancelModal(false);
+        } finally {
+            setIsPolicyLoading(false);
+        }
+    };
+
+   const handleConfirmCancellation = async () => {
+        setIsCancelling(true);
+        try {
+            const response = await cancelBooking(booking.bookingId || booking.id);
+            if (response.success) {
+                setRefundData(response.data.refund);
+                // Show the success screen instead of closing/reloading immediately
+                setCancelSuccess(true);
+            } else {
+                alert(response.message || "Failed to cancel booking.");
+            }
+        } catch (error) {
+            console.error("Cancellation error:", error);
+            alert(error.message || "Failed to cancel booking.");
+        } finally {
+            setIsCancelling(false);
+        }
+    };
+
 
 
     return (
@@ -413,15 +463,33 @@ const BookingDetailsPage = () => {
                         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-between">
 
                             {/* Verification Block */}
-                            <div className="flex flex-col items-center shrink-0">
-                                <div className="bg-white p-3 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700">
-                                    <BookingQr booking={booking} size={140} />
-                                </div>
-                                <div className="mt-4 flex items-center justify-center gap-1.5 text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-3 py-1 rounded-full">
-                                    <Shield size={12} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{booking.status}</span>
-                                </div>
-                            </div>
+<div className="flex flex-col items-center shrink-0">
+    <div className={`relative bg-white p-3 rounded-2xl overflow-hidden transition-all ${booking.status?.toLowerCase() === 'cancelled' ? 'border-2 border-red-100 dark:border-red-900/30 shadow-sm' : 'shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700'}`}>
+        
+        {/* QR Code Container (Blurred if cancelled) */}
+        <div className={booking.status?.toLowerCase() === 'cancelled' ? 'blur-[4px] opacity-40 grayscale pointer-events-none transition-all duration-300' : ''}>
+            <BookingQr booking={booking} size={140} />
+        </div>
+        
+        {/* Cancelled Overlay */}
+        {booking.status?.toLowerCase() === 'cancelled' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+                <div className="w-12 h-12 bg-white/80 dark:bg-gray-900/80 rounded-full flex items-center justify-center mb-1.5 shadow-sm border border-red-100 dark:border-red-900/50 backdrop-blur-md">
+                    <X size={28} className="text-red-500" strokeWidth={3} />
+                </div>
+                <span className="text-[11px] font-black text-red-600 dark:text-red-500 bg-white/95 dark:bg-gray-900/95 px-3 py-1 rounded-md shadow-lg border border-red-100 dark:border-red-900/50 uppercase tracking-widest backdrop-blur-md">
+                    Cancelled
+                </span>
+            </div>
+        )}
+    </div>
+    
+    {/* Status Pill below QR */}
+    <div className={`mt-4 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-50 text-red-500 dark:bg-red-500/10' : 'text-primary dark:text-primary bg-primary/5 dark:bg-primary/10'}`}>
+        {booking.status?.toLowerCase() === 'cancelled' ? <X size={12} strokeWidth={3} /> : <Shield size={12} />}
+        <span>{booking.status}</span>
+    </div>
+</div>
 
                             {/* Details & Pricing */}
                             <div className="flex-1 w-full space-y-6">
@@ -526,8 +594,19 @@ const BookingDetailsPage = () => {
                     );
                 })()}
 
-                {/* Footer Actions */}
-                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex justify-center">
+                {/* Footer Actions (Download & Cancel) */}
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex justify-center gap-4">
+                    
+                    {/* Cancel Booking Button - Only visible if booking is confirmed */}
+                    {booking.status?.toLowerCase() === 'confirmed' && (
+                        <button
+                            onClick={handleOpenCancelModal}
+                            className="w-full max-w-[200px] h-12 rounded-2xl bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/30 text-red-500 dark:text-red-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <X size={14} /> Cancel Ticket
+                        </button>
+                    )}
+
                     <button
                         onClick={handleDownload}
                         disabled={isDownloading}
@@ -535,8 +614,7 @@ const BookingDetailsPage = () => {
                     >
                         {isDownloading ? (
                             <>
-                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                Processing...
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> Processing...
                             </>
                         ) : (
                             <>
@@ -545,6 +623,138 @@ const BookingDetailsPage = () => {
                         )}
                     </button>
                 </div>
+
+                <ReviewModal isOpen={showReviewModal} onClose={() => setShowReviewModal(false)} booking={booking} onSuccess={handleReviewSuccess} />
+
+               {/* --- Cancellation Policy & Confirmation Modal --- */}
+{showCancelModal && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
+        <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
+            
+            {cancelSuccess ? (
+                /* --- SUCCESS SCREEN --- */
+                <div className="p-8 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
+                    <div className="w-20 h-20 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-5 ring-1 ring-green-100 dark:ring-green-500/20">
+                        <CheckCircle2 size={40} className="text-green-500 dark:text-green-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">Booking Cancelled</h3>
+                    <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-8">
+                        {booking.bookingId || booking.id}
+                    </p>
+
+                    {/* Refund Summary Card */}
+                    <div className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 mb-8 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Refund Status</span>
+                            <span className="font-black text-green-600 dark:text-green-400 uppercase tracking-widest text-[10px] bg-green-100 dark:bg-green-500/20 px-2.5 py-1 rounded-md border border-green-200 dark:border-green-500/30">
+                                {refundData?.status}
+                            </span>
+                        </div>
+                        <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50" />
+                        <div className="flex justify-between items-center">
+                            <span className="font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Refund Amount</span>
+                            <span className="text-xl font-black text-gray-900 dark:text-white leading-none">
+                                ₹{(refundData?.refundAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                            </span>
+                        </div>
+                        <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 text-left leading-relaxed mt-2">
+                            * Amount will be credited to your original payment method ({(booking.payment?.method || booking.paymentMethod || 'account').toUpperCase()}) within 5-7 business days. {refundData?.note}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-primary hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/20"
+                    >
+                        Continue
+                    </button>
+                </div>
+            ) : (
+                /* --- ORIGINAL POLICY/CONFIRM SCREEN --- */
+                <>
+                    {/* Modal Header */}
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-500">
+                                <AlertTriangle size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight">Cancel Booking</h3>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{booking.bookingId || booking.id}</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowCancelModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {/* Modal Body (Policy Data) */}
+                    <div className="p-6 overflow-y-auto max-h-[60vh]">
+                        {isPolicyLoading ? (
+                            <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loading Policy...</p>
+                            </div>
+                        ) : policyData ? (
+                            <div className="space-y-6">
+                                {/* Policy Notes */}
+                                <div className="p-4 bg-orange-50 dark:bg-orange-500/10 rounded-2xl border border-orange-100 dark:border-orange-500/20">
+                                    <p className="text-xs font-bold text-orange-800 dark:text-orange-300 leading-relaxed">
+                                        {policyData.policyNote}
+                                    </p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-md ${policyData.convenienceFeeRefundable ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>
+                                            Convenience Fee: {policyData.convenienceFeeRefundable ? 'Refundable' : 'Non-Refundable'}
+                                        </span>
+                                        <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-md ${policyData.gstRefundable ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>
+                                            Taxes/GST: {policyData.gstRefundable ? 'Refundable' : 'Non-Refundable'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Refund Slabs */}
+                                <div>
+                                    <h4 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Cancellation Charges</h4>
+                                    <div className="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                                        {policyData.slabs?.map((slab, idx) => (
+                                            <div key={idx} className="flex justify-between items-center p-3 text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 bg-white dark:bg-gray-900">
+                                                <span className="font-medium text-gray-700 dark:text-gray-300">{slab.hoursBeforeShow} hrs before show</span>
+                                                <span className="font-bold text-gray-900 dark:text-white">{slab.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-center text-sm text-gray-500 py-4">Failed to load policy. Please try again.</p>
+                        )}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex gap-3">
+                        <button
+                            onClick={() => setShowCancelModal(false)}
+                            className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
+                        >
+                            Keep Ticket
+                        </button>
+                        <button
+                            onClick={handleConfirmCancellation}
+                            disabled={isCancelling || !policyData?.isCancellationEnabled}
+                            className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            {isCancelling ? (
+                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Cancelling</>
+                            ) : (
+                                "Confirm Cancel"
+                            )}
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    </div>
+)}
 
                 {/* Review Modal */}
                 <ReviewModal

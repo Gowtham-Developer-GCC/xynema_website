@@ -96,5 +96,12 @@ export const ENDPOINTS = {
         CONFIRM: (reservationId) => `/customer-activity/activity-parks/confirm-booking/${reservationId}`,
         BOOKING_DETAILS: (bookingId) => `/customer-activity/activity-parks/bookings/${bookingId}`,
         MY_BOOKINGS: '/customer-activity/activity-parks/mybookings',
+    },
+
+    CANCELLATION: {
+        MOVIES: {
+            GET_POLICY: (bookingId) => `/cancellation/booking/${bookingId}/get-policy`,
+            CANCEL: (bookingId) => `/booking/cancel-booking/${bookingId}`,
+        }
     }
 };

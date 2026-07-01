@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api, { getStoredUser, storeUser, removeUser } from '../services/api';
+import api, { getStoredUser, storeUser, removeUser, registerOnUnauthorized } from '../services/api';
 import { loginWithGoogle, logout, sendPhoneLogin, verifyPhoneOtp } from '../services/userService';
 import { googleLogout } from '@react-oauth/google';
 import { User } from '../models/index.js';
@@ -8,6 +8,25 @@ import { registerNotificationToken, removeNotificationToken, onMessageListener }
 import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext();
+
+/**
+ * Check if JWT token is expired
+ */
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return false; // If it's not a standard JWT, let API call validate it
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp) {
+            return Date.now() >= payload.exp * 1000;
+        }
+        return false;
+    } catch (e) {
+        console.error('[Auth] Failed to parse token expiration:', e);
+        return false;
+    }
+};
 
 /**
  * Hook to use auth context
@@ -33,6 +52,12 @@ export const AuthProvider = ({ children }) => {
                 const parsed = JSON.parse(storedUser);
                 const tokenToUse = parsed?.token || storedToken;
                 if (tokenToUse) {
+                    if (isTokenExpired(tokenToUse)) {
+                        console.warn('[Auth] Token is expired on initialization. Clearing storage.');
+                        localStorage.removeItem('auth_user');
+                        localStorage.removeItem('auth_token');
+                        return null;
+                    }
                     return new User({ ...parsed, token: tokenToUse });
                 }
             }
@@ -330,6 +355,21 @@ export const AuthProvider = ({ children }) => {
         setIsLoginModalOpen(false);
         setLoginCallback(null);
     }, []);
+
+    // Register global unauthorized API handler
+    useEffect(() => {
+        const handleUnauthorized = async () => {
+            console.warn('[Auth] Session unauthorized or token expired. Handling logout.');
+            await logoutUser();
+            openLogin();
+            toast.error('Your session has expired. Please log in again.');
+        };
+
+        registerOnUnauthorized(handleUnauthorized);
+        return () => {
+            registerOnUnauthorized(null);
+        };
+    }, [logoutUser, openLogin]);
 
     const value = {
         user,

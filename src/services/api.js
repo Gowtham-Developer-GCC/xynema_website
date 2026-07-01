@@ -103,18 +103,31 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+let onUnauthorizedCallback = null;
+
+/**
+ * Register a callback to handle 401 Unauthorized errors globally
+ */
+export const registerOnUnauthorized = (callback) => {
+    onUnauthorizedCallback = callback;
+};
+
 /**
  * Response interceptor - Handle errors
- * NOTE: We do NOT auto-logout on 401 here because it causes the login modal
- * to appear unexpectedly when the user is browsing. API components handle
- * their own auth errors gracefully.
+ * Automatically logs out and prompts login on 401 Unauthorized
  */
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        // Log error for debugging but do NOT force logout
+    async (error) => {
         if (error.response?.status === 401) {
             console.warn('[API] 401 Unauthorized on:', error.config?.url);
+            if (onUnauthorizedCallback) {
+                try {
+                    await onUnauthorizedCallback();
+                } catch (callbackErr) {
+                    console.error('[API] Error in onUnauthorizedCallback:', callbackErr);
+                }
+            }
         }
         return Promise.reject(error);
     }

@@ -136,6 +136,7 @@ const LoginModal = () => {
                             <GoogleLogin
                                 onSuccess={handleGoogleSuccess}
                                 onError={() => toast.error('Google login failed')}
+                                ux_mode="redirect"
                                 theme="outline"
                                 size="large"
                                 width="340"

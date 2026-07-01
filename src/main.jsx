@@ -25,7 +25,7 @@ if (!clientId) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <GoogleOAuthProvider clientId={clientId}>
+        <GoogleOAuthProvider clientId={clientId} use_fedcm_for_prompt={true}>
             <ThemeProvider>
                 <AuthProvider>
                     <App />

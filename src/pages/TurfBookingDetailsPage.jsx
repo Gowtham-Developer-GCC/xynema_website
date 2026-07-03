@@ -11,7 +11,11 @@ import {
     Info,
     ArrowLeft,
     CheckCircle2,
-    Activity
+    Activity,
+    X,
+    Ban,
+    RefreshCcw,
+    Check
 } from 'lucide-react';
 import { getTurfBookingDetails } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
@@ -19,11 +23,16 @@ import LoadingScreen from '../components/LoadingScreen';
 import SEO from '../components/SEO';
 import { toast } from 'react-hot-toast';
 import BookingQr from '../components/BookingQr';
+import CancellationModal from '../components/CancellationModal';
+
 
 const TurfBookingDetailsPage = () => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+
+    //cancellation 
+    const [showCancelModal, setShowCancelModal] = useState(false);
 
     // SWR Cache Layer
     const [booking, setBooking] = useState(() => apiCacheManager.get(`turf_booking_details_${bookingId}`));
@@ -57,7 +66,10 @@ const TurfBookingDetailsPage = () => {
     }, [bookingId]);
 
     if (loading && !booking) return <LoadingScreen message="Fetching your ticket..." />;
-    if (!booking) return null;
+    if (!booking) return <div className="min-h-screen flex items-center justify-center text-gray-500">Booking not found</div>;
+    
+    const isCancelled = booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.status?.toLowerCase() === 'cancelled';
+    const isRefunded = booking.paymentInfo?.paymentStatus?.toLowerCase() === 'refunded' || booking.payment?.paymentStatus?.toLowerCase() === 'refunded';
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -225,7 +237,9 @@ const TurfBookingDetailsPage = () => {
             toast.error('Failed to generate PDF. Please try again.');
         } finally {
             setIsDownloading(false);
+            toast.success("Download initiated");
         }
+
     };
 
     const turf = booking.turf || {};
@@ -242,6 +256,7 @@ const TurfBookingDetailsPage = () => {
     const startTime = snapshot.startTime || firstSlot.timeSlot?.startTime;
     const endTime = lastSlot.timeSlot?.endTime || snapshot.endTime;
     const date = snapshot.date || firstSlot.timeSlot?.date;
+    const paidAmount = payment.amountPaid !== undefined ? payment.amountPaid : (payment.amount || 0);
 
     const handleShare = async () => {
         const shareData = {
@@ -448,14 +463,24 @@ const TurfBookingDetailsPage = () => {
                             </span>
                         </div>
 
-                        {/* Centered QR code container */}
-                        <div className="flex items-center justify-center py-2 select-none">
-                            <div className="p-0.5 bg-white rounded-md shadow-md flex items-center justify-center select-none">
+                        {/* Centered QR code container with Cancelled Stamp */}
+                        <div className="relative flex items-center justify-center py-2 select-none">
+                            <div className={`p-0.5 bg-white rounded-md shadow-md flex items-center justify-center select-none transition-all duration-300 ${isCancelled ? 'blur-[3px] opacity-40 grayscale' : ''}`}>
                                 <BookingQr
                                     booking={{ ...booking, qrcode: booking.qrcode || booking.qrCode || firstSlot.qrcode || firstSlot.qrCode }}
                                     size={130}
                                 />
                             </div>
+                            
+                            {/* High Visual Cancelled Vector Stamp */}
+                            {isCancelled && (
+                                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                    <div className="border-[4px] border-red-600 text-red-600 rounded-xl px-5 py-2 transform -rotate-[15deg] flex flex-col items-center justify-center shadow-2xl bg-white/95 ring-4 ring-red-600/20 backdrop-blur-sm">
+                                        <Ban className="w-8 h-8 mb-1 opacity-90" strokeWidth={3} />
+                                        <span className="text-[15px] font-black tracking-[0.2em] uppercase leading-none">Cancelled</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Invite message */}
@@ -530,12 +555,76 @@ const TurfBookingDetailsPage = () => {
                     </div>
                 </div>
 
+                {/* Refund Process Timeline (Only visible if cancelled and user actually paid something) */}
+                {isCancelled && paidAmount > 0 && (
+                    <div className="bg-white dark:bg-[#1a1d24] border border-gray-100 dark:border-gray-800/80 rounded-2xl p-6 md:p-8 shadow-sm mt-6 print:hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-widest text-[13px] md:text-sm mb-8 flex items-center gap-2">
+                            <RefreshCcw className="w-5 h-5 text-primary" /> Refund Tracking
+                        </h4>
+                        
+                        <div className="relative pl-2 md:pl-4">
+                            {/* Vertical connecting line */}
+                            <div className="absolute left-[23px] md:left-[31px] top-4 bottom-8 w-[2px] bg-gray-100 dark:bg-gray-800">
+                                {/* Green progress line fills up if refunded */}
+                                {isRefunded && <div className="w-full h-full bg-green-400 dark:bg-green-500"></div>}
+                            </div>
+
+                            {/* Step 1: Booking Cancelled */}
+                            <div className="relative flex items-start gap-5 mb-8">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-[#1a1d24] shadow-sm">
+                                    <X className="w-4 h-4 md:w-5 md:h-5 text-red-600 dark:text-red-500" strokeWidth={3} />
+                                </div>
+                                <div className="pt-1">
+                                    <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Booking Cancelled</p>
+                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Pass has been voided</p>
+                                </div>
+                            </div>
+
+                            {/* Step 2: Refund Initiated */}
+                            <div className="relative flex items-start gap-5 mb-8">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-[#1a1d24] shadow-sm">
+                                    <Check className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-500" strokeWidth={3} />
+                                </div>
+                                <div className="pt-1">
+                                    <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Refund Initiated</p>
+                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">
+                                        ₹{Math.round(paidAmount).toLocaleString()} calculated for refund
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Step 3: Refund Completed / Processing */}
+                            <div className="relative flex items-start gap-5">
+                                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-[#1a1d24] shadow-sm transition-colors ${isRefunded ? 'bg-green-100 dark:bg-green-500/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                                    {isRefunded ? (
+                                        <Check className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-500" strokeWidth={3} />
+                                    ) : (
+                                        <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-400" strokeWidth={2.5} />
+                                    )}
+                                </div>
+                                <div className="pt-1">
+                                    <p className={`text-sm md:text-base font-black uppercase tracking-tight ${isRefunded ? 'text-green-600 dark:text-green-500' : 'text-gray-900 dark:text-white'}`}>
+                                        {isRefunded ? 'Refund Successful' : 'Refund In Progress'}
+                                    </p>
+                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest leading-relaxed">
+                                        {isRefunded 
+                                            ? `Credited to ${payment.paymentMethod || payment.method || 'account'}` 
+                                            : 'Usually takes 5-7 business days to reflect in your account'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Footer Details Wrapper */}
                 <div className="bg-white dark:bg-[#1a1d24] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800/80 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mt-6 print:hidden">
                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 md:flex md:flex-wrap md:items-center md:gap-y-4 md:gap-x-8">
                         <div className="space-y-0.5">
                             <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Amount Paid</p>
-                            <p className="font-black text-[#ef5658] text-lg leading-none">₹{Math.round(payment.amountPaid !== undefined ? payment.amountPaid : (payment.amount || 0)).toLocaleString()}</p>
+                            <p className={`font-black text-lg leading-none ${isCancelled ? 'text-gray-400 line-through' : 'text-[#ef5658]'}`}>
+                                ₹{Math.round(paidAmount).toLocaleString()}
+                            </p>
                         </div>
 
                         {payment.paymentStatus === 'partial' && payment.remainingAtVenue > 0 && (
@@ -551,37 +640,40 @@ const TurfBookingDetailsPage = () => {
                         </div>
                         <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
                             <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Payment Status</p>
-                            <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">{payment.paymentStatus || 'Success'}</p>
+                            <p className={`font-bold capitalize text-base leading-none ${isRefunded ? 'text-green-500' : isCancelled ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                                {payment.paymentStatus || (isCancelled ? 'Cancelled' : 'Success')}
+                            </p>
                         </div>
                         <div className="space-y-0.5 md:border-l md:border-gray-200 md:dark:border-gray-800 md:pl-8">
                             <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Total Amount</p>
-                            <p className="font-bold text-gray-700 dark:text-gray-300 capitalize text-base leading-none">₹{payment.totalAmount || '0'}</p>
+                            <p className={`font-bold capitalize text-base leading-none ${isCancelled ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}>
+                                ₹{payment.totalAmount || '0'}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="flex w-full md:w-auto print:hidden download-exclude">
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3 mt-8 md:mt-0 md:min-w-[320px]">
+                        {!isCancelled && (
+                            <button 
+                                onClick={() => setShowCancelModal(true)}
+                                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/30 text-red-500 dark:text-red-400 rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95 transition-all shadow-sm"
+                            >
+                                <X className="w-4 h-4" strokeWidth={3} /> Cancel Booking
+                            </button>
+                        )}
                         <button
                             onClick={handleDownload}
                             disabled={isDownloading}
-                            className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 md:px-5 md:py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm md:text-xs hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-70 disabled:cursor-wait"
+                            className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-wide shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all disabled:opacity-70"
                         >
-                            {isDownloading ? (
-                                <>
-                                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <Download className="w-4 h-4" />
-                                    Download Pass
-                                </>
-                            )}
+                            {isDownloading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="w-4 h-4" />} Download
                         </button>
                     </div>
                 </div>
 
                 {/* Important Instructions */}
-                <div className="mt-8 bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100/50 dark:border-blue-500/10 rounded-2xl p-6">
+                <div className="mt-6 bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100/50 dark:border-blue-500/10 rounded-2xl p-6">
                     <div className="flex items-start gap-4">
                         <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-lg">
                             <Info className="w-5 h-5 text-blue-600 dark:text-blue-500" />
@@ -597,6 +689,16 @@ const TurfBookingDetailsPage = () => {
                         </div>
                     </div>
                 </div>
+                
+                <CancellationModal 
+                    isOpen={showCancelModal}
+                    onClose={() => setShowCancelModal(false)}
+                    bookingId={booking.bookingId || booking._id}
+                    turfId={turf.id}
+                    bookingType="turf"
+                    totalAmount={booking.pricing?.total || booking.totalAmount}
+                    paymentMethod={booking.payment?.method || booking.paymentMethod || 'account'}
+                />
             </main>
         </div>
     );

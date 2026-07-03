@@ -25,7 +25,10 @@ const TurfPaymentPage = () => {
     const [mobileNumber, setMobileNumber] = useState('');
     const [email, setEmail] = useState('');
     const [couponCode, setCouponCode] = useState('');
-    const [notes, setNotes] = useState('Keep lights on');
+    
+    // Updated: Default notes to an empty string to match the requested payload
+    const [notes, setNotes] = useState(''); 
+    
     const [isAdvancePayment, setIsAdvancePayment] = useState(true);
     const [selectedMethod, setSelectedMethod] = useState('upi');
     const [timeLeft, setTimeLeft] = useState(reservation?.expiresInSeconds || 300);
@@ -103,9 +106,32 @@ const TurfPaymentPage = () => {
     const convenienceFee = Math.round((turfFee * (turf?.convenienceFeePercent || 0)) / 100);
     const finalDisplayAmount = isAdvancePayment ? (turfFee / 2) + convenienceFee : turfFee + convenienceFee;
 
+    // --- EXACT PAYLOAD STRUCTURE FOR CONFIRMATION ---
+    const confirmPayload = {
+        slotIds: reservation.slotIds,
+        isAdvancePayment: isAdvancePayment,
+        phone: mobileNumber,
+        email: email,
+        notes: notes,
+        paymentDetails: {
+            method: "online" // Explicitly setting to 'online' as requested
+        },
+        
+        // UI/PaymentButton Helper properties (PaymentButton will ignore these when calling API if strict mode is on)
+        sport: sport,
+        couponCode: couponCode,
+        selectedMethod: selectedMethod,
+        isTurf: true,
+        turfName: turf?.name || "Turf",
+        turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+        courtName: court?.name || "",
+        date: date,
+        time: reservation?.time || ""
+    };
+
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 text-slate-900 dark:text-gray-100">
-            <SEO title={`Secure Checkout - ${turf?.venueName}`} />
+            <SEO title={`Secure Checkout - ${turf?.venueName || 'Turf'}`} />
             
             <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300 sticky top-0 z-50">
                 <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-12 md:h-20 flex items-center">
@@ -162,30 +188,6 @@ const TurfPaymentPage = () => {
                                         rows={3}
                                         className="w-full bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans resize-none"
                                     />
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Apply Coupons Section */}
-                        <section className="bg-white dark:bg-gray-900 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-800 transition-colors duration-300">
-                            <h2 className="text-[14px] md:text-lg font-black text-gray-900 dark:text-white mb-6 font-roboto uppercase tracking-wider">Apply coupons</h2>
-                            <div className="space-y-4">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter coupon code"
-                                        value={couponCode}
-                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                        className="flex-1 bg-[#f8f9fa] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3.5 text-[13px] md:text-[14px] text-gray-900 dark:text-white outline-none focus:border-primary focus:bg-white dark:focus:bg-gray-700 transition-colors font-sans"
-                                    />
-                                    <button className="px-6 bg-primary text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-95 transition-all">Apply</button>
-                                </div>
-                                
-                                <div className="pt-2">
-                                    <button className="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-widest border border-gray-100 dark:border-gray-800 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-500">
-                                        <span>Available coupons</span>
-                                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                                    </button>
                                 </div>
                             </div>
                         </section>
@@ -332,32 +334,17 @@ const TurfPaymentPage = () => {
 
                                 <PaymentButton
                                     amount={finalDisplayAmount}
-                                    bookingData={{
-                                        slotIds: reservation.slotIds,
-                                        isAdvancePayment: isAdvancePayment,
-                                        sport: sport,
-                                        notes: notes,
-                                        phone: mobileNumber,
-                                        email: email,
-                                        couponCode: couponCode,
-                                        selectedMethod,
-                                        isTurf: true,
-                                        turfName: turf?.name || "Turf",
-                                        turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
-                                        courtName: court?.name || "",
-                                        date: date,
-                                        time: reservation?.time || ""
-                                    }}
+                                    bookingData={confirmPayload}
                                     onSuccess={(result) => {
-                                        // Redirect is now handled by PaymentButton
+                                        // Redirect is now handled by PaymentButton merging dynamic details
                                     }}
                                     onFailure={(err) => toast.error(err.message || 'Payment failed')}
-                                    disabled={!isFormValid}
+                                    disabled={!isFormValid || isProcessing}
                                     onClick={() => handleBeforePayment()}
                                     className={`w-full py-4 md:py-5 rounded-2xl font-black text-[14px] md:text-[16px] uppercase tracking-[0.25em] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-primary/20
-                                        ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none' : 'bg-primary hover:brightness-110 text-white'}`}
+                                        ${!isFormValid || isProcessing ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none' : 'bg-primary hover:brightness-110 text-white'}`}
                                 >
-                                    <span>Pay ₹{finalDisplayAmount}</span>
+                                    <span>{isProcessing ? 'Processing...' : `Pay ₹${finalDisplayAmount}`}</span>
                                 </PaymentButton>
 
                                 <p className="text-[10px] text-gray-400 text-center font-bold uppercase tracking-wider">Cancellation policy applies • Secure checkout</p>
@@ -376,32 +363,17 @@ const TurfPaymentPage = () => {
                 <div className="flex-1 flex justify-end">
                     <PaymentButton
                         amount={finalDisplayAmount}
-                        bookingData={{
-                            slotIds: reservation.slotIds,
-                            isAdvancePayment: isAdvancePayment,
-                            sport: sport,
-                            notes: notes,
-                            phone: mobileNumber,
-                            email: email,
-                            couponCode: couponCode,
-                            selectedMethod,
-                            isTurf: true,
-                            turfName: turf?.name || "Turf",
-                            turfImage: turf?.imageUrl || turf?.allImages?.[0] || turf?.images?.[0] || court?.imageUrl || court?.allImages?.[0] || court?.images?.[0] || "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
-                            courtName: court?.name || "",
-                            date: date,
-                            time: reservation?.time || ""
-                        }}
+                        bookingData={confirmPayload}
                         onSuccess={(result) => {
                             // Redirect is now handled by PaymentButton
                         }}
                         onFailure={(err) => toast.error(err.message || 'Payment failed')}
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isProcessing}
                         onClick={() => handleBeforePayment()}
                         className={`w-full h-14 rounded-2xl font-black text-[14px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2
-                            ${!isFormValid ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
+                            ${!isFormValid || isProcessing ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:brightness-110'}`}
                     >
-                        <span>Pay Now</span> <ChevronRight className="w-5 h-5" />
+                        <span>{isProcessing ? 'Processing...' : 'Pay Now'}</span> <ChevronRight className="w-5 h-5" />
                     </PaymentButton>
                 </div>
             </div>

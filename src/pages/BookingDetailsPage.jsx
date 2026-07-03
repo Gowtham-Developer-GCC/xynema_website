@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock, CheckCircle2, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Download, Shield, Info, Monitor, Calendar, MapPin, Armchair, ShoppingBag, Star, CheckCircle, Ticket, Clock, CheckCircle2, X, AlertTriangle, Ban, RefreshCcw, Check, FileText } from 'lucide-react';
 import { getBookingDetails } from '../services/bookingService';
 import { getCancellationPolicy, cancelBooking } from '../services/cancellationService';
+import CancellationModal from '../components/CancellationModal';
 import { useData } from '../context/DataContext';
 import SEO from '../components/SEO';
 import BookingQr from '../components/BookingQr';
@@ -26,11 +27,7 @@ const BookingDetailsPage = () => {
 
     // Cancellation States
     const [showCancelModal, setShowCancelModal] = useState(false);
-    const [policyData, setPolicyData] = useState(null);
-    const [isPolicyLoading, setIsPolicyLoading] = useState(false);
-    const [isCancelling, setIsCancelling] = useState(false);
-    const [cancelSuccess, setCancelSuccess] = useState(false);
-    const [refundData, setRefundData] = useState(null);
+    const [showRefundBreakdown, setShowRefundBreakdown] = useState(false);
 
     const hasFetched = useRef(false);
     const ticketRef = useRef(null);
@@ -58,6 +55,7 @@ const BookingDetailsPage = () => {
             } finally {
                 setLoading(false);
             }
+            
         };
 
         fetchBookingDetails();
@@ -75,6 +73,16 @@ const BookingDetailsPage = () => {
     }) : 'TBD';
 
     const bookingTime = booking.showTime || booking.time || '';
+
+    // Status and Refund Variables (Fixed extraction logic)
+    const isCancelled = booking.status?.toLowerCase() === 'cancelled' || booking.cancellation?.isCancelled === true;
+    const refundData = booking.cancellation?.refund || booking.cancellation || {};
+    const refundStatus = refundData.status || booking.payment?.status || 'PENDING';
+    const isRefunded = ['refunded', 'success', 'completed'].includes(refundStatus?.toLowerCase());
+    const paidAmount = booking.pricing?.total || booking.totalAmount || 0;
+    
+    // Accurately targets the refundAmount ensuring it grabs 704 and doesn't default to 0
+    const refundAmount = refundData.refundAmount || refundData.totalRefundAmount || 0;
 
     // Seat Parsing Logic
     const getSeatString = () => {
@@ -253,48 +261,6 @@ const BookingDetailsPage = () => {
         setShowReviewModal(false);
     };
 
-    // --- Cancellation Functions ---
-    const handleOpenCancelModal = async () => {
-        setShowCancelModal(true);
-        setIsPolicyLoading(true);
-        try {
-            const response = await getCancellationPolicy(booking.bookingId || booking.id);
-            if (response.success) {
-                setPolicyData(response.data);
-            } else {
-                alert('Failed to load cancellation policy.');
-                setShowCancelModal(false);
-            }
-        } catch (error) {
-            console.error("Policy fetch error:", error);
-            alert('Error loading cancellation policy.');
-            setShowCancelModal(false);
-        } finally {
-            setIsPolicyLoading(false);
-        }
-    };
-
-   const handleConfirmCancellation = async () => {
-        setIsCancelling(true);
-        try {
-            const response = await cancelBooking(booking.bookingId || booking.id);
-            if (response.success) {
-                setRefundData(response.data.refund);
-                // Show the success screen instead of closing/reloading immediately
-                setCancelSuccess(true);
-            } else {
-                alert(response.message || "Failed to cancel booking.");
-            }
-        } catch (error) {
-            console.error("Cancellation error:", error);
-            alert(error.message || "Failed to cancel booking.");
-        } finally {
-            setIsCancelling(false);
-        }
-    };
-
-
-
     return (
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 pb-20 transition-colors duration-300 print:bg-white print:p-0">
             <style>{`
@@ -334,7 +300,7 @@ const BookingDetailsPage = () => {
                     img { display: block !important; max-width: 100%; border-radius: 0 !important; }
                 }
             `}</style>
-            <SEO title={`Ticket - ${booking.movieTitle} | XYNEMA`} description="View your movie ticket" />
+            <SEO title={`Ticket - ${booking.movieTitle || booking.movie?.MovieName} | XYNEMA`} description="View your movie ticket" />
 
             {/* Header */}
             <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 print:hidden transition-colors duration-300">
@@ -353,9 +319,9 @@ const BookingDetailsPage = () => {
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
                 {/* Success Banner - Only show on direct redirect after booking */}
-                {location.state?.isNewBooking && (
+                {location.state?.isNewBooking && !isCancelled && (
                     <div className="mb-8 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-700">
                         <div className="w-16 h-16 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-500" />
@@ -370,9 +336,8 @@ const BookingDetailsPage = () => {
 
                     {/* Top Section: Hero Image & Movie Info */}
                     <div className="relative w-full h-56 bg-gray-900 overflow-hidden">
-                        {/* Immersive Background - Using img tag for better capture reliability */}
                         <img
-                            src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 1200, quality: 75 })}
+                            src={optimizeImage(booking.movie?.landscapePosterUrl?.url || booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 1200, quality: 75 })}
                             className="absolute inset-0 w-full h-full object-cover scale-105 opacity-60 contrast-125 saturate-150"
                             alt=""
                         />
@@ -381,15 +346,15 @@ const BookingDetailsPage = () => {
                                 {/* Portrait Poster inset */}
                                 <div className="w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20 shrink-0 transform translate-y-4">
                                     <img
-                                        src={optimizeImage(booking.portraitPosterUrl || booking.posterUrl, { width: 300, quality: 80 }) || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
+                                        src={optimizeImage(booking.movie?.portraitPosterUrl?.url || booking.portraitPosterUrl || booking.posterUrl, { width: 300, quality: 80 }) || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image'}
                                         className="w-full h-full object-cover shadow-inner"
-                                        alt={booking.movieTitle}
+                                        alt={booking.movieTitle || booking.movie?.MovieName}
                                     />
                                 </div>
                                 {/* Title and Tags */}
                                 <div className="flex-1 pb-2">
                                     <h2 className="text-3xl font-black tracking-tighter uppercase text-white leading-none mb-3">
-                                        {booking.movieTitle}
+                                        {booking.movieTitle || booking.movie?.MovieName}
                                     </h2>
                                     <div className="flex flex-wrap gap-2">
                                         <span className="px-2.5 py-1 bg-white/25 text-[9px] font-black text-white rounded uppercase tracking-widest">
@@ -426,7 +391,7 @@ const BookingDetailsPage = () => {
                                 <p className="text-[10px] font-black text-primary dark:text-primary uppercase tracking-[0.2em] flex items-center sm:justify-end gap-2">
                                     <MapPin size={12} /> Venue
                                 </p>
-                                <p className="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase line-clamp-2">{booking.theatre?.theatreName || booking.theaterName}</p>
+                                <p className="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase line-clamp-2">{booking.theatre?.theatreName || booking.theatre?.theaterName || booking.theaterName}</p>
                                 <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-0.5">{booking.screen?.screenName || booking.screen || 'Screen 1'}</p>
                             </div>
 
@@ -448,13 +413,8 @@ const BookingDetailsPage = () => {
 
                     {/* Highly Visual Perforation Structural Metaphor */}
                     <div className="relative flex items-center justify-between h-8 z-20 pointer-events-none">
-                        {/* Left Cutout */}
                         <div className="absolute left-0 w-8 h-8 -translate-x-1/2 bg-[#F5F5FA] dark:bg-gray-950 rounded-full border border-gray-100 dark:border-gray-800 shadow-[inset_-4px_0_8px_rgba(0,0,0,0.02)] dark:shadow-[inset_-4px_0_8px_rgba(0,0,0,0.2)]" />
-
-                        {/* Dashed Line */}
                         <div className="w-full border-t-2 border-dashed border-gray-200 dark:border-gray-800 mx-8" />
-
-                        {/* Right Cutout */}
                         <div className="absolute right-0 w-8 h-8 translate-x-1/2 bg-[#F5F5FA] dark:bg-gray-950 rounded-full border border-gray-100 dark:border-gray-800 shadow-[inset_4px_0_8px_rgba(0,0,0,0.02)] dark:shadow-[inset_4px_0_8px_rgba(0,0,0,0.2)]" />
                     </div>
 
@@ -462,34 +422,32 @@ const BookingDetailsPage = () => {
                     <div className="p-8 pt-6 bg-gray-50/50 dark:bg-gray-900/50">
                         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-between">
 
-                            {/* Verification Block */}
-<div className="flex flex-col items-center shrink-0">
-    <div className={`relative bg-white p-3 rounded-2xl overflow-hidden transition-all ${booking.status?.toLowerCase() === 'cancelled' ? 'border-2 border-red-100 dark:border-red-900/30 shadow-sm' : 'shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700'}`}>
-        
-        {/* QR Code Container (Blurred if cancelled) */}
-        <div className={booking.status?.toLowerCase() === 'cancelled' ? 'blur-[4px] opacity-40 grayscale pointer-events-none transition-all duration-300' : ''}>
-            <BookingQr booking={booking} size={140} />
-        </div>
-        
-        {/* Cancelled Overlay */}
-        {booking.status?.toLowerCase() === 'cancelled' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-                <div className="w-12 h-12 bg-white/80 dark:bg-gray-900/80 rounded-full flex items-center justify-center mb-1.5 shadow-sm border border-red-100 dark:border-red-900/50 backdrop-blur-md">
-                    <X size={28} className="text-red-500" strokeWidth={3} />
-                </div>
-                <span className="text-[11px] font-black text-red-600 dark:text-red-500 bg-white/95 dark:bg-gray-900/95 px-3 py-1 rounded-md shadow-lg border border-red-100 dark:border-red-900/50 uppercase tracking-widest backdrop-blur-md">
-                    Cancelled
-                </span>
-            </div>
-        )}
-    </div>
-    
-    {/* Status Pill below QR */}
-    <div className={`mt-4 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-50 text-red-500 dark:bg-red-500/10' : 'text-primary dark:text-primary bg-primary/5 dark:bg-primary/10'}`}>
-        {booking.status?.toLowerCase() === 'cancelled' ? <X size={12} strokeWidth={3} /> : <Shield size={12} />}
-        <span>{booking.status}</span>
-    </div>
-</div>
+                            {/* Verification Block with Attractive Cancelled Stamp */}
+                            <div className="flex flex-col items-center shrink-0">
+                                <div className={`relative bg-white p-3 rounded-2xl overflow-hidden transition-all ${isCancelled ? 'border border-red-200 dark:border-red-900/50 shadow-sm' : 'shadow-xl shadow-gray-200/50 dark:shadow-none ring-1 ring-gray-100 dark:ring-gray-700'}`}>
+                                    
+                                    {/* QR Code Container (Blurred if cancelled) */}
+                                    <div className={isCancelled ? 'blur-[3px] opacity-40 grayscale pointer-events-none transition-all duration-300' : ''}>
+                                        <BookingQr booking={booking} size={140} />
+                                    </div>
+                                    
+                                    {/* High Visual Cancelled Vector Stamp */}
+                                    {isCancelled && (
+                                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                            <div className="border-[4px] border-red-600 text-red-600 rounded-xl px-5 py-2 transform -rotate-[15deg] flex flex-col items-center justify-center shadow-2xl bg-white/95 dark:bg-gray-900/95 ring-4 ring-red-600/20 backdrop-blur-sm">
+                                                <Ban className="w-8 h-8 mb-1 opacity-90" strokeWidth={3} />
+                                                <span className="text-[15px] font-black tracking-[0.2em] uppercase leading-none">Cancelled</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Status Pill below QR */}
+                                <div className={`mt-4 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] ${isCancelled ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500' : 'text-primary dark:text-primary bg-primary/5 dark:bg-primary/10'}`}>
+                                    {isCancelled ? <X size={12} strokeWidth={3} /> : <Shield size={12} />}
+                                    <span>{isCancelled ? 'Cancelled' : booking.status}</span>
+                                </div>
+                            </div>
 
                             {/* Details & Pricing */}
                             <div className="flex-1 w-full space-y-6">
@@ -516,7 +474,9 @@ const BookingDetailsPage = () => {
                                 {/* Clean Receipt */}
                                 <div className="space-y-3">
                                     <ReceiptRow label="Tickets Subtotal" value={booking.pricing?.subtotal || booking.ticketPrice} />
-                                    {!!booking.foodPrice && <ReceiptRow label="Food & Bev" value={booking.foodPrice} />}
+                                    {((booking.pricing?.foodSubtotal > 0) || !!booking.foodPrice) && (
+                                        <ReceiptRow label="Food & Bev" value={booking.pricing?.foodSubtotal || booking.foodPrice} />
+                                    )}
                                     <ReceiptRow label="Convenience Fee" value={booking.pricing?.convenienceFee || booking.convenienceFee} />
                                     <ReceiptRow label="Taxes" value={booking.pricing?.gst || booking.tax} />
                                     {(booking.pricing?.discount > 0 || booking.discount > 0) && (
@@ -525,10 +485,10 @@ const BookingDetailsPage = () => {
                                     <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex justify-between items-end">
                                         <div>
                                             <p className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">Total</p>
-                                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Paid via {(booking.payment?.method || booking.paymentMethod)?.toUpperCase()}</p>
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Paid via {(booking.payment?.method || booking.paymentMethod || 'Online')?.toUpperCase()}</p>
                                         </div>
-                                        <span className="text-3xl font-black text-primary dark:text-primary tracking-tighter leading-none">
-                                            ₹{(booking.pricing?.total || booking.totalAmount)?.toLocaleString()}
+                                        <span className={`text-3xl font-black tracking-tighter leading-none ${isCancelled ? 'text-gray-400 line-through' : 'text-primary dark:text-primary'}`}>
+                                            ₹{paidAmount?.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
@@ -537,10 +497,142 @@ const BookingDetailsPage = () => {
                     </div>
                 </div>
 
+                {/* Refund Process Timeline with Interactive Breakdown */}
+                {isCancelled && paidAmount > 0 && (
+                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 print:hidden">
+                        <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-widest text-[13px] md:text-sm mb-8 flex items-center gap-2">
+                            <RefreshCcw className="w-5 h-5 text-primary" /> Refund Tracking
+                        </h4>
+                        
+                        <div className="relative pl-2 md:pl-4">
+                            {/* Vertical connecting line */}
+                            <div className="absolute left-[23px] md:left-[31px] top-4 bottom-8 w-[2px] bg-gray-100 dark:bg-gray-800">
+                                {/* Green progress line fills up if refunded */}
+                                {isRefunded && <div className="w-full h-full bg-green-400 dark:bg-green-500"></div>}
+                            </div>
+
+                            {/* Step 1: Booking Cancelled */}
+                            <div className="relative flex items-start gap-5 mb-8">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-gray-900 shadow-sm">
+                                    <X className="w-4 h-4 md:w-5 md:h-5 text-red-600 dark:text-red-500" strokeWidth={3} />
+                                </div>
+                                <div className="pt-1">
+                                    <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Booking Cancelled</p>
+                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Ticket has been voided</p>
+                                </div>
+                            </div>
+
+                            {/* Step 2: Refund Initiated with Breakdown */}
+                            <div className="relative flex items-start gap-5 mb-8">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-gray-900 shadow-sm">
+                                    <Check className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-500" strokeWidth={3} />
+                                </div>
+                                <div className="pt-1 w-full">
+                                    <div className="flex flex-wrap justify-between items-start gap-3">
+                                        <div>
+                                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Refund Initiated</p>
+                                            <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">
+                                                ₹{refundAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} calculated for refund
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowRefundBreakdown(!showRefundBreakdown)}
+                                            className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors flex items-center gap-1.5"
+                                        >
+                                            <FileText size={12} />
+                                            {showRefundBreakdown ? 'Hide Breakdown' : 'View Breakdown'}
+                                        </button>
+                                    </div>
+
+                                    {/* Breakdown Accordion Panel */}
+                                    {showRefundBreakdown && (
+                                        <div className="mt-5 bg-gray-50 dark:bg-gray-800/40 rounded-2xl p-5 border border-gray-100 dark:border-gray-700/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="space-y-3">
+                                                <RefundRow label="Ticket Base Amount" value={refundData.seatAmount || booking.pricing?.subtotal || booking.ticketPrice || 0} />
+                                                
+                                                {refundData.cancellationCharge > 0 && (
+                                                    <RefundRow 
+                                                        label={`Cancellation Charge (${refundData.appliedSlab?.label || refundData.chargePercent + '%'})`} 
+                                                        value={refundData.cancellationCharge} 
+                                                        isCharge 
+                                                    />
+                                                )}
+                                                
+                                                <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Non-Refundable Add-ons</p>
+                                                
+                                                <RefundRow label="Convenience Fee" value={refundData.convenienceFee || booking.pricing?.convenienceFee || booking.convenienceFee || 0} isCharge />
+                                                <RefundRow label="GST & Taxes" value={refundData.gst || booking.pricing?.gst || booking.tax || 0} isCharge />
+                                                
+                                                {refundData.foodAmount > 0 && (
+                                                    <RefundRow label="Food & Beverages" value={refundData.foodAmount} isCharge />
+                                                )}
+
+                                                <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />
+                                                
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Net Refund Amount</span>
+                                                    <span className="text-sm font-black text-green-600 dark:text-green-400">
+                                                        ₹{refundAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700/50 grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Refund ID</p>
+                                                    <p className="text-[10px] font-mono font-bold text-gray-900 dark:text-white truncate" title={refundData.refundId}>
+                                                        {refundData.refundId || 'Processing...'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Initiated On</p>
+                                                    <p className="text-[10px] font-bold text-gray-900 dark:text-white">
+                                                        {refundData.initiatedAt 
+                                                            ? new Date(refundData.initiatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
+                                                            : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            {refundData.note && (
+                                                <p className="mt-4 text-[9px] font-bold text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                                    * {refundData.note}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Step 3: Refund Completed / Processing */}
+                            <div className="relative flex items-start gap-5">
+                                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-gray-900 shadow-sm transition-colors ${isRefunded ? 'bg-green-100 dark:bg-green-500/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                                    {isRefunded ? (
+                                        <Check className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-500" strokeWidth={3} />
+                                    ) : (
+                                        <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-400" strokeWidth={2.5} />
+                                    )}
+                                </div>
+                                <div className="pt-1">
+                                    <p className={`text-sm md:text-base font-black uppercase tracking-tight ${isRefunded ? 'text-green-600 dark:text-green-500' : 'text-gray-900 dark:text-white'}`}>
+                                        {isRefunded ? 'Refund Successful' : 'Refund In Progress'}
+                                    </p>
+                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest leading-relaxed">
+                                        {isRefunded 
+                                            ? `Credited to ${(booking.payment?.method || booking.paymentMethod || 'account').toUpperCase()}` 
+                                            : 'Usually takes 5-7 business days to reflect in your account'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Review Section (Conditional) */}
                 {(() => {
-                    return null; // Temporarily disabled rating feature
-                    if (!booking) return null;
+                    if (isCancelled || !booking) return null; // Hide reviews if cancelled
+                    
                     const showDate = booking.showDate || booking.date;
                     const showTime = booking.showTime || booking.time;
 
@@ -595,22 +687,22 @@ const BookingDetailsPage = () => {
                 })()}
 
                 {/* Footer Actions (Download & Cancel) */}
-                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex justify-center gap-4">
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300 print:hidden flex flex-wrap justify-center gap-4">
                     
-                    {/* Cancel Booking Button - Only visible if booking is confirmed */}
-                    {booking.status?.toLowerCase() === 'confirmed' && (
+                    {/* Cancel Booking Button - Only visible if booking is NOT cancelled */}
+                    {!isCancelled && (
                         <button
-                            onClick={handleOpenCancelModal}
-                            className="w-full max-w-[200px] h-12 rounded-2xl bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/30 text-red-500 dark:text-red-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            onClick={() => setShowCancelModal(true)}
+                            className="w-full sm:flex-1 max-w-[200px] h-12 rounded-2xl bg-white dark:bg-gray-900 border border-red-100 dark:border-red-900/30 text-red-500 dark:text-red-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            <X size={14} /> Cancel Ticket
+                            <X size={14} strokeWidth={3} /> Cancel Ticket
                         </button>
                     )}
 
                     <button
                         onClick={handleDownload}
                         disabled={isDownloading}
-                        className="w-full max-w-[200px] h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
+                        className={`w-full sm:flex-1 max-w-[200px] h-12 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait ${isCancelled ? 'max-w-xs' : ''}`}
                     >
                         {isDownloading ? (
                             <>
@@ -624,154 +716,21 @@ const BookingDetailsPage = () => {
                     </button>
                 </div>
 
-                <ReviewModal isOpen={showReviewModal} onClose={() => setShowReviewModal(false)} booking={booking} onSuccess={handleReviewSuccess} />
-
-               {/* --- Cancellation Policy & Confirmation Modal --- */}
-{showCancelModal && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
-        <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
-            
-            {cancelSuccess ? (
-                /* --- SUCCESS SCREEN --- */
-                <div className="p-8 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
-                    <div className="w-20 h-20 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-5 ring-1 ring-green-100 dark:ring-green-500/20">
-                        <CheckCircle2 size={40} className="text-green-500 dark:text-green-400" />
-                    </div>
-                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">Booking Cancelled</h3>
-                    <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-8">
-                        {booking.bookingId || booking.id}
-                    </p>
-
-                    {/* Refund Summary Card */}
-                    <div className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 mb-8 space-y-4">
-                        <div className="flex justify-between items-center">
-                            <span className="font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Refund Status</span>
-                            <span className="font-black text-green-600 dark:text-green-400 uppercase tracking-widest text-[10px] bg-green-100 dark:bg-green-500/20 px-2.5 py-1 rounded-md border border-green-200 dark:border-green-500/30">
-                                {refundData?.status}
-                            </span>
-                        </div>
-                        <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50" />
-                        <div className="flex justify-between items-center">
-                            <span className="font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Refund Amount</span>
-                            <span className="text-xl font-black text-gray-900 dark:text-white leading-none">
-                                ₹{(refundData?.refundAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                            </span>
-                        </div>
-                        <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 text-left leading-relaxed mt-2">
-                            * Amount will be credited to your original payment method ({(booking.payment?.method || booking.paymentMethod || 'account').toUpperCase()}) within 5-7 business days. {refundData?.note}
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-primary hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/20"
-                    >
-                        Continue
-                    </button>
-                </div>
-            ) : (
-                /* --- ORIGINAL POLICY/CONFIRM SCREEN --- */
-                <>
-                    {/* Modal Header */}
-                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-500">
-                                <AlertTriangle size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight">Cancel Booking</h3>
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{booking.bookingId || booking.id}</p>
-                            </div>
-                        </div>
-                        <button onClick={() => setShowCancelModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    {/* Modal Body (Policy Data) */}
-                    <div className="p-6 overflow-y-auto max-h-[60vh]">
-                        {isPolicyLoading ? (
-                            <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loading Policy...</p>
-                            </div>
-                        ) : policyData ? (
-                            <div className="space-y-6">
-                                {/* Policy Notes */}
-                                <div className="p-4 bg-orange-50 dark:bg-orange-500/10 rounded-2xl border border-orange-100 dark:border-orange-500/20">
-                                    <p className="text-xs font-bold text-orange-800 dark:text-orange-300 leading-relaxed">
-                                        {policyData.policyNote}
-                                    </p>
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-md ${policyData.convenienceFeeRefundable ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>
-                                            Convenience Fee: {policyData.convenienceFeeRefundable ? 'Refundable' : 'Non-Refundable'}
-                                        </span>
-                                        <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-md ${policyData.gstRefundable ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>
-                                            Taxes/GST: {policyData.gstRefundable ? 'Refundable' : 'Non-Refundable'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Refund Slabs */}
-                                <div>
-                                    <h4 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Cancellation Charges</h4>
-                                    <div className="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                                        {policyData.slabs?.map((slab, idx) => (
-                                            <div key={idx} className="flex justify-between items-center p-3 text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 bg-white dark:bg-gray-900">
-                                                <span className="font-medium text-gray-700 dark:text-gray-300">{slab.hoursBeforeShow} hrs before show</span>
-                                                <span className="font-bold text-gray-900 dark:text-white">{slab.label}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-center text-sm text-gray-500 py-4">Failed to load policy. Please try again.</p>
-                        )}
-                    </div>
-
-                    {/* Modal Footer */}
-                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex gap-3">
-                        <button
-                            onClick={() => setShowCancelModal(false)}
-                            className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
-                        >
-                            Keep Ticket
-                        </button>
-                        <button
-                            onClick={handleConfirmCancellation}
-                            disabled={isCancelling || !policyData?.isCancellationEnabled}
-                            className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
-                        >
-                            {isCancelling ? (
-                                <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Cancelling</>
-                            ) : (
-                                "Confirm Cancel"
-                            )}
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
-    </div>
-)}
-
-                {/* Review Modal */}
                 <ReviewModal
                     isOpen={showReviewModal}
                     onClose={() => setShowReviewModal(false)}
                     booking={booking}
                     onSuccess={handleReviewSuccess}
                 />
-                {/* 
-                <div className="p-6 rounded-3xl bg-white shadow-sm border border-gray-100 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
-                    <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
-                        <Info size={18} />
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase tracking-wide">
-                        <span className="text-gray-900 font-black">Note:</span> Please show this QR at the entrance 15 mins before showtime.
-                    </p>
-                </div> */}
+                
+                <CancellationModal 
+                    isOpen={showCancelModal}
+                    onClose={() => setShowCancelModal(false)}
+                    bookingId={booking.bookingId || booking.id}
+                    bookingType="movie"
+                    totalAmount={paidAmount}
+                    paymentMethod={booking.payment?.method || booking.paymentMethod || 'account'}
+                />
             </main>
         </div>
     );
@@ -789,16 +748,24 @@ const DetailItem = ({ icon, label, value, subValue, className = '' }) => (
     </div>
 );
 
+// Standard Receipt Row
 const ReceiptRow = ({ label, value, isDiscount }) => (
     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wide">
         <span className="text-gray-500 dark:text-gray-400">{label}</span>
         <span className={isDiscount ? "text-green-500 dark:text-green-400" : "text-gray-900 dark:text-white"}>
-            {isDiscount ? '-' : ''}₹{(value || 0).toLocaleString()}
+            {isDiscount ? '-' : ''}₹{Math.abs(value || 0).toLocaleString()}
         </span>
     </div>
 );
 
-
-// ErrorState removed - imported from components
+// Custom Refund Breakdown Row
+const RefundRow = ({ label, value, isCharge }) => (
+    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wide">
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className={isCharge ? "text-red-500 dark:text-red-400" : "text-gray-900 dark:text-white"}>
+            {isCharge ? '-' : ''}₹{Math.abs(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+        </span>
+    </div>
+);
 
 export default BookingDetailsPage;

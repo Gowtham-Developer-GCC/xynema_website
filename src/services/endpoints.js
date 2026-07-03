@@ -102,6 +102,10 @@ export const ENDPOINTS = {
         MOVIES: {
             GET_POLICY: (bookingId) => `/cancellation/booking/${bookingId}/get-policy`,
             CANCEL: (bookingId) => `/booking/cancel-booking/${bookingId}`,
+        },
+        TURF: {
+            GET_POLICY: (turfId) => `/customer-turf/booking/${turfId}/get-policy`,
+            CANCEL: (bookingId) => `/customer-turf/cancel-booking/${bookingId}/cancel`
         }
     }
 };

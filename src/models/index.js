@@ -456,6 +456,7 @@ export class Booking {
         this.createdAt = data.createdAt || new Date().toISOString();
         this.isReviewed = data.isReviewed ?? false;
         this.qrCode = data.qrCode || '';
+        this.cancellation = data.cancellation || null;
     }
 
     static fromJson(json) {
@@ -547,6 +548,7 @@ export class Booking {
             createdAt: (json.createdAt || '').toString(),
             isReviewed: json.isReviewed ?? false,
             qrCode: (json.qrCode || '').toString(),
+            cancellation: json.cancellation || null,
         });
     }
 

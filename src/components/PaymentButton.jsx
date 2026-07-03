@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { ENDPOINTS } from "../services/endpoints";
+import { confirmTurfBooking } from "../services/turfService";
+import { confirmEventBooking } from "../services/eventService";
+import { confirmParkBooking } from "../services/parkService";
 
 /**
  * Dynamically loads the Razorpay checkout script.
@@ -165,10 +168,12 @@ const PaymentButton = ({
                             const confirmResponse = await api.post(ENDPOINTS.TURFS.CONFIRM, {
                                 ...bookingData,
                                 amount: amount, // Pass the paid amount
-                                paymentMethod: selectedMethod || 'upi',
-                                transactionId: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature
+                                paymentDetails: {
+                                    method: bookingData.paymentDetails?.method || "online",
+                                    transactionId: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature
+                                }
                             });
                             verifyResult = confirmResponse.data;
                         } else {

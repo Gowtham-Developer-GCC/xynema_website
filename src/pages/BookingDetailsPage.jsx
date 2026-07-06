@@ -565,7 +565,7 @@ const BookingDetailsPage = () => {
                                                 <RefundRow label="GST & Taxes" value={refundData.gst || booking.pricing?.gst || booking.tax || 0} isCharge />
                                                 
                                                 {refundData.foodAmount > 0 && (
-                                                    <RefundRow label="Food & Beverages" value={refundData.foodAmount} isCharge />
+                                                    <RefundRow label="Food & Beverages" value={refundData.foodAmount} />
                                                 )}
 
                                                 <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />

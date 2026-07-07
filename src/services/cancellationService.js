@@ -40,3 +40,23 @@ export const cancelTurfBooking = async (bookingId) => {
         throw error.response?.data || error;
     }
 };
+
+// 👇 NEW EVENT SERVICES 👇
+export const getEventCancellationPolicy = async (eventId) => {
+    try {
+        const response = await api.get(ENDPOINTS.CANCELLATION.EVENTS.GET_POLICY(eventId));
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+export const cancelEventBooking = async (bookingId) => {
+    try {
+        const payload = { cancellationReason: "i need to cancel" };
+        const response = await api.post(ENDPOINTS.CANCELLATION.EVENTS.CANCEL(bookingId), payload);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};

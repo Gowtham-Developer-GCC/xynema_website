@@ -106,6 +106,10 @@ export const ENDPOINTS = {
         TURF: {
             GET_POLICY: (turfId) => `/customer-turf/booking/${turfId}/get-policy`,
             CANCEL: (bookingId) => `/customer-turf/cancel-booking/${bookingId}/cancel`
+        },
+        EVENTS: {
+            GET_POLICY: (eventId) => `/event-booking/cancellation-policy/${eventId}`,
+            CANCEL: (bookingId) => `/event-booking/cancel/${bookingId}` 
         }
     }
 };

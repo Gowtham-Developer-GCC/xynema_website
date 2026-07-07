@@ -5,7 +5,9 @@ import {
     getCancellationPolicy, 
     cancelBooking, 
     getTurfCancellationPolicy, 
-    cancelTurfBooking 
+    cancelTurfBooking,
+    getEventCancellationPolicy,
+    cancelEventBooking
 } from '../services/cancellationService';
 
 const CancellationModal = ({ 
@@ -13,6 +15,7 @@ const CancellationModal = ({
     onClose, 
     bookingId, 
     turfId,
+    eventId, // <-- Added eventId support
     bookingType = 'movie', 
     totalAmount = 0, 
     paymentMethod = 'account' 
@@ -35,8 +38,11 @@ const CancellationModal = ({
         const fetchPolicy = async () => {
             setIsPolicyLoading(true);
             try {
+                // Dynamically call the correct API based on the category
                 const response = bookingType === 'turf' 
                     ? await getTurfCancellationPolicy(turfId) 
+                    : bookingType === 'event'
+                    ? await getEventCancellationPolicy(eventId)
                     : await getCancellationPolicy(bookingId);
 
                 if (response.success) {
@@ -60,8 +66,11 @@ const CancellationModal = ({
     const handleConfirmCancellation = async () => {
         setIsCancelling(true);
         try {
+            // Dynamically call the correct cancel API
             const response = bookingType === 'turf' 
                 ? await cancelTurfBooking(bookingId) 
+                : bookingType === 'event'
+                ? await cancelEventBooking(bookingId)
                 : await cancelBooking(bookingId);
 
             if (response.success) {
@@ -79,11 +88,21 @@ const CancellationModal = ({
     };
 
     if (!isOpen) return null;
-    // Determine values to display to support both Turf and Movie API responses safely
-    const displayStatus = refundData?.status?.toUpperCase() || 'REFUND INITIATED'; 
     
-    // Turf uses `totalRefundAmount`, Movies use `refundAmount`
+    // Determine values to display to support all API responses safely
+    const displayStatus = refundData?.status?.toUpperCase() || 'REFUND INITIATED'; 
     const finalRefundAmount = refundData?.totalRefundAmount ?? refundData?.refundAmount ?? totalAmount ?? 0;
+
+    // Helper to calculate hours safely from different API payload variations
+    const getTimeLabel = (slab) => {
+        if (slab.hoursBeforeShow !== undefined) return `${slab.hoursBeforeShow} hrs before`;
+        if (slab.hoursBeforeSlot !== undefined) return `${slab.hoursBeforeSlot} hrs before`;
+        if (slab.daysBeforeEvent !== undefined) {
+            const hours = slab.daysBeforeEvent * 24;
+            return `${Math.round(hours)} hrs before`;
+        }
+        return 'Cancellation Window';
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
@@ -170,7 +189,7 @@ const CancellationModal = ({
                                                 {policyData.slabs.map((slab, idx) => (
                                                     <div key={idx} className="flex justify-between items-center p-3 text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 bg-white dark:bg-gray-900">
                                                         <span className="font-medium text-gray-700 dark:text-gray-300">
-                                                            {slab.hoursBeforeShow !== undefined ? `${slab.hoursBeforeShow} hrs before` : `${slab.hoursBeforeSlot} hrs before`}
+                                                            {getTimeLabel(slab)}
                                                         </span>
                                                         <span className="font-bold text-gray-900 dark:text-white">{slab.label}</span>
                                                     </div>

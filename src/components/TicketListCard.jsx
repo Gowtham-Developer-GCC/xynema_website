@@ -84,6 +84,8 @@ const MovieTicketCard = ({ booking }) => {
     };
 
     const { row, seat } = getSeatDetails();
+    const isCancelled = booking.status?.toLowerCase() === 'cancelled' || booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.cancellation?.isCancelled === true;
+
 
     return (
         <div
@@ -111,9 +113,25 @@ const MovieTicketCard = ({ booking }) => {
                         <img
                             src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Movie'}
                             alt={booking.movieTitle}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${isCancelled ? 'grayscale opacity-50' : 'group-hover:scale-105'}`}
+                        />
+                        
+                        {/* Cancelled Stamp */}
+                        {isCancelled && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
+                                <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg tracking-[0.2em] transform -rotate-12 border-2 border-white">
+                                    CANCELLED
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    {/* <div className="relative aspect-[16/9.5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">
+                        <img
+                            src={optimizeImage(booking.landscapePosterUrl || booking.portraitPosterUrl || booking.posterUrl, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Movie'}
+                            alt={booking.movieTitle}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Ticket Info Area */}
@@ -157,10 +175,14 @@ const MovieTicketCard = ({ booking }) => {
 
             {/* Bottom Content Area (y: 372 to 500) */}
             <div className="relative z-10 px-6 pb-6 pt-1 h-[128px] flex flex-col justify-center items-center w-full">
-                <button
-                    className="w-full py-4 bg-primary text-white text-[10px] sm:text-[11px] font-black rounded-md shadow-md shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 font-roboto tracking-widest hover:brightness-110 active:scale-[0.97] uppercase flex items-center justify-center gap-2 group-hover:scale-[1.01] group-hover:bg-primary/95"
+                 <button
+                    className={`w-full py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
+                        isCancelled 
+                        ? 'bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700' 
+                        : 'bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 active:scale-[0.97] group-hover:scale-[1.01] group-hover:bg-primary/95'
+                    }`}
                 >
-                    View Ticket
+                    {isCancelled ? 'View Details' : 'View Ticket'}
                 </button>
             </div>
         </div>
@@ -201,6 +223,7 @@ const EventTicketCard = ({ booking }) => {
         booking.eventDetails?.location?.venue || 
         'Xynema Live'
     );
+    const isCancelled = booking.bookingStatus?.toLowerCase() === 'cancelled' || booking.status?.toLowerCase() === 'cancelled' || booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.cancellation?.isCancelled === true;
 
     return (
         <div
@@ -228,9 +251,25 @@ const EventTicketCard = ({ booking }) => {
                         <img
                             src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Event'}
                             alt={booking.eventName}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${isCancelled ? 'grayscale opacity-50' : 'group-hover:scale-105'}`}
+                        />
+                        
+                        {/* Cancelled Stamp */}
+                        {isCancelled && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
+                                <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg tracking-[0.2em] transform -rotate-12 border-2 border-white">
+                                    CANCELLED
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    {/* <div className="relative aspect-[16/9.5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">
+                        <img
+                            src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://placehold.co/400x250/f0f0f5/999?text=Event'}
+                            alt={booking.eventName}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Ticket Info Area */}
@@ -276,11 +315,20 @@ const EventTicketCard = ({ booking }) => {
 
             {/* Bottom Content Area (y: 372 to 500) */}
             <div className="relative z-10 px-6 pb-6 pt-1 h-[128px] flex flex-col justify-center items-center w-full">
-                <button
+                 <button
+                    className={`w-full py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
+                        isCancelled 
+                        ? 'bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700' 
+                        : 'bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 active:scale-[0.97] group-hover:scale-[1.01] group-hover:bg-primary/95'
+                    }`}
+                >
+                    {isCancelled ? 'View Details' : 'View Ticket'}
+                </button>
+                {/* <button
                     className="w-full py-4 bg-primary text-white text-[10px] sm:text-[11px] font-black rounded-xl shadow-md shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 font-roboto tracking-widest hover:brightness-110 active:scale-[0.97] uppercase flex items-center justify-center gap-2 group-hover:scale-[1.01] group-hover:bg-primary/95"
                 >
                     View Ticket
-                </button>
+                </button> */}
             </div>
         </div>
     );
@@ -309,6 +357,7 @@ const TurfTicketCard = ({ booking }) => {
     const amount = booking.paymentInfo?.totalAmount || booking.paymentSummary?.totalAmount || booking.snapshot?.totalPriceWithFee || booking.payment?.amount || booking.totalPrice || booking.totalAmount || 0;
     const primaryImage = booking.turf?.primaryImage?.url || booking.turf?.images?.[0]?.url || booking.turfImage || booking.courtImage || booking.eventPoster || booking.eventDetails?.eventImages?.[0]?.url || booking.posterUrl;
     const paymentStatus = booking.paymentInfo?.paymentStatus || booking.paymentSummary?.paymentStatus || booking.payment?.status;
+    const isCancelled = booking.status?.toLowerCase() === 'cancelled' || booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.cancellation?.isCancelled === true;
 
     return (
         <div
@@ -336,8 +385,17 @@ const TurfTicketCard = ({ booking }) => {
                         <img
                             src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
                             alt={turfName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className={`w-full h-full object-cover transition-transform duration-500 ${isCancelled ? 'grayscale opacity-50' : 'group-hover:scale-105'}`}
                         />
+                        
+                        {/* Cancelled Stamp */}
+                        {isCancelled && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
+                                <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg tracking-[0.2em] transform -rotate-12 border-2 border-white">
+                                    CANCELLED
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -383,7 +441,7 @@ const TurfTicketCard = ({ booking }) => {
             {/* Bottom Content Area (y: 372 to 500) */}
             <div className="relative z-10 px-6 pb-6 pt-1 h-[128px] flex justify-between items-center w-full gap-3">
                 {paymentStatus && (paymentStatus.toLowerCase() === 'paid' || paymentStatus.toLowerCase() === 'partial') && (
-                    <div className={`flex flex-col items-center justify-center px-4 h-12 rounded-xl border select-none transition-all duration-300 ${
+                    <div className={`flex flex-col items-center justify-center px-4 h-12 rounded-md border select-none transition-all duration-300 ${
                         paymentStatus.toLowerCase() === 'paid'
                             ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)]'
                             : 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/20 text-amber-600 dark:text-amber-400 shadow-[0_2px_12px_rgba(245,158,11,0.08)]'
@@ -397,9 +455,13 @@ const TurfTicketCard = ({ booking }) => {
                     </div>
                 )}
                 <button
-                    className="flex-grow py-4 bg-primary text-white text-[10px] sm:text-[11px] font-black rounded-xl shadow-md shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 font-roboto tracking-widest hover:brightness-110 active:scale-[0.97] uppercase flex items-center justify-center gap-2 group-hover:scale-[1.01] group-hover:bg-primary/95"
+                    className={`flex-grow py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
+                        isCancelled 
+                        ? 'bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700' 
+                        : 'bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 active:scale-[0.97] group-hover:scale-[1.01] group-hover:bg-primary/95'
+                    }`}
                 >
-                    View Ticket
+                    {isCancelled ? 'View Details' : 'View Ticket'}
                 </button>
             </div>
         </div>
@@ -426,6 +488,8 @@ const ParkTicketCard = ({ booking }) => {
     const amount = booking.pricing?.totalAmount || booking.amount || booking.totalPrice || booking.paidAmount || 0;
     const bookingRef = booking.bookingRef || booking.id || booking._id;
     const primaryImage = booking.park?.parkImage?.url || booking.parkImage?.url || 'https://images.unsplash.com/photo-1513889959013-c2845acbaf3d?auto=format&fit=crop&q=80&w=600';
+    const isCancelled = booking.bookingStatus?.toLowerCase() === 'cancelled' || booking.status?.toLowerCase() === 'cancelled' || booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.cancellation?.isCancelled === true;
+
 
     return (
         <div
@@ -451,11 +515,27 @@ const ParkTicketCard = ({ booking }) => {
                 <div className="px-1 py-1">
                     <div className="relative aspect-[16/9.5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">
                         <img
+                            src={optimizeImage(primaryImage, { width: 600, quality: 75 }) || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600'}
+                            alt={parkName}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${isCancelled ? 'grayscale opacity-50' : 'group-hover:scale-105'}`}
+                        />
+                        
+                        {/* Cancelled Stamp */}
+                        {isCancelled && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
+                                <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg tracking-[0.2em] transform -rotate-12 border-2 border-white">
+                                    CANCELLED
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    {/* <div className="relative aspect-[16/9.5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700">
+                        <img
                             src={optimizeImage(primaryImage, { width: 600, quality: 75 })}
                             alt={parkName}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Ticket Info Area */}
@@ -500,9 +580,13 @@ const ParkTicketCard = ({ booking }) => {
             {/* Bottom Content Area (y: 372 to 500) */}
             <div className="relative z-10 px-6 pb-6 pt-1 h-[128px] flex flex-col justify-center items-center w-full">
                 <button
-                    className="w-full py-4 bg-primary text-white text-[10px] sm:text-[11px] font-black rounded-xl shadow-md shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 font-roboto tracking-widest hover:brightness-110 active:scale-[0.97] uppercase flex items-center justify-center gap-2 group-hover:scale-[1.01] group-hover:bg-primary/95"
+                    className={`flex-grow py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
+                        isCancelled 
+                        ? 'bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700' 
+                        : 'bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 active:scale-[0.97] group-hover:scale-[1.01] group-hover:bg-primary/95'
+                    }`}
                 >
-                    View Ticket
+                    {isCancelled ? 'View Details' : 'View Ticket'}
                 </button>
             </div>
         </div>

@@ -15,7 +15,8 @@ import {
     X,
     Ban,
     RefreshCcw,
-    Check
+    Check,
+    FileText
 } from 'lucide-react';
 import { getTurfBookingDetails } from '../services/turfService';
 import apiCacheManager from '../services/apiCacheManager';
@@ -33,6 +34,7 @@ const TurfBookingDetailsPage = () => {
 
     //cancellation 
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRefundBreakdown, setShowRefundBreakdown] = useState(false);
 
     // SWR Cache Layer
     const [booking, setBooking] = useState(() => apiCacheManager.get(`turf_booking_details_${bookingId}`));
@@ -68,8 +70,11 @@ const TurfBookingDetailsPage = () => {
     if (loading && !booking) return <LoadingScreen message="Fetching your ticket..." />;
     if (!booking) return <div className="min-h-screen flex items-center justify-center text-gray-500">Booking not found</div>;
     
-    const isCancelled = booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.status?.toLowerCase() === 'cancelled';
-    const isRefunded = booking.paymentInfo?.paymentStatus?.toLowerCase() === 'refunded' || booking.payment?.paymentStatus?.toLowerCase() === 'refunded';
+    const isCancelled = booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.status?.toLowerCase() === 'cancelled' || booking.cancellation?.isCancelled === true;
+    const refundData = booking.cancellation?.refund || booking.cancellation || {};
+    const refundStatus = refundData.status || booking.paymentInfo?.paymentStatus || booking.payment?.paymentStatus || 'PENDING';
+    const isRefunded = ['refunded', 'success', 'completed'].includes(refundStatus?.toLowerCase());
+    const refundAmount = refundData.totalRefundAmount || refundData.refundAmount || 0;
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -580,16 +585,91 @@ const TurfBookingDetailsPage = () => {
                                 </div>
                             </div>
 
-                            {/* Step 2: Refund Initiated */}
+                            {/* Step 2: Refund Initiated with Breakdown */}
                             <div className="relative flex items-start gap-5 mb-8">
                                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center z-10 shrink-0 border-4 border-white dark:border-[#1a1d24] shadow-sm">
                                     <Check className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-500" strokeWidth={3} />
                                 </div>
-                                <div className="pt-1">
-                                    <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Refund Initiated</p>
-                                    <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">
-                                        ₹{Math.round(paidAmount).toLocaleString()} calculated for refund
-                                    </p>
+                                <div className="pt-1 w-full">
+                                    <div className="flex flex-wrap justify-between items-start gap-3">
+                                        <div>
+                                            <p className="text-sm md:text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">Refund Initiated</p>
+                                            <p className="text-[11px] md:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">
+                                                ₹{refundAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} calculated for refund
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowRefundBreakdown(!showRefundBreakdown)}
+                                            className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors flex items-center gap-1.5"
+                                        >
+                                            <FileText size={12} />
+                                            {showRefundBreakdown ? 'Hide Breakdown' : 'View Breakdown'}
+                                        </button>
+                                    </div>
+
+                                    {/* Breakdown Accordion Panel */}
+                                    {/* Breakdown Accordion Panel */}
+                                    {showRefundBreakdown && (
+                                        <div className="mt-5 bg-gray-50 dark:bg-gray-800/40 rounded-2xl p-5 border border-gray-100 dark:border-gray-700/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="space-y-3">
+                                                <RefundRow label="Turf Base Amount" value={refundData.totalSlotBaseAmount || payment.baseAmount || paidAmount || 0} />
+                                                
+                                                {/* Always show advance if it exists */}
+                                                {(refundData.isAdvancePayment || refundData.advancePaid !== undefined) && (
+                                                    <RefundRow label="Advance Paid" value={refundData.advancePaid || 0} />
+                                                )}
+                                                
+                                                <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Deductions</p>
+                                                
+                                                {/* Always show Cancellation Charge, even if 0 */}
+                                                <RefundRow 
+                                                    label={`Cancellation Charge (${refundData.appliedSlabForSlot?.label || refundData.slotChargePercent + '%'})`} 
+                                                    value={(refundData.slotCancellationCharge || 0) + (refundData.advanceCancellationCharge || 0)} 
+                                                    isCharge 
+                                                />
+                                                
+                                                {/* Always show Convenience Fee, even if 0 */}
+                                                <RefundRow 
+                                                    label="Convenience Fee" 
+                                                    value={refundData.convenienceFeeTotal !== undefined ? refundData.convenienceFeeTotal : (payment.convenienceFeeAmount || 0)} 
+                                                    isCharge 
+                                                />
+
+                                                <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />
+                                                
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Net Refund Amount</span>
+                                                    <span className="text-sm font-black text-green-600 dark:text-green-400">
+                                                        ₹{refundAmount.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700/50 grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Refund ID</p>
+                                                    <p className="text-[10px] font-mono font-bold text-gray-900 dark:text-white truncate" title={refundData.refundId}>
+                                                        {refundData.refundId || 'Processing...'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Initiated On</p>
+                                                    <p className="text-[10px] font-bold text-gray-900 dark:text-white">
+                                                        {refundData.initiatedAt 
+                                                            ? new Date(refundData.initiatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
+                                                            : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            {refundData.note && (
+                                                <p className="mt-4 text-[9px] font-bold text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                                    * {refundData.note}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -703,5 +783,14 @@ const TurfBookingDetailsPage = () => {
         </div>
     );
 };
+// Custom Refund Breakdown Row
+const RefundRow = ({ label, value, isCharge }) => (
+    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wide">
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className={isCharge ? "text-red-500 dark:text-red-400" : "text-gray-900 dark:text-white"}>
+            {isCharge ? '-' : ''}₹{Math.abs(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+        </span>
+    </div>
+);
 
 export default TurfBookingDetailsPage;

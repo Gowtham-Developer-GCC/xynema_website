@@ -72,6 +72,7 @@ const TurfBookingDetailsPage = () => {
     
     const isCancelled = booking.slots?.every(slot => slot.status?.toLowerCase() === 'cancelled') || booking.status?.toLowerCase() === 'cancelled' || booking.cancellation?.isCancelled === true;
     const refundData = booking.cancellation?.refund || booking.cancellation || {};
+    const paymentInfo = booking.paymentInfo || booking.paymentInfo || {};
     const refundStatus = refundData.status || booking.paymentInfo?.paymentStatus || booking.payment?.paymentStatus || 'PENDING';
     const isRefunded = ['refunded', 'success', 'completed'].includes(refundStatus?.toLowerCase());
     const refundAmount = refundData.totalRefundAmount || refundData.refundAmount || 0;
@@ -621,12 +622,13 @@ const TurfBookingDetailsPage = () => {
                                                 
                                                 <div className="h-px w-full bg-gray-200 dark:bg-gray-700/50 my-2" />
                                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Deductions</p>
-                                                
+                                    
                                                 {/* Always show Cancellation Charge, even if 0 */}
                                                 <RefundRow 
-                                                    label={`Cancellation Charge (${refundData.appliedSlabForSlot?.label || refundData.slotChargePercent + '%'})`} 
-                                                    value={(refundData.slotCancellationCharge || 0) + (refundData.advanceCancellationCharge || 0)} 
+                                                    label={`Cancellation Charge (${paymentInfo.isAdvancePayment ? refundData.appliedSlabForAdvance?.label || refundData.appliedSlabForSlot?.label || refundData.slotChargePercent + '%' : 'Standard'})`} 
+                                                    value={(paymentInfo.isAdvancePayment ? refundData.advanceCancellationCharge : refundData.slotCancellationCharge) || 0} 
                                                     isCharge 
+                                                   
                                                 />
                                                 
                                                 {/* Always show Convenience Fee, even if 0 */}
@@ -774,7 +776,7 @@ const TurfBookingDetailsPage = () => {
                     isOpen={showCancelModal}
                     onClose={() => setShowCancelModal(false)}
                     bookingId={booking.bookingId || booking._id}
-                    turfId={turf.id}
+                    turfId={turf._id || turf.id}
                     bookingType="turf"
                     totalAmount={booking.pricing?.total || booking.totalAmount}
                     paymentMethod={booking.payment?.method || booking.paymentMethod || 'account'}

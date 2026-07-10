@@ -7,7 +7,9 @@ import {
     getTurfCancellationPolicy, 
     cancelTurfBooking,
     getEventCancellationPolicy,
-    cancelEventBooking
+    cancelEventBooking,
+    getParkCancellationPolicy,
+    cancelParkBooking
 } from '../services/cancellationService';
 
 const CancellationModal = ({ 
@@ -15,7 +17,8 @@ const CancellationModal = ({
     onClose, 
     bookingId, 
     turfId,
-    eventId, // <-- Added eventId support
+    eventId,
+    parkId,
     bookingType = 'movie', 
     totalAmount = 0, 
     paymentMethod = 'account' 
@@ -43,6 +46,8 @@ const CancellationModal = ({
                     ? await getTurfCancellationPolicy(turfId) 
                     : bookingType === 'event'
                     ? await getEventCancellationPolicy(eventId)
+                    : bookingType === 'park'                     // <--- ADD THIS
+                    ? await getParkCancellationPolicy(parkId)
                     : await getCancellationPolicy(bookingId);
 
                 if (response.success) {
@@ -71,6 +76,8 @@ const CancellationModal = ({
                 ? await cancelTurfBooking(bookingId) 
                 : bookingType === 'event'
                 ? await cancelEventBooking(bookingId)
+                : bookingType === 'park'                  // <--- ADD THIS
+                ? await cancelParkBooking(bookingId)
                 : await cancelBooking(bookingId);
 
             if (response.success) {
@@ -100,6 +107,9 @@ const CancellationModal = ({
         if (slab.daysBeforeEvent !== undefined) {
             const hours = slab.daysBeforeEvent * 24;
             return `${Math.round(hours)} hrs before`;
+        }
+        if(slab.daysBeforeVisit !== undefined) {
+            return `${slab.daysBeforeVisit} days before`;
         }
         return 'Cancellation Window';
     };
@@ -191,6 +201,7 @@ const CancellationModal = ({
                                                         <span className="font-medium text-gray-700 dark:text-gray-300">
                                                             {getTimeLabel(slab)}
                                                         </span>
+                                                        {/* <span>{slab.daysBeforeVisit + " days before visit"}</span> */}
                                                         <span className="font-bold text-gray-900 dark:text-white">{slab.label}</span>
                                                     </div>
                                                 ))}

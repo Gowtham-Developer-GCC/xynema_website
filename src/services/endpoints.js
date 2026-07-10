@@ -110,6 +110,10 @@ export const ENDPOINTS = {
         EVENTS: {
             GET_POLICY: (eventId) => `/event-booking/cancellation-policy/${eventId}`,
             CANCEL: (bookingId) => `/event-booking/cancel/${bookingId}` 
+        },
+         PARKS: {
+            GET_POLICY: (parkId) => `/customer-activity/activity-parks/cancellation-policy/${parkId}`,
+            CANCEL: (bookingId) => `/customer-activity/activity-parks/cancel-booking/${bookingId}`
         }
     }
 };

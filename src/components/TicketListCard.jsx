@@ -580,7 +580,7 @@ const ParkTicketCard = ({ booking }) => {
             {/* Bottom Content Area (y: 372 to 500) */}
             <div className="relative z-10 px-6 pb-6 pt-1 h-[128px] flex flex-col justify-center items-center w-full">
                 <button
-                    className={`flex-grow py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
+                    className={`flex w-full py-4 text-[10px] sm:text-[11px] font-black rounded-md transition-all duration-300 font-roboto tracking-widest uppercase flex items-center justify-center gap-2 ${
                         isCancelled 
                         ? 'bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700' 
                         : 'bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 hover:brightness-110 active:scale-[0.97] group-hover:scale-[1.01] group-hover:bg-primary/95'

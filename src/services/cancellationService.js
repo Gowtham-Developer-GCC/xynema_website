@@ -60,3 +60,23 @@ export const cancelEventBooking = async (bookingId) => {
         throw error.response?.data || error;
     }
 };
+
+// 👇 ADD THESE TWO FUNCTIONS AT THE BOTTOM 👇
+export const getParkCancellationPolicy = async (parkId) => {
+    try {
+        const response = await api.get(ENDPOINTS.CANCELLATION.PARKS.GET_POLICY(parkId));
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+export const cancelParkBooking = async (bookingId) => {
+    try {
+        const payload = { cancellationReason: "i need to cancel" };
+        const response = await api.post(ENDPOINTS.CANCELLATION.PARKS.CANCEL(bookingId), payload);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};

@@ -10,23 +10,19 @@ import { useAuth } from '../context/AuthContext';
 const EventBookingSummaryPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { event, reservationId, selectedTickets, totalAmount, pricing, selectedDate, selectedTime } = location.state || {};
-
-    const derivedPricingTotal = pricing 
-        ? ((pricing.subtotal || 0) + (pricing.convenienceFee || 0) + (pricing.tax || 0))
-        : null;
-        
+    const { event, reservationId, selectedTickets, totalAmount, pricing, selectedDate, selectedTime, data } = location.state || {};
     
-    // Local states to capture and store live API pricing response details
-    const [apiPricing, setApiPricing] = useState(pricing || null);
+    // Local state to capture and store live API pricing response details
+    const [apiPricing, setApiPricing] = useState(pricing || data?.pricing || null);
     const [currentReservationId, setCurrentReservationId] = useState(reservationId || null);
-    const [isLoadingPricing, setIsLoadingPricing] = useState(!pricing);
+    const [isLoadingPricing, setIsLoadingPricing] = useState(!pricing && !(data?.pricing));
 
     // 1. Try API's totalAmount
     // 2. Fallback to manually summed total (1000 + 100 + 18 = 1118)
     // 3. Fallback to the original state totalAmount
     // Use API pricing.totalAmount if available, else fall back to locally calculated totalAmount
-     const finalAmount = apiPricing?.totalAmount ?? totalAmount;
+    const finalAmount = apiPricing?.totalAmount || totalAmount || 0;
+
 
 
     const [attendees, setAttendees] = useState([{
@@ -402,6 +398,7 @@ const EventBookingSummaryPage = () => {
                                                 <div className="space-y-1">
                                                     <p className="text-xs font-black text-slate-800 dark:text-gray-200 uppercase tracking-tight">{ticket.className}</p>
                                                     <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500">Qty: {ticket.quantity}</p>
+
                                                 </div>
                                                 <span className="text-xs font-black text-slate-900 dark:text-white">₹{ticket.totalPrice.toFixed(2)}</span>
                                             </div>
@@ -476,7 +473,7 @@ const EventBookingSummaryPage = () => {
                                                 : 'bg-primary hover:brightness-110 text-white'
                                             }`}
                                     >
-                                        <span>Pay ₹{finalAmount.toLocaleString()}</span>
+                                        <span>Pay₹{finalAmount?.toLocaleString('en-IN') || 0}</span>
                                     </PaymentButton>
 
                                     <div className="mt-4 text-center space-y-2">
@@ -507,9 +504,9 @@ const EventBookingSummaryPage = () => {
                 <div className="flex items-center justify-between gap-6">
                     <div className="flex flex-col shrink-0">
                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">Final Amount</span>
-                        <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{finalAmount.toLocaleString()}</span>
-                        {pricing && (
-                            <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">incl. ₹{((pricing.convenienceFee ?? 0) + (pricing.tax ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fees & taxes</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white font-roboto tracking-tight">₹{finalAmount?.toLocaleString('en-IN') || 0}</span>
+                        {apiPricing && (
+                            <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">incl. ₹{((apiPricing.convenienceFee ?? 0) + (apiPricing.tax ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fees & taxes</span>
                         )}
                     </div>
                     <div className="flex-1 flex justify-end">

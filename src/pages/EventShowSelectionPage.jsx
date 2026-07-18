@@ -108,7 +108,8 @@ const EventShowSelectionPage = () => {
                         event,
                         reservationId: result.reservationId,
                         selectedTickets: location.state?.enrichedTickets || selectedTickets,
-                        totalAmount,
+                        totalAmount: result.pricing?.totalAmount ?? totalAmount,
+                        pricing: result.pricing || null,
                         selectedDate: showDate,
                         selectedTime: showTime
                     }

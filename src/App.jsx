@@ -123,7 +123,7 @@ export default function App() {
                     {isOffline && <OfflineScreen />}
                     <LanguageProvider>
                     <DataProvider selectedCity={selectedCity}>
-                        <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
+                        <div className="min-h-screen bg-[#f8fafc] dark:bg-gray-900 font-sans text-slate-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
                             <SEO />
                             <Navbar
                                 selectedCity={selectedCity}

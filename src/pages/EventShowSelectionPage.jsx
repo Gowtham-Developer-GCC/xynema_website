@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, Ticket, MapPin, Check } from 'lucide-react';
 import SEO from '../components/SEO';
 import LoadingScreen from '../components/LoadingScreen';
-import { reserveEventTickets } from '../services/eventService';
+import { getEventDetails, reserveEventTickets } from '../services/eventService';
 
 const EventShowSelectionPage = () => {
     const { slug } = useParams();
@@ -11,11 +11,13 @@ const EventShowSelectionPage = () => {
     const navigate = useNavigate();
 
     // Safely retrieve state
-    const event = location.state?.event;
+    const initialEvent = location.state?.event;
     const selectedTickets = location.state?.selectedTickets || [];
     const ticketQuantities = location.state?.ticketQuantities || {};
-    const totalAmount = location.state?.totalAmount || 0;
+    const initialTotalAmount = location.state?.totalAmount || 0;
 
+    const [event, setEvent] = useState(initialEvent);
+    const [loading, setLoading] = useState(!initialEvent);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedShowTime, setSelectedShowTime] = useState(null);
     const [isReserving, setIsReserving] = useState(false);
@@ -33,10 +35,45 @@ const EventShowSelectionPage = () => {
         return { todayStr, maxDateStr };
     };
 
+    // Helper to check if all tickets on a specific date are sold out
+    const isDateSoldOut = (dateStr, currentEvent) => {
+        const targetEvent = currentEvent || event;
+        if (!targetEvent || !targetEvent.showTimes) return false;
+        const shows = targetEvent.showTimes.filter(st => new Date(st.date).toISOString().split('T')[0] === dateStr);
+        if (shows.length === 0) return true;
+        return shows.every(show => 
+            (show.ticketClasses || []).every(tc => (tc.availableSeats ?? tc.availableSeats === 0 ? tc.availableSeats : 0) <= 0)
+        );
+    };
+
+    // Helper to check if a specific showtime is sold out
+    const isShowSoldOut = (show) => {
+        return (show.ticketClasses || []).every(tc => (tc.availableSeats ?? tc.availableSeats === 0 ? tc.availableSeats : 0) <= 0);
+    };
+
+    // Fetch the latest event details with ticket lists & remaining capacity on mount
+    useEffect(() => {
+        const fetchLatestDetails = async () => {
+            try {
+                const latestEvent = await getEventDetails(slug);
+                if (latestEvent) {
+                    setEvent(latestEvent);
+                }
+            } catch (err) {
+                console.error('Failed to load fresh event details:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLatestDetails();
+    }, [slug]);
+
     // Initialize date from event showtimes
     useEffect(() => {
         if (!event || event.eventType !== 'multi-day' || !(event.showTimes?.length > 0)) {
-            navigate(`/event/${slug}`); // Not a multi-day event or missing data
+            if (!loading) {
+                navigate(`/event/${slug}`); // Not a multi-day event or missing data
+            }
             return;
         }
 
@@ -49,20 +86,22 @@ const EventShowSelectionPage = () => {
                 .sort();
 
             if (validDates.length > 0) {
-                // Pick the first date available in the upcoming 7 days
-                setSelectedDate(validDates[0]);
+                // Pick the first date available in the upcoming 7 days that is not sold out
+                const firstAvailableDate = validDates.find(d => !isDateSoldOut(d, event)) || validDates[0];
+                setSelectedDate(firstAvailableDate);
             } else {
                 // Fallback: If no shows in the next 7 days, select the next future show available
                 const futureDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))]
                     .filter(dateStr => dateStr >= todayStr)
                     .sort();
                 
-                setSelectedDate(futureDates.length > 0 ? futureDates[0] : todayStr);
+                const fallbackDate = futureDates.find(d => !isDateSoldOut(d, event)) || futureDates[0] || todayStr;
+                setSelectedDate(fallbackDate);
             }
         }
-    }, [event, navigate, slug, selectedDate]);
+    }, [event, navigate, slug, selectedDate, loading]);
 
-    if (!event) return <LoadingScreen message="Loading event details" />;
+    if (loading || !event) return <LoadingScreen message="Retrieving showtimes and ticket availability..." />;
 
     // --- UPDATED: Extract and filter unique dates for the date strip ---
     let uniqueDates = [];
@@ -73,6 +112,13 @@ const EventShowSelectionPage = () => {
             // Only keep dates that are >= today AND <= 7 days from today
             .filter(dateStr => dateStr >= todayStr && dateStr <= maxDateStr) 
             .sort();
+
+        // Fallback: if no dates within next 7 days, show all upcoming dates
+        if (uniqueDates.length === 0) {
+            uniqueDates = [...new Set(event.showTimes.map(st => new Date(st.date).toISOString().split('T')[0]))]
+                .filter(dateStr => dateStr >= todayStr)
+                .sort();
+        }
     }
 
     // Filter showtimes for the selected date
@@ -81,9 +127,68 @@ const EventShowSelectionPage = () => {
         return new Date(st.date).toISOString().split('T')[0] === selectedDate;
     }) || [];
 
+    // Map selected tickets to their correct ticketClassIds based on the chosen showtime
+    const getMappedTicketsForShow = () => {
+        if (!selectedShowTime) return { mappedTickets: [], mappedEnriched: [], totalAmount: 0 };
+
+        try {
+            const mappedTickets = selectedTickets.map(selTicket => {
+                // Find original ticket class name from first showtime or event tickets using the previous ticketClassId
+                const originalTicket = event.showTimes?.[0]?.ticketClasses?.find(tc => tc.id === selTicket.ticketClassId || tc._id === selTicket.ticketClassId)
+                    || event.tickets?.find(tc => tc.id === selTicket.ticketClassId || tc._id === selTicket.ticketClassId);
+
+                const classNameToMatch = originalTicket?.className;
+
+                // Find corresponding ticket class in selected showtime by name
+                const matchingTicketClass = selectedShowTime.ticketClasses?.find(tc => tc.className === classNameToMatch);
+
+                if (!matchingTicketClass) {
+                    throw new Error(`Ticket tier "${classNameToMatch || 'Standard'}" is not available for this showtime.`);
+                }
+
+                return {
+                    ticketClassId: matchingTicketClass.id || matchingTicketClass._id,
+                    quantity: selTicket.quantity
+                };
+            });
+
+            const mappedEnriched = mappedTickets.map(mapped => {
+                const tc = selectedShowTime.ticketClasses?.find(item => (item.id || item._id) === mapped.ticketClassId);
+                return {
+                    ticketClassId: mapped.ticketClassId,
+                    className: tc.className,
+                    quantity: mapped.quantity,
+                    pricePerTicket: tc.price,
+                    totalPrice: tc.price * mapped.quantity
+                };
+            });
+
+            const total = mappedEnriched.reduce((sum, item) => sum + item.totalPrice, 0);
+
+            return { mappedTickets, mappedEnriched, totalAmount: total };
+        } catch (err) {
+            console.error('Error mapping tickets:', err);
+            return { mappedTickets: [], mappedEnriched: [], totalAmount: 0, error: err.message };
+        }
+    };
+
+    const { mappedTickets, mappedEnriched, totalAmount } = getMappedTicketsForShow();
 
     const handleProceedToSummary = async () => {
         if (!selectedShowTime) return;
+
+        // Perform final seat availability check
+        for (const item of mappedTickets) {
+            const tc = selectedShowTime.ticketClasses?.find(x => (x.id || x._id) === item.ticketClassId);
+            if (!tc) {
+                alert("Selected ticket class is not available for this showtime.");
+                return;
+            }
+            if ((tc.availableSeats ?? 0) < item.quantity) {
+                alert(`Insufficient seats! Only ${tc.availableSeats} tickets are available for "${tc.className}". You requested ${item.quantity}.`);
+                return;
+            }
+        }
 
         setIsReserving(true);
         try {
@@ -97,17 +202,17 @@ const EventShowSelectionPage = () => {
                 showDate = selectedShowTime.date;
             }
 
-            console.log('[Reserve] Sending:', { showDate, showTime, tickets: selectedTickets });
+            console.log('[Reserve] Sending:', { showDate, showTime, tickets: mappedTickets });
 
-            const result = await reserveEventTickets(event.id, selectedTickets, showDate, showTime);
+            const result = await reserveEventTickets(event.id, mappedTickets, showDate, showTime);
 
             if (result?.reservationId) {
-                // Navigate to booking summary
+                // Navigate to booking summary with corrected details
                 navigate('/events/booking-summary', {
                     state: {
                         event,
                         reservationId: result.reservationId,
-                        selectedTickets: location.state?.enrichedTickets || selectedTickets,
+                        selectedTickets: mappedEnriched,
                         totalAmount: result.pricing?.totalAmount ?? totalAmount,
                         pricing: result.pricing || null,
                         selectedDate: showDate,
@@ -126,7 +231,7 @@ const EventShowSelectionPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-whiteSmoke w-full max-w-[100vw] overflow-x-hidden">
+        <div className="min-h-screen bg-whiteSmoke  dark:bg-gray-900 w-full max-w-[100vw] overflow-x-hidden">
             <SEO
                 title={`Select Showtime - ${event?.name} | XYNEMA`}
                 description="Choose your preferred date and time for the event"
@@ -214,6 +319,7 @@ const EventShowSelectionPage = () => {
                                 {uniqueDates.map((dateStr) => {
                                     const dateObj = new Date(dateStr);
                                     const isSelected = dateStr === selectedDate;
+                                    const soldOut = isDateSoldOut(dateStr, event);
 
                                     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
                                     const dayNum = dateObj.getUTCDate();
@@ -222,16 +328,18 @@ const EventShowSelectionPage = () => {
                                     return (
                                         <button
                                             key={dateStr}
+                                            disabled={soldOut}
                                             onClick={() => {
                                                 setSelectedDate(dateStr);
                                                 setSelectedShowTime(null); // Reset showtime when date changes
                                             }}
                                             className={`
-                                                flex-shrink-0 w-14 h-16 md:w-16 md:h-20 rounded-xl md:rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300
+                                                flex-shrink-0 w-14 h-16 md:w-16 md:h-20 rounded-xl md:rounded-2xl flex flex-col items-center justify-center snap-center transition-all duration-300 relative
                                                 ${isSelected
                                                     ? 'bg-primary text-white shadow-lg shadow-primary/20 dark:shadow-primary/40 border-primary'
                                                     : 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700 hover:border-gray-300'
                                                 } border-2
+                                                ${soldOut ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-850 hover:border-gray-100' : ''}
                                             `}
                                         >
                                             <span className={`text-[8px] md:text-[9px] font-black tracking-widest mb-0.5 md:mb-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
@@ -241,7 +349,7 @@ const EventShowSelectionPage = () => {
                                                 {dayNum}
                                             </span>
                                             <span className={`text-[8px] md:text-[9px] font-black tracking-widest ${isSelected ? 'text-white/80' : 'text-gray-300'}`}>
-                                                {monthName}
+                                                {soldOut ? 'SOLD' : monthName}
                                             </span>
                                         </button>
                                     );
@@ -257,14 +365,19 @@ const EventShowSelectionPage = () => {
                         {showsForDate.map((show, idx) => {
                             const showId = show.id || idx;
                             const isSelected = selectedShowTime?.id === showId || (selectedShowTime && !selectedShowTime.id && showsForDate.indexOf(selectedShowTime) === idx);
+                            const showSoldOut = isShowSoldOut(show);
 
                             return (
                                 <button
                                     key={showId}
-                                    onClick={() => setSelectedShowTime(show)}
+                                    disabled={showSoldOut}
+                                    onClick={() => {
+                                        if (!showSoldOut) setSelectedShowTime(show);
+                                    }}
                                     className={`
                                         group bg-white dark:bg-gray-800 rounded-3xl border transition-all duration-500 text-left relative overflow-hidden
-                                        hover:-translate-y-1 p-5 shadow-sm hover:shadow-xl
+                                        p-5 shadow-sm
+                                        ${showSoldOut ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-850 border-gray-100' : 'hover:-translate-y-1 hover:shadow-xl'}
                                         ${isSelected
                                             ? 'border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/20 dark:shadow-indigo-900/20'
                                             : 'border-gray-100 dark:border-gray-700'
@@ -272,12 +385,12 @@ const EventShowSelectionPage = () => {
                                     `}
                                 >
                                     <div className="flex justify-between items-center mb-3 md:mb-4">
-                                        <span className={`text-lg md:text-xl font-black tracking-tight ${isSelected ? 'text-primary dark:text-primary' : 'text-gray-900 dark:text-white'}`}>
+                                        <span className={`text-lg md:text-xl font-black tracking-tight ${isSelected ? 'text-primary dark:text-primary' : 'text-gray-900 dark:text-white'} ${showSoldOut ? 'line-through text-gray-400' : ''}`}>
                                             {show.startTime}
                                         </span>
-                                        <div className={`px-2 py-0.5 md:py-1 rounded-lg border transition-colors ${isSelected ? 'bg-primary border-primary' : 'bg-primary/10 border-primary/20'}`}>
-                                            <span className={`text-[10px] md:text-xs font-black flex items-center gap-1.5 ${isSelected ? 'text-white' : 'text-primary dark:text-primary'}`}>
-                                                {isSelected ? 'Selected' : 'Select'} <Check className="w-3 h-3" />
+                                        <div className={`px-2 py-0.5 md:py-1 rounded-lg border transition-colors ${showSoldOut ? 'bg-gray-200 dark:bg-gray-700 border-transparent' : isSelected ? 'bg-primary border-primary' : 'bg-primary/10 border-primary/20'}`}>
+                                            <span className={`text-[10px] md:text-xs font-black flex items-center gap-1.5 ${showSoldOut ? 'text-gray-400 dark:text-gray-500' : isSelected ? 'text-white' : 'text-primary dark:text-primary'}`}>
+                                                {showSoldOut ? 'Sold Out' : isSelected ? 'Selected' : 'Select'} {!showSoldOut && <Check className="w-3 h-3" />}
                                             </span>
                                         </div>
                                     </div>
@@ -296,7 +409,9 @@ const EventShowSelectionPage = () => {
                                     </div>
 
                                     {/* Subtle glow effect on hover */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br transition-opacity pointer-events-none ${isSelected ? 'from-primary/10 opacity-100' : 'from-primary/5 opacity-0 group-hover:opacity-100'}`} />
+                                    {!showSoldOut && (
+                                        <div className={`absolute inset-0 bg-gradient-to-br transition-opacity pointer-events-none ${isSelected ? 'from-primary/10 opacity-100' : 'from-primary/5 opacity-0 group-hover:opacity-100'}`} />
+                                    )}
                                 </button>
                             );
                         })}
@@ -307,7 +422,68 @@ const EventShowSelectionPage = () => {
                             <Calendar className="w-8 h-8 text-gray-300" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Shows Available</h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">There are no showtimes scheduled for the selected date within the next 7 days.</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">There are no showtimes scheduled for the selected date.</p>
+                    </div>
+                )}
+
+                {/* NEW Section: Ticket availability check & details for selected showtime */}
+                {selectedShowTime && (
+                    <div className="mt-12 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 shadow-sm">
+                        <h3 className="text-base md:text-lg font-black text-gray-900 dark:text-white tracking-tight uppercase mb-6 flex items-center gap-3">
+                            <Ticket className="w-5 h-5 text-primary" />
+                            Ticket Availability for Selected Show ({selectedShowTime.startTime})
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {selectedShowTime.ticketClasses?.map(tc => {
+                                const isSoldOut = (tc.availableSeats ?? 0) <= 0;
+                                const originalTicket = event.showTimes?.[0]?.ticketClasses?.find(ot => ot.className === tc.className)
+                                    || event.tickets?.find(ot => ot.className === tc.className);
+                                const selectedQty = originalTicket ? (ticketQuantities[originalTicket.id || originalTicket._id] || 0) : 0;
+
+                                return (
+                                    <div 
+                                        key={tc._id || tc.id} 
+                                        className={`p-4 rounded-2xl border flex justify-between items-center ${
+                                            isSoldOut 
+                                                ? 'bg-gray-50/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 opacity-60' 
+                                                : 'bg-gray-50/30 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <p className="font-extrabold text-sm md:text-base text-gray-900 dark:text-white">
+                                                    {tc.className}
+                                                </p>
+                                                {selectedQty > 0 && (
+                                                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-lg border border-primary/20 uppercase tracking-wider">
+                                                        Selected: {selectedQty}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">
+                                                Price: ₹{tc.price.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            {isSoldOut ? (
+                                                <span className="text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest bg-red-50 dark:bg-red-950/20 px-2 py-1 rounded-lg border border-red-100 dark:border-red-900/10">
+                                                    SOLD OUT
+                                                </span>
+                                            ) : (
+                                                <div className="flex flex-col items-end">
+                                                    <span className={`text-xs font-black ${tc.availableSeats <= 10 ? 'text-orange-500' : 'text-green-600 dark:text-green-400'}`}>
+                                                        {tc.availableSeats} / {tc.totalSeats} Left
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-0.5">
+                                                        Seats Available
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
@@ -327,7 +503,7 @@ const EventShowSelectionPage = () => {
                             {selectedShowTime ? (
                                 <button
                                     onClick={handleProceedToSummary}
-                                    disabled={isReserving}
+                                    disabled={isReserving || mappedTickets.length === 0}
                                     className="px-6 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl bg-primary text-white font-bold text-xs md:text-[15px] transition-all hover:bg-[#E33D52] active:scale-95 shadow-lg shadow-primary/30 disabled:opacity-50"
                                 >
                                     {isReserving ? (

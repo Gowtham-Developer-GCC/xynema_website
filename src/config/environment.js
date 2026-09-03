@@ -51,10 +51,6 @@ class Environment {
             errors.push('VITE_API_BASE_URL is not configured');
         }
 
-        if (!this.googleClientId) {
-            errors.push('VITE_GOOGLE_CLIENT_ID is not configured');
-        }
-
         if (errors.length > 0) {
             console.error('Configuration Errors:', errors);
             if (this.isProduction) {

@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api, { getStoredUser, storeUser, removeUser, registerOnUnauthorized } from '../services/api';
 import { loginWithGoogle, logout, sendPhoneLogin, verifyPhoneOtp } from '../services/userService';
-import { googleLogout } from '@react-oauth/google';
+import { auth } from '../firebase/config';
+import { signOut } from 'firebase/auth';
 import { User } from '../models/index.js';
 import apiCacheManager from '../services/apiCacheManager';
 import { registerNotificationToken, removeNotificationToken, onMessageListener } from '../services/notificationService';
@@ -199,7 +200,11 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error('Logout error:', err);
         } finally {
-            googleLogout();
+            try {
+                await signOut(auth);
+            } catch (signOutErr) {
+                console.warn('[Auth] Firebase signOut warning:', signOutErr);
+            }
             removeUser();
             localStorage.removeItem('auth_token');
             delete api.defaults.headers.common['Authorization'];

@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import Environment from './config/environment.js';
@@ -17,20 +16,12 @@ try {
     process.exit(1);
 }
 
-const clientId = Environment.googleClientId;
-
-if (!clientId) {
-    console.error('❌ Google Client ID is not configured');
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <GoogleOAuthProvider clientId={clientId} use_fedcm_for_prompt={true}>
-            <ThemeProvider>
-                <AuthProvider>
-                    <App />
-                </AuthProvider>
-            </ThemeProvider>
-        </GoogleOAuthProvider>
+        <ThemeProvider>
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        </ThemeProvider>
     </React.StrictMode>
 );

@@ -82,7 +82,7 @@ export default defineConfig({
                 manualChunks: {
                     // Vendor libraries
                     'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-                    'auth-vendor': ['@react-oauth/google', 'jwt-decode'],
+                    'auth-vendor': ['firebase/auth', 'jwt-decode'],
                     'ui-vendor': ['lucide-react'],
                     'api-vendor': ['axios'],
                 },
@@ -125,7 +125,7 @@ export default defineConfig({
             'react',
             'react-dom',
             'react-router-dom',
-            '@react-oauth/google',
+            'firebase/auth',
             'axios',
             'jwt-decode',
             'lucide-react',

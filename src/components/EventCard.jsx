@@ -48,7 +48,7 @@ const EventCard = memo(({ event }) => {
 
                     <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800 pt-4">
                         <span className="font-bold text-primary dark:text-primary text-[13px] sm:text-lg min-w-0 truncate">
-                            ₹{event.price ? event.price.toLocaleString() : 'Free'}
+                            {event.basePrice ? `₹${event.basePrice.toLocaleString()}` : 'Free'}
                         </span>
                         <div
                             className="flex-shrink-0 px-3 sm:px-5 py-2 bg-primary text-white text-[9px] sm:text-[10px] font-bold rounded-lg shadow-lg shadow-primary/20 transition-all font-roboto tracking-widest sm:tracking-wider hover:brightness-110 active:scale-95 whitespace-nowrap uppercase"

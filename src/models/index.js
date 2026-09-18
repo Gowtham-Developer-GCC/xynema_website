@@ -746,6 +746,7 @@ export class Event {
             });
         }
         this.price = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+        this.basePrice = data.basePrice || data.baseTicket?.price || this.price;
 
         // Organizer mapping
         const org = data.organizer || {};

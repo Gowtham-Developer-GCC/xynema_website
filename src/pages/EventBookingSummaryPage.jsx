@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, ShieldCheck, CheckCircle, ChevronRight, Info, CreditCard, Coffee, Smartphone, Building, Wallet } from 'lucide-react';
-import { confirmEventBooking, reserveEventTickets } from '../services/eventService';
+import { confirmEventBooking, reserveEventTickets, cancelEventReservation } from '../services/eventService';
 import LoadingScreen from '../components/LoadingScreen';
 import PaymentButton from '../components/PaymentButton';
 import EmailPrompt from '../components/EmailPrompt';
@@ -101,7 +101,14 @@ const EventBookingSummaryPage = () => {
         return () => clearInterval(timer);
     }, [timeLeft, booked]);
 
-    const handleExpiration = () => {
+    const handleExpiration = async () => {
+        if (currentReservationId && !booked) {
+            try {
+                await cancelEventReservation(currentReservationId);
+            } catch (error) {
+                console.error("Failed to cancel reservation on expiration:", error);
+            }
+        }
         alert("Session time is over. Please try booking again.");
         navigate('/events', { replace: true });
     };
@@ -111,6 +118,31 @@ const EventBookingSummaryPage = () => {
             window.scrollTo(0, 0);
         }
     }, [booked]);
+
+    // Handle browser back button navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            if (currentReservationId && !booked) {
+                cancelEventReservation(currentReservationId).catch(error => {
+                    console.error("Failed to cancel reservation on back navigation:", error);
+                });
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [currentReservationId, booked]);
+
+    const handleCancelAndGoBack = async () => {
+        if (currentReservationId && !booked) {
+            try {
+                await cancelEventReservation(currentReservationId);
+            } catch (error) {
+                console.error("Failed to cancel reservation:", error);
+            }
+        }
+        navigate(-1);
+    };
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -166,7 +198,7 @@ const EventBookingSummaryPage = () => {
         <div className="min-h-screen bg-[#F5F5FA] dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 text-slate-900 dark:text-gray-100">
             <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
                 <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-12 md:h-20 flex items-center">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <button onClick={handleCancelAndGoBack} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                     <h1 className="flex-1 text-center font-black text-gray-900 dark:text-white uppercase tracking-widest text-[10px] md:text-base mr-8">SECURE CHECKOUT</h1>

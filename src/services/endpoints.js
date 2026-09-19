@@ -38,13 +38,13 @@ export const ENDPOINTS = {
         BOOKING_DETAILS: (bookingId) => `/booking/mybookings/${bookingId}`,
     },
 
-    // Event Bookings
     EVENT_BOOKING: {
         LIST: '/event-booking/bookings',
         DETAILS: (bookingId) => `/event-booking/bookings/${bookingId}`,
         RESERVE: (eventId) => `/event-booking/${eventId}/reserve`,
         CREATE_ORDER: (reservationId) => `/event-booking/create-order/${reservationId}`,
         CONFIRM: (eventId, reservationId) => `/event-booking/confirm/${reservationId}`,
+        CANCEL_RESERVATION: (reservationId) => `/event-booking/cancel-reservation/${reservationId}`,
     },
 
     // User Profile

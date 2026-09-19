@@ -179,3 +179,10 @@ export const toggleEventInterest = async (eventId, interested) => {
         return response.data;
     }, 'toggle event interest');
 };
+
+export const cancelEventReservation = async (reservationId) => {
+    return safeApiCall(async () => {
+        const response = await api.post(ENDPOINTS.EVENT_BOOKING.CANCEL_RESERVATION(reservationId));
+        return response.data;
+    }, 'cancel event reservation');
+};

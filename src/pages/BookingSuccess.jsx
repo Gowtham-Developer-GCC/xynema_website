@@ -42,7 +42,8 @@ const BookingSuccess = () => {
         : (bookingData?.time || sessionStorage.getItem('booking_show_time') || '');
 
     const showDate = bookingData?.date || '';
-    const seats = isMovie ? (bookingData?.seatIds || bookingData?.seats || []) : [];
+    const seats = isMovie ? (bookingData?.seats?.seatLabel || bookingData?.seats || []) : [];
+    console.log("DEBUG seats:", seats, "bookingData:", bookingData);
     const bookingId = bookingData?.bookingId || bookingData?.id || 'BK' + Date.now();
     const totalTicketCount = isPark 
         ? (bookingData?.tickets?.reduce?.((acc, t) => acc + (t.quantity || t.qty || 0), 0) || 1) 
@@ -168,7 +169,9 @@ const BookingSuccess = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Seats</p>
-                                        <p className="text-xs md:text-sm font-black text-gray-800 dark:text-gray-200 uppercase truncate max-w-[160px]">{seats.join(', ')}</p>
+                                        <p className="text-xs md:text-sm font-black text-gray-800 dark:text-gray-200 uppercase truncate max-w-[160px]">
+                                            {Array.isArray(seats) ? seats.map(s => typeof s === 'object' ? s.seatLabel || s.seatNumber : s).join(', ') : seats}
+                                        </p>
                                     </div>
                                 </div>
                             )}

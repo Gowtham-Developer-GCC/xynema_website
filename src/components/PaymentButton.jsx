@@ -193,7 +193,8 @@ const PaymentButton = ({
                             let navigationState = {
                                 bookingData: {
                                     ...bookingData,
-                                    bookingId: verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || "BK" + Date.now()
+                                    bookingId: verifyResult.data?.bookingId || verifyResult.data?.id || verifyResult.bookingId || "BK" + Date.now(),
+                                    seats: verifyResult.data?.seats || bookingData.seats || []
                                 }
                             };
 
@@ -208,7 +209,7 @@ const PaymentButton = ({
                                         theaterName: bookingData.theaterName || sessionStorage.getItem('booking_theater_name') || "Theater",
                                         date: bookingData.date || sessionStorage.getItem('booking_show_date') || "",
                                         time: bookingData.time || sessionStorage.getItem('booking_show_time') || "",
-                                        seats: bookingData.seats || [],
+                                        seats: verifyResult.data?.seats || bookingData.seats || [],
                                         bookingId: bId
                                     }
                                 };

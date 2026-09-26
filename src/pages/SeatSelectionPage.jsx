@@ -303,7 +303,7 @@ const SeatSelectionPage = () => {
     const seatCategories = React.useMemo(() => {
         if (!seats || seats.length === 0) {
             // Fallback to show.pricing if seats layout isn't loaded yet
-            return show?.pricing?.filter(p => !['path', 'aisle', 'empty', 'wheelchair'].includes((p.seatType || '').toLowerCase())).map(p => ({
+            return show?.pricing?.filter(p => !['path', 'aisle', 'empty', 'wheelchair', 'disabled'].includes((p.seatType || '').toLowerCase())).map(p => ({
                 label: p.label || p.seatClass?.name || (p.seatType || 'NORMAL').toUpperCase(),
                 price: p.basePrice || p.price || 0,
                 status: 'AVAILABLE'
@@ -313,18 +313,21 @@ const SeatSelectionPage = () => {
         // Deriving from actual seats layout for accuracy
         const categoriesMap = new Map();
         seats.flat().forEach(seat => {
-            const type = (seat.originalType || seat.type || '').toLowerCase();
-            if (seat && type !== 'path' && type !== 'aisle' && type !== 'empty') {
+            const rawType = (seat.seatType || seat.originalType || seat.type || '').toLowerCase();
+            const isDisabled = rawType === 'disabled' || seat.status === 'disabled';
+            if (seat && rawType !== 'path' && rawType !== 'aisle' && rawType !== 'empty' && !isDisabled) {
                 const label = seat.categoryName || seat.seatClass?.name || (seat.type || 'NORMAL').toUpperCase();
                 const price = seat.basePrice || seat.price || 0;
-                const key = `${label}-${price}`;
+                if (price > 0) {
+                    const key = `${label}-${price}`;
 
-                if (!categoriesMap.has(key)) {
-                    categoriesMap.set(key, {
-                        label: label,
-                        price: price,
-                        status: 'AVAILABLE'
-                    });
+                    if (!categoriesMap.has(key)) {
+                        categoriesMap.set(key, {
+                            label: label,
+                            price: price,
+                            status: 'AVAILABLE'
+                        });
+                    }
                 }
             }
         });
@@ -414,8 +417,8 @@ const SeatSelectionPage = () => {
 
                 {/* Left Side: Seat Layout Card */}
                 <div className="flex-1 flex flex-col gap-4">
-                    {/* Mobile Only: Top Legend Indicator */}
-                    <div className="flex lg:hidden items-center justify-center flex-wrap gap-x-4 gap-y-2 py-3 px-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+                    {/* Top Legend Indicator */}
+                    <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 py-3 px-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
                         <div className="flex items-center gap-1.5 shrink-0">
                             <div className="w-2.5 h-2.5 rounded-[3px] border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"></div>
                             <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Available</span>
@@ -429,9 +432,8 @@ const SeatSelectionPage = () => {
                             <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Booked</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                            <div className="w-[11px] h-[11px] rounded-[3px] bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center relative">
-                                <div className="absolute w-[6px] h-[1px] bg-gray-400 rotate-45"></div>
-                                <div className="absolute w-[6px] h-[1px] bg-gray-400 -rotate-45"></div>
+                            <div className="w-[11px] h-[11px] rounded-[3px] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center relative">
+                                <X className="w-2.5 h-2.5 text-gray-400 stroke-[2.5]" />
                             </div>
                             <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">Sold Out</span>
                         </div>

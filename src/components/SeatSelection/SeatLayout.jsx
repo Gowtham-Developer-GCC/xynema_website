@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getShowSeats } from '../../services/bookingService';
 import apiCacheManager from '../../services/apiCacheManager';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { Accessibility, Armchair } from 'lucide-react';
+import { Accessibility, Armchair, X } from 'lucide-react';
 
 const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 10, showToast }) => {
     const [seats, setSeats] = useState([]);
@@ -16,7 +16,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
         // Check if any sync is actually needed to avoid loops or redundant renders
         const needsSync = seats.some(row =>
             row.some(seat => {
-                if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved') return false;
+                if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved' || seat.status === 'disabled' || seat.type === 'disabled' || seat.rawSeatType === 'disabled') return false;
                 const isSelectedInProp = selectedSeats.some(s => s.id === seat.id);
                 return (isSelectedInProp && seat.status !== 'selected') || (!isSelectedInProp && seat.status === 'selected');
             })
@@ -27,7 +27,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
         setSeats(prevSeats =>
             prevSeats.map(row =>
                 row.map(seat => {
-                    if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved') return seat;
+                    if (!seat || seat.type === 'path' || seat.status === 'booked' || seat.status === 'reserved' || seat.status === 'disabled' || seat.type === 'disabled' || seat.rawSeatType === 'disabled') return seat;
 
                     const isSelectedInProp = selectedSeats.some(s => s.id === seat.id);
                     if (isSelectedInProp && seat.status !== 'selected') {
@@ -50,8 +50,8 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
             setIsLoading(true);
             setError(null);
             try {
-                // getShowSeats returns a ShowLayoutResponse with .show and .seats
-                const layoutData = await apiCacheManager.getOrFetchSeats(showId, () => getShowSeats(showId));
+                // Always force-fresh on mount so disabled/wheelchair types are never stale from cache
+                const layoutData = await apiCacheManager.getOrFetchSeats(showId, () => getShowSeats(showId), true);
 
                 if (layoutData?.seats && layoutData.seats.length > 0) {
                     const seatList = layoutData.seats;
@@ -74,27 +74,63 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                         const r = s.position?.row ?? 0;
                         const c = s.position?.column ?? 0;
 
-                        // s.type is mapped from seatType by the Seat model
-                        let uiType = (s.seatType || s.type || 'normal').toLowerCase();
+                        // Read seatType directly from raw API data - s.seatType is the original backend field
+                        const rawSeatType = ((s.seatType !== undefined ? s.seatType : '') || (s.type !== undefined ? s.type : '') || '').toLowerCase().trim();
                         const seatName = (s.seatClass?.name || '').toLowerCase();
-                        if (uiType !== 'wheelchair' && uiType !== 'recliner' && (seatName === 'platinum' || seatName === 'gold' || seatName === 'sofa')) {
+                        const hasReclinerFeature = Array.isArray(s.features) && s.features.some(f => typeof f === 'string' && f.toLowerCase().includes('recliner'));
+
+                        // STRICT disabled check: ONLY rawSeatType decides this, nothing else
+                        const isDisabled = rawSeatType === 'disabled';
+                        // STRICT wheelchair check: only if NOT disabled
+                        const isWheelchair = !isDisabled && rawSeatType === 'wheelchair';
+
+                        // Determine UI type - disabled takes absolute priority
+                        let uiType;
+                        if (rawSeatType === 'path') {
+                            uiType = 'path';
+                        } else if (isDisabled) {
+                            uiType = 'disabled';
+                        } else if (isWheelchair) {
+                            uiType = 'wheelchair';
+                        } else if (rawSeatType === 'recliner' || hasReclinerFeature) {
+                            uiType = 'recliner';
+                        } else if (seatName === 'platinum' || seatName === 'gold' || seatName === 'sofa') {
                             uiType = 'premium';
+                        } else {
+                            uiType = 'normal';
                         }
 
                         const showData = layoutData.show;
                         const basePrice = s.basePrice || showData?.pricing?.[0]?.basePrice || 150;
 
+                        // Status: disabled always wins regardless of isBooked/isAvailable
+                        let seatStatus;
+                        if (isDisabled) {
+                            seatStatus = 'disabled';
+                        } else if (s.isBooked === true) {
+                            seatStatus = 'booked';
+                        } else if (s.isAvailable === false || s.isLocked === true) {
+                            seatStatus = 'reserved';
+                        } else {
+                            seatStatus = 'available';
+                        }
+
                         matrix[r][c] = {
-                            id: s.id || s.seatNumber,
+                            id: s._id || s.id || s.seatNumber,
                             row: s.row,
                             number: s.seatNumber,
-                            status: s.isBooked ? 'booked' : (!s.isAvailable || s.isLocked ? 'reserved' : 'available'),
+                            status: seatStatus,
                             type: uiType,
-                            categoryName: s.seatClass?.name || uiType.toUpperCase(),
-                            originalType: s.type, // preserve 'path'
+                            rawSeatType: rawSeatType,   // keep raw for render-side checks
+                            seatType: rawSeatType,       // alias
+                            categoryName: s.seatClass?.name || (uiType === 'recliner' ? 'RECLINER' : uiType.toUpperCase()),
+                            originalType: rawSeatType,
                             priceModifier: 0,
                             basePrice: basePrice,
-                            position: s.position
+                            position: s.position,
+                            isDisabled: isDisabled,
+                            isBooked: s.isBooked === true,
+                            features: Array.isArray(s.features) ? s.features : []
                         };
                     });
 
@@ -123,7 +159,7 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
         if (isAnimating) return;
         const seat = seats[rowIndex][colIndex];
         if (!seat) return;
-        if (seat.type === 'path' || seat.originalType === 'path' || seat.status === 'booked' || seat.status === 'reserved' || seat.status === 'disabled') return;
+        if (seat.type === 'path' || seat.originalType === 'path' || seat.status === 'booked' || seat.status === 'reserved' || seat.status === 'disabled' || seat.type === 'disabled' || seat.rawSeatType === 'disabled') return;
 
         const currentlySelected = seats.flat().filter(s => s && s.status === 'selected');
         const isSelected = seat.status === 'selected';
@@ -343,24 +379,41 @@ const SeatLayout = ({ showId, selectedSeats = [], onSeatChange, maxSeatCount = 1
                                                             return <div key={`path-${seat?.id || colIndex}`} className="w-8 h-8 md:w-[34px] md:h-[34px] shrink-0 opacity-0" />;
                                                         }
 
-                                                        // Styles based on Figma
+                                                        // Distinct visual states — rely ONLY on pre-computed fields set in matrix build
+                                                        const isSeatDisabled = seat.status === 'disabled' || seat.type === 'disabled' || seat.rawSeatType === 'disabled';
+                                                        const isSeatBooked = seat.status === 'booked' || seat.status === 'reserved';
+                                                        const isSeatSelected = seat.status === 'selected';
+
                                                         let seatStyle = "border-[#cbd5e1] dark:border-gray-700 bg-white dark:bg-gray-800 text-[#475569] dark:text-gray-400 hover:border-[#64748b] dark:hover:border-gray-500 transition-colors";
 
-                                                        if (seat.status === 'booked' || seat.status === 'reserved') {
-                                                            seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none"; // Solid gray booked state with visible text
-                                                        } else if (seat.status === 'selected') {
-                                                            seatStyle = "bg-primary border-primary text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200"; // Solid primary color selected state with pop effect
+                                                        if (isSeatDisabled) {
+                                                            // Sold Out / Disabled UI
+                                                            seatStyle = "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none";
+                                                        } else if (isSeatBooked) {
+                                                            // Booked UI - Solid gray with muted text/icon, NO 'X'
+                                                            seatStyle = "bg-[#94a3b8] dark:bg-gray-700 border-[#94a3b8] dark:border-gray-700 text-white/40 dark:text-white/20 cursor-not-allowed pointer-events-none";
+                                                        } else if (isSeatSelected) {
+                                                            // Selected UI - Solid primary color with pop effect
+                                                            seatStyle = "bg-primary border-primary text-white font-bold scale-105 shadow-md z-10 animate-in zoom-in-95 duration-200";
                                                         }
 
                                                         return (
                                                             <button
                                                                 key={seat.id}
                                                                 onClick={() => handleSeatClick(rowIndex, colIndex)}
-                                                                disabled={seat.status === 'booked' || seat.status === 'reserved'}
-                                                                title={`${seat.row}${seat.number} - ₹${seat.basePrice}`}
+                                                                disabled={isSeatDisabled || isSeatBooked}
+                                                                title={
+                                                                    isSeatDisabled
+                                                                        ? `${seat.row}${seat.number} - Sold Out`
+                                                                        : isSeatBooked
+                                                                        ? `${seat.row}${seat.number} - Booked`
+                                                                        : `${seat.row}${seat.number} - ₹${seat.basePrice}`
+                                                                }
                                                                 className={`relative w-8 h-8 md:w-[34px] md:h-[34px] rounded-[6px] shrink-0 flex items-center justify-center border text-[10px] font-medium leading-none transition-all duration-300 transform active:scale-90 ${seatStyle}`}
                                                             >
-                                                                {seat.type === 'wheelchair' ? (
+                                                                {isSeatDisabled ? (
+                                                                    <X className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 dark:text-gray-500 shrink-0 stroke-[2.5]" />
+                                                                ) : seat.type === 'wheelchair' ? (
                                                                     <Accessibility className="w-4 h-4 shrink-0" />
                                                                 ) : seat.type === 'recliner' ? (
                                                                     <Armchair className="w-4 h-4 shrink-0" />

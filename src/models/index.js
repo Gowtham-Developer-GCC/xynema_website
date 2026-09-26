@@ -366,7 +366,9 @@ export class Seat {
         this.price = data.price || data.basePrice || 0;
         this.basePrice = this.price;
         this.type = data.seatType || data.type || 'normal';
+        this.seatType = data.seatType || this.type;
         this.seatClass = data.seatClass || null; // Add this line to preserve seat class info
+        this.features = Array.isArray(data.features) ? data.features : [];
 
         this.position = new SeatPosition(data.position || {});
 

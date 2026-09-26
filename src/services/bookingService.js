@@ -11,7 +11,14 @@ export const getShowSeats = async (showId) => {
             responseData = responseData[0];
         }
         const data = responseData?.data || responseData;
-        return new ShowLayoutResponse(data);
+        // Return raw data — do NOT wrap in ShowLayoutResponse/Seat models
+        // so that seatType ('disabled','wheelchair','recliner','path','normal')
+        // is preserved exactly as sent by the API for SeatLayout to process.
+        return {
+            show: data.show || {},
+            seats: Array.isArray(data.seats) ? data.seats : [],
+            layout: data.layout || data.show?.layout || {}
+        };
     });
 };
 

@@ -470,9 +470,9 @@ class ApiCacheManager {
     /**
      * Helper: Get or fetch seat layout/availability
      */
-    async getOrFetchSeats(showId, fetchFn) {
-        // Shorter TTL for seats since availability changes frequently
-        return this.getOrExecute(`seats_${showId}`, fetchFn, 60);
+    async getOrFetchSeats(showId, fetchFn, force = false) {
+        // Short TTL for seats so real-time availability and admin changes reflect immediately
+        return this.getOrExecute(`seats_${showId}`, fetchFn, 5, force);
     }
 
     /**

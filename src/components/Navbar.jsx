@@ -423,23 +423,31 @@ const Navbar = ({ selectedCity, setSelectedCity, openCityModal }) => {
                                         />
                                     </div>
                                 ) : (
-                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
-                                        <span className={`text-lg font-bold ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>?</span>
-                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setIsSidebarOpen(false);
+                                            openLogin();
+                                        }}
+                                        className="bg-primary text-white px-8 py-3 rounded-lg text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm"
+                                    >
+                                        {t('sign_up') || 'Sign Up'}
+                                    </button>
                                 )}
                             </div>
 
                             {/* Name & Email */}
-                            <div className="space-y-0.5">
-                                <h2 className={`text-[15px] font-medium leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    {user ? user.displayName : t('welcome') || 'Welcome!'}
-                                </h2>
-                                {user?.email && (
-                                    <p className={`text-[12px] font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        {user.email}
-                                    </p>
-                                )}
-                            </div>
+                            {user && (
+                                <div className="space-y-0.5">
+                                    <h2 className={`text-[15px] font-medium leading-snug ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {user.displayName}
+                                    </h2>
+                                    {user.email && (
+                                        <p className={`text-[12px] font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            {user.email}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Mobile Location Selector inside Sidebar */}
                             <div className="md:hidden mt-6">

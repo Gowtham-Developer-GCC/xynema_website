@@ -110,14 +110,15 @@ const LoginModal = () => {
                 onClick={closeLogin}
             />
 
-            <div className="relative w-full max-w-[420px] bg-white dark:bg-gray-900 rounded-[50px] p-8 md:p-12 shadow-2xl animate-in zoom-in-95 duration-500 overflow-hidden border border-white/20">
+            <div className="relative w-full max-w-[420px] bg-white dark:bg-gray-900 rounded-md p-8 md:p-12 shadow-2xl animate-in zoom-in-95 duration-500 overflow-hidden border border-white/20">
                 {/* Decorative Background */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-xynemaRose/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full -ml-20 -mb-20 blur-3xl" />
+                <div className="absolute top-0 right-0 w-40 h-40 bg-xynemaRose/50 rounded-full -mr-20 -mt-20 blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/60 rounded-full -ml-20 -mb-20 blur-3xl" />
+                {/* <div className="absolute bottom-[2%] left-[60%] w-40 h-40 bg-primary/60 rounded-full -ml-20 -mb-20 blur-3xl" /> */}
 
                 <button
                     onClick={closeLogin}
-                    className="absolute top-8 right-8 p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-300 transition-all z-20 group"
+                    className="absolute top-8 right-8 p-3 rounded-full hover:bg-primary/10 dark:hover:bg-gray-800 text-primary transition-all z-20 group"
                 >
                     <X className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
                 </button>
@@ -125,12 +126,12 @@ const LoginModal = () => {
                 {/* Header */}
                 <div className="relative z-10 text-center mb-10">
                     <div className="mx-auto w-20 h-20 mb-6">
-                        <div className="relative w-full h-full bg-white dark:bg-gray-800 rounded-[28px] p-4 shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center">
+                        <div className="relative w-full h-full bg-white dark:bg-gray-800 rounded-full p-4 shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center">
                             <img src="/logo.png" alt="Xynema Logo" className="w-full h-full object-contain" />
                         </div>
                     </div>
                     <h2 className="text-3xl font-black text-gray-950 dark:text-white uppercase tracking-tighter leading-none mb-3">
-                        Entrance <br /> <span className="text-xynemaRose">Required</span>
+                        Login <span className="text-xynemaRose">Required</span>
                     </h2>
                     <div className="flex items-center justify-center gap-3">
                         <div className="h-[2px] w-6 bg-xynemaRose/20" />
@@ -147,7 +148,7 @@ const LoginModal = () => {
                             type="button"
                             onClick={handleGoogleSignIn}
                             disabled={isGoogleSigningIn || isSubmitting}
-                            className="w-full h-[60px] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm flex items-center justify-center gap-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.98] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed group px-4"
+                            className="w-full h-[60px] rounded-md border border-gray-100 dark:border-white/10 shadow-sm flex items-center justify-center gap-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 active:scale-[0.98] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed group px-4"
                         >
                             {isGoogleSigningIn ? (
                                 <div className="flex items-center gap-3">
@@ -189,13 +190,13 @@ const LoginModal = () => {
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                         placeholder="Enter Phone Number"
-                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-5 py-5 text-sm font-black tracking-widest text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-xynemaRose/20 focus:border-xynemaRose/30 transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-md pl-12 pr-5 py-5 text-sm font-black tracking-widest text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || phoneNumber.length < 10}
-                                    className="w-full bg-xynemaRose text-white font-black text-[11px] uppercase tracking-[0.3em] py-5 rounded-2xl shadow-xl shadow-xynemaRose/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:scale-100"
+                                    className="w-full bg-primary text-white font-black text-[11px] uppercase tracking-[0.3em] py-5 rounded-md shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:scale-100"
                                 >
                                     {isSubmitting ? 'Sending OTP...' : 'Continue with Phone'} <ArrowRight className="w-4 h-4" />
                                 </button>
@@ -212,21 +213,21 @@ const LoginModal = () => {
                                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="Enter 6-Digit OTP"
                                         autoFocus
-                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-2xl pl-12 pr-5 py-5 text-sm font-black tracking-widest text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-gray-300"
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-white/5 rounded-md pl-12 pr-5 py-5 text-sm font-black tracking-widest text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 transition-all placeholder:text-gray-300"
                                     />
                                 </div>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
                                         onClick={() => { setLoginStep('phone'); setOtp(''); }}
-                                        className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-500 font-black text-[9px] uppercase tracking-widest py-5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                                        className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-500 font-black text-[9px] uppercase tracking-widest py-4 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
                                     >
                                         Back
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || otp.length < 6}
-                                        className="flex-[2] bg-emerald-500 text-white font-black text-[11px] uppercase tracking-[0.3em] py-5 rounded-2xl shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:scale-100"
+                                        className="flex-[2] bg-primary text-white font-black text-[11px] uppercase tracking-[0.3em] py-4 rounded-md shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:scale-100"
                                     >
                                         {isSubmitting ? 'Verifying...' : 'Verify OTP'}
                                     </button>

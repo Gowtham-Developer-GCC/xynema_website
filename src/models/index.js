@@ -725,6 +725,7 @@ export class Event {
         const primaryImg = imgs.find(img => img.isPrimary) || imgs[0];
 
         this.imageUrl = primaryImg?.url || (allImages.length > 0 ? allImages[0] : 'https://placehold.co/800x400');
+        this.landscapeEventImage = data.landscapeEventImage?.url || null;
         this.allImages = allImages;
 
         // Portrait Image
@@ -854,7 +855,8 @@ export class EventBooking {
         // Image extraction
         const images = eventData.eventImages || eventData.images || [];
         const primaryImage = images.find(img => img.isPrimary) || images[0];
-        this.imageUrl = primaryImage?.url || '';
+        this.imageUrl = eventData.landScapeImage?.url || primaryImage?.url || '';
+        this.eventDetails = eventData;
 
         this.venue = {
             name: venueData.venueName || venueData.venue || venueData.name || '',

@@ -82,8 +82,8 @@ const EventBookingDetailsPage = () => {
     const bookingDate = getDisplayDate(showDate);
     const eventImages = eventData.eventImages || eventData.images || [];
     const primaryImageUrl = eventImages.find(img => img.isPrimary)?.url || eventImages[0]?.url;
-    const heroImageUrl = primaryImageUrl || 'https://placehold.co/800x400';
-    const posterImageUrl = primaryImageUrl || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image';
+    const heroImageUrl = eventData?.landScapeImage?.url || 'https://placehold.co/800x400';
+    const posterImageUrl = eventData?.portraitImage?.url || 'https://placehold.co/400x600/666/FFFFFF.png?text=No%20Image';
 
     const ticketClasses = booking.ticketClass
         ? [booking.ticketClass]

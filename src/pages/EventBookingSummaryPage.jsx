@@ -394,7 +394,7 @@ const EventBookingSummaryPage = () => {
                             {/* Full Width Top Poster */}
                             <div className="w-full h-32 md:h-40 relative group overflow-hidden bg-gray-950 border-b border-gray-100 dark:border-gray-800">
                                 <img
-                                    src={event?.imageUrl || "/logo.png"}
+                                    src={event?.landscapeEventImage || "/logo.png"}
                                     alt={event?.name}
                                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                                 />
@@ -488,7 +488,7 @@ const EventBookingSummaryPage = () => {
                                             selectedMethod,
                                             isEvent: true,
                                             eventName: event?.name || "Event",
-                                            eventImage: event?.imageUrl || "",
+                                            eventImage: event?.landscapeEventImage || "",
                                             venueName: event?.venue || event?.city || "",
                                             date: selectedDate,
                                             time: selectedTime

@@ -441,7 +441,7 @@ const EventDetailsPage = () => {
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
                     style={{
-                        backgroundImage: `url(${optimizeImage(isMobile ? (event.portraitEventImage || images[activeImageIndex] || event.imageUrl) : (images[activeImageIndex] || event.imageUrl), { width: isMobile ? 800 : 1920, quality: 95 })})`,
+                        backgroundImage: `url(${optimizeImage(isMobile ? (event.portraitEventImage || images[activeImageIndex] || event.imageUrl) : (event.landscapeEventImage), { width: isMobile ? 800 : 1920, quality: 95 })})`,
                         filter: isMobile ? 'blur(1px)' : 'contrast(100%) brightness(1.0) saturate(1.0) url(#sharpen-filter)',
                         imageRendering: '-webkit-optimize-contrast'
                     }}
@@ -457,7 +457,7 @@ const EventDetailsPage = () => {
                     <div className="w-full sm:w-[85%] md:w-[320px] lg:w-[30%] shrink-0 mx-auto md:mx-0 md:relative">
                         <div className="aspect-video md:aspect-auto md:absolute md:inset-0 rounded-md overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-gray-200/10 backdrop-blur-md">
                             <img
-                                src={isMobile ? (images[activeImageIndex] || event.imageUrl) : (event.portraitEventImage || images[activeImageIndex] || event.imageUrl)}
+                                src={isMobile ? ( event.landscapeEventImage) : (event.portraitEventImage || images[activeImageIndex] || event.imageUrl)}
                                 alt={event.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-1"
                                 style={{

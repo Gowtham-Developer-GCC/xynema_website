@@ -22,7 +22,7 @@ const EventCard = memo(({ event }) => {
             <div className={`bg-white dark:bg-[#1a1c23] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-xl flex flex-col h-full transition-all duration-300 cursor-pointer ${event.delayClass || ''}`}>
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                     <img
-                        src={optimizeImage(event.imageUrl, { width: 600, height: 375, quality: 80 }) || 'https://via.placeholder.com/600x375?text=No+Image'}
+                        src={optimizeImage(event.landscapeEventImage||event.imageUrl, { width: 600, height: 375, quality: 80 }) || 'https://via.placeholder.com/600x375?text=No+Image'}
                         alt={event.name}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-1"
